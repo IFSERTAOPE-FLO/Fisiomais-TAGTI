@@ -26,18 +26,22 @@ def login():
     colaborador = Colaboradores.query.filter_by(email=email).first()
 
     if colaborador and colaborador.check_password(senha):
+        access_token = create_access_token(identity=email)
+        response = {"access_token": access_token, "name": colaborador.nome}
+        
         if colaborador.is_admin:
-            access_token = create_access_token(identity=email)
-            return jsonify(access_token=access_token, name=colaborador.nome), 200
+            response["role"] = "admin"  # Permissão de administrador
         else:
-            return jsonify(message="Você não tem permissão de administrador"), 403
+            response["role"] = "colaborador"  # Permissão de colaborador comum
+            
+        return jsonify(response), 200
 
     # Verificar se o email pertence a um cliente
     cliente = Clientes.query.filter_by(email=email).first()
 
     if cliente and cliente.check_password(senha):
         access_token = create_access_token(identity=email)
-        return jsonify(access_token=access_token, name=cliente.nome), 200
+        return jsonify(access_token=access_token, name=cliente.nome, role="cliente"), 200
 
     # Se o email ou senha estiverem incorretos
     return jsonify(message="Credenciais inválidas"), 401
