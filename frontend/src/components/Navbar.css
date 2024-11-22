@@ -1,0 +1,117 @@
+.custom-navbar {
+  background-color: #ffffff;
+  padding: 0px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand img {
+  height: 72px; /* Tamanho maior da imagem */
+  width: 142px;
+  margin-top: 0; /* Remove a margem superior */
+  margin-left: 90px; /* Remove a margem inferior */
+  display: block; /* Garante que a imagem se comporte como bloco */
+}
+
+.navbar-nav {
+  justify-content: center; /* Centralizar as opções do menu */
+}
+
+.navbar-nav .nav-item {
+  margin: 0 10px; /* Espaço entre os itens do menu */
+}
+
+.nav-link {
+  color: white;
+  font-size: 0.9rem; /* Fonte menor */
+  font-weight: 500;
+  background-color: #36ab9c;
+  border-radius: 5px;
+  margin: 0 4px;
+  padding: 12px 12px;
+  transition: background-color 0.3s ease;
+}
+
+.nav-link:hover {
+  background-color: #2d9485;
+}
+
+.btn-login {
+  background-color: #36ab9c;
+  color: white;
+  font-size: 0.85rem;
+  border-radius: 20px;
+  padding: 8px 10px;
+  transition: all 0.3s ease;
+  margin-right: 10px;
+}
+
+.btn-login:hover {
+  background-color: #2d9485;
+  color: white;
+  transform: scale(1.01);
+  font-weight: bold;
+}
+
+#iconeuser {
+  font-size: 50px; /* Tamanho maior do ícone */
+  margin-right: 7px;
+}
+
+.custom-navbar .navbar-collapse {
+  justify-content: space-between;
+}
+
+/* Novo estilo para o botão Inscrever-se */
+.btn-signup {
+  background-color: #bc155b; 
+  color: white;
+  font-size: 0.85rem;
+  border-radius: 20px;
+  padding: 8px 10px;
+  transition: all 0.3s ease;
+  margin-right: 10px;
+}
+
+.btn-signup:hover {
+  background-color: #9c2456;
+  color: white;
+  font-weight: bold;
+  transform: scale(1.01);
+}
+
+/* Estilização do botão do usuário logado */
+.btn-user {
+  background-color: white; /* Fundo transparente */
+  font-size: 0.85rem;
+  border-radius: 20px;
+  padding: 5px 10px;
+  transition: all 0.3s ease;
+  margin-right: 10px;
+  color: #919292;
+  border: none; /* Remove bordas adicionais */
+}
+
+.btn-user:hover {  
+  background-color: White; /* Fundo transparente */  
+}
+
+/* Menu dropdown do usuário */
+.dropdown-menu {
+  border-radius: 10px; /* Bordas arredondadas */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra leve */
+}
+
+.dropdown-item {
+  font-size: 0.9rem; /* Tamanho do texto do dropdown */
+  color: #525252;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa; /* Cor de fundo clara no hover */
+  color: #333; /* Cor do texto no hover */
+}
+
+/* Centralizar o dropdown à direita */
+.navbar-nav.ms-auto {
+  margin-left: auto; /* Empurra o dropdown para a direita */
+}

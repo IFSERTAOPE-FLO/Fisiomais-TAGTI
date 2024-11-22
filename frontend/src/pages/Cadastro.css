@@ -1,0 +1,11 @@
+/* Personalize os botões */
+.btn-success {
+    background-color: #28a745; /* Verde */
+    color: white;
+    font-weight: bold;
+  }
+  
+  .btn-success:hover {
+    background-color: #218838; /* Efeito de hover */
+    color: white;
+  }
