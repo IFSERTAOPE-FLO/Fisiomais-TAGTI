@@ -464,4 +464,4 @@ def add_pagamento():
     # Redirecionar após inserir
     return redirect(url_for('main.form'))
 
->>>>>>> badc8ec0be1c6504bb2bbf1d58e3a5993e160a13
+
