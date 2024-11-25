@@ -11,6 +11,7 @@ function Navbar() {
   const [role, setRole] = useState(""); // Armazena a função do usuário (admin, colaborador ou cliente)
   const [email, setEmail] = useState("");
   const [senha, setPassword] = useState("");
+  const [userId, setUserId] = useState(null);
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -20,14 +21,16 @@ function Navbar() {
         senha,
       });
 
-      const { access_token, name, role } = response.data;
+      const { access_token, name, role, userId } = response.data;
 
       setIsLoggedIn(true);
       setUserName(name);
-      setRole(role); // Define o papel do usuário
+      setRole(role);
+      setUserId(userId); // Atualiza o ID do usuário no estado
       localStorage.setItem("token", access_token);
       localStorage.setItem("userName", name);
-      localStorage.setItem("role", role); // Salva o papel do usuário
+      localStorage.setItem("role", role);
+      localStorage.setItem("userId", userId);
 
       // Fechar o modal
       const modalElement = document.getElementById("loginModal");
@@ -59,7 +62,7 @@ function Navbar() {
 
       const response = await axios.post(
         "http://localhost:5000/logout",
-        {},
+        {}, // Corpo vazio
         {
           headers: {
             Authorization: `Bearer ${savedToken}`,
@@ -70,10 +73,12 @@ function Navbar() {
       if (response.status === 200) {
         setIsLoggedIn(false);
         setUserName("Usuário");
-        setRole(""); // Limpa o papel do usuário
+        setRole("");
+        setUserId(null);
         localStorage.removeItem("token");
         localStorage.removeItem("userName");
         localStorage.removeItem("role");
+        localStorage.removeItem("userId");
 
         navigate("/");
       } else {
@@ -89,6 +94,7 @@ function Navbar() {
     const savedToken = localStorage.getItem("token");
     const savedUserName = localStorage.getItem("userName");
     const savedRole = localStorage.getItem("role");
+    const savedUserId = localStorage.getItem("userId");
 
     if (savedToken && savedUserName && savedRole) {
       try {
@@ -101,11 +107,13 @@ function Navbar() {
 
         setIsLoggedIn(true);
         setUserName(savedUserName);
-        setRole(savedRole); // Define o papel do usuário com base no localStorage
+        setRole(savedRole);
+        setUserId(savedUserId); // Usa o setUserId correto
       } catch (error) {
         localStorage.removeItem("token");
         localStorage.removeItem("userName");
         localStorage.removeItem("role");
+        localStorage.removeItem("userId");
         setIsLoggedIn(false);
         setUserName("Usuário");
         setRole("");

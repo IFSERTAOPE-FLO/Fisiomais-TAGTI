@@ -11,7 +11,7 @@ function Footer() {
 
     width: "100%",
     zIndex: 1000,
-    marginTop: "25px",  // Garante que o footer fica na parte inferior da tela
+    marginTop: "500px",  // Garante que o footer fica na parte inferior da tela
   };
 
   const iconColors = {

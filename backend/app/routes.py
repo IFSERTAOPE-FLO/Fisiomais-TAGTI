@@ -5,6 +5,9 @@ from app.models import Agendamentos, Clientes, Colaboradores, Servicos, Pagament
 from datetime import datetime
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from werkzeug.security import generate_password_hash
+from werkzeug.utils import secure_filename
+import os
+
 
 
 main = Blueprint('main', __name__)
@@ -317,43 +320,7 @@ def deletar_agendamento(id):
         print(f"Erro ao deletar agendamento: {str(e)}")
         return jsonify({'message': f'Erro ao deletar agendamento: {str(e)}'}), 500
 
-@main.route('/api/perfil', methods=['GET'])
-@jwt_required()
-def get_profile():
-    email = get_jwt_identity()  # Recupera o email do usuário autenticado
-    
-    # Verifica se o usuário é um cliente ou colaborador
-    cliente = Clientes.query.filter_by(email=email).first()
-    colaborador = Colaboradores.query.filter_by(email=email).first()
 
-    if cliente:
-        return jsonify({
-            'ID': cliente.ID_Cliente,
-            'nome': cliente.nome,
-            'email': cliente.email,
-            'telefone': cliente.telefone,
-            'endereco': cliente.endereco,
-            'bairro': cliente.bairro,
-            'cidade': cliente.cidade,
-            'photo': cliente.photo,
-            'role': 'cliente'
-        })
-
-    elif colaborador:
-        return jsonify({
-            'ID': colaborador.ID_Colaborador,
-            'nome': colaborador.nome,
-            'email': colaborador.email,
-            'telefone': colaborador.telefone,
-            'endereco': colaborador.endereco,
-            'bairro': colaborador.bairro,
-            'cidade': colaborador.cidade,
-            'cargo': colaborador.cargo,
-            'photo': colaborador.photo,
-            'role': 'colaborador'
-        })
-
-    return jsonify({'message': 'Usuário não encontrado.'}), 404
 
 
 # Rota para agendamento
@@ -430,29 +397,28 @@ def add_servico():
     # Redirecionar após inserir
     return redirect(url_for('main.form'))
 
-@main.route('/api/editar_usuario/cliente/<int:id>', methods=['PUT'])
+@main.route('/api/editar_usuario/<role>/<int:user_id>', methods=['PUT'])
 @jwt_required()
-def editar_usuario(id):
+def editar_usuario(role, user_id):
     data = request.get_json()
+    if role == 'cliente':
+        user = Clientes.query.filter_by(ID_Cliente=user_id).first()
+    elif role == 'colaborador':
+        user = Colaboradores.query.filter_by(ID_Colaborador=user_id).first()
+    else:
+        return jsonify({'message': 'Role inválido.'}), 400
 
-    try:
-        # Buscando o usuário pelo ID
-        usuario = Clientes.query.get(id)
-        
-        if not usuario:
-            return jsonify({"message": "Cliente não encontrado"}), 404
+    if not user:
+        return jsonify({'message': 'Usuário não encontrado.'}), 404
 
-        # Atualizando os campos com os dados recebidos
-        for key, value in data.items():
-            if hasattr(usuario, key) and key != 'ID_Cliente':
-                setattr(usuario, key, value)
+    # Atualizar os dados
+    for key, value in data.items():
+        if hasattr(user, key):
+            setattr(user, key, value)
 
-        db.session.commit()
-        return jsonify({"message": "Cliente atualizado com sucesso!"}), 200
+    db.session.commit()
+    return jsonify({'message': 'Dados atualizados com sucesso.'}), 200
 
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"message": f"Erro ao atualizar cliente: {str(e)}"}), 500
 
 
 # Deletar usuário (cliente ou colaborador)
@@ -502,4 +468,72 @@ def add_pagamento():
     # Redirecionar após inserir
     return redirect(url_for('main.form'))
 
+
+@main.route('/api/perfil', methods=['GET'])
+@jwt_required()
+def get_profile():
+    email = get_jwt_identity()  # Recupera o email do usuário autenticado
+    
+    # Verifica se o usuário é um cliente ou colaborador
+    cliente = Clientes.query.filter_by(email=email).first()
+    colaborador = Colaboradores.query.filter_by(email=email).first()
+
+    if cliente:
+        return jsonify({
+            'ID': cliente.ID_Cliente,
+            'nome': cliente.nome,
+            'email': cliente.email,
+            'telefone': cliente.telefone,
+            'endereco': cliente.endereco,
+            'bairro': cliente.bairro,
+            'cidade': cliente.cidade,
+            'photo': cliente.photo,
+            'role': 'cliente'
+        })
+
+    elif colaborador:
+        return jsonify({
+            'ID': colaborador.ID_Colaborador,
+            'nome': colaborador.nome,
+            'email': colaborador.email,
+            'telefone': colaborador.telefone,
+            'endereco': colaborador.endereco,
+            'bairro': colaborador.bairro,
+            'cidade': colaborador.cidade,
+            'cargo': colaborador.cargo,
+            'photo': colaborador.photo,
+            'role': 'colaborador'
+        })
+
+    return jsonify({'message': 'Usuário não encontrado.'}), 404
+
+# A variável UPLOAD_FOLDER é acessada diretamente da configuração do app
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
+
+@main.route('/api/upload_photo', methods=['POST'])
+@jwt_required()
+def upload_photo():
+    email = get_jwt_identity()
+    user = Clientes.query.filter_by(email=email).first() or Colaboradores.query.filter_by(email=email).first()
+
+    if 'file' not in request.files:
+        return jsonify({'message': 'Nenhum arquivo enviado.'}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'message': 'Nenhum arquivo selecionado.'}), 400
+
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+
+        # Atualiza o banco de dados com o caminho da foto
+        if user:
+            user.photo = filepath
+            db.session.commit()
+            return jsonify({'message': 'Foto de perfil atualizada com sucesso.'}), 200
+
+    return jsonify({'message': 'Tipo de arquivo não permitido.'}), 400
 

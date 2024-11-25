@@ -5,17 +5,24 @@ function Agendamento() {
   const [hora, setHora] = useState('');
   const [servico, setServico] = useState('');
   const [colaborador, setColaborador] = useState('');
-  const [cliente, setCliente] = useState('');
+  const [cliente, setCliente] = useState('');  // ID do cliente
   const [servicos, setServicos] = useState([]);
   const [colaboradores, setColaboradores] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [role, setRole] = useState('');  // Armazena o papel do usuário logado
-  
+
   const horarios = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
 
   useEffect(() => {
     const savedRole = localStorage.getItem('role');
     setRole(savedRole);  // Define o papel do usuário logado
+
+    // Preenche automaticamente o cliente se for um cliente logado
+    if (savedRole === 'cliente') {
+      const userId = localStorage.getItem('userId');
+      setCliente(userId); // Define o cliente automaticamente se o usuário for um cliente
+      console.log('ID do cliente logado:', userId);  // Verifique se o ID está sendo obtido corretamente
+    }
 
     fetchServicos();
     fetchClientes();
@@ -68,7 +75,7 @@ function Agendamento() {
       servico_id: servico,
       colaborador_id: colaborador,
       data: dataHora,
-      cliente_id: cliente,
+      cliente_id: cliente,  // Certifique-se de que o ID do cliente está sendo enviado corretamente
     };
 
     const token = localStorage.getItem('token');
@@ -103,9 +110,9 @@ function Agendamento() {
   return (
     <div className="container">
       <h2 className="text-center mb-4">Agendar Sessão</h2>
-      
+
       <form onSubmit={handleSubmit} className="row g-3">
-        <div className="row mb-3  d-flex justify-content-center">
+        <div className="row mb-3 d-flex justify-content-center">
           <div className="col-md-2">
             <label className="form-label">Data:</label>
             <input
@@ -133,7 +140,7 @@ function Agendamento() {
               ))}
             </select>
           </div>
-          <div className="col-md-3 ">
+          <div className="col-md-3">
             <label className="form-label">Serviço:</label>
             <select
               className="form-control"
@@ -171,30 +178,38 @@ function Agendamento() {
           </div>
 
           {/* Cliente */}
-          <div className="col-md-3">
-            <label className="form-label">Cliente:</label>
-            <select
-              className="form-control"
-              value={cliente}
-              onChange={(e) => setCliente(e.target.value)}
-              required
-            >
-              <option value="">Selecione um cliente</option>
-              {role === 'cliente' ? (
-                // Se o usuário for um cliente, exibe apenas o cliente logado
-                <option key={localStorage.getItem('userName')} value={localStorage.getItem('userName')}>
-                  {localStorage.getItem('userName')}
-                </option>
-              ) : (
-                // Se o usuário for colaborador, exibe todos os clientes
-                clientes.map((cli) => (
+          {role === 'cliente' ? (
+            // Se o usuário for um cliente, não mostra o select e preenche automaticamente com o cliente logado
+            <div className="col-md-3">
+              <label className="form-label">Cliente:</label>
+              <input
+                type="text"
+                className="form-control"
+                value={localStorage.getItem('userName')}                 
+                         
+                readOnly
+              />
+               
+            </div>
+          ) : (
+            // Se o usuário for colaborador, exibe todos os clientes
+            <div className="col-md-3">
+              <label className="form-label">Cliente:</label>
+              <select
+                className="form-control"
+                value={cliente}
+                onChange={(e) => setCliente(e.target.value)}
+                required
+              >
+                <option value="">Selecione um cliente</option>
+                {clientes.map((cli) => (
                   <option key={cli.ID_Cliente} value={cli.ID_Cliente}>
                     {cli.Nome}
                   </option>
-                ))
-              )}
-            </select>
-          </div>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Botão de envio */}

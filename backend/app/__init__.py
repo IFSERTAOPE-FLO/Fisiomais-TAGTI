@@ -7,6 +7,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+import os
 
 
 
@@ -20,6 +21,9 @@ def create_app():
     # Inicialize o JWTManager
     app.config['JWT_SECRET_KEY'] = 'Senha123'  # Use uma chave secreta segura
     jwt = JWTManager(app) 
+
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
 
     # Importar e registrar o Blueprint
     from app.routes import main

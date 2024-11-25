@@ -18,6 +18,7 @@ class Colaboradores(db.Model):
     estado = db.Column(db.String(50))
     cidade = db.Column(db.String(100))
     bairro = db.Column(db.String(100))
+    photo = db.Column(db.String(255), nullable=True)
 
     # Métodos para criptografar e verificar a senha
     def set_password(self, password):
@@ -43,6 +44,7 @@ class Clientes(db.Model):
     estado = db.Column(db.String(50))
     cidade = db.Column(db.String(100))
     bairro = db.Column(db.String(100))
+    photo = db.Column(db.String(255), nullable=True)
 
     # Métodos para criptografar e verificar a senha
     def set_password(self, password):
