@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Importando o Bootstrap
-import './Profile.css'; // Adicione seus estilos personalizados
+import React, { useState, useEffect } from "react";
+import 'bootstrap/dist/css/bootstrap.min.css'; 
+import './Profile.css'; 
 
 const Profile = () => {
   const [userData, setUserData] = useState({});
@@ -8,6 +8,7 @@ const Profile = () => {
   const [success, setSuccess] = useState('');
   const [editData, setEditData] = useState({});
   const [selectedFile, setSelectedFile] = useState(null);
+  const [userRole, setUserRole] = useState(''); // Novo estado para armazenar o papel do usuário
 
   const token = localStorage.getItem('access_token');
   const apiBaseUrl = 'http://localhost:5000/api';
@@ -15,7 +16,7 @@ const Profile = () => {
   // Função para buscar dados do usuário
   const fetchUserData = async () => {
     try {
-      const response = await fetch(`${apiBaseUrl}/clientes`, {
+      const response = await fetch(`${apiBaseUrl}/perfil`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -24,8 +25,9 @@ const Profile = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setUserData(data[0]); // Assume o primeiro cliente retornado
-        setEditData(data[0]);
+        setUserData(data);
+        setEditData(data);
+        setUserRole(data.role); // Armazenando o papel do usuário
       } else {
         throw new Error('Erro ao buscar dados do usuário.');
       }
@@ -38,7 +40,7 @@ const Profile = () => {
   const updateUser = async () => {
     try {
       const response = await fetch(
-        `${apiBaseUrl}/editar_usuario/cliente/${userData.ID_Cliente}`,
+        `${apiBaseUrl}/editar_usuario/${userRole}/${userData.ID}`,
         {
           method: 'PUT',
           headers: {
@@ -53,7 +55,7 @@ const Profile = () => {
 
       if (response.ok) {
         setSuccess(data.message);
-        fetchUserData(); // Atualiza os dados após sucesso
+        fetchUserData(); 
       } else {
         throw new Error(data.message || 'Erro ao atualizar usuário.');
       }
@@ -127,61 +129,113 @@ const Profile = () => {
                         }
                       />
                     </div>
-                    <div className="mb-3">
-                      <label className="form-label">Telefone:</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={editData.telefone || ''}
-                        onChange={(e) =>
-                          setEditData({ ...editData, telefone: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Endereço:</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={editData.endereco || ''}
-                        onChange={(e) =>
-                          setEditData({ ...editData, endereco: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Cidade:</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={editData.cidade || ''}
-                        onChange={(e) =>
-                          setEditData({ ...editData, cidade: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Bairro:</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={editData.bairro || ''}
-                        onChange={(e) =>
-                          setEditData({ ...editData, bairro: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label">Cargo:</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={editData.cargo || ''}
-                        onChange={(e) =>
-                          setEditData({ ...editData, cargo: e.target.value })
-                        }
-                      />
-                    </div>
+                    {userRole === 'cliente' && (
+                      <>
+                        <div className="mb-3">
+                          <label className="form-label">Telefone:</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={editData.telefone || ''}
+                            onChange={(e) =>
+                              setEditData({ ...editData, telefone: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="mb-3">
+                          <label className="form-label">Endereço:</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={editData.endereco || ''}
+                            onChange={(e) =>
+                              setEditData({ ...editData, endereco: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="mb-3">
+                          <label className="form-label">Cidade:</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={editData.cidade || ''}
+                            onChange={(e) =>
+                              setEditData({ ...editData, cidade: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="mb-3">
+                          <label className="form-label">Bairro:</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={editData.bairro || ''}
+                            onChange={(e) =>
+                              setEditData({ ...editData, bairro: e.target.value })
+                            }
+                          />
+                        </div>
+                      </>
+                    )}
+                    {userRole === 'colaborador' && (
+                      <>
+                        <div className="mb-3">
+                          <label className="form-label">Cargo:</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={editData.cargo || ''}
+                            onChange={(e) =>
+                              setEditData({ ...editData, cargo: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="mb-3">
+                          <label className="form-label">Telefone:</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={editData.telefone || ''}
+                            onChange={(e) =>
+                              setEditData({ ...editData, telefone: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="mb-3">
+                          <label className="form-label">Endereço:</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={editData.endereco || ''}
+                            onChange={(e) =>
+                              setEditData({ ...editData, endereco: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="mb-3">
+                          <label className="form-label">Cidade:</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={editData.cidade || ''}
+                            onChange={(e) =>
+                              setEditData({ ...editData, cidade: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="mb-3">
+                          <label className="form-label">Bairro:</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={editData.bairro || ''}
+                            onChange={(e) =>
+                              setEditData({ ...editData, bairro: e.target.value })
+                            }
+                          />
+                        </div>
+                      </>
+                    )}
                     <div className="text-center">
                       <button
                         type="button"

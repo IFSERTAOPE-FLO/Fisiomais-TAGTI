@@ -82,7 +82,7 @@ function Contato() {
             required
           ></textarea>
         </div>
-        <button type="submit" className="btn btn-primary">Enviar</button>
+        <button type="submit" className="btn btn-outline-success w-auto mx-auto d-block">Enviar</button>
       </form>
     </div>
   );

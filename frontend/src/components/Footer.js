@@ -7,10 +7,11 @@ function Footer() {
     backgroundColor: "#efefef", 
     color: "#5b0d30",
     padding: "7px 0",
-    position: "fixed", 
-    bottom: 0,
+    position: "relative",  
+
     width: "100%",
     zIndex: 1000,
+    marginTop: "25px",  // Garante que o footer fica na parte inferior da tela
   };
 
   const iconColors = {
@@ -39,6 +40,7 @@ function Footer() {
   };
 
   return (
+    
     <footer style={footerStyle} className="text-center">
       <div className="container">
         <p className="mb-3" style={{ fontSize: "1.1rem", fontWeight: "500" }}>

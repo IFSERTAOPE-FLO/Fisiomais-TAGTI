@@ -317,6 +317,44 @@ def deletar_agendamento(id):
         print(f"Erro ao deletar agendamento: {str(e)}")
         return jsonify({'message': f'Erro ao deletar agendamento: {str(e)}'}), 500
 
+@main.route('/api/perfil', methods=['GET'])
+@jwt_required()
+def get_profile():
+    email = get_jwt_identity()  # Recupera o email do usuário autenticado
+    
+    # Verifica se o usuário é um cliente ou colaborador
+    cliente = Clientes.query.filter_by(email=email).first()
+    colaborador = Colaboradores.query.filter_by(email=email).first()
+
+    if cliente:
+        return jsonify({
+            'ID': cliente.ID_Cliente,
+            'nome': cliente.nome,
+            'email': cliente.email,
+            'telefone': cliente.telefone,
+            'endereco': cliente.endereco,
+            'bairro': cliente.bairro,
+            'cidade': cliente.cidade,
+            'photo': cliente.photo,
+            'role': 'cliente'
+        })
+
+    elif colaborador:
+        return jsonify({
+            'ID': colaborador.ID_Colaborador,
+            'nome': colaborador.nome,
+            'email': colaborador.email,
+            'telefone': colaborador.telefone,
+            'endereco': colaborador.endereco,
+            'bairro': colaborador.bairro,
+            'cidade': colaborador.cidade,
+            'cargo': colaborador.cargo,
+            'photo': colaborador.photo,
+            'role': 'colaborador'
+        })
+
+    return jsonify({'message': 'Usuário não encontrado.'}), 404
+
 
 # Rota para agendamento
 @main.route('/api/agendamento', methods=['POST'])

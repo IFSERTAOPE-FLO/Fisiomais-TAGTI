@@ -232,7 +232,7 @@ function Cadastro() {
           
         
 
-        <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+        <button type="submit" className="btn btn-outline-success w-auto mx-auto d-block" disabled={loading}>
           {loading ? "Carregando..." : "Inscrever-se"}
         </button>
       </form>

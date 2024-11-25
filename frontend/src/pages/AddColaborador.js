@@ -12,7 +12,6 @@ function AddColaborador() {
   const [referencias, setReferencias] = useState('');
   const [cargo, setCargo] = useState('');
   const [endereco, setEndereco] = useState('');
-  const [rua, setRua] = useState('');
   const [estado, setEstado] = useState('');
   const [cidade, setCidade] = useState('');
   const [bairro, setBairro] = useState('');
@@ -30,7 +29,7 @@ function AddColaborador() {
     setErrorMessage('');
 
     try {
-      const response = await axios.post("http://localhost:5000/register-colaborador", {
+      const response = await axios.post('http://localhost:5000/register-colaborador', {
         nome,
         email,
         senha,
@@ -38,7 +37,6 @@ function AddColaborador() {
         referencias,
         cargo,
         endereco,
-        rua,
         estado,
         cidade,
         bairro,
@@ -46,7 +44,7 @@ function AddColaborador() {
       });
 
       if (response.status === 201) {
-        alert("Colaborador cadastrado com sucesso!");
+        alert('Colaborador cadastrado com sucesso!');
         // Resetar os campos
         setNome('');
         setEmail('');
@@ -55,15 +53,14 @@ function AddColaborador() {
         setReferencias('');
         setCargo('');
         setEndereco('');
-        setRua('');
         setEstado('');
         setCidade('');
         setBairro('');
         setIsAdmin(false);
       }
     } catch (error) {
-      console.error("Erro ao cadastrar colaborador:", error);
-      const message = error.response?.data?.message || "Erro ao cadastrar colaborador. Verifique os dados fornecidos.";
+      console.error('Erro ao cadastrar colaborador:', error);
+      const message = error.response?.data?.message || 'Erro ao cadastrar colaborador. Verifique os dados fornecidos.';
       setErrorMessage(message);
     } finally {
       setLoading(false);
@@ -72,9 +69,10 @@ function AddColaborador() {
 
   return (
     <div className="container">
-      <h2 className="mb-4">Adicionar Colaborador</h2>
+      <h2 className="text-center mb-4">Adicionar Colaborador</h2>
       {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
       <form onSubmit={(e) => { e.preventDefault(); handleRegister(); }}>
+        {/* Nome e Email */}
         <div className="row mb-3">
           <div className="col-12 col-md-6">
             <label htmlFor="nome" className="form-label">Nome*</label>
@@ -87,7 +85,7 @@ function AddColaborador() {
               required
             />
           </div>
-          <div className="col-12 col-md-6">
+          <div className="col-12 col-md-5">
             <label htmlFor="email" className="form-label">Email*</label>
             <input
               type="email"
@@ -98,10 +96,22 @@ function AddColaborador() {
               required
             />
           </div>
+          <div className="col-12 col-md-1">
+            <div className="form-check">
+              <input
+                type="checkbox"
+                className="form-check-input"
+                id="isAdmin"
+                checked={isAdmin}
+                onChange={(e) => setIsAdmin(e.target.checked)}
+              />
+              <label className="form-check-label" htmlFor="isAdmin">Administrador</label>
+            </div>   
+          </div>  
         </div>
-
+        
         <div className="row mb-3">
-          <div className="col-12 col-md-6">
+          <div className="col-12 col-md-3">
             <label htmlFor="senha" className="form-label">Senha*</label>
             <input
               type="password"
@@ -112,7 +122,7 @@ function AddColaborador() {
               required
             />
           </div>
-          <div className="col-12 col-md-6">
+          <div className="col-12 col-md-3">
             <label htmlFor="telefone" className="form-label">Telefone</label>
             <input
               type="tel"
@@ -121,24 +131,11 @@ function AddColaborador() {
               value={telefone}
               onChange={(e) => setTelefone(e.target.value)}
             />
-          </div>
-        </div>
-
-        <div className="row mb-3">
-          <div className="col-12">
-            <label htmlFor="referencias" className="form-label">Referências</label>
-            <input
-              type="text"
-              className="form-control"
-              id="referencias"
-              value={referencias}
-              onChange={(e) => setReferencias(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="row mb-3">
-          <div className="col-12 col-md-6">
+          </div>     
+           
+        
+          
+          <div className="col-12 col-md-2">
             <label htmlFor="cargo" className="form-label">Cargo</label>
             <input
               type="text"
@@ -148,30 +145,7 @@ function AddColaborador() {
               onChange={(e) => setCargo(e.target.value)}
             />
           </div>
-          <div className="col-12 col-md-6">
-            <label htmlFor="isAdmin" className="form-label">Administrador</label>
-            <input
-              type="checkbox"
-              className="form-check-input"
-              id="isAdmin"
-              checked={isAdmin}
-              onChange={(e) => setIsAdmin(e.target.checked)}
-            />
-          </div>
-        </div>
-
-        <div className="row mb-3">
-          <div className="col-12 col-md-6">
-            <label htmlFor="estado" className="form-label">Estado</label>
-            <input
-              type="text"
-              className="form-control"
-              id="estado"
-              value={estado}
-              onChange={(e) => setEstado(e.target.value)}
-            />
-          </div>
-          <div className="col-12 col-md-6">
+          <div className="col-12 col-md-3">
             <label htmlFor="cidade" className="form-label">Cidade</label>
             <input
               type="text"
@@ -181,10 +155,32 @@ function AddColaborador() {
               onChange={(e) => setCidade(e.target.value)}
             />
           </div>
-        </div>
+          
+          <div className="col-12 col-md-1">
+            <label htmlFor="estado" className="form-label">Estado</label>
+            <input
+              type="text"
+              className="form-control"
+              id="estado"
+              value={estado}
+              onChange={(e) => setEstado(e.target.value)}
+            />
+          </div>
+          </div> 
 
+        {/* Endereço, Estado, Cidade, Bairro */}
         <div className="row mb-3">
-          <div className="col-12">
+          <div className="col-12 col-md-6">
+            <label htmlFor="endereco" className="form-label">Endereço</label>
+            <input
+              type="text"
+              className="form-control"
+              id="endereco"
+              value={endereco}
+              onChange={(e) => setEndereco(e.target.value)}
+            />
+          </div>
+          <div className="col-12 col-md-2">
             <label htmlFor="bairro" className="form-label">Bairro</label>
             <input
               type="text"
@@ -194,10 +190,25 @@ function AddColaborador() {
               onChange={(e) => setBairro(e.target.value)}
             />
           </div>
+          
+          <div className="col-12 col-md-4">
+            <label htmlFor="referencias" className="form-label">Referências</label>
+            <input
+              type="text"
+              className="form-control"
+              id="referencias"
+              value={referencias}
+              onChange={(e) => setReferencias(e.target.value)}
+            />
+          </div>
+          
         </div>
 
-        <button type="submit" className="btn btn-login w-auto mx-auto d-block" disabled={loading}>
-          {loading ? "Carregando..." : "Cadastrar"}
+        
+        
+
+        <button type="submit" className="btn btn-outline-success w-auto mx-auto d-block" disabled={loading}>
+          {loading ? 'Carregando...' : 'Cadastrar'}
         </button>
       </form>
     </div>

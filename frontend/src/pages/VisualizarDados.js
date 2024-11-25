@@ -14,20 +14,20 @@ const VisualizarDados = () => {
         const response = await axios.get('http://localhost:5000/api/listar_agendamentos', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
-
+  
         if (response.data.length === 0) {
-          setErro('Nenhum agendamento encontrado');
+          setAgendamentos([]); // Apenas setando um array vazio, sem mensagem de erro
         } else {
           setAgendamentos(response.data);
         }
       } catch (error) {
-        setErro(`Erro ao carregar os dados: ${error.response?.data?.message || error.message}`);
         console.error('Erro ao buscar agendamentos:', error);
       }
     };
-
+  
     fetchAgendamentos();
   }, []);
+  
 
   const handleShowDetails = (agendamento) => {
     setSelectedAgendamento(agendamento);

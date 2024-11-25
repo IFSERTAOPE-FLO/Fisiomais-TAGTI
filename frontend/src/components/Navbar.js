@@ -2,15 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap/dist/js/bootstrap.bundle.min.js"; // Necessário para o modal
-import "./Navbar.css"; // Estilos personalizados (opcional)
+import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import "./Navbar.css";
 
 function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("Usuário");
-  const [token, setToken] = useState("");
-  const [email, setEmail] = useState(""); // Para capturar o email no modal
-  const [senha, setPassword] = useState(""); // Para capturar a senha no modal
+  const [role, setRole] = useState(""); // Armazena a função do usuário (admin, colaborador ou cliente)
+  const [email, setEmail] = useState("");
+  const [senha, setPassword] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -20,30 +20,29 @@ function Navbar() {
         senha,
       });
 
-      const { access_token, name } = response.data;
+      const { access_token, name, role } = response.data;
 
-      setToken(access_token);
-      setUserName(name);
       setIsLoggedIn(true);
-
+      setUserName(name);
+      setRole(role); // Define o papel do usuário
       localStorage.setItem("token", access_token);
+      localStorage.setItem("userName", name);
+      localStorage.setItem("role", role); // Salva o papel do usuário
 
-      // Fechar o modal após login
+      // Fechar o modal
       const modalElement = document.getElementById("loginModal");
       const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
       if (modalInstance) {
         modalInstance.hide();
       }
 
-      // Remover backdrop manualmente
-      document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+      document.querySelectorAll(".modal-backdrop").forEach((backdrop) => backdrop.remove());
 
       console.log("Usuário logado:", name);
 
-      // Atrasar o redirecionamento para garantir que o modal seja fechado corretamente
       setTimeout(() => {
-        navigate("/"); // Redirecionar após 500ms
-      }, 500); // Atraso de 500ms para garantir o fechamento do modal
+        navigate("/");
+      }, 500);
     } catch (error) {
       console.error("Erro no login:", error);
       alert("Erro ao fazer login. Verifique suas credenciais.");
@@ -71,11 +70,12 @@ function Navbar() {
       if (response.status === 200) {
         setIsLoggedIn(false);
         setUserName("Usuário");
-        setToken("");
+        setRole(""); // Limpa o papel do usuário
         localStorage.removeItem("token");
         localStorage.removeItem("userName");
+        localStorage.removeItem("role");
 
-        navigate("/"); // Redireciona para a página inicial
+        navigate("/");
       } else {
         alert("Erro ao fazer logout. Tente novamente.");
       }
@@ -86,33 +86,29 @@ function Navbar() {
   };
 
   useEffect(() => {
-    const savedToken = localStorage.getItem("token"); 
+    const savedToken = localStorage.getItem("token");
     const savedUserName = localStorage.getItem("userName");
+    const savedRole = localStorage.getItem("role");
 
-    if (savedToken && savedUserName) {
+    if (savedToken && savedUserName && savedRole) {
       try {
-        // Decodificando o token
-        const decodedToken = JSON.parse(atob(savedToken.split('.')[1]));
-
-        // Verifique se o token é válido (ou seja, se o campo 'exp' não está expirado)
+        const decodedToken = JSON.parse(atob(savedToken.split(".")[1]));
         const isTokenExpired = decodedToken.exp * 1000 < Date.now();
 
         if (isTokenExpired) {
           throw new Error("Token expirado");
         }
 
-        // Caso o token não tenha expirado, atualiza o estado
-        const userNameFromToken = decodedToken?.name || "Usuário";
         setIsLoggedIn(true);
         setUserName(savedUserName);
-        setToken(savedToken);
+        setRole(savedRole); // Define o papel do usuário com base no localStorage
       } catch (error) {
-        // Se o token for inválido ou expirado, remova-o e atualize o estado
         localStorage.removeItem("token");
         localStorage.removeItem("userName");
+        localStorage.removeItem("role");
         setIsLoggedIn(false);
         setUserName("Usuário");
-        setToken("");
+        setRole("");
         console.error("Erro ao verificar o token:", error);
       }
     }
@@ -121,97 +117,100 @@ function Navbar() {
   return (
     <>
       <nav className="navbar navbar-expand-lg custom-navbar">
-  <div className="container-fluid">
-    <Link className="navbar-brand" to="/">
-      <img src="/fisiomais.png" alt="Logo" className="navbar-logo" />
-    </Link>
-    <button
-      className="navbar-toggler"
-      type="button"
-      data-bs-toggle="collapse"
-      data-bs-target="#navbarNav"
-      aria-controls="navbarNav"
-      aria-expanded="false"
-      aria-label="Toggle navigation"
-    >
-      <span className="navbar-toggler-icon"></span>
-    </button>
-    <div className="collapse navbar-collapse" id="navbarNav">
-      <ul className="navbar-nav mx-auto">
-        <li className="nav-item">
-          <Link className="nav-link" to="/">Início</Link>
-        </li>
-        <li className="nav-item">
-          <Link className="nav-link" to="/contato">Contato</Link>
-        </li>
-        <li className="nav-item">
-          <Link className="nav-link" to="/sobrenos">Sobre Nós</Link>
-        </li>
-      </ul>
-      <ul className="navbar-nav ms-auto">
-        {!isLoggedIn ? (
-          <>
-            <li className="nav-item">
-              <button
-                className="btn btn-login"
-                data-bs-toggle="modal"
-                data-bs-target="#loginModal"
-              >
-                Entrar
-              </button>
-            </li>
-            <li className="nav-item">
-              <Link to="/cadastro" className="btn btn-signup">
-                Inscrever-se
-              </Link>
-            </li>
-          </>
-        ) : (
-          <li className="nav-item dropdown btn-user">
-            <a
-              className="nav-link dropdown-toggle btn-user"
-              href="#"
-              id="navbarDropdown"
-              role="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              <i id="iconeuser" className="bi bi-person-circle"></i>
-              <span>{userName}</span>
-            </a>
-            <ul className="dropdown-menu" aria-labelledby="navbarDropdown">
-              <li>
-                <Link className="dropdown-item" to="/profile">Meu Perfil</Link>
+        <div className="container-fluid">
+          <Link className="navbar-brand" to="/">
+            <img src="/fisiomais.png" alt="Logo" className="navbar-logo" />
+          </Link>
+          <button
+            className="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNav"
+            aria-controls="navbarNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span className="navbar-toggler-icon"></span>
+          </button>
+          <div className="collapse navbar-collapse" id="navbarNav">
+            <ul className="navbar-nav mx-auto">
+              <li className="nav-item">
+                <Link className="nav-link" to="/">Início</Link>
               </li>
-              <li>
-                <Link className="dropdown-item" to="/criaragendamento">Agendamento</Link>
+              <li className="nav-item">
+                <Link className="nav-link" to="/contato">Contato</Link>
               </li>
-              <li>
-                <Link className="dropdown-item" to="/addcolaborador">Adicionar Colaborador</Link>
-              </li>
-              <li>
-                <Link className="dropdown-item" to="/addcliente">Adicionar Cliente</Link>
-              </li>
-              <li>
-                <Link className="dropdown-item" to="/VisualizarDados">Visualizar Dados</Link>
-              </li>
-              <li>
-                <button
-                  className="dropdown-item"
-                  onClick={handleLogout}
-                  type="button"
-                >
-                  Sair
-                </button>
+              <li className="nav-item">
+                <Link className="nav-link" to="/sobrenos">Sobre Nós</Link>
               </li>
             </ul>
-          </li>
-        )}
-      </ul>
-    </div>
-  </div>
-</nav>
-
+            <ul className="navbar-nav ms-auto">
+              {!isLoggedIn ? (
+                <>
+                  <li className="nav-item">
+                    <button
+                      className="btn btn-login"
+                      data-bs-toggle="modal"
+                      data-bs-target="#loginModal"
+                    >
+                      Entrar
+                    </button>
+                  </li>
+                  <li className="nav-item">
+                    <Link to="/cadastro" className="btn btn-signup">
+                      Inscrever-se
+                    </Link>
+                  </li>
+                </>
+              ) : (
+                <li className="nav-item dropdown btn-user">
+                  <a
+                    className="nav-link dropdown-toggle btn-user"
+                    href="#"
+                    id="navbarDropdown"
+                    role="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                  >
+                    <i id="iconeuser" className="bi bi-person-circle"></i>
+                    <span>{userName}</span>
+                  </a>
+                  <ul className="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <li>
+                      <Link className="dropdown-item" to="/profile">Meu Perfil</Link>
+                    </li>
+                    <li>
+                      <Link className="dropdown-item" to="/criaragendamento">Agendar Sessão</Link>
+                    </li>
+                    {role === "admin" && (
+                      <>
+                        <li>
+                          <Link className="dropdown-item" to="/addcolaborador">Adicionar Colaborador</Link>
+                        </li>
+                        <li>
+                          <Link className="dropdown-item" to="/addcliente">Adicionar Cliente</Link>
+                        </li>
+                      </>
+                    )}
+                    <li>
+                      <Link className="dropdown-item" to="/VisualizarDados">Visualizar Agendamentos</Link>
+                    </li>
+                    <li>
+                      <button
+                        className="dropdown-item"
+                        onClick={handleLogout}
+                        type="button"
+                      >
+                        Sair
+                      </button>
+                    </li>
+                  </ul>
+                </li>
+              )}
+            </ul>
+          </div>
+        </div>
+      </nav>
 
       {/* Modal de Login */}
       <div
