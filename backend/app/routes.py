@@ -323,23 +323,37 @@ def deletar_agendamento(id):
 
 
 
-# Rota para agendamento
 @main.route('/api/agendamento', methods=['POST'])
 @jwt_required()
 def agendamento():
     data = request.get_json()
 
-    # Obter o ID do cliente logado, mas se for admin, utilizar o cliente_id da requisição
-    cliente_id = data.get('cliente_id') if 'cliente_id' in data else get_jwt_identity()
+    # Obter o email do usuário logado
+    usuario_email = get_jwt_identity()
+
+    # Consultar o cliente ou colaborador logado pelo email
+    cliente = Clientes.query.filter_by(email=usuario_email).first()
+    colaborador = Colaboradores.query.filter_by(email=usuario_email).first()
+
+    if not cliente and not colaborador:
+        return jsonify({'message': 'Usuário não encontrado'}), 404
+
+    if colaborador and 'cliente_id' in data and data['cliente_id']:
+        cliente = Clientes.query.get(data['cliente_id'])
+        if not cliente:
+            return jsonify({'message': 'Cliente não encontrado'}), 404
+    elif not colaborador:
+        cliente = Clientes.query.filter_by(email=usuario_email).first()
+        if not cliente:
+            return jsonify({'message': 'Cliente não encontrado'}), 404
 
     # Obter o colaborador selecionado
     colaborador = Colaboradores.query.get(data['colaborador_id'])
+    if not colaborador:
+        return jsonify({'message': 'Colaborador não encontrado'}), 404
 
     # Obter o serviço selecionado
     servico = Servicos.query.get(data['servico_id'])
-
-    if not colaborador:
-        return jsonify({'message': 'Colaborador não encontrado'}), 404
     if not servico:
         return jsonify({'message': 'Serviço não encontrado'}), 404
 
@@ -352,15 +366,15 @@ def agendamento():
         # Criar agendamento
         novo_agendamento = Agendamentos(
             data_e_hora=data_e_hora,
-            ID_Cliente=cliente_id,
+            ID_Cliente=cliente.ID_Cliente,
             ID_Colaborador=colaborador.ID_Colaborador,
-            ID_Servico=servico.ID_Servico  # Atribuindo o ID do serviço
+            ID_Servico=servico.ID_Servico
         )
 
         db.session.add(novo_agendamento)
         db.session.commit()
 
-        return jsonify({'message': 'Agendamento realizado com sucesso'}), 200
+        return jsonify({'message': 'Agendamento realizado com sucesso'}), 201
 
     except Exception as e:
         db.session.rollback()
@@ -371,8 +385,8 @@ def horario_disponivel(data_e_hora, colaborador_id):
         ID_Colaborador=colaborador_id,
         data_e_hora=data_e_hora
     ).first()
-    
     return agendamento_existente is None
+
 
 
 

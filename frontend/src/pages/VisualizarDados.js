@@ -80,7 +80,7 @@ const VisualizarDados = () => {
                 <td>{agendamento.valor_servico ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.valor_servico) : 'Valor não informado'}</td> {/* Valor do serviço */}
                 <td>
                   <button
-                    className="btn btn-info btn-sm"
+                    className="btn btn-outline-info btn-sm"
                     onClick={() => handleShowDetails(agendamento)}
                   >
                     Ver Detalhes
@@ -112,8 +112,8 @@ const VisualizarDados = () => {
           </Modal.Body>
 
           <Modal.Footer>
-            <Button variant="secondary" onClick={handleCloseModal}>Fechar</Button>
-            <Button variant="danger" onClick={() => handleDeleteAgendamento(selectedAgendamento.id)}>
+            <Button variant="btn btn-outline-secondary" onClick={handleCloseModal}>Fechar</Button>
+            <Button variant="btn btn-outline-danger" onClick={() => handleDeleteAgendamento(selectedAgendamento.id)}>
               Apagar Agendamento
             </Button>
           </Modal.Footer>

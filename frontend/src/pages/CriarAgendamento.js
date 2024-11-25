@@ -5,23 +5,23 @@ function Agendamento() {
   const [hora, setHora] = useState('');
   const [servico, setServico] = useState('');
   const [colaborador, setColaborador] = useState('');
-  const [cliente, setCliente] = useState('');  // ID do cliente
+  const [cliente, setCliente] = useState('');
   const [servicos, setServicos] = useState([]);
   const [colaboradores, setColaboradores] = useState([]);
   const [clientes, setClientes] = useState([]);
-  const [role, setRole] = useState('');  // Armazena o papel do usuário logado
+  const [role, setRole] = useState('');
 
   const horarios = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
 
   useEffect(() => {
     const savedRole = localStorage.getItem('role');
-    setRole(savedRole);  // Define o papel do usuário logado
+    setRole(savedRole);
 
     // Preenche automaticamente o cliente se for um cliente logado
     if (savedRole === 'cliente') {
       const userId = localStorage.getItem('userId');
-      setCliente(userId); // Define o cliente automaticamente se o usuário for um cliente
-      console.log('ID do cliente logado:', userId);  // Verifique se o ID está sendo obtido corretamente
+      setCliente(userId);
+      console.log('ID do cliente logado:', userId);
     }
 
     fetchServicos();
@@ -75,7 +75,7 @@ function Agendamento() {
       servico_id: servico,
       colaborador_id: colaborador,
       data: dataHora,
-      cliente_id: cliente,  // Certifique-se de que o ID do cliente está sendo enviado corretamente
+      cliente_id: cliente,
     };
 
     const token = localStorage.getItem('token');
@@ -159,7 +159,6 @@ function Agendamento() {
         </div>
 
         <div className="row mb-3 d-flex justify-content-center">
-          {/* Colaborador */}
           <div className="col-md-3">
             <label className="form-label">Colaborador:</label>
             <select
@@ -177,22 +176,17 @@ function Agendamento() {
             </select>
           </div>
 
-          {/* Cliente */}
           {role === 'cliente' ? (
-            // Se o usuário for um cliente, não mostra o select e preenche automaticamente com o cliente logado
             <div className="col-md-3">
               <label className="form-label">Cliente:</label>
               <input
                 type="text"
                 className="form-control"
-                value={localStorage.getItem('userName')}                 
-                         
+                value={localStorage.getItem('userName')}
                 readOnly
               />
-               
             </div>
           ) : (
-            // Se o usuário for colaborador, exibe todos os clientes
             <div className="col-md-3">
               <label className="form-label">Cliente:</label>
               <select
@@ -212,7 +206,6 @@ function Agendamento() {
           )}
         </div>
 
-        {/* Botão de envio */}
         <div className="col-12 text-center">
           <button type="submit" className="btn btn-outline-success w-auto mx-auto d-block">
             Agendar
