@@ -1,4 +1,3 @@
-
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
 from datetime import datetime
 from app.models import Agendamentos, Clientes, Colaboradores, Servicos, Pagamentos, BlacklistedToken, db
