@@ -15,8 +15,9 @@ import CriarAgendamento from "./pages/CriarAgendamento";
 import Contato from "./pages/Contato";
 import SobreNos from "./pages/SobreNos";
 import Cadastro from "./pages/Cadastro";
-import Profile from "./pages/Profile";
+import Perfil from "./pages/Perfil";
 import VisualizarDados from "./pages/VisualizarDados";
+import AddServico from "./pages/AddServico"; 
 
 
 
@@ -33,8 +34,9 @@ function App() {
           <Route path="/contato" element={<Contato />} />
           <Route path="/sobrenos" element={<SobreNos />} />
           <Route path="/cadastro" element={<Cadastro />} />
-          <Route path="/profile" element={<Profile />} />     
+          <Route path="/perfil" element={<Perfil />} />     
           <Route path="/VisualizarDados" element={<VisualizarDados />} />  
+          <Route path="/addservico" element={<AddServico />} /> 
           
         </Routes>
         <Footer />

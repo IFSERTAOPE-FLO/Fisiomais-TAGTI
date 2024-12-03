@@ -1,3 +1,7 @@
+#python -m venv venv
+#.\venv\Scripts\activate
+#pip install -r requirements.txt
+#admin@teste.com  12345
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS

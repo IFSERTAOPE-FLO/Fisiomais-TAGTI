@@ -185,21 +185,28 @@ function Navbar() {
                   </a>
                   <ul className="dropdown-menu" aria-labelledby="navbarDropdown">
                     <li>
-                      <Link className="dropdown-item" to="/profile">Meu Perfil</Link>
+                      <Link className="dropdown-item" to="/perfil">Meu Perfil</Link>
                     </li>
                     <li>
                       <Link className="dropdown-item" to="/criaragendamento">Agendar Sessão</Link>
                     </li>
-                    {role === "admin" && (
+                    {role === "admin" || role === "colaborador" ? (
                       <>
                         <li>
-                          <Link className="dropdown-item" to="/addcolaborador">Adicionar Colaborador</Link>
+                          <Link className="dropdown-item" to="/addservico">Adicionar Serviço</Link>
                         </li>
-                        <li>
-                          <Link className="dropdown-item" to="/addcliente">Adicionar Cliente</Link>
-                        </li>
+                        {role === "admin" && (
+                          <>
+                            <li>
+                              <Link className="dropdown-item" to="/addcolaborador">Adicionar Colaborador</Link>
+                            </li>
+                            <li>
+                              <Link className="dropdown-item" to="/addcliente">Adicionar Cliente</Link>
+                            </li>
+                          </>
+                        )}
                       </>
-                    )}
+                    ) : null}
                     <li>
                       <Link className="dropdown-item" to="/VisualizarDados">Visualizar Agendamentos</Link>
                     </li>

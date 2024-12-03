@@ -1,11 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.models import Agendamentos, Clientes, Colaboradores, Servicos,  BlacklistedToken, db
-from datetime import datetime
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 from flask_mail import Message
+from pytz import timezone
 import os
 
 
@@ -356,6 +356,69 @@ def deletar_agendamento(id):
 
 
 
+BRASILIA = timezone('America/Sao_Paulo')
+
+# Função de notificação agendada
+def notificar_atendimentos():
+    # Definir o dia de amanhã no fuso horário de Brasília
+    amanha = datetime.now(BRASILIA) + timedelta(days=1)
+    amanha_date = amanha.date()  # Só a data (sem a hora)
+
+    # Buscar os agendamentos para amanhã
+    agendamentos = Agendamentos.query.filter(cast(Agendamentos.data_e_hora, Date) == amanha_date).all()
+
+    if not agendamentos:
+        print("Nenhum atendimento agendado para amanhã.")
+        return
+
+    # Enviar email para cada cliente
+    for agendamento in agendamentos:
+        cliente = Clientes.query.filter_by(id=agendamento.ID_Cliente).first()
+
+        if cliente:
+            subject = "Lembrete: Seu atendimento está agendado para amanhã!"
+            body = f"Olá {cliente.nome},\n\nLembrete: Você tem um atendimento agendado para amanhã, {amanha_date}.\n\nAtenciosamente,\nEquipe FisioMais"
+
+            msg = Message(subject=subject, recipients=[cliente.email], body=body)
+
+            try:
+                mail.send(msg)
+                print(f"Notificação enviada para {cliente.email}")
+            except Exception as e:
+                print(f"Erro ao enviar email: {str(e)}")
+
+
+@main.route('/api/notificar_atendimentos', methods=['GET'])
+def notificar_atendimentos_route():
+    # Definir o dia de amanhã no fuso horário de Brasília
+    amanha = datetime.now(BRASILIA) + timedelta(days=1)
+    amanha_date = amanha.date()
+
+    # Buscar os agendamentos para amanhã
+    agendamentos = Agendamentos.query.filter(cast(Agendamentos.data_e_hora, Date) == amanha_date).all()
+
+    if not agendamentos:
+        return jsonify({"message": "Nenhum atendimento agendado para amanhã."}), 200
+
+    # Enviar email para cada cliente
+    for agendamento in agendamentos:
+        cliente = Clientes.query.filter_by(id=agendamento.ID_Cliente).first()
+
+        if cliente:
+            subject = "Lembrete: Seu atendimento está agendado para amanhã!"
+            body = f"Olá {cliente.nome},\n\nLembrete: Você tem um atendimento agendado para amanhã, {amanha_date}.\n\nAtenciosamente,\nEquipe FisioMais"
+
+            msg = Message(subject=subject, recipients=[cliente.email], body=body)
+
+            try:
+                mail.send(msg)
+            except Exception as e:
+                return jsonify({"message": f"Erro ao enviar email: {str(e)}"}), 500
+
+    return jsonify({"message": f"Notificações enviadas para {len(agendamentos)} clientes."}), 200
+
+
+
 @main.route('/api/agendamento', methods=['POST'])
 @jwt_required()
 def agendamento():
@@ -407,11 +470,11 @@ def agendamento():
         db.session.add(novo_agendamento)
         db.session.commit()
 
-         # Enviar notificação de e-mail
+        # Enviar notificação de e-mail
         subject = "Lembrete: Seu atendimento foi agendado!"
         body = f"Olá {cliente.nome},\n\nSeu atendimento foi agendado para {novo_agendamento.data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\nAtenciosamente,\nEquipe FisioMais"
         msg = Message(subject=subject, recipients=[cliente.email], body=body)
-        
+       
         try:
             mail.send(msg)
             print(f"Notificação enviada para {cliente.email}")
@@ -434,26 +497,30 @@ def horario_disponivel(data_e_hora, colaborador_id):
 
 
 
+
 # Rota para adicionar serviço
 @main.route('/add_servico', methods=['POST'])
 def add_servico():
-    nome_servico = request.form.get('nome_servico')
-    descricao = request.form.get('descricao')
-    valor = request.form.get('valor')
-    
+    data = request.get_json()  # Obter os dados como JSON
+    nome_servico = data.get('nome_servico')
+    descricao = data.get('descricao')
+    valor = data.get('valor')
+
+    if not nome_servico or not descricao or not valor:
+        return jsonify({"error": "Todos os campos são obrigatórios."}), 400
+
     # Criar um novo serviço
     novo_servico = Servicos(
         Nome_servico=nome_servico,
         Descricao=descricao,
         Valor=valor
     )
-    
+
     # Adicionar ao banco de dados
     db.session.add(novo_servico)
     db.session.commit()
-    
-    # Redirecionar após inserir
-    return redirect(url_for('main.form'))
+
+    return jsonify({"message": "Serviço adicionado com sucesso!"}), 200
 
 @main.route('/api/editar_usuario/<role>/<int:user_id>', methods=['PUT'])
 @jwt_required()
@@ -504,11 +571,9 @@ def deletar_usuario(tipo, id):
 
 
 
-
-
 @main.route('/api/perfil', methods=['GET'])
 @jwt_required()
-def get_profile():
+def get_perfil():
     email = get_jwt_identity()  # Recupera o email do usuário autenticado
     
     # Verifica se o usuário é um cliente ou colaborador
@@ -544,7 +609,38 @@ def get_profile():
 
     return jsonify({'message': 'Usuário não encontrado.'}), 404
 
-# A variável UPLOAD_FOLDER é acessada diretamente da configuração do app
+@main.route('/api/editar_usuario/<role>/<int:id>', methods=['PUT'])
+@jwt_required()
+def atualizar_usuario(role, id):
+    dados = request.get_json()
+    
+    if role == 'cliente':
+        usuario = Clientes.query.get(id)
+    elif role == 'colaborador':
+        usuario = Colaboradores.query.get(id)
+    else:
+        return jsonify({'message': 'Role não reconhecido.'}), 400
+
+    if not usuario:
+        return jsonify({'message': 'Usuário não encontrado.'}), 404
+    
+    # Atualiza os dados do usuário
+    usuario.nome = dados.get('nome', usuario.nome)
+    usuario.email = dados.get('email', usuario.email)
+    usuario.telefone = dados.get('telefone', usuario.telefone)
+    usuario.endereco = dados.get('endereco', usuario.endereco)
+    usuario.bairro = dados.get('bairro', usuario.bairro)
+    usuario.cidade = dados.get('cidade', usuario.cidade)
+    if role == 'colaborador':
+        usuario.cargo = dados.get('cargo', usuario.cargo)
+    
+    try:
+        db.session.commit()
+        return jsonify({'message': 'Dados atualizados com sucesso.'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'Erro ao atualizar dados: {str(e)}'}), 500
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
 
@@ -552,7 +648,7 @@ def allowed_file(filename):
 @jwt_required()
 def upload_photo():
     email = get_jwt_identity()
-    user = Clientes.query.filter_by(email=email).first() or Colaboradores.query.filter_by(email=email).first()
+    usuario = Clientes.query.filter_by(email=email).first() or Colaboradores.query.filter_by(email=email).first()
 
     if 'file' not in request.files:
         return jsonify({'message': 'Nenhum arquivo enviado.'}), 400
@@ -567,87 +663,11 @@ def upload_photo():
         file.save(filepath)
 
         # Atualiza o banco de dados com o caminho da foto
-        if user:
-            user.photo = filepath
+        if usuario:
+            usuario.photo = filepath
             db.session.commit()
             return jsonify({'message': 'Foto de perfil atualizada com sucesso.'}), 200
 
     return jsonify({'message': 'Tipo de arquivo não permitido.'}), 400
 
-# Função para enviar o e-mail de notificação
-def enviar_email(destinatario, agendamento):
-    msg = Message(
-        'Lembrete: Seu atendimento é amanhã!',
-        sender='seu_email@dominio.com',
-        recipients=[destinatario]
-    )
-    msg.body = f"""
-    Olá, {destinatario}!
 
-    Lembre-se que seu atendimento está agendado para amanhã, {agendamento.data_e_hora.strftime('%d/%m/%Y')} às {agendamento.data_e_hora.strftime('%H:%M')}.
-    Aguardamos você!
-
-    Atenciosamente,
-    Equipe Fisiomais
-    """
-    mail.send(msg)
-
-# Função de notificação agendada
-def notificar_atendimentos():
-    # Definir o dia de amanhã
-    amanha = datetime.today() + timedelta(days=1)
-    amanha_date = amanha.date()
-
-    # Buscar os agendamentos para amanhã
-    agendamentos = Agendamentos.query.filter(cast(Agendamentos.data_e_hora, Date) == amanha_date).all()
-
-    if not agendamentos:
-        print("Nenhum atendimento agendado para amanhã.")
-        return
-
-    # Enviar email para cada cliente
-    for agendamento in agendamentos:
-        cliente = Clientes.query.filter_by(id=agendamento.ID_Cliente).first()
-        
-        if cliente:
-            subject = "Lembrete: Seu atendimento está agendado para amanhã!"
-            body = f"Olá {cliente.nome},\n\nLembrete: Você tem um atendimento agendado para amanhã, {amanha_date}.\n\nAtenciosamente,\nEquipe FisioMais"
-
-            msg = Message(subject=subject, recipients=[cliente.email], body=body)
-            
-            try:
-                mail.send(msg)
-                print(f"Notificação enviada para {cliente.email}")
-            except Exception as e:
-                print(f"Erro ao enviar email: {str(e)}")
-
-
-
-@main.route('/api/notificar_atendimentos', methods=['GET'])
-def notificar_atendimentos_route():
-    # Definir o dia de amanhã
-    amanha = datetime.today() + timedelta(days=1)
-    amanha_date = amanha.date()
-
-    # Buscar os agendamentos para amanhã
-    agendamentos = Agendamentos.query.filter(cast(Agendamentos.data_e_hora, Date) == amanha_date).all()
-
-    if not agendamentos:
-        return jsonify({"message": "Nenhum atendimento agendado para amanhã."}), 200
-
-    # Enviar email para cada cliente
-    for agendamento in agendamentos:
-        cliente = Clientes.query.filter_by(id=agendamento.ID_Cliente).first()
-        
-        if cliente:
-            subject = "Lembrete: Seu atendimento está agendado para amanhã!"
-            body = f"Olá {cliente.nome},\n\nLembrete: Você tem um atendimento agendado para amanhã, {amanha_date}.\n\nAtenciosamente,\nEquipe FisioMais"
-
-            msg = Message(subject=subject, recipients=[cliente.email], body=body)
-            
-            try:
-                mail.send(msg)
-            except Exception as e:
-                return jsonify({"message": f"Erro ao enviar email: {str(e)}"}), 500
-
-    return jsonify({"message": f"Notificações enviadas para {len(agendamentos)} clientes."}), 200

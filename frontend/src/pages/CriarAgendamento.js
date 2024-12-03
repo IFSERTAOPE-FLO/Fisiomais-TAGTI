@@ -69,7 +69,14 @@ function Agendamento() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const dataHora = `${data} ${hora}:00`;
+    // Adicionar um dia à data fornecida pelo usuário
+    const dataEscolhida = new Date(data);
+    dataEscolhida.setDate(dataEscolhida.getDate() + 1);
+
+    // Formatando a data no formato adequado
+    const dataFormatada = dataEscolhida.toISOString().split('T')[0];
+
+    const dataHora = `${dataFormatada} ${hora}:00`;
 
     const agendamentoData = {
       servico_id: servico,
