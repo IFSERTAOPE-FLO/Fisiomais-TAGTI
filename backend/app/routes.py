@@ -1,10 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, jsonify
 from datetime import datetime
-from app.models import Agendamentos, Clientes, Colaboradores, Servicos, Pagamentos, BlacklistedToken, db
+from app.models import Agendamentos, Clientes, Colaboradores, Servicos,  BlacklistedToken, db
 from datetime import datetime
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
+from flask_mail import Message
 import os
 
 
@@ -69,16 +70,17 @@ def logout():
 
     return jsonify(message="Logout realizado com sucesso"), 200
 
-# Rota de Inscrição
+
+# Rota para registro do cliente
 @main.route('/register', methods=['POST'])
 def register():
-    data = request.get_json()
-
     # Capturar os dados do cliente
+    data = request.get_json()
     nome = data.get('nome')
     email = data.get('email')
+    cpf = data.get('cpf')
     senha = data.get('senha')
-    telefone = data.get('telefone')
+    telefone = data.get('telefone', '')
     referencias = data.get('referencias', '')
     endereco = data.get('endereco', '')
     rua = data.get('rua', '')
@@ -87,7 +89,11 @@ def register():
     bairro = data.get('bairro', '')
     dt_nasc_str = data.get('dt_nasc', None)
 
-    # Converter dt_nasc para um objeto date, se fornecido
+    # Validar CPF
+    if not is_cpf_valid(cpf):
+        return jsonify({"message": "CPF inválido."}), 400
+
+    # Validar data de nascimento
     dt_nasc = None
     if dt_nasc_str:
         try:
@@ -95,21 +101,18 @@ def register():
         except ValueError:
             return jsonify({"message": "Data de nascimento em formato inválido. Use AAAA-MM-DD."}), 400
 
-    # Verificar se o email já existe
-    if Clientes.query.filter_by(email=email).first():
-        return jsonify({"message": "Email já registrado."}), 400
+    # Verificar duplicidade de email e CPF
+    if Clientes.query.filter((Clientes.email == email) | (Clientes.cpf == cpf)).first():
+        return jsonify({"message": "Email ou CPF já cadastrado."}), 400
 
-    # Verificar se o telefone já existe
-    if Clientes.query.filter_by(telefone=telefone).first():
-        return jsonify({"message": "Telefone já registrado."}), 400
-
-    # Criptografar a senha
+    # Criptografar senha
     hashed_password = generate_password_hash(senha)
 
-    # Criar um novo cliente
+    # Criar novo cliente
     new_user = Clientes(
         nome=nome,
         email=email,
+        cpf=cpf,
         telefone=telefone,
         senha=hashed_password,
         referencias=referencias,
@@ -129,16 +132,31 @@ def register():
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Erro ao realizar a inscrição: {str(e)}"}), 500
-    
+
+# Função para validar CPF
+def is_cpf_valid(cpf):
+    cpf = cpf.replace('.', '').replace('-', '').strip()
+    if len(cpf) != 11 or not cpf.isdigit() or cpf == cpf[0] * len(cpf):
+        return False
+    for i in range(9, 11):
+        value = sum((int(cpf[num]) * ((i + 1) - num) for num in range(0, i)))
+        digit = ((value * 10) % 11) % 10
+        if digit != int(cpf[i]):
+            return False
+    return True
+
+# Rota de Inscrição
 @main.route('/register-colaborador', methods=['POST'])
 def register_colaborador():
     data = request.get_json()
+    print(data)  # Adiciona um log para verificar os dados recebidos
 
     # Capturar os dados do colaborador
     nome = data.get('nome')
     email = data.get('email')
     senha = data.get('senha')
     telefone = data.get('telefone')
+    cpf = data.get('cpf')  
     referencias = data.get('referencias', '')
     cargo = data.get('cargo', '')
     endereco = data.get('endereco', '')
@@ -148,9 +166,21 @@ def register_colaborador():
     bairro = data.get('bairro', '')
     is_admin = data.get('is_admin', False)  # Booleano para determinar se é admin
 
-    # Verificar se o email ou telefone já existe
-    if Colaboradores.query.filter((Colaboradores.email == email) | (Colaboradores.telefone == telefone)).first():
-        return jsonify({"message": "Email ou telefone já cadastrado."}), 400
+    # Validar campos obrigatórios
+    if not all([nome, email, senha, cpf]):
+        return jsonify({"message": "Os campos nome, email, senha e CPF são obrigatórios."}), 400
+
+    # Validar CPF
+    if not is_cpf_valid(cpf):
+        return jsonify({"message": "CPF inválido."}), 400
+
+    # Verificar se o email, telefone ou CPF já existe
+    if Colaboradores.query.filter(
+        (Colaboradores.email == email) | 
+        (Colaboradores.telefone == telefone) | 
+        (Colaboradores.cpf == cpf)
+    ).first():
+        return jsonify({"message": "Email, telefone ou CPF já cadastrado."}), 400
 
     # Criptografar a senha
     hashed_password = generate_password_hash(senha)
@@ -161,6 +191,7 @@ def register_colaborador():
         email=email,
         telefone=telefone,
         senha=hashed_password,
+        cpf=cpf,  
         referencias=referencias,
         cargo=cargo,
         endereco=endereco,
@@ -179,6 +210,9 @@ def register_colaborador():
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Erro ao registrar colaborador: {str(e)}"}), 500
+
+
+
 
     
 
@@ -373,7 +407,18 @@ def agendamento():
         db.session.add(novo_agendamento)
         db.session.commit()
 
-        return jsonify({'message': 'Agendamento realizado com sucesso'}), 201
+         # Enviar notificação de e-mail
+        subject = "Lembrete: Seu atendimento foi agendado!"
+        body = f"Olá {cliente.nome},\n\nSeu atendimento foi agendado para {novo_agendamento.data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\nAtenciosamente,\nEquipe FisioMais"
+        msg = Message(subject=subject, recipients=[cliente.email], body=body)
+        
+        try:
+            mail.send(msg)
+            print(f"Notificação enviada para {cliente.email}")
+        except Exception as e:
+            print(f"Erro ao enviar email: {str(e)}")
+
+        return jsonify({'message': 'Agendamento realizado com sucesso e notificação enviada'}), 201
 
     except Exception as e:
         db.session.rollback()
@@ -458,28 +503,7 @@ def deletar_usuario(tipo, id):
         return jsonify({"message": f"Erro ao deletar {tipo}: {str(e)}"}), 500
 
 
-# Rota para adicionar pagamento
-@main.route('/add_pagamento', methods=['POST'])
-def add_pagamento():
-    id_servico = request.form.get('id_servico')
-    id_cliente = request.form.get('id_cliente')
-    valor = request.form.get('valor')
-    data_pagamento = request.form.get('data_pagamento')
-    
-    # Criar um novo pagamento
-    novo_pagamento = Pagamentos(
-        ID_servico=id_servico,
-        ID_cliente=id_cliente,
-        valor=valor,
-        data_pagamento=data_pagamento
-    )
-    
-    # Adicionar ao banco de dados
-    db.session.add(novo_pagamento)
-    db.session.commit()
-    
-    # Redirecionar após inserir
-    return redirect(url_for('main.form'))
+
 
 
 @main.route('/api/perfil', methods=['GET'])
@@ -550,3 +574,80 @@ def upload_photo():
 
     return jsonify({'message': 'Tipo de arquivo não permitido.'}), 400
 
+# Função para enviar o e-mail de notificação
+def enviar_email(destinatario, agendamento):
+    msg = Message(
+        'Lembrete: Seu atendimento é amanhã!',
+        sender='seu_email@dominio.com',
+        recipients=[destinatario]
+    )
+    msg.body = f"""
+    Olá, {destinatario}!
+
+    Lembre-se que seu atendimento está agendado para amanhã, {agendamento.data_e_hora.strftime('%d/%m/%Y')} às {agendamento.data_e_hora.strftime('%H:%M')}.
+    Aguardamos você!
+
+    Atenciosamente,
+    Equipe Fisiomais
+    """
+    mail.send(msg)
+
+# Função de notificação agendada
+def notificar_atendimentos():
+    # Definir o dia de amanhã
+    amanha = datetime.today() + timedelta(days=1)
+    amanha_date = amanha.date()
+
+    # Buscar os agendamentos para amanhã
+    agendamentos = Agendamentos.query.filter(cast(Agendamentos.data_e_hora, Date) == amanha_date).all()
+
+    if not agendamentos:
+        print("Nenhum atendimento agendado para amanhã.")
+        return
+
+    # Enviar email para cada cliente
+    for agendamento in agendamentos:
+        cliente = Clientes.query.filter_by(id=agendamento.ID_Cliente).first()
+        
+        if cliente:
+            subject = "Lembrete: Seu atendimento está agendado para amanhã!"
+            body = f"Olá {cliente.nome},\n\nLembrete: Você tem um atendimento agendado para amanhã, {amanha_date}.\n\nAtenciosamente,\nEquipe FisioMais"
+
+            msg = Message(subject=subject, recipients=[cliente.email], body=body)
+            
+            try:
+                mail.send(msg)
+                print(f"Notificação enviada para {cliente.email}")
+            except Exception as e:
+                print(f"Erro ao enviar email: {str(e)}")
+
+
+
+@main.route('/api/notificar_atendimentos', methods=['GET'])
+def notificar_atendimentos_route():
+    # Definir o dia de amanhã
+    amanha = datetime.today() + timedelta(days=1)
+    amanha_date = amanha.date()
+
+    # Buscar os agendamentos para amanhã
+    agendamentos = Agendamentos.query.filter(cast(Agendamentos.data_e_hora, Date) == amanha_date).all()
+
+    if not agendamentos:
+        return jsonify({"message": "Nenhum atendimento agendado para amanhã."}), 200
+
+    # Enviar email para cada cliente
+    for agendamento in agendamentos:
+        cliente = Clientes.query.filter_by(id=agendamento.ID_Cliente).first()
+        
+        if cliente:
+            subject = "Lembrete: Seu atendimento está agendado para amanhã!"
+            body = f"Olá {cliente.nome},\n\nLembrete: Você tem um atendimento agendado para amanhã, {amanha_date}.\n\nAtenciosamente,\nEquipe FisioMais"
+
+            msg = Message(subject=subject, recipients=[cliente.email], body=body)
+            
+            try:
+                mail.send(msg)
+            except Exception as e:
+                return jsonify({"message": f"Erro ao enviar email: {str(e)}"}), 500
+
+    return jsonify({"message": f"Notificações enviadas para {len(agendamentos)} clientes."}), 200

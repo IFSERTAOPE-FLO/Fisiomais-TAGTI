@@ -10,6 +10,7 @@ function AddCliente() {
   const [confirmarEmail, setConfirmarEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
+  const [cpf, setCpf] = useState('');
   const [telefone, setTelefone] = useState('');
   const [referencias, setReferencias] = useState('');
   const [endereco, setEndereco] = useState('');
@@ -22,26 +23,29 @@ function AddCliente() {
   const [errorMessage, setErrorMessage] = useState('');
 
   const handleRegister = async () => {
-    if (!nome || !email || !senha) {
+    if (!nome || !email || !senha || !cpf) {
       alert('Por favor, preencha os campos obrigatórios.');
       return;
     }
+  
     if (email !== confirmarEmail) {
       alert('Os emails não correspondem.');
       return;
     }
+  
     if (senha !== confirmarSenha) {
       alert('As senhas não correspondem.');
       return;
     }
-
+  
     setLoading(true);
     setErrorMessage('');
-
+  
     try {
       const response = await axios.post("http://localhost:5000/register", {
         nome,
         email,
+        cpf, // CPF sendo enviado aqui
         senha,
         telefone,
         referencias,
@@ -52,12 +56,14 @@ function AddCliente() {
         bairro,
         dt_nasc: dtNasc,
       });
-
+  
       if (response.status === 201) {
         alert("Inscrição realizada com sucesso!");
+        // Resetar os campos
         setNome('');
         setEmail('');
         setConfirmarEmail('');
+        setCpf(''); // Resetar o CPF
         setSenha('');
         setConfirmarSenha('');
         setTelefone('');
@@ -80,7 +86,7 @@ function AddCliente() {
 
   return (
     <div className="container">
-      <h2 className="text-center mb-4">Inscreva-se</h2>
+      <h2 className="text-center mb-4">Adicionar cliente</h2>
       {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
       <form onSubmit={(e) => { e.preventDefault(); handleRegister(); }}>
         {/* Nome e Email */}
@@ -96,7 +102,19 @@ function AddCliente() {
               required
             />
           </div>
-          <div className="col-12 col-md-4">
+          <div className="col-12 col-md-2">
+            <label htmlFor="cpf" className="form-label">CPF*</label>
+            <input
+                type="text"
+                className="form-control"
+                id="cpf"
+                value={cpf}
+                onChange={(e) => setCpf(e.target.value)}
+                placeholder="123.456.789-00"
+                required
+            />
+        </div>
+          <div className="col-12 col-md-3">
             <label htmlFor="email" className="form-label">Email*</label>
             <input
               type="email"
@@ -107,7 +125,7 @@ function AddCliente() {
               required
             />
           </div>
-          <div className="col-12 col-md-4">
+          <div className="col-12 col-md-3">
             <label htmlFor="confirmarEmail" className="form-label">Confirme seu Email*</label>
             <input
               type="email"
@@ -157,6 +175,7 @@ function AddCliente() {
               onChange={(e) => setDtNasc(e.target.value)}
             />
           </div>
+          
           <div className="col-12 col-md-2">
             <label htmlFor="telefone" className="form-label">Telefone</label>
             <input

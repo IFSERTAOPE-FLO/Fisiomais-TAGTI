@@ -5,8 +5,8 @@
 }
 
 .navbar-brand img {
-  height: 72px; /* Tamanho maior da imagem */
-  width: 142px;
+  height: 90px; /* Tamanho maior da imagem */
+  width: 240px;
   margin-top: 0; /* Remove a margem superior */
   margin-left: 90px; /* Remove a margem inferior */
   display: block; /* Garante que a imagem se comporte como bloco */

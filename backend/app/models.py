@@ -15,6 +15,7 @@ class Colaboradores(db.Model):
     cargo = db.Column(db.String(100))
     endereco = db.Column(db.String(255))
     rua = db.Column(db.String(255))
+    cpf = db.Column(db.String(11), unique=True, nullable=False)
     estado = db.Column(db.String(50))
     cidade = db.Column(db.String(100))
     bairro = db.Column(db.String(100))
@@ -44,6 +45,7 @@ class Clientes(db.Model):
     estado = db.Column(db.String(50))
     cidade = db.Column(db.String(100))
     bairro = db.Column(db.String(100))
+    cpf = db.Column(db.String(11), unique=True, nullable=False)
     photo = db.Column(db.String(255), nullable=True)
 
     # Métodos para criptografar e verificar a senha
@@ -79,14 +81,6 @@ class Servicos(db.Model):
     Descricao = db.Column(db.Text)
     Valor = db.Column(db.Numeric(10, 2))
 
-# Modelo: Pagamentos
-class Pagamentos(db.Model):
-    ID_Pagamento = db.Column(db.Integer, primary_key=True)
-    valor = db.Column(db.Numeric(10, 2))
-    data_pagamento = db.Column(db.Date)
-    ID_servico = db.Column(db.Integer, db.ForeignKey('servicos.ID_Servico'), nullable=False)
-    ID_cliente = db.Column(db.Integer, db.ForeignKey('clientes.ID_Cliente'), nullable=False)
-
 class BlacklistedToken(db.Model):
     __tablename__ = 'blacklisted_tokens'
 
@@ -105,101 +99,80 @@ def populate_database():
             email='admin@teste.com',
             telefone='999999999',
             cargo='Administrador',
+            cpf='000.000.000-00',  # Adicionar CPF faltando
             is_admin=True
         )
-        admin.set_password('12345')
+        admin.set_password('12345')  # Certifique-se de que o método de criptografia funciona corretamente
         db.session.add(admin)
 
     # Verificar se os serviços de fisioterapia já existem
-    servico_fisioterapia_cla = Servicos.query.filter_by(Nome_servico='Fisioterapia Clássica').first()
-    if not servico_fisioterapia_cla:
-        servico_fisioterapia_cla = Servicos(
-            Nome_servico='Fisioterapia Clássica',
-            Descricao='Tratamento de lesões e dores musculares e articulares usando técnicas como termoterapia, eletroterapia, laser e crioterapia.',
-            Valor=120.00
-        )
-        db.session.add(servico_fisioterapia_cla)
+    servicos = [
+        {
+            "Nome_servico": "Fisioterapia Clássica",
+            "Descricao": "Tratamento de lesões e dores musculares e articulares usando técnicas como termoterapia, eletroterapia, laser e crioterapia.",
+            "Valor": 120.00,
+        },
+        {
+            "Nome_servico": "Reabilitação Pós-Cirúrgica",
+            "Descricao": "Tratamentos específicos para ajudar na recuperação após cirurgias, focando na restauração da função e força muscular.",
+            "Valor": 130.00,
+        },
+        {
+            "Nome_servico": "Neurológica para Adultos",
+            "Descricao": "Exercícios para melhorar funções motoras em pacientes com doenças neurodegenerativas.",
+            "Valor": 150.00,
+        },
+        {
+            "Nome_servico": "Ortopédica",
+            "Descricao": "Prevenção e tratamento de disfunções musculoesqueléticas, incluindo lesões por esforço repetitivo.",
+            "Valor": 110.00,
+        },
+        {
+            "Nome_servico": "Reeducação Postural Global (RPG)",
+            "Descricao": "Técnicas para melhorar a postura e alinhar corretamente as articulações.",
+            "Valor": 140.00,
+        },
+        {
+            "Nome_servico": "Pilates Clínico",
+            "Descricao": "Focado no controle da respiração, fortalecimento do core e melhoria da postura.",
+            "Valor": 160.00,
+        },
+        {
+            "Nome_servico": "Pilates para Flexibilidade",
+            "Descricao": "Exercícios para aumentar a flexibilidade dos músculos e articulações.",
+            "Valor": 150.00,
+        },
+        {
+            "Nome_servico": "Pilates para Recuperação",
+            "Descricao": "Programas personalizados para ajudar na recuperação de lesões e melhorar a mobilidade.",
+            "Valor": 170.00,
+        },
+        {
+            "Nome_servico": "Pilates para Bem-Estar Geral",
+            "Descricao": "Sessões para melhorar a concentração, coordenação motora e qualidade do sono.",
+            "Valor": 140.00,
+        },
+    ]
 
-    servico_reabilitacao = Servicos.query.filter_by(Nome_servico='Reabilitação Pós-Cirúrgica').first()
-    if not servico_reabilitacao:
-        servico_reabilitacao = Servicos(
-            Nome_servico='Reabilitação Pós-Cirúrgica',
-            Descricao='Tratamentos específicos para ajudar na recuperação após cirurgias, focando na restauração da função e força muscular.',
-            Valor=130.00
-        )
-        db.session.add(servico_reabilitacao)
-
-    servico_neurologica = Servicos.query.filter_by(Nome_servico='Neurológica para Adultos').first()
-    if not servico_neurologica:
-        servico_neurologica = Servicos(
-            Nome_servico='Neurológica para Adultos',
-            Descricao='Exercícios para melhorar funções motoras em pacientes com doenças neurodegenerativas.',
-            Valor=150.00
-        )
-        db.session.add(servico_neurologica)
-
-    servico_ortopedica = Servicos.query.filter_by(Nome_servico='Ortopédica').first()
-    if not servico_ortopedica:
-        servico_ortopedica = Servicos(
-            Nome_servico='Ortopédica',
-            Descricao='Prevenção e tratamento de disfunções musculoesqueléticas, incluindo lesões por esforço repetitivo.',
-            Valor=110.00
-        )
-        db.session.add(servico_ortopedica)
-
-    servico_rpg = Servicos.query.filter_by(Nome_servico='Reeducação Postural Global (RPG)').first()
-    if not servico_rpg:
-        servico_rpg = Servicos(
-            Nome_servico='Reeducação Postural Global (RPG)',
-            Descricao='Técnicas para melhorar a postura e alinhar corretamente as articulações.',
-            Valor=140.00
-        )
-        db.session.add(servico_rpg)
-
-    servico_pilates_clinico = Servicos.query.filter_by(Nome_servico='Pilates Clínico').first()
-    if not servico_pilates_clinico:
-        servico_pilates_clinico = Servicos(
-            Nome_servico='Pilates Clínico',
-            Descricao='Focado no controle da respiração, fortalecimento do core e melhoria da postura.',
-            Valor=160.00
-        )
-        db.session.add(servico_pilates_clinico)
-
-    servico_pilates_flexibilidade = Servicos.query.filter_by(Nome_servico='Pilates para Flexibilidade').first()
-    if not servico_pilates_flexibilidade:
-        servico_pilates_flexibilidade = Servicos(
-            Nome_servico='Pilates para Flexibilidade',
-            Descricao='Exercícios para aumentar a flexibilidade dos músculos e articulações.',
-            Valor=150.00
-        )
-        db.session.add(servico_pilates_flexibilidade)
-
-    servico_pilates_recuperacao = Servicos.query.filter_by(Nome_servico='Pilates para Recuperação').first()
-    if not servico_pilates_recuperacao:
-        servico_pilates_recuperacao = Servicos(
-            Nome_servico='Pilates para Recuperação',
-            Descricao='Programas personalizados para ajudar na recuperação de lesões e melhorar a mobilidade.',
-            Valor=170.00
-        )
-        db.session.add(servico_pilates_recuperacao)
-
-    servico_pilates_bemestar = Servicos.query.filter_by(Nome_servico='Pilates para Bem-Estar Geral').first()
-    if not servico_pilates_bemestar:
-        servico_pilates_bemestar = Servicos(
-            Nome_servico='Pilates para Bem-Estar Geral',
-            Descricao='Sessões para melhorar a concentração, coordenação motora e qualidade do sono.',
-            Valor=140.00
-        )
-        db.session.add(servico_pilates_bemestar)
+    for servico in servicos:
+        exists = Servicos.query.filter_by(Nome_servico=servico["Nome_servico"]).first()
+        if not exists:
+            new_servico = Servicos(
+                Nome_servico=servico["Nome_servico"],
+                Descricao=servico["Descricao"],
+                Valor=servico["Valor"],
+            )
+            db.session.add(new_servico)
 
     # Criar colaboradores
     colaboradores = [
-        {"nome": "João Victor Ramos de Souza", "email": "joao@teste.com", "telefone": "999988888", "cargo": "Fisioterapeuta"},
-        {"nome": "Lucas Alves", "email": "lucas@teste.com", "telefone": "999977777", "cargo": "Fisioterapeuta"},
-        {"nome": "Manases", "email": "manases@teste.com", "telefone": "999966666", "cargo": "Fisioterapeuta"},
-        {"nome": "Aline Rayane", "email": "aline@teste.com", "telefone": "999955555", "cargo": "Fisioterapeuta"},
-        {"nome": "Eveline Santos", "email": "eveline@teste.com", "telefone": "999944444", "cargo": "Fisioterapeuta"},
-    ]
+        {"nome": "João Victor Ramos de Souza", "email": "joao@teste.com", "telefone": "999988888", "cargo": "Fisioterapeuta", "cpf": "11111111111"},
+        {"nome": "Lucas Alves", "email": "lucas@teste.com", "telefone": "999977777", "cargo": "Fisioterapeuta", "cpf": "22222222222"},
+        {"nome": "Manases", "email": "manases@teste.com", "telefone": "999966666", "cargo": "Fisioterapeuta", "cpf": "33333333333"},
+        {"nome": "Aline Rayane", "email": "aline@teste.com", "telefone": "999955555", "cargo": "Fisioterapeuta", "cpf": "44444444444"},
+        {"nome": "Eveline Santos", "email": "eveline@teste.com", "telefone": "999944444", "cargo": "Fisioterapeuta", "cpf": "55555555555"},
+]
+
 
     for colaborador in colaboradores:
         exists = Colaboradores.query.filter_by(email=colaborador["email"]).first()
@@ -208,18 +181,19 @@ def populate_database():
                 nome=colaborador["nome"],
                 email=colaborador["email"],
                 telefone=colaborador["telefone"],
-                cargo=colaborador["cargo"]
+                cargo=colaborador["cargo"],
+                cpf=colaborador["cpf"]
             )
             new_colaborador.set_password("123")  # Criptografando a senha
             db.session.add(new_colaborador)
 
     # Criar clientes
     clientes = [
-        {"nome": "Cliente 1", "email": "cliente1@teste.com", "telefone": "888877777"},
-        {"nome": "Cliente 2", "email": "cliente2@teste.com", "telefone": "888866666"},
-        {"nome": "Cliente 3", "email": "cliente3@teste.com", "telefone": "888855555"},
-        {"nome": "Cliente 4", "email": "cliente4@teste.com", "telefone": "888844444"},
-        {"nome": "Cliente 5", "email": "cliente5@teste.com", "telefone": "888833333"},
+        {"nome": "Cliente 1", "email": "cliente1@teste.com", "telefone": "888877777", "cpf": "66666666666"},
+        {"nome": "Cliente 2", "email": "cliente2@teste.com", "telefone": "888866666", "cpf": "77777777777"},
+        {"nome": "Cliente 3", "email": "cliente3@teste.com", "telefone": "888855555", "cpf": "88888888888"},
+        {"nome": "Cliente 4", "email": "cliente4@teste.com", "telefone": "888844444", "cpf": "99999999999"},
+        {"nome": "Cliente 5", "email": "cliente5@teste.com", "telefone": "888833333", "cpf": "11111111112"},
     ]
 
     for cliente in clientes:
@@ -228,11 +202,12 @@ def populate_database():
             new_cliente = Clientes(
                 nome=cliente["nome"],
                 email=cliente["email"],
-                telefone=cliente["telefone"]
+                telefone=cliente["telefone"],
+                cpf=cliente["cpf"]
             )
             new_cliente.set_password("123")  # Criptografando a senha
             db.session.add(new_cliente)
 
+    # Salvar todas as alterações no banco de dados
     db.session.commit()
     print("Banco de dados populado com sucesso!")
-    
