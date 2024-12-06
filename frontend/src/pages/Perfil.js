@@ -9,6 +9,7 @@ const Perfil = () => {
   const [dadosEdicao, setDadosEdicao] = useState({});
   const [arquivoSelecionado, setArquivoSelecionado] = useState(null);
   const [papelUsuario, setPapelUsuario] = useState("");
+  
 
   const token = localStorage.getItem("token");
   const apiBaseUrl = "http://localhost:5000/api";

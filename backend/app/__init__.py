@@ -3,6 +3,7 @@
 #pip install -r requirements.txt
 #admin@teste.com  12345
 from flask import Flask
+
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
@@ -23,6 +24,11 @@ def create_app():
     mail.init_app(app)
     jwt = JWTManager(app)
 
+    # Criar e iniciar o agendador
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(func=agendar_notificacao, trigger='interval', hours=24, args=[app])  # Passa app como argumento para a função
+    scheduler.start()
+
     # Garantir que a pasta de uploads exista
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
@@ -37,20 +43,17 @@ def create_app():
     # Registrar os modelos e criar tabelas
     with app.app_context():
         from app.models import Colaboradores, Clientes, Agendamentos, Servicos, populate_database
-        
         db.create_all()  # Cria as tabelas no banco de dados
         populate_database()  # Popular o banco com dados iniciais, se necessário
 
-    # Configuração do agendador para notificações
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(func=agendar_notificacao, trigger='interval', hours=24)  # Executar a cada 24 horas
-    scheduler.start()
-
     return app
 
-# Função de notificação agendada
-def agendar_notificacao():
+# Função para agendar a notificação
+def agendar_notificacao(app):  # Agora recebe o app como argumento
+    from app.routes import notificar_atendimentos  # Importar a função diretamente aqui
+
+    # Usando o contexto da aplicação para garantir que o acesso ao banco de dados seja feito corretamente
     with app.app_context():
-        from app.routes import main
-        # Aqui você chama o método que vai enviar as notificações
-        main.notificar_atendimentos()
+        notificar_atendimentos()  # Chama a função que envia notificações
+
+

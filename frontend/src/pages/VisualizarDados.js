@@ -68,13 +68,14 @@ const VisualizarDados = () => {
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
-      alert('Admin notificado com sucesso!');
+      alert('Administrador notificado com sucesso!');
       handleCloseModal();
     } catch (error) {
       console.error('Erro ao notificar admin:', error);
       alert('Erro ao notificar admin.');
     }
   };
+  
 
   return (
     <div className="container mt-5">

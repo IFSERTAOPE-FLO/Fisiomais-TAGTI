@@ -12,6 +12,7 @@ function Navbar() {
   const [email, setEmail] = useState("");
   const [senha, setPassword] = useState("");
   const [userId, setUserId] = useState(null);
+  const [userPhoto, setUserPhoto] = useState(""); // Estado para armazenar a foto do usuário
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -21,16 +22,18 @@ function Navbar() {
         senha,
       });
 
-      const { access_token, name, role, userId } = response.data;
+      const { access_token, name, role, userId, photo } = response.data;
 
       setIsLoggedIn(true);
       setUserName(name);
       setRole(role);
       setUserId(userId); // Atualiza o ID do usuário no estado
+      setUserPhoto(photo); // Atualiza o estado da foto do usuário
       localStorage.setItem("token", access_token);
       localStorage.setItem("userName", name);
       localStorage.setItem("role", role);
       localStorage.setItem("userId", userId);
+      localStorage.setItem("userPhoto", photo); // Salva a foto no localStorage
 
       // Fechar o modal
       const modalElement = document.getElementById("loginModal");
@@ -75,10 +78,12 @@ function Navbar() {
         setUserName("Usuário");
         setRole("");
         setUserId(null);
+        setUserPhoto(""); // Limpa a foto do usuário
         localStorage.removeItem("token");
         localStorage.removeItem("userName");
         localStorage.removeItem("role");
         localStorage.removeItem("userId");
+        localStorage.removeItem("userPhoto"); // Limpa a foto do localStorage
 
         navigate("/");
       } else {
@@ -95,6 +100,7 @@ function Navbar() {
     const savedUserName = localStorage.getItem("userName");
     const savedRole = localStorage.getItem("role");
     const savedUserId = localStorage.getItem("userId");
+    const savedUserPhoto = localStorage.getItem("userPhoto"); // Recupera a foto salva no localStorage
 
     if (savedToken && savedUserName && savedRole) {
       try {
@@ -109,11 +115,13 @@ function Navbar() {
         setUserName(savedUserName);
         setRole(savedRole);
         setUserId(savedUserId); // Usa o setUserId correto
+        setUserPhoto(savedUserPhoto); // Usa a foto salva no localStorage
       } catch (error) {
         localStorage.removeItem("token");
         localStorage.removeItem("userName");
         localStorage.removeItem("role");
         localStorage.removeItem("userId");
+        localStorage.removeItem("userPhoto"); // Limpa a foto do localStorage
         setIsLoggedIn(false);
         setUserName("Usuário");
         setRole("");
@@ -180,7 +188,16 @@ function Navbar() {
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
                   >
-                    <i id="iconeuser" className="bi bi-person-circle"></i>
+                    {userPhoto ? (
+                      <img
+                        src={`http://localhost:5000/${userPhoto}`} // Altere conforme o caminho correto da imagem
+                        alt="Foto de perfil"
+                        className="user-photo"
+                        style={{ width: "30px", height: "30px", borderRadius: "50%" }}
+                      />
+                    ) : (
+                      <i id="iconeuser" className="bi bi-person-circle"></i>
+                    )}
                     <span>{userName}</span>
                   </a>
                   <ul className="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -247,42 +264,37 @@ function Navbar() {
               ></button>
             </div>
             <div className="modal-body">
-              <form>
+              <form onSubmit={(e) => e.preventDefault()}>
                 <div className="mb-3">
-                  <label htmlFor="emailInput" className="form-label">Email</label>
+                  <label htmlFor="email" className="form-label">Email</label>
                   <input
                     type="email"
                     className="form-control"
-                    id="emailInput"
+                    id="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
                 <div className="mb-3">
-                  <label htmlFor="passwordInput" className="form-label">Senha</label>
+                  <label htmlFor="senha" className="form-label">Senha</label>
                   <input
                     type="password"
                     className="form-control"
-                    id="passwordInput"
+                    id="senha"
                     value={senha}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                 </div>
+                <button
+                  type="submit"
+                  className="btn btn-primary w-100"
+                  onClick={handleLogin}
+                >
+                  Entrar
+                </button>
               </form>
-            </div>
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn-signup"
-                data-bs-dismiss="modal"
-              >
-                Fechar
-              </button>
-              <button type="button" className="btn btn-login" onClick={handleLogin}>
-                Entrar
-              </button>
             </div>
           </div>
         </div>
