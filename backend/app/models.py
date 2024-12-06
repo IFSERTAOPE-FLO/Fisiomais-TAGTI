@@ -92,11 +92,11 @@ class BlacklistedToken(db.Model):
 
 def populate_database():
     # Criar o administrador se não existir
-    admin_exists = Colaboradores.query.filter_by(email='admin@teste.com').first()
+    admin_exists = Colaboradores.query.filter_by(email='fisiomaispilatesefisioterapia@gmail.com').first()
     if not admin_exists:
         admin = Colaboradores(
             nome='Administrador',
-            email='admin@teste.com',
+            email='fisiomaispilatesefisioterapia@gmail.com',
             telefone='999999999',
             cargo='Administrador',
             cpf='000.000.000-00',  # Adicionar CPF faltando
@@ -166,7 +166,7 @@ def populate_database():
 
     # Criar colaboradores
     colaboradores = [
-        {"nome": "João Victor Ramos de Souza", "email": "joao@teste.com", "telefone": "999988888", "cargo": "Fisioterapeuta", "cpf": "11111111111"},
+        {"nome": "João Victor Ramos de Souza", "email": "joao.ramos.souza@gmail.com", "telefone": "999988888", "cargo": "Fisioterapeuta", "cpf": "11111111111"},
         {"nome": "Lucas Alves", "email": "lucas@teste.com", "telefone": "999977777", "cargo": "Fisioterapeuta", "cpf": "22222222222"},
         {"nome": "Manases", "email": "manases@teste.com", "telefone": "999966666", "cargo": "Fisioterapeuta", "cpf": "33333333333"},
         {"nome": "Aline Rayane", "email": "aline@teste.com", "telefone": "999955555", "cargo": "Fisioterapeuta", "cpf": "44444444444"},
@@ -193,7 +193,7 @@ def populate_database():
         {"nome": "Cliente 2", "email": "cliente2@teste.com", "telefone": "888866666", "cpf": "77777777777"},
         {"nome": "Cliente 3", "email": "cliente3@teste.com", "telefone": "888855555", "cpf": "88888888888"},
         {"nome": "Cliente 4", "email": "cliente4@teste.com", "telefone": "888844444", "cpf": "99999999999"},
-        {"nome": "Cliente 5", "email": "cliente5@teste.com", "telefone": "888833333", "cpf": "11111111112"},
+        {"nome": "João Victor Ramos de Souza", "email": "jvrs2009@gmail.com", "telefone": "888833333", "cpf": "11111111112"},
     ]
 
     for cliente in clientes:
