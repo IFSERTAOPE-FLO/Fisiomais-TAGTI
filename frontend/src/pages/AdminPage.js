@@ -42,6 +42,7 @@ const GerenciarUsuarios = () => {
     const [usuarios, setUsuarios] = useState([]);
     const [erro, setErro] = useState("");
     const [usuarioEditando, setUsuarioEditando] = useState(null);
+    const [atualizarLista, setAtualizarLista] = useState(false);
   
     // Função para buscar usuários
     const buscarUsuarios = async () => {
@@ -64,6 +65,7 @@ const GerenciarUsuarios = () => {
   
         if (Array.isArray(data)) {
           setUsuarios(data);
+          setAtualizarLista(prevState => !prevState);
         } else {
           setErro("A resposta da API não é um array.");
         }
@@ -99,7 +101,7 @@ const GerenciarUsuarios = () => {
     };
   
     const handleEditarUsuario = (usuario) => {
-  console.log("Editando usuário:", usuario);  // Verifique se o ID é válido
+  console.log("Editando usuário:", usuario); 
   setUsuarioEditando(usuario);
 };
 
@@ -112,8 +114,11 @@ const GerenciarUsuarios = () => {
       buscarUsuarios(); // Atualizar a lista de usuários
       setUsuarioEditando(null); // Fechar o modal
     };
-    useEffect(() => { buscarUsuarios(); 
-        }, []);
+    useEffect(() => {
+      if (usuarios.length > 0) {
+        document.documentElement.style.height = 'auto'; // Ajusta o layout para ativar rolagem
+      }
+    }, [atualizarLista, usuarios]); // O efeito depende do estado de atualizarLista e usuarios
     return (
       <div>
         <h2 className="mb-3">Gerenciar Usuários</h2>

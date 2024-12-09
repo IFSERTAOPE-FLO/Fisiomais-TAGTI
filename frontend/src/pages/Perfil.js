@@ -150,216 +150,217 @@ const Perfil = () => {
   };
 
   return (
-    <div className="container mt-5">
-  <h1 className="mb-4 text-center">Perfil do Usuário</h1>
-
-  {erro && <p className="alert alert-danger">{erro}</p>}
-  {sucesso && <p className="alert alert-success">{sucesso}</p>}
-
-  <div className="row justify-content-center">
-    <div className="col-md-8">
-      <div className="card shadow">
-        <div className="card-body">
-          <div className="row">
-            <div className="col-12 col-md-4 text-center">
-              {arquivoSelecionado ? (
-                <img
-                  src={URL.createObjectURL(arquivoSelecionado)} // Exibe a imagem selecionada localmente
-                  alt="Foto Selecionada"
-                  className="img-fluid rounded-circle mb-3"
-                  style={{ width: "150px", height: "150px" }}
-                />
-              ) : dadosUsuario.photo ? (
-                <img
-                  src={`http://localhost:5000/uploads/${dadosUsuario.photo}?t=${new Date().getTime()}`}
-                  alt="Foto do Usuário"
-                  className="img-fluid rounded-circle mb-3"
-                  style={{ width: "200px", height: "160px" }}
-                />
-              ) : (
-                <i className="bi bi-person-circle" style={{ fontSize: "150px" }}></i>
-              )}
-
-              <input
-                type="file"
-                onChange={(e) => setArquivoSelecionado(e.target.files[0])}
-                className="form-control mb-2"
-              />
-              <button className="btn btn-outline-primary" onClick={fazerUploadFoto}>
-                Alterar Foto
-              </button>
-            </div>
-            <div className="col-12 col-md-8">
-              <form>
-                <div className="row mb-3">
-                  <div className="col-12 col-md-6">
-                    <label htmlFor="nome" className="form-label">Nome</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="nome"
-                      name="nome"
-                      value={dadosEdicao.nome || ''}
-                      onChange={handleChange}
-                      required
+    <div className="container col-md-8 my-5">
+      <div className="card shadow agendamento">
+        <div className="card-header agendamento-header">
+          <h1 className="text-center agendamento-titulo">Perfil do Usuário</h1>
+        </div>
+  
+        <div className="card-body agendamento">
+          {erro && <p className="alert alert-danger">{erro}</p>}
+          {sucesso && <p className="alert alert-success">{sucesso}</p>}
+  
+          <div className="row justify-content-center">
+            <div className="col-md-12">
+              <div className="row">
+                <div className="col-12 col-md-4 text-center">
+                  {arquivoSelecionado ? (
+                    <img
+                      src={URL.createObjectURL(arquivoSelecionado)} // Exibe a imagem selecionada localmente
+                      alt="Foto Selecionada"
+                      className="img-fluid rounded-circle mb-3"
+                      style={{ width: "150px", height: "150px" }}
                     />
-                  </div>
-                  <div className="col-12 col-md-6">
-                    <label htmlFor="email" className="form-label">Email</label>
-                    <input
-                      type="email"
-                      className="form-control"
-                      id="email"
-                      name="email"
-                      value={dadosEdicao.email || ''}
-                      onChange={handleChange}
-                      required
+                  ) : dadosUsuario.photo ? (
+                    <img
+                      src={`http://localhost:5000/uploads/${dadosUsuario.photo}?t=${new Date().getTime()}`}
+                      alt="Foto do Usuário"
+                      className="img-fluid rounded-circle mb-3"
+                      style={{ width: "200px", height: "160px" }}
                     />
-                  </div>
+                  ) : (
+                    <i className="bi bi-person-circle" style={{ fontSize: "150px" }}></i>
+                  )}
+  
+                  <input
+                    type="file"
+                    onChange={(e) => setArquivoSelecionado(e.target.files[0])}
+                    className="form-control mb-2"
+                  />
+                  <button className="btn btn-outline-primary" onClick={fazerUploadFoto}>
+                    Alterar Foto
+                  </button>
                 </div>
-
-                <div className="row mb-3">
-                  <div className="col-12 col-md-6">
-                    <label htmlFor="cpf" className="form-label">CPF</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="cpf"
-                      name="cpf"
-                      value={dadosEdicao.cpf || ''}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="col-12 col-md-6">
-                    <label htmlFor="telefone" className="form-label">Telefone</label>
-                    <input
-                      type="tel"
-                      className="form-control"
-                      id="telefone"
-                      name="telefone"
-                      value={dadosEdicao.telefone || ''}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Campos para alterar a senha */}
-                <div className="row mb-3">
-                  <div className="col-12 col-md-6">
-                    <label htmlFor="senhaAtual" className="form-label">Senha Atual</label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      id="senhaAtual"
-                      value={senhaAtual}
-                      onChange={(e) => setSenhaAtual(e.target.value)}
-                    />
-                  </div>
-                  <div className="col-12 col-md-6">
-                    <label htmlFor="novaSenha" className="form-label">Nova Senha</label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      id="novaSenha"
-                      value={novaSenha}
-                      onChange={(e) => setNovaSenha(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="row mb-3">
-                  <div className="col-12 col-md-6">
-                    <label htmlFor="confirmarSenha" className="form-label">Confirmar Nova Senha</label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      id="confirmarSenha"
-                      value={confirmarSenha}
-                      onChange={(e) => setConfirmarSenha(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  className="btn btn btn-outline-warning mb-3"
-                  onClick={atualizarSenha}
-                >
-                  Alterar Senha
-                </button>
-
-                <div className="row mb-3">
-                  <div className="col-12 col-md-4">
-                    <label htmlFor="endereco" className="form-label">Endereço</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="endereco"
-                      name="endereco"
-                      value={dadosEdicao.endereco || ''}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="col-12 col-md-4">
-                    <label htmlFor="bairro" className="form-label">Bairro</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="bairro"
-                      name="bairro"
-                      value={dadosEdicao.bairro || ''}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="col-12 col-md-4">
-                    <label htmlFor="cidade" className="form-label">Cidade</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="cidade"
-                      name="cidade"
-                      value={dadosEdicao.cidade || ''}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </div>
-
-                {papelUsuario === 'colaborador' && (
-                  <div className="row mb-3">
-                    <div className="col-12 col-md-6">
-                      <label htmlFor="cargo" className="form-label">Cargo</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        id="cargo"
-                        name="cargo"
-                        value={dadosEdicao.cargo || ''}
-                        onChange={handleChange}
-                      />
+                <div className="col-12 col-md-8">
+                  <form>
+                    <div className="row mb-3">
+                      <div className="col-12 col-md-6">
+                        <label htmlFor="nome" className="form-label">Nome</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="nome"
+                          name="nome"
+                          value={dadosEdicao.nome || ''}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                      <div className="col-12 col-md-6">
+                        <label htmlFor="email" className="form-label">Email</label>
+                        <input
+                          type="email"
+                          className="form-control"
+                          id="email"
+                          name="email"
+                          value={dadosEdicao.email || ''}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
                     </div>
-                  </div>
-                )}
-
-                <button
-                  type="button"
-                  className="btn btn-outline-success"
-                  onClick={atualizarUsuario}
-                >
-                  Salvar Alterações
-                </button>
-              </form>
+  
+                    <div className="row mb-3">
+                      <div className="col-12 col-md-6">
+                        <label htmlFor="cpf" className="form-label">CPF</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="cpf"
+                          name="cpf"
+                          value={dadosEdicao.cpf || ''}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                      <div className="col-12 col-md-6">
+                        <label htmlFor="telefone" className="form-label">Telefone</label>
+                        <input
+                          type="tel"
+                          className="form-control"
+                          id="telefone"
+                          name="telefone"
+                          value={dadosEdicao.telefone || ''}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                    </div>
+  
+                    {/* Campos para alterar a senha */}
+                    <div className="row mb-3">
+                      <div className="col-12 col-md-6">
+                        <label htmlFor="senhaAtual" className="form-label">Senha Atual</label>
+                        <input
+                          type="password"
+                          className="form-control"
+                          id="senhaAtual"
+                          value={senhaAtual}
+                          onChange={(e) => setSenhaAtual(e.target.value)}
+                        />
+                      </div>
+                      <div className="col-12 col-md-6">
+                        <label htmlFor="novaSenha" className="form-label">Nova Senha</label>
+                        <input
+                          type="password"
+                          className="form-control"
+                          id="novaSenha"
+                          value={novaSenha}
+                          onChange={(e) => setNovaSenha(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="row mb-3">
+                      <div className="col-12 col-md-6">
+                        <label htmlFor="confirmarSenha" className="form-label">Confirmar Nova Senha</label>
+                        <input
+                          type="password"
+                          className="form-control"
+                          id="confirmarSenha"
+                          value={confirmarSenha}
+                          onChange={(e) => setConfirmarSenha(e.target.value)}
+                        />
+                      </div>
+                    </div>
+  
+                    <button
+                      type="button"
+                      className="btn btn btn-outline-warning mb-3"
+                      onClick={atualizarSenha}
+                    >
+                      Alterar Senha
+                    </button>
+  
+                    <div className="row mb-3">
+                      <div className="col-12 col-md-4">
+                        <label htmlFor="endereco" className="form-label">Endereço</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="endereco"
+                          name="endereco"
+                          value={dadosEdicao.endereco || ''}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                      <div className="col-12 col-md-4">
+                        <label htmlFor="bairro" className="form-label">Bairro</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="bairro"
+                          name="bairro"
+                          value={dadosEdicao.bairro || ''}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                      <div className="col-12 col-md-4">
+                        <label htmlFor="cidade" className="form-label">Cidade</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          id="cidade"
+                          name="cidade"
+                          value={dadosEdicao.cidade || ''}
+                          onChange={handleChange}
+                          required
+                        />
+                      </div>
+                    </div>
+  
+                    {papelUsuario === 'colaborador' && (
+                      <div className="row mb-3">
+                        <div className="col-12 col-md-6">
+                          <label htmlFor="cargo" className="form-label">Cargo</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            id="cargo"
+                            name="cargo"
+                            value={dadosEdicao.cargo || ''}
+                            onChange={handleChange}
+                          />
+                        </div>
+                      </div>
+                    )}
+  
+                    <button
+                      type="button"
+                      className="btn btn-outline-success"
+                      onClick={atualizarUsuario}
+                    >
+                      Salvar Alterações
+                    </button>
+                  </form>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
-
   );
 };
 

@@ -115,13 +115,13 @@ function Agendamento() {
   };
 
   return (
-    <div className="container col-md-6 my-5">
+    <div className="container col-md-5 my-5">
       <div className="card shadow agendamento">
         <div className="card-header agendamento-header">
           <h2 className="text-center agendamento-titulo">Agendar Sessão</h2>
         </div>
   
-        <div className="card-body">
+        <div className="card-body ">
           <form onSubmit={handleSubmit} className="row g-3">
             <div className="row mb-3 d-flex justify-content-center">
             <div className="col-md-3">

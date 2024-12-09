@@ -14,7 +14,8 @@ function Navbar() {
   const [rememberMe, setRememberMe] = useState(false); 
   const [userId, setUserId] = useState(null);
   const [userPhoto, setUserPhoto] = useState(""); 
-  const [mostrarSenha, setMostrarSenha] = useState(false); // Controla a visibilidade da senha
+  const [mostrarSenha, setMostrarSenha] = useState(false); 
+  
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -25,7 +26,7 @@ function Navbar() {
       });
 
       const { access_token, name, role, userId, photo } = response.data;
-
+      
       setIsLoggedIn(true);
       setUserName(name);
       setRole(role);
@@ -50,6 +51,7 @@ function Navbar() {
 
       setTimeout(() => {
         navigate("/");
+        window.location.reload();
       }, 500);
     } catch (error) {
       console.error("Erro no login:", error);
@@ -88,6 +90,7 @@ function Navbar() {
         localStorage.removeItem("userPhoto"); // Limpa a foto do localStorage
 
         navigate("/");
+        window.location.reload();
       } else {
         alert("Erro ao fazer logout. Tente novamente.");
       }
@@ -136,7 +139,9 @@ function Navbar() {
 
   return (
     <>
+    
       <nav className="navbar navbar-expand-lg custom-navbar">
+      
         <div className="container-fluid">
           <Link className="navbar-brand" to="/">
             <img src="/fisiomais.png" alt="Logo" className="navbar-logo" />
@@ -169,16 +174,16 @@ function Navbar() {
                 <>
                   <li className="nav-item">
                     <button
-                      className="btn btn-login"
+                      className="btn btn-login d-flex align-items-center gap-2"
                       data-bs-toggle="modal"
                       data-bs-target="#loginModal"
                     >
-                      Entrar
+                      <i className="bi bi-box-arrow-in-right"> </i> Entrar
                     </button>
                   </li>
                   <li className="nav-item">
-                    <Link to="/cadastro" className="btn btn-signup">
-                      Inscrever-se
+                    <Link to="/cadastro" className="btn btn-signup d-flex align-items-center gap-2">
+                    <i className="bi bi-person-plus"></i> Inscrever-se
                     </Link>
                   </li>
                 </>
@@ -253,109 +258,106 @@ function Navbar() {
 
       {/* Modal de Login */}
       <div
-        className="modal fade"
-        id="loginModal"
-        tabIndex="-1"
-        aria-labelledby="loginModalLabel"
-        aria-hidden="true"
-      >
-        <div className="modal-dialog">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title" id="loginModalLabel">
-                <i className="bi bi-person-circle"></i> Login
-              </h5>
+  className="modal fade"
+  id="loginModal"
+  tabIndex="-1"
+  aria-labelledby="loginModalLabel"
+  aria-hidden="true"
+>
+  <div className="modal-dialog">
+    <div className="modal-content">
+      <div className="modal-header">
+        <h5 className="modal-title " id="loginModalLabel">
+          <i className="bi bi-person-circle "></i> Login
+        </h5>
+        <button
+          type="button"
+          className="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div className="modal-body">
+        <form onSubmit={(e) => e.preventDefault()}>
+          <div className="mb-2">
+            <label htmlFor="email" className="form-label ">
+              <i className="bi bi-envelope"></i> Email
+            </label>
+            <input
+              type="email"
+              className="form-control"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="mb-2">
+            <label htmlFor="senha" className="form-label">
+              <i className="bi bi-lock"></i> Senha
+            </label>
+            <div className="input-group">
+              <input
+                type={mostrarSenha ? "text" : "password"}
+                className="form-control"
+                id="senha"
+                value={senha}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
               <button
                 type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
-            </div>
-            <div className="modal-body">
-              <form onSubmit={(e) => e.preventDefault()}>
-                <div className="mb-2">
-                  <label htmlFor="email" className="form-label">
-                    <i className="bi bi-envelope"></i> Email
-                  </label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="mb-2">
-                  <label htmlFor="senha" className="form-label">
-                    <i className="bi bi-lock"></i> Senha
-                  </label>
-                  <div className="input-group">
-                    <input
-                      type={mostrarSenha ? "text" : "password"}
-                      className="form-control"
-                      id="senha"
-                      value={senha}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary"
-                      onClick={() => setMostrarSenha(!mostrarSenha)}
-                    >
-                      {mostrarSenha ? (
-                        <i className="bi bi-eye-slash"></i>
-                      ) : (
-                        <i className="bi bi-eye"></i>
-                      )}
-                    </button>
-                  </div>
-
-                </div>
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <div>
-                    <input
-                      type="checkbox"
-                      id="rememberMe"
-                      checked={rememberMe}
-                      onChange={() => setRememberMe(!rememberMe)}
-                    />
-                    <label htmlFor="rememberMe"> Lembre-me</label>
-                  </div>
-                  <a href="#" className="text-primary">
-                    <i className="bi bi-arrow-clockwise"></i> Esqueceu a senha?
-                  </a>
-                </div>
-                <button
-                  type="submit"
-                  className="btn btn btn-signup w-100"
-                  onClick={handleLogin}
-                >
-                  <i className="bi bi-box-arrow-in-right"></i> Entrar
-                </button>
-              </form>
-            </div>
-            <div className="modal-footer">
-              <p>
-                Não tem uma conta? <a href="/cadastro">Inscreva-se</a>
-              </p>
-              <div className="social-icons">
-                <button className="btn btn-outline-primary btn-social">
-                  <i className="bi bi-facebook"></i>
-                </button>
-                <button className="btn btn-outline-danger btn-social">
-                  <i className="bi bi-google"></i>
-                </button>
-                <button className="btn btn-outline-dark btn-social">
-                  <i className="bi bi-linkedin"></i>
-                </button>
-              </div>
+                className="btn btn-outline-secondary"
+                onClick={() => setMostrarSenha(!mostrarSenha)}
+              >
+                {mostrarSenha ? (
+                  <i className="bi bi-eye-slash"></i>
+                ) : (
+                  <i className="bi bi-eye"></i>
+                )}
+              </button>
             </div>
           </div>
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <input
+                type="checkbox"
+                id="rememberMe"
+                checked={rememberMe}
+                onChange={() => setRememberMe(!rememberMe)}
+              />
+              <label htmlFor="rememberMe"> Lembre-me</label>
+            </div>
+            <a href="#" className="">
+              <i className="bi bi-arrow-clockwise"></i> Esqueceu a senha?
+            </a>
+          </div>
+          <button
+            type="submit"
+            className="btn btn btn-signup w-100"
+            onClick={handleLogin}
+          >
+            <i className="bi bi-box-arrow-in-right"></i> Entrar
+          </button>
+        </form>
+      </div>
+      <div className="modal-footer">
+        <p>
+          Não tem uma conta? <a href="/cadastro">Inscreva-se</a>
+        </p>
+        <div className="social-icons">
+          <button className="btn btn-outline-primary btn-social">
+            <i className="bi bi-facebook"></i>
+          </button>
+          <button className="btn btn-outline-danger btn-social">
+            <i className="bi bi-google"></i>
+          </button>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
     </>
   );
 }

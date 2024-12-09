@@ -4,14 +4,12 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 
 function Footer() {
   const footerStyle = {
-    backgroundColor: "#efefef", 
-    color: "#5b0d30",
-    padding: "7px 0",
-    position: "relative",  
-
+    backgroundColor: "#f8f9fa", // Fundo suave
+    padding: "10px 0", // Reduzido o espaçamento interno
+    position: "relative",
     width: "100%",
-    zIndex: 1000,
-    marginTop: "100px",  // Garante que o footer fica na parte inferior da tela
+    marginTop: "50px", // Margem superior reduzida
+    boxShadow: "0 -2px 4px rgba(0, 0, 0, 0.1)", // Sombra adicionada diretamente
   };
 
   const iconColors = {
@@ -22,31 +20,30 @@ function Footer() {
   };
 
   const hoverColors = {
-    facebook: "#145DBF", // Azul mais escuro
-    instagram: "#D32E50", // Rosa mais vibrante
-    twitter: "#1488C6", // Azul mais forte
-    linkedin: "#005582", // Azul escuro
+    facebook: "#145DBF",
+    instagram: "#D32E50",
+    twitter: "#1488C6",
+    linkedin: "#005582",
   };
 
   const iconStyle = {
-    fontSize: "1.6rem",
-    margin: "0 15px",
+    fontSize: "1.5rem", // Reduzido o tamanho dos ícones
+    margin: "0 10px", // Reduzido o espaçamento entre ícones
     transition: "transform 0.3s, color 0.3s",
   };
 
   const handleHover = (e, hover = true, color) => {
-    e.target.style.transform = hover ? "scale(1.3)" : "scale(1)";
+    e.target.style.transform = hover ? "scale(1.2)" : "scale(1)";
     e.target.style.color = hover ? color : ""; // Cor no hover
   };
 
   return (
-    
     <footer style={footerStyle} className="text-center">
       <div className="container">
-        <p className="mb-3" style={{ fontSize: "1.1rem", fontWeight: "500" }}>
+        <p className="text-secondary mb-2" style={{ fontSize: "1rem" }}>
           Siga-nos nas redes sociais
         </p>
-        <div>
+        <div className="mb-3">
           <a
             href="https://facebook.com"
             target="_blank"
@@ -88,8 +85,8 @@ function Footer() {
             <i className="bi bi-linkedin"></i>
           </a>
         </div>
-        <p className="mt-3" style={{ fontSize: "0.9rem" }}>
-          &copy; {new Date().getFullYear()} <b>Fisiomais</b>. Todos os direitos reservados.
+        <p className="text-secondary" style={{ fontSize: "0.8rem" }}>
+          &copy; {new Date().getFullYear()} <b className="text-primary">Fisiomais</b>. Todos os direitos reservados.
         </p>
       </div>
     </footer>

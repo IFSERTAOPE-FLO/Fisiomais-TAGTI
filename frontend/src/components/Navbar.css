@@ -288,32 +288,44 @@
   }
 
   /* Estilos para os ícones de redes sociais */
-  .social-icons {
-    display: flex;
+  /* Estilos de hover para redes sociais */
+.social-icons a:hover {
+  color: #fff;
+}
+
+.social-icons a:hover.bi-facebook {
+  background-color: #1877F2;
+}
+
+.social-icons a:hover.bi-google {
+  background-color: #db4437;
+}
+
+.social-icons a:hover.bi-linkedin {
+  background-color: #0077B5;
+}
+
+.social-icons a:hover.bi-instagram {
+  background-color: #E4405F;
+}
+
+
+
+.social-icons {
+    
     gap: 10px;
   }
 
-  .btn-social {
-    width: 40px;
-    height: 40px;
-    font-size: 18px;
-    border-radius: 50%;
-  }
+.modal-footer p {
+  margin: 0;
+  font-size: 1rem;
+}
 
-  .btn-outline-primary {
-    border-color: #007bff;
-    color: #007bff;
-  }
-
-  .btn-outline-danger {
-    border-color: #db4437;
-    color: #db4437;
-  }
-
-  .btn-outline-dark {
-    border-color: #0077b5;
-    color: #0077b5;
-  }
+.modal-footer .social-icons {
+  gap: 10px;
+  display: flex;
+  padding: 0;
+}
 
   /* Responsividade */
   @media (max-width: 576px) {

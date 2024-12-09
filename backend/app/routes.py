@@ -743,12 +743,11 @@ def alterar_senha(role, user_id):
 
 @main.route('/api/listar_usuarios', methods=['GET'])
 @jwt_required()
-def listar_usuarios():
-    # Consulta os usuários de clientes e colaboradores e já ordena pelo nome
+def listar_usuarios():    
     clientes = Clientes.query.order_by(Clientes.nome).all()
     colaboradores = Colaboradores.query.order_by(Colaboradores.nome).all()
 
-    # Combine os usuários em uma única lista
+    
     usuarios = [
         {"ID": cliente.ID_Cliente, "nome": cliente.nome, "email": cliente.email, "role": "cliente"}
         for cliente in clientes
@@ -757,7 +756,7 @@ def listar_usuarios():
         for colaborador in colaboradores
     ]
     
-    # Verifique os dados antes de enviar a resposta
+    
     print(usuarios)  # Adicione isso para debugar
 
     return jsonify(usuarios), 200

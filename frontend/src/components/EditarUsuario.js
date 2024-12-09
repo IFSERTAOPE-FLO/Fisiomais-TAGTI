@@ -26,9 +26,9 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
         };
         
         const idUsuario = role === 'cliente' ? usuario.ID_Cliente : usuario.ID_Colaborador;
-        console.log("ID do Usuário:", idUsuario);  // Verifique se o ID é passado corretamente
+        console.log("ID do Usuário:", idUsuario);  
         
-        // Verifique se o ID do usuário está correto e não é undefined
+        
         if (!idUsuario) {
             alert("ID do usuário inválido.");
             return;

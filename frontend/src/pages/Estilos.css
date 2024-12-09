@@ -36,3 +36,7 @@
   transform: scale(1); /* Remove a escala ao clicar */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra um pouco mais suave ao clicar */
 }
+footer {
+  
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
