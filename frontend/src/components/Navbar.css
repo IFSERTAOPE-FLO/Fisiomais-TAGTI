@@ -314,6 +314,7 @@
 .social-icons {
     
     gap: 10px;
+    border: 0px;
   }
 
 .modal-footer p {
@@ -358,6 +359,7 @@
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
+    border: none; 
   }
 
   .social-icons .btn-outline-primary:hover {

@@ -146,9 +146,9 @@ const VisualizarDados = () => {
               </Modal.Body>
   
               <Modal.Footer>
-                <Button variant="btn btn-outline-secondary" onClick={handleCloseModal}>Fechar</Button>
+                <Button variant="btn btn-secondary" onClick={handleCloseModal}>Fechar</Button>
                 {role === 'admin' ? (
-                  <Button variant="btn btn-outline-danger" onClick={() => handleDeleteAgendamento(selectedAgendamento.id)}>
+                  <Button variant="btn btn-danger" onClick={() => handleDeleteAgendamento(selectedAgendamento.id)}>
                     Apagar Agendamento
                   </Button>
                 ) : (
