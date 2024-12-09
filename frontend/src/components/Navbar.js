@@ -8,11 +8,13 @@ import "./Navbar.css";
 function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("Usuário");
-  const [role, setRole] = useState(""); // Armazena a função do usuário (admin, colaborador ou cliente)
+  const [role, setRole] = useState(""); 
   const [email, setEmail] = useState("");
   const [senha, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false); 
   const [userId, setUserId] = useState(null);
-  const [userPhoto, setUserPhoto] = useState(""); // Estado para armazenar a foto do usuário
+  const [userPhoto, setUserPhoto] = useState(""); 
+  const [mostrarSenha, setMostrarSenha] = useState(false); // Controla a visibilidade da senha
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -101,21 +103,23 @@ function Navbar() {
     const savedRole = localStorage.getItem("role");
     const savedUserId = localStorage.getItem("userId");
     const savedUserPhoto = localStorage.getItem("userPhoto"); // Recupera a foto salva no localStorage
-
+  
+    console.log(savedUserPhoto); // Verifique se o valor de userPhoto é o esperado
+  
     if (savedToken && savedUserName && savedRole) {
       try {
         const decodedToken = JSON.parse(atob(savedToken.split(".")[1]));
         const isTokenExpired = decodedToken.exp * 1000 < Date.now();
-
+  
         if (isTokenExpired) {
           throw new Error("Token expirado");
         }
-
+  
         setIsLoggedIn(true);
         setUserName(savedUserName);
         setRole(savedRole);
         setUserId(savedUserId); // Usa o setUserId correto
-        setUserPhoto(savedUserPhoto); // Usa a foto salva no localStorage
+        setUserPhoto(savedUserPhoto || ""); // Usa uma string vazia caso a foto não exista
       } catch (error) {
         localStorage.removeItem("token");
         localStorage.removeItem("userName");
@@ -186,17 +190,17 @@ function Navbar() {
                     id="navbarDropdown"
                     role="button"
                     data-bs-toggle="dropdown"
+                    
                     aria-expanded="false"
                   >
-                    {userPhoto ? (
+                    {userPhoto && userPhoto.trim() !== "" ? (
                       <img
-                        src={`http://localhost:5000/${userPhoto}`} // Altere conforme o caminho correto da imagem
+                        src={`http://localhost:5000/uploads/${userPhoto}?t=${new Date().getTime()}`}
                         alt="Foto de perfil"
                         className="user-photo"
-                        style={{ width: "30px", height: "30px", borderRadius: "50%" }}
                       />
                     ) : (
-                      <i id="iconeuser" className="bi bi-person-circle"></i>
+                      <i id="iconeuser" className="bi bi-person-circle"></i> // Exibe o ícone se não houver foto
                     )}
                     <span>{userName}</span>
                   </a>
@@ -219,6 +223,9 @@ function Navbar() {
                             </li>
                             <li>
                               <Link className="dropdown-item" to="/addcliente">Adicionar Cliente</Link>
+                            </li>
+                            <li>
+                              <Link className="dropdown-item" to="/adminPage">Pagina Administrador</Link>
                             </li>
                           </>
                         )}
@@ -255,7 +262,9 @@ function Navbar() {
         <div className="modal-dialog">
           <div className="modal-content">
             <div className="modal-header">
-              <h5 className="modal-title" id="loginModalLabel">Login</h5>
+              <h5 className="modal-title" id="loginModalLabel">
+                <i className="bi bi-person-circle"></i> Login
+              </h5>
               <button
                 type="button"
                 className="btn-close"
@@ -265,8 +274,10 @@ function Navbar() {
             </div>
             <div className="modal-body">
               <form onSubmit={(e) => e.preventDefault()}>
-                <div className="mb-3">
-                  <label htmlFor="email" className="form-label">Email</label>
+                <div className="mb-2">
+                  <label htmlFor="email" className="form-label">
+                    <i className="bi bi-envelope"></i> Email
+                  </label>
                   <input
                     type="email"
                     className="form-control"
@@ -276,25 +287,71 @@ function Navbar() {
                     required
                   />
                 </div>
-                <div className="mb-3">
-                  <label htmlFor="senha" className="form-label">Senha</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    id="senha"
-                    value={senha}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
+                <div className="mb-2">
+                  <label htmlFor="senha" className="form-label">
+                    <i className="bi bi-lock"></i> Senha
+                  </label>
+                  <div className="input-group">
+                    <input
+                      type={mostrarSenha ? "text" : "password"}
+                      className="form-control"
+                      id="senha"
+                      value={senha}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={() => setMostrarSenha(!mostrarSenha)}
+                    >
+                      {mostrarSenha ? (
+                        <i className="bi bi-eye-slash"></i>
+                      ) : (
+                        <i className="bi bi-eye"></i>
+                      )}
+                    </button>
+                  </div>
+
+                </div>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <div>
+                    <input
+                      type="checkbox"
+                      id="rememberMe"
+                      checked={rememberMe}
+                      onChange={() => setRememberMe(!rememberMe)}
+                    />
+                    <label htmlFor="rememberMe"> Lembre-me</label>
+                  </div>
+                  <a href="#" className="text-primary">
+                    <i className="bi bi-arrow-clockwise"></i> Esqueceu a senha?
+                  </a>
                 </div>
                 <button
                   type="submit"
-                  className="btn btn-primary w-100"
+                  className="btn btn btn-signup w-100"
                   onClick={handleLogin}
                 >
-                  Entrar
+                  <i className="bi bi-box-arrow-in-right"></i> Entrar
                 </button>
               </form>
+            </div>
+            <div className="modal-footer">
+              <p>
+                Não tem uma conta? <a href="/cadastro">Inscreva-se</a>
+              </p>
+              <div className="social-icons">
+                <button className="btn btn-outline-primary btn-social">
+                  <i className="bi bi-facebook"></i>
+                </button>
+                <button className="btn btn-outline-danger btn-social">
+                  <i className="bi bi-google"></i>
+                </button>
+                <button className="btn btn-outline-dark btn-social">
+                  <i className="bi bi-linkedin"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>

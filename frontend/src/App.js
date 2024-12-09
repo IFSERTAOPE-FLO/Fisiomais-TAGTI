@@ -18,6 +18,7 @@ import Cadastro from "./pages/Cadastro";
 import Perfil from "./pages/Perfil";
 import VisualizarDados from "./pages/VisualizarDados";
 import AddServico from "./pages/AddServico"; 
+import AdminPage from "./pages/AdminPage"; 
 
 
 
@@ -37,6 +38,7 @@ function App() {
           <Route path="/perfil" element={<Perfil />} />     
           <Route path="/VisualizarDados" element={<VisualizarDados />} />  
           <Route path="/addservico" element={<AddServico />} /> 
+          <Route path="/adminPage" element={<AdminPage />} /> 
           
         </Routes>
         <Footer />

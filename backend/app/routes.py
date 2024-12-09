@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, render_template, request, redirect, url_for, jsonify
+from flask import Blueprint, current_app, send_from_directory, request, jsonify
 from datetime import datetime, timedelta
 from app.models import Agendamentos, Clientes, Colaboradores, Servicos,  BlacklistedToken, db
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
@@ -33,13 +33,13 @@ def login():
 
     if colaborador and colaborador.check_password(senha):
         access_token = create_access_token(identity=email)
-        response = {"access_token": access_token, "name": colaborador.nome}
-        
+        response = {"access_token": access_token, "name": colaborador.nome, "photo": colaborador.photo}
+
         if colaborador.is_admin:
             response["role"] = "admin"  # Permissão de administrador
         else:
             response["role"] = "colaborador"  # Permissão de colaborador comum
-            
+
         return jsonify(response), 200
 
     # Verificar se o email pertence a um cliente
@@ -47,10 +47,11 @@ def login():
 
     if cliente and cliente.check_password(senha):
         access_token = create_access_token(identity=email)
-        return jsonify(access_token=access_token, name=cliente.nome, role="cliente"), 200
+        return jsonify(access_token=access_token, name=cliente.nome, role="cliente", photo=cliente.photo), 200
 
     # Se o email ou senha estiverem incorretos
     return jsonify(message="Credenciais inválidas"), 401
+
 
 @main.route('/logout', methods=['POST'])
 @jwt_required()  # Garantir que o JWT esteja presente
@@ -668,6 +669,60 @@ def editar_usuario(role, user_id):
     db.session.commit()
     return jsonify({'message': 'Dados atualizados com sucesso.'}), 200
 
+@main.route('/api/alterar_senha/<role>/<int:user_id>', methods=['PUT'])
+@jwt_required()
+def alterar_senha(role, user_id):
+    data = request.get_json()
+    senha_atual = data.get('senhaAtual')
+    nova_senha = data.get('novaSenha')
+
+    if not senha_atual or not nova_senha:
+        return jsonify({'message': 'Senha atual e nova senha são obrigatórias.'}), 400
+
+    # Buscar o usuário com base no role e user_id
+    user = None
+
+    if role == 'colaborador':
+        user = Colaboradores.query.filter_by(ID_Colaborador=user_id).first()
+    elif role == 'cliente':
+        user = Clientes.query.filter_by(ID_Cliente=user_id).first()
+    else:
+        return jsonify({'message': 'Role inválido.'}), 400
+
+    if not user:
+        return jsonify({'message': 'Usuário não encontrado.'}), 404
+
+    # Verificar se a senha atual está correta
+    if not user.check_password(senha_atual):
+        return jsonify({'message': 'Senha atual inválida.'}), 400
+
+    # Atualizar a senha com a nova
+    user.set_password(nova_senha)  # Gera o hash da nova senha
+    db.session.commit()
+
+    return jsonify({'message': 'Senha alterada com sucesso.'}), 200
+
+
+@main.route('/api/listar_usuarios', methods=['GET'])
+@jwt_required()
+def listar_usuarios():
+    # Consulta os usuários de clientes e colaboradores e já ordena pelo nome
+    clientes = Clientes.query.order_by(Clientes.nome).all()
+    colaboradores = Colaboradores.query.order_by(Colaboradores.nome).all()
+
+    # Combine os usuários em uma única lista
+    usuarios = [
+        {"ID": cliente.ID_Cliente, "nome": cliente.nome, "email": cliente.email, "role": "cliente"}
+        for cliente in clientes
+    ] + [
+        {"ID": colaborador.ID_Colaborador, "nome": colaborador.nome, "email": colaborador.email, "role": "colaborador"}
+        for colaborador in colaboradores
+    ]
+    
+    # Verifique os dados antes de enviar a resposta
+    print(usuarios)  # Adicione isso para debugar
+
+    return jsonify(usuarios), 200
 
 
 # Deletar usuário (cliente ou colaborador)
@@ -710,6 +765,7 @@ def get_perfil():
             'nome': cliente.nome,
             'email': cliente.email,
             'telefone': cliente.telefone,
+            'cpf': cliente.cpf,
             'endereco': cliente.endereco,
             'bairro': cliente.bairro,
             'cidade': cliente.cidade,
@@ -723,6 +779,7 @@ def get_perfil():
             'nome': colaborador.nome,
             'email': colaborador.email,
             'telefone': colaborador.telefone,
+            'cpf': colaborador.cpf,
             'endereco': colaborador.endereco,
             'bairro': colaborador.bairro,
             'cidade': colaborador.cidade,
@@ -733,64 +790,107 @@ def get_perfil():
 
     return jsonify({'message': 'Usuário não encontrado.'}), 404
 
-    @main.route('/api/editar_usuario/<role>/<int:id>', methods=['PUT'])
-    @jwt_required()
-    def atualizar_usuario(role, id):
-        dados = request.get_json()
-        
-        if role == 'cliente':
-            usuario = Clientes.query.get(id)
-        elif role == 'colaborador':
-            usuario = Colaboradores.query.get(id)
-        else:
-            return jsonify({'message': 'Role não reconhecido.'}), 400
+@main.route('/api/editar_usuario/<role>/<int:id>', methods=['PUT'])
+@jwt_required()
+def atualizar_usuario(role, id):
+    dados = request.get_json()
+    
+    if role == 'cliente':
+        usuario = Clientes.query.get(id)
+    elif role == 'colaborador':
+        usuario = Colaboradores.query.get(id)
+    else:
+        return jsonify({'message': 'Role não reconhecido.'}), 400
 
-        if not usuario:
-            return jsonify({'message': 'Usuário não encontrado.'}), 404
+    if not usuario:
+        return jsonify({'message': 'Usuário não encontrado.'}), 404
+    
+    # Atualiza os dados do usuário
+    usuario.nome = dados.get('nome', usuario.nome)
+    usuario.email = dados.get('email', usuario.email)
+    usuario.telefone = dados.get('telefone', usuario.telefone)
+    usuario.endereco = dados.get('endereco', usuario.endereco)
+    usuario.bairro = dados.get('bairro', usuario.bairro)
+    usuario.cidade = dados.get('cidade', usuario.cidade)
+    usuario.cpf = dados.get('cpf', usuario.cpf)  # Atualizando o CPF
+    if role == 'colaborador':
+        usuario.cargo = dados.get('cargo', usuario.cargo)
+    
+    try:
+        db.session.commit()
+        return jsonify({'message': 'Dados atualizados com sucesso.'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'Erro ao atualizar dados: {str(e)}'}), 500
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
+
+@main.route('/api/upload_photo', methods=['POST'])
+@jwt_required()
+def upload_photo():
+    email = get_jwt_identity()
+    usuario = Clientes.query.filter_by(email=email).first() or Colaboradores.query.filter_by(email=email).first()
+
+    if 'file' not in request.files:
+        return jsonify({'message': 'Nenhum arquivo enviado.'}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'message': 'Nenhum arquivo selecionado.'}), 400
+
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
         
-        # Atualiza os dados do usuário
-        usuario.nome = dados.get('nome', usuario.nome)
-        usuario.email = dados.get('email', usuario.email)
-        usuario.telefone = dados.get('telefone', usuario.telefone)
-        usuario.endereco = dados.get('endereco', usuario.endereco)
-        usuario.bairro = dados.get('bairro', usuario.bairro)
-        usuario.cidade = dados.get('cidade', usuario.cidade)
-        if role == 'colaborador':
-            usuario.cargo = dados.get('cargo', usuario.cargo)
-        
-        try:
+        if usuario:
+            usuario.photo = filename  
             db.session.commit()
-            return jsonify({'message': 'Dados atualizados com sucesso.'}), 200
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'message': f'Erro ao atualizar dados: {str(e)}'}), 500
+            return jsonify({'message': 'Foto de perfil atualizada com sucesso.', 'photo': filename}), 200
 
-    def allowed_file(filename):
-        return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
+    return jsonify({'message': 'Tipo de arquivo não permitido.'}), 400
 
-    @main.route('/api/upload_photo', methods=['POST'])
-    @jwt_required()
-    def upload_photo():
-        email = get_jwt_identity()
-        usuario = Clientes.query.filter_by(email=email).first() or Colaboradores.query.filter_by(email=email).first()
+@main.route('/uploads/<path:filename>')
+def serve_uploads(filename):
+    return send_from_directory(current_app.config['UPLOAD_FOLDER'], filename)
 
-        if 'file' not in request.files:
-            return jsonify({'message': 'Nenhum arquivo enviado.'}), 400
+@main.route('/api/listar_servicos', methods=['GET'])
+def get_list_servicos():
+    try:
+        servicos = Servicos.query.all()  # Pegue todos os serviços cadastrados
+        if not servicos:
+            return jsonify({"message": "Nenhum serviço encontrado"}), 404
 
-        file = request.files['file']
-        if file.filename == '':
-            return jsonify({'message': 'Nenhum arquivo selecionado.'}), 400
+        servicos_list = [
+            {
+                "ID_Servico": s.ID_Servico,
+                "Nome_servico": s.Nome_servico,
+                "Descricao": s.Descricao,
+                "Valor": str(s.Valor)  # Convertendo para string, para evitar problemas com decimal
+            }
+            for s in servicos
+        ]
+        return jsonify(servicos_list), 200
+    except Exception as e:
+        return jsonify({"message": f"Erro ao listar serviços: {str(e)}"}), 500
 
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
+    
+@main.route('/api/deletar_servico/<int:id>', methods=['DELETE'])
+@jwt_required()
+def deletar_servico(id):
+    try:
+        servico = Servicos.query.get(id)
 
-            # Atualiza o banco de dados com o caminho da foto
-            if usuario:
-                usuario.photo = filepath
-                db.session.commit()
-                return jsonify({'message': 'Foto de perfil atualizada com sucesso.'}), 200
+        if not servico:
+            return jsonify({"message": "Serviço não encontrado"}), 404
 
-        return jsonify({'message': 'Tipo de arquivo não permitido.'}), 400
+        db.session.delete(servico)
+        db.session.commit()
+        return jsonify({"message": "Serviço deletado com sucesso!"}), 200
 
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Erro ao deletar serviço: {str(e)}"}), 500
+ 

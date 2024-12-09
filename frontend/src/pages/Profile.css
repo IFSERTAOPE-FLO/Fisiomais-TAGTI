@@ -1,14 +1,8 @@
+
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  padding-bottom: 50px;  /* Isso adiciona o espaço necessário para o rodapé */
-  min-height: 100vh; /* Garante que o corpo da página tenha ao menos a altura da tela */
-  display: flex;
-  flex-direction: column;
+  height: 100vh; 
+  overflow-y: auto; 
+  margin: 0; 
 }
 
-main {
-  flex-grow: 1;  /* Isso faz com que o conteúdo cresça para ocupar o espaço restante */
-}
+

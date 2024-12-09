@@ -5,6 +5,9 @@ function Home() {
     <div className="container mt-4">
       <h1>Bem-vindo ao meu site!</h1>
       <p>Explore as opções no menu para navegar pelo site.</p>
+      <br></br>
+      <br></br>
+      <br></br>
     </div>
   );
 }

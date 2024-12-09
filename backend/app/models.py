@@ -1,6 +1,7 @@
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+from flask import url_for
 
 
 # Modelo: Colaboradores
@@ -30,6 +31,11 @@ class Colaboradores(db.Model):
 
     def __repr__(self):
         return f'<Colaborador {self.nome}>'
+    def get_photo_url(self):
+        """Retorna o URL público da foto."""
+        if self.photo:
+            return url_for('main.serve_photo', filename=self.photo, _external=True)
+        return None  # Caso não tenha foto
 
 # Modelo: Clientes
 class Clientes(db.Model):
@@ -54,6 +60,11 @@ class Clientes(db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.senha, password)
+    def get_photo_url(self):
+        """Retorna o URL público da foto."""
+        if self.photo:
+            return url_for('main.serve_photo', filename=self.photo, _external=True)
+        return None  # Caso não tenha foto
 
 # Modelo: Agendamentos
 class Agendamentos(db.Model):

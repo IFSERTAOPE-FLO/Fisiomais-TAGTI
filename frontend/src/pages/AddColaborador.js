@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
-import './Cadastro.css';
+import './Estilos.css';
 
 function AddColaborador() {
   const [nome, setNome] = useState('');

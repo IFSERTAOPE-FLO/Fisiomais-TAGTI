@@ -115,23 +115,27 @@ function Agendamento() {
   };
 
   return (
-    <div className="container">
-      <h2 className="text-center mb-4">Agendar Sessão</h2>
+    <div className="container col-md-6">
+      <h2 className="text-center mb-4 ">Agendar Sessão</h2>
 
       <form onSubmit={handleSubmit} className="row g-3">
-        <div className="row mb-3 d-flex justify-content-center">
-          <div className="col-md-2">
-            <label className="form-label">Data:</label>
-            <input
-              type="date"
-              className="form-control"
-              value={data}
-              onChange={(e) => setData(e.target.value)}
-              required
-            />
-          </div>
+      <div className="card shadow agendamento">
+      <div className="card-body agendamento">
+        <div className="row mb-3 d-flex justify-content-center ">
+          
+        <div className="col-md-3">
+          <label className="form-label">Data:</label>
+          <input
+            type="date"
+            className="form-control"
+            value={data}
+            onChange={(e) => setData(e.target.value)}
+            min={new Date().toISOString().split('T')[0]} // Define a data mínima como hoje
+            required
+          />
+        </div>
 
-          <div className="col-md-1">
+          <div className="col-md-2">
             <label className="form-label">Hora:</label>
             <select
               className="form-control"
@@ -147,7 +151,7 @@ function Agendamento() {
               ))}
             </select>
           </div>
-          <div className="col-md-3">
+          <div className="col-md-4">
             <label className="form-label">Serviço:</label>
             <select
               className="form-control"
@@ -166,7 +170,7 @@ function Agendamento() {
         </div>
 
         <div className="row mb-3 d-flex justify-content-center">
-          <div className="col-md-3">
+          <div className="col-md-4">
             <label className="form-label">Colaborador:</label>
             <select
               className="form-control"
@@ -184,7 +188,7 @@ function Agendamento() {
           </div>
 
           {role === 'cliente' ? (
-            <div className="col-md-3">
+            <div className="col-md-4">
               <label className="form-label">Cliente:</label>
               <input
                 type="text"
@@ -214,9 +218,11 @@ function Agendamento() {
         </div>
 
         <div className="col-12 text-center">
-          <button type="submit" className="btn btn-outline-success w-auto mx-auto d-block">
+          <button type="submit" className="btn btn-signup  w-auto mx-auto d-block">
             Agendar
           </button>
+        </div>
+        </div>
         </div>
       </form>
     </div>
