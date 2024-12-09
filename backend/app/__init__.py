@@ -3,7 +3,7 @@
 #pip install -r requirements.txt
 #admin@teste.com  12345
 from flask import Flask
-
+from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
@@ -14,7 +14,7 @@ import os
 # Instâncias do SQLAlchemy, Mail e JWTManager
 db = SQLAlchemy()
 mail = Mail()
-
+migrate = Migrate()
 def create_app():
     app = Flask(__name__)
     app.config.from_object('config.Config')  # Carrega as configurações do arquivo config.py
@@ -22,6 +22,7 @@ def create_app():
     # Inicializa a aplicação com as extensões
     db.init_app(app)
     mail.init_app(app)
+    migrate.init_app(app, db)
     jwt = JWTManager(app)
 
     # Criar e iniciar o agendador

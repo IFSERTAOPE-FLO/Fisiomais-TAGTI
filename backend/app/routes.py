@@ -450,6 +450,44 @@ def notificar_admin():
         return jsonify({'message': 'Administrador, colaborador e cliente notificados com sucesso!'}), 200
     except Exception as e:
         return jsonify({'message': f'Erro ao enviar e-mail: {str(e)}'}), 500
+    
+@main.route('/api/contato', methods=['POST'])
+def contato():
+    data = request.get_json()
+
+    nome = data.get('nome')
+    email = data.get('email')
+    telefone = data.get('telefone')
+    mensagem = data.get('mensagem')
+
+    if not all([nome, email, telefone, mensagem]):
+        return jsonify({'message': 'Todos os campos são obrigatórios.'}), 400
+
+    try:
+        # Criar a mensagem de e-mail
+        subject = f'Nova Mensagem de Contato - {nome}'
+        body = f'''
+        Olá Admin,
+
+        Você recebeu uma nova mensagem de contato:
+
+        - Nome: {nome}
+        - E-mail: {email}
+        - Telefone: {telefone}
+
+        Mensagem:
+        {mensagem}
+
+        Atenciosamente,
+        Seu sistema de contatos
+        '''
+        msg = Message(subject=subject, recipients=['fisiomaispilatesefisioterapia@gmail.com'], body=body)
+
+        # Enviar o e-mail
+        mail.send(msg)
+        return jsonify({'message': 'Mensagem enviada com sucesso!'}), 200
+    except Exception as e:
+        return jsonify({'message': f'Erro ao enviar mensagem: {str(e)}'}), 500
 
 
 

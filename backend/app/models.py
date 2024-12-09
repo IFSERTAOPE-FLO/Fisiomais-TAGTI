@@ -103,18 +103,19 @@ class BlacklistedToken(db.Model):
 
 def populate_database():
     # Criar o administrador se não existir
-    admin_exists = Colaboradores.query.filter_by(email='fisiomaispilatesefisioterapia@gmail.com').first()
-    if not admin_exists:
-        admin = Colaboradores(
-            nome='Administrador',
-            email='fisiomaispilatesefisioterapia@gmail.com',
-            telefone='999999999',
-            cargo='Administrador',
-            cpf='000.000.000-00',  # Adicionar CPF faltando
-            is_admin=True
-        )
-        admin.set_password('12345')  # Certifique-se de que o método de criptografia funciona corretamente
-        db.session.add(admin)
+    with db.session.no_autoflush:
+        admin_exists = Colaboradores.query.filter_by(cpf='000.000.000-00').first()
+        if not admin_exists:
+            admin = Colaboradores(
+                nome='Administrador',
+                email='fisiomaispilatesefisioterapia@gmail.com',
+                telefone='999999999',
+                cargo='Administrador',
+                cpf='000.000.000-00',  # Adicionar CPF faltando
+                is_admin=True
+            )
+            admin.set_password('12345')  # Certifique-se de que o método de criptografia funciona corretamente
+            db.session.add(admin)
 
     # Verificar se os serviços de fisioterapia já existem
     servicos = [
