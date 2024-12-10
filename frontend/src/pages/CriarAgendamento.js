@@ -118,7 +118,7 @@ function Agendamento() {
     <div className="container col-md-5 my-5">
       <div className="card shadow agendamento">
         <div className="card-header agendamento-header">
-          <h2 className="text-center agendamento-titulo">Agendar Sessão</h2>
+          <h2 className="text-center agendamento-titulo">Agendar Atendimento</h2>
         </div>
   
         <div className="card-body ">

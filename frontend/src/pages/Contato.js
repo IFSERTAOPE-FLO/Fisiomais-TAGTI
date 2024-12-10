@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './Contato.css'; // Certifique-se de criar o arquivo Contato.css para os estilos personalizados
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import './Contato.css';
 
 function Contato() {
   const [formData, setFormData] = useState({
@@ -34,7 +35,7 @@ function Contato() {
       if (response.ok) {
         setSuccessMessage('Mensagem enviada com sucesso!');
         setErrorMessage('');
-        setFormData({ nome: '', email: '', telefone: '', mensagem: '' }); // Limpar formulário
+        setFormData({ nome: '', email: '', telefone: '', mensagem: '' });
       } else {
         const errorData = await response.json();
         setErrorMessage(errorData.message || 'Erro ao enviar mensagem.');
@@ -47,17 +48,30 @@ function Contato() {
 
   return (
     <div className="container my-5">
-      <div className="row">
-        {/* Coluna com texto simples à esquerda */}
+      <div className="row align-items-center">
+        {/* Bloco de Informações de Contato */}
         <div className="col-md-5">
-          <div className="mb-4">
-            <h3>Informações</h3>
-            <p>Preencha o formulário ao lado para entrar em contato conosco. Nossa equipe estará pronta para atendê-lo!</p>
+          <h3 className="mb-4 text-primary fw-bold">Informações de Contato</h3>
+          <div className="info-box mb-3">
+            <i className="bi bi-geo-alt-fill text-primary"></i>
+            <div>
+              <p className="mb-1"><strong>Floresta</strong></p>
+              <p>Rua 123, 372 - Centro, Floresta - PE</p>
+              <p>Segunda a Sexta: 07:00–19:00<br />Sábado e Domingo: Fechado</p>
+            </div>
+          </div>
+          <div className="info-box mb-3">
+            <i className="bi bi-geo-alt-fill text-primary"></i>
+            <div>
+              <p className="mb-1"><strong>Serra Talhada</strong></p>
+              <p>Rua 123, 372 - Centro, Serra Talhada - PE</p>
+              <p>Segunda a Sexta: 07:00–19:00<br />Sábado e Domingo: Fechado</p>
+            </div>
           </div>
         </div>
-  
-        {/* Formulário à direita */}
-        <div className="col-md-6">
+
+        {/* Formulário de Contato */}
+        <div className="col-md-7">
           <div className="card shadow agendamento">
             <div className="card-header agendamento-header">
               <h2 className="text-center agendamento-titulo">Fale Conosco</h2>
@@ -67,7 +81,7 @@ function Contato() {
               {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">
-                  <label htmlFor="nome" className="form-label">Nome</label>
+                  <label htmlFor="nome" className="form-label">Nome Completo</label>
                   <input
                     type="text"
                     className="form-control"
@@ -78,7 +92,6 @@ function Contato() {
                     required
                   />
                 </div>
-  
                 <div className="mb-3">
                   <label htmlFor="email" className="form-label">Email</label>
                   <input
@@ -91,9 +104,8 @@ function Contato() {
                     required
                   />
                 </div>
-  
                 <div className="mb-3">
-                  <label htmlFor="telefone" className="form-label">Telefone</label>
+                  <label htmlFor="telefone" className="form-label">Telefone/WhatsApp</label>
                   <input
                     type="tel"
                     className="form-control"
@@ -104,7 +116,6 @@ function Contato() {
                     required
                   />
                 </div>
-  
                 <div className="mb-3">
                   <label htmlFor="mensagem" className="form-label">Mensagem</label>
                   <textarea
@@ -117,12 +128,7 @@ function Contato() {
                     required
                   ></textarea>
                 </div>
-  
-                <div className="text-center">
-                  <button type="submit" className="btn btn-outline-success btn-pink">
-                    Enviar
-                  </button>
-                </div>
+                <button type="submit" className="btn btn-pink w-100">Enviar</button>
               </form>
             </div>
           </div>
@@ -130,6 +136,6 @@ function Contato() {
       </div>
     </div>
   );
-}  
+}
 
 export default Contato;

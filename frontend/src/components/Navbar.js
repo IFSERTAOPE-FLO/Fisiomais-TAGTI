@@ -136,37 +136,41 @@ function Navbar() {
       }
     }
   }, []);
+ 
 
   return (
     <>
     
-      <nav className="navbar navbar-expand-lg custom-navbar">
-      
-        <div className="container-fluid">
-          <Link className="navbar-brand" to="/">
-            <img src="/fisiomais.png" alt="Logo" className="navbar-logo" />
-          </Link>
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarNav"
-            aria-controls="navbarNav"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div className="collapse navbar-collapse" id="navbarNav">
-            <ul className="navbar-nav mx-auto">
+    <nav className="navbar navbar-expand-lg navbar-light bg-light">
+      <div className="container-fluid">
+        <Link className="navbar-brand" to="/">
+          <img src="/fisiomais.png" alt="Logo" className="navbar-logo" />
+        </Link>
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span className="navbar-toggler-icon"></span>
+        </button>
+        <div className="collapse navbar-collapse" id="navbarNav">
+          <ul className="navbar-nav mx-auto">
               <li className="nav-item">
                 <Link className="nav-link" to="/">Início</Link>
               </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/contato">Contato</Link>
-              </li>
+              
               <li className="nav-item">
                 <Link className="nav-link" to="/sobrenos">Sobre Nós</Link>
+              </li>
+              <li className="nav-item">
+                <Link className="nav-link" to="/sobrenos">Especialidades</Link>
+              </li>
+              <li className="nav-item">
+                <Link className="nav-link" to="/contato">Fale conosco</Link>
               </li>
             </ul>
             <ul className="navbar-nav ms-auto">
@@ -182,7 +186,7 @@ function Navbar() {
                     </button>
                   </li>
                   <li className="nav-item">
-                    <Link to="/cadastro" className="btn btn-signup d-flex align-items-center gap-2">
+                    <Link to="/cadastro" className="btn btn-signup  align-items-center gap-2">
                     <i className="bi bi-person-plus"></i> Inscrever-se
                     </Link>
                   </li>
@@ -266,10 +270,11 @@ function Navbar() {
 >
   <div className="modal-dialog">
     <div className="modal-content">
-      <div className="modal-header">
-        <h5 className="modal-title " id="loginModalLabel">
-          <i className="bi bi-person-circle "></i> Login
-        </h5>
+    <div className="modal-header justify-content-center">
+      <h5 className="modal-title d-flex align-items-center gap-2" id="loginModalLabel">
+        <i className="bi bi-person-circle"></i>
+        Login
+      </h5>
         <button
           type="button"
           className="btn-close"

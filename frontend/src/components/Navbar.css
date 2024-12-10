@@ -38,6 +38,11 @@
   display: block;
 }
 
+.nav-link:not(.dropdown-toggle):hover {
+  background-color: #2d9485;
+  transform: scale(1.01);
+}
+
 .navbar-nav {
   justify-content: center;
 }
@@ -103,6 +108,7 @@
   color: white;
 }
 
+
 .btn-login:hover{
   background-color: #2d9485;
   color: white;
@@ -139,11 +145,8 @@
     font-size: 0.85rem;
     border-radius: 20px;
     padding: 10px 20px; /* Ajustado para maior largura */
-    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
- 
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease; 
     margin-right: 10px;
-
-  
   
   }
 
@@ -163,7 +166,7 @@
     color: white;
     font-size: 0.85rem;
     border-radius: 20px;
-    padding: 10px 20px; /* Ajustado para maior largura */
+    padding: 10px 20px; 
     transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
     margin-right: 10px;
     border: none;
@@ -335,17 +338,20 @@
       margin: 20px;
     }
   }
+  
+
 
   /* Link "Inscreva-se" */
   .modal-footer a {
     text-decoration: none;
-    color: #bc155b;
-    font-weight: bold;
+    color: white;
+    
     transition: color 0.3s ease;
   }
 
   .modal-footer a:hover {
-    color: #9c2456;
+    color: #ffecf4;
+    font-weight: bold;
     text-decoration: underline;
   }
 
