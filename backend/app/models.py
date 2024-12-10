@@ -6,6 +6,7 @@ from flask import url_for
 
 # Modelo: Colaboradores
 class Colaboradores(db.Model):
+    __tablename__ = 'colaboradores'
     ID_Colaborador = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(255))
     telefone = db.Column(db.String(20), unique=True)  # Modificado para apenas um telefone
@@ -21,6 +22,8 @@ class Colaboradores(db.Model):
     cidade = db.Column(db.String(100))
     bairro = db.Column(db.String(100))
     photo = db.Column(db.String(255), nullable=True)
+
+    servicos = db.relationship('Servicos', secondary='colaboradores_servicos', back_populates='colaboradores')
 
     # Métodos para criptografar e verificar a senha
     def set_password(self, password):
@@ -39,6 +42,7 @@ class Colaboradores(db.Model):
 
 # Modelo: Clientes
 class Clientes(db.Model):
+    __tablename__ = 'clientes'
     ID_Cliente = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(255))
     telefone = db.Column(db.String(20), unique=True)  # Modificado para apenas um telefone
@@ -65,9 +69,18 @@ class Clientes(db.Model):
         if self.photo:
             return url_for('main.serve_photo', filename=self.photo, _external=True)
         return None  # Caso não tenha foto
+    
+class ColaboradoresServicos(db.Model):
+    __tablename__ = 'colaboradores_servicos'
+    ID_Colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.ID_Colaborador'), primary_key=True)
+    ID_Servico = db.Column(db.Integer, db.ForeignKey('servicos.ID_Servico'), primary_key=True)
+
+    colaborador = db.relationship('Colaboradores', backref=db.backref('colaboradores_servicos', lazy=True))
+    servico = db.relationship('Servicos', backref=db.backref('colaboradores_servicos', lazy=True))
 
 # Modelo: Agendamentos
 class Agendamentos(db.Model):
+    __tablename__ = 'agendamentos'
     ID_Agendamento = db.Column(db.Integer, primary_key=True)
     data_e_hora = db.Column(db.DateTime, nullable=False)
     ID_Cliente = db.Column(db.Integer, db.ForeignKey('clientes.ID_Cliente'), nullable=False)
@@ -82,15 +95,35 @@ class Agendamentos(db.Model):
         self.data_e_hora = data_e_hora
         self.ID_Cliente = ID_Cliente
         self.ID_Colaborador = ID_Colaborador
-        self.ID_Servico = ID_Servico  # Atribuindo o ID do serviço
+        self.ID_Servico = ID_Servico  
 
 
 # Modelo: Servicos
 class Servicos(db.Model):
+    __tablename__ = 'servicos'
     ID_Servico = db.Column(db.Integer, primary_key=True)
-    Nome_servico = db.Column(db.String(255))
+    Nome_servico = db.Column(db.String(255), nullable=False)
     Descricao = db.Column(db.Text)
-    Valor = db.Column(db.Numeric(10, 2))
+    Valor = db.Column(db.Numeric(10, 2))  # Mantido para serviços de Fisioterapia
+    tipo_servico = db.Column(db.String(50), nullable=False)  # Tipo: fisioterapia ou pilates
+    planos = db.Column(db.JSON, nullable=True)  # Campo para armazenar planos de Pilates
+
+    colaboradores = db.relationship('Colaboradores', secondary='colaboradores_servicos', back_populates='servicos')
+
+    # Validação para tipo de serviço
+    def __init__(self, Nome_servico, Descricao, Valor=None, tipo_servico=None, planos=None):
+        if tipo_servico not in ['fisioterapia', 'pilates']:
+            raise ValueError("O tipo de serviço deve ser 'fisioterapia' ou 'pilates'.")
+        if tipo_servico == 'pilates' and not planos:
+            raise ValueError("Serviços de Pilates devem incluir planos de pagamento.")
+        self.Nome_servico = Nome_servico
+        self.Descricao = Descricao
+        self.Valor = Valor
+        self.tipo_servico = tipo_servico
+        self.planos = planos
+
+    def __repr__(self):
+        return f'<Servico {self.Nome_servico} - {self.tipo_servico}>'
 
 class BlacklistedToken(db.Model):
     __tablename__ = 'blacklisted_tokens'
@@ -111,70 +144,81 @@ def populate_database():
                 email='fisiomaispilatesefisioterapia@gmail.com',
                 telefone='999999999',
                 cargo='Administrador',
-                cpf='000.000.000-00',  # Adicionar CPF faltando
+                cpf='000.000.000-00',  
                 is_admin=True
             )
             admin.set_password('12345')  # Certifique-se de que o método de criptografia funciona corretamente
             db.session.add(admin)
 
-    # Verificar se os serviços de fisioterapia já existem
+    # Definir os serviços
     servicos = [
         {
             "Nome_servico": "Fisioterapia Clássica",
             "Descricao": "Tratamento de lesões e dores musculares e articulares usando técnicas como termoterapia, eletroterapia, laser e crioterapia.",
             "Valor": 120.00,
+            "tipo_servico": "fisioterapia",
         },
         {
             "Nome_servico": "Reabilitação Pós-Cirúrgica",
             "Descricao": "Tratamentos específicos para ajudar na recuperação após cirurgias, focando na restauração da função e força muscular.",
             "Valor": 130.00,
+            "tipo_servico": "fisioterapia",
         },
         {
             "Nome_servico": "Neurológica para Adultos",
             "Descricao": "Exercícios para melhorar funções motoras em pacientes com doenças neurodegenerativas.",
             "Valor": 150.00,
+            "tipo_servico": "fisioterapia",
         },
         {
             "Nome_servico": "Ortopédica",
             "Descricao": "Prevenção e tratamento de disfunções musculoesqueléticas, incluindo lesões por esforço repetitivo.",
             "Valor": 110.00,
+            "tipo_servico": "fisioterapia",
         },
         {
             "Nome_servico": "Reeducação Postural Global (RPG)",
             "Descricao": "Técnicas para melhorar a postura e alinhar corretamente as articulações.",
             "Valor": 140.00,
+            "tipo_servico": "fisioterapia",
         },
         {
             "Nome_servico": "Pilates Clínico",
             "Descricao": "Focado no controle da respiração, fortalecimento do core e melhoria da postura.",
-            "Valor": 160.00,
+            "Valor": None,  # Valor não aplicável, pois será definido conforme a necessidade
+            "tipo_servico": "pilates",
+            "planos": None  # Pilates Clínico não tem planos fixos
         },
         {
-            "Nome_servico": "Pilates para Flexibilidade",
-            "Descricao": "Exercícios para aumentar a flexibilidade dos músculos e articulações.",
-            "Valor": 150.00,
-        },
-        {
-            "Nome_servico": "Pilates para Recuperação",
-            "Descricao": "Programas personalizados para ajudar na recuperação de lesões e melhorar a mobilidade.",
-            "Valor": 170.00,
-        },
-        {
-            "Nome_servico": "Pilates para Bem-Estar Geral",
-            "Descricao": "Sessões para melhorar a concentração, coordenação motora e qualidade do sono.",
-            "Valor": 140.00,
+            "Nome_servico": "Pilates Tradicional",
+            "Descricao": "Aulas de Pilates para aumentar flexibilidade e força.",
+            "Valor": None,  # Valor não aplicável, será determinado pelos planos
+            "tipo_servico": "pilates",
+            "planos": [
+                {"plano": "Plano anuais", "valor": 200.00},
+                {"plano": "Plano mensais", "valor": 300.00},
+                {"plano": "3 dias por semana", "valor": 349.99},
+                {"plano": "2 dias por semana", "valor": 299.00},
+                {"plano": "1 dia por semana", "valor": 200.00},
+            ],
         },
     ]
 
+    # Inserir os serviços no banco de dados
     for servico in servicos:
         exists = Servicos.query.filter_by(Nome_servico=servico["Nome_servico"]).first()
         if not exists:
             new_servico = Servicos(
                 Nome_servico=servico["Nome_servico"],
                 Descricao=servico["Descricao"],
-                Valor=servico["Valor"],
+                Valor=servico.get("Valor"),
+                tipo_servico=servico["tipo_servico"],
+                planos=servico.get("planos") if servico["tipo_servico"] == "pilates" else None,  # Somente serviços de Pilates terão planos
             )
             db.session.add(new_servico)
+
+    # Salvar os serviços no banco de dados
+    db.session.commit()
 
     # Criar colaboradores
     colaboradores = [
@@ -183,8 +227,7 @@ def populate_database():
         {"nome": "Manases", "email": "manases@teste.com", "telefone": "999966666", "cargo": "Fisioterapeuta", "cpf": "33333333333"},
         {"nome": "Aline Rayane", "email": "aline@teste.com", "telefone": "999955555", "cargo": "Fisioterapeuta", "cpf": "44444444444"},
         {"nome": "Eveline Santos", "email": "eveline@teste.com", "telefone": "999944444", "cargo": "Fisioterapeuta", "cpf": "55555555555"},
-]
-
+    ]
 
     for colaborador in colaboradores:
         exists = Colaboradores.query.filter_by(email=colaborador["email"]).first()
@@ -198,6 +241,36 @@ def populate_database():
             )
             new_colaborador.set_password("123")  # Criptografando a senha
             db.session.add(new_colaborador)
+
+    # Salvar colaboradores no banco de dados
+    db.session.commit()
+
+    # Associar colaboradores aos serviços
+    for colaborador in Colaboradores.query.all():
+        # Exemplo de atribuição de serviços aos colaboradores
+        if colaborador.nome == "João Victor Ramos de Souza":
+            servico = Servicos.query.filter_by(Nome_servico="Fisioterapia Clássica").first()
+            if servico not in colaborador.servicos:  # Verifica se o serviço já está associado
+                colaborador.servicos.append(servico)
+        if colaborador.nome == "Lucas Alves":
+            servico = Servicos.query.filter_by(Nome_servico="Reabilitação Pós-Cirúrgica").first()
+            if servico not in colaborador.servicos:
+                colaborador.servicos.append(servico)
+        if colaborador.nome == "Manases":
+            servico = Servicos.query.filter_by(Nome_servico="Neurológica para Adultos").first()
+            if servico not in colaborador.servicos:
+                colaborador.servicos.append(servico)
+        if colaborador.nome == "Aline Rayane":
+            servico = Servicos.query.filter_by(Nome_servico="Ortopédica").first()
+            if servico not in colaborador.servicos:
+                colaborador.servicos.append(servico)
+        if colaborador.nome == "Eveline Santos":
+            servico = Servicos.query.filter_by(Nome_servico="Reeducação Postural Global (RPG)").first()
+            if servico not in colaborador.servicos:
+                colaborador.servicos.append(servico)
+
+    # Salvar as associações no banco de dados
+    db.session.commit()
 
     # Criar clientes
     clientes = [

@@ -220,11 +220,7 @@ def register_colaborador():
     
 
 # Endpoint para retornar os serviços disponíveis
-@main.route('/api/servicos', methods=['GET'])
-def get_servicos():
-    servicos = Servicos.query.all()  # Pegue todos os serviços cadastrados
-    servicos_list = [{"ID_Servico": s.ID_Servico, "Nome_servico": s.Nome_servico} for s in servicos]
-    return jsonify(servicos_list)
+
 
 @main.route('/api/clientes', methods=['GET'])
 def get_clientes():
@@ -658,32 +654,8 @@ def horario_disponivel(data_e_hora, colaborador_id):
     return agendamento_existente is None
 
 
-
-
-
 # Rota para adicionar serviço
-@main.route('/add_servico', methods=['POST'])
-def add_servico():
-    data = request.get_json()  # Obter os dados como JSON
-    nome_servico = data.get('nome_servico')
-    descricao = data.get('descricao')
-    valor = data.get('valor')
 
-    if not nome_servico or not descricao or not valor:
-        return jsonify({"error": "Todos os campos são obrigatórios."}), 400
-
-    # Criar um novo serviço
-    novo_servico = Servicos(
-        Nome_servico=nome_servico,
-        Descricao=descricao,
-        Valor=valor
-    )
-
-    # Adicionar ao banco de dados
-    db.session.add(novo_servico)
-    db.session.commit()
-
-    return jsonify({"message": "Serviço adicionado com sucesso!"}), 200
 
 @main.route('/api/editar_usuario/<role>/<int:user_id>', methods=['PUT'])
 @jwt_required()
@@ -743,23 +715,55 @@ def alterar_senha(role, user_id):
 
 @main.route('/api/listar_usuarios', methods=['GET'])
 @jwt_required()
-def listar_usuarios():    
+def listar_usuarios():
+    # Consulta os dados de clientes e colaboradores
     clientes = Clientes.query.order_by(Clientes.nome).all()
     colaboradores = Colaboradores.query.order_by(Colaboradores.nome).all()
 
-    
+    # Formata os dados para incluir todos os campos relevantes, exceto `photo`
     usuarios = [
-        {"ID": cliente.ID_Cliente, "nome": cliente.nome, "email": cliente.email, "role": "cliente"}
+        {
+            "ID": cliente.ID_Cliente,
+            "nome": cliente.nome,
+            "email": cliente.email,
+            "telefone": cliente.telefone,
+            "endereco": cliente.endereco,
+            "bairro": cliente.bairro,
+            "cidade": cliente.cidade,
+            "cpf": cliente.cpf,
+            "estado": cliente.estado,
+            "rua": cliente.rua,
+            "referencias": cliente.referencias,
+            "dt_nasc": cliente.dt_nasc.isoformat() if cliente.dt_nasc else None,
+            "role": "cliente"
+        }
         for cliente in clientes
     ] + [
-        {"ID": colaborador.ID_Colaborador, "nome": colaborador.nome, "email": colaborador.email, "role": "colaborador"}
+        {
+            "ID": colaborador.ID_Colaborador,
+            "nome": colaborador.nome,
+            "email": colaborador.email,
+            "telefone": colaborador.telefone,
+            "endereco": colaborador.endereco,
+            "bairro": colaborador.bairro,
+            "cidade": colaborador.cidade,
+            "cpf": colaborador.cpf,
+            "estado": colaborador.estado,
+            "rua": colaborador.rua,
+            "referencias": colaborador.referencias,
+            "cargo": colaborador.cargo,
+            "is_admin": colaborador.is_admin,
+            "role": "colaborador"
+        }
         for colaborador in colaboradores
     ]
-    
-    
-    print(usuarios)  # Adicione isso para debugar
 
+    # Debug para verificar a saída
+    print(usuarios)
+
+    # Retorna os dados como JSON
     return jsonify(usuarios), 200
+
 
 
 # Deletar usuário (cliente ou colaborador)
@@ -896,24 +900,73 @@ def serve_uploads(filename):
 @main.route('/api/listar_servicos', methods=['GET'])
 def get_list_servicos():
     try:
-        servicos = Servicos.query.all()  # Pegue todos os serviços cadastrados
+        servicos = Servicos.query.all()
         if not servicos:
             return jsonify({"message": "Nenhum serviço encontrado"}), 404
 
-        servicos_list = [
-            {
+        servicos_list = []
+        for s in servicos:
+            colaboradores = [colaborador.nome for colaborador in s.colaboradores]  # Supondo que o nome seja um atributo de Colaboradores
+            servico_data = {
                 "ID_Servico": s.ID_Servico,
                 "Nome_servico": s.Nome_servico,
                 "Descricao": s.Descricao,
-                "Valor": str(s.Valor)  # Convertendo para string, para evitar problemas com decimal
+                "Valor": str(s.Valor) if s.tipo_servico == 'fisioterapia' else None,
+                "Planos": s.planos if s.tipo_servico == 'pilates' else None,
+                "Tipo": s.tipo_servico,
+                "Colaboradores": colaboradores  # Adicionando os colaboradores
             }
-            for s in servicos
-        ]
+            servicos_list.append(servico_data)
+
         return jsonify(servicos_list), 200
     except Exception as e:
         return jsonify({"message": f"Erro ao listar serviços: {str(e)}"}), 500
 
-    
+
+
+
+@main.route('/api/editar_servico/<int:id>', methods=['PUT'])
+def editar_servico(id):
+    try:
+        data = request.get_json()
+        nome_servico = data.get('nome_servico')
+        descricao = data.get('descricao')
+        valor = data.get('valor')  # Apenas para serviços de fisioterapia
+        tipo_servico = data.get('tipo_servico')
+        planos = data.get('planos')  # Planos, obrigatório para Pilates
+        colaboradores_ids = data.get('colaboradores_ids')  # IDs dos colaboradores
+
+        servico = Servicos.query.get(id)
+
+        if not servico:
+            return jsonify({"error": "Serviço não encontrado."}), 404
+
+        if not nome_servico or not descricao or not tipo_servico:
+            return jsonify({"error": "Nome, descrição e tipo de serviço são obrigatórios."}), 400
+
+        if tipo_servico == 'pilates' and not planos:
+            return jsonify({"error": "Serviços de Pilates devem incluir planos de pagamento."}), 400
+
+        # Atualizar os dados do serviço
+        servico.Nome_servico = nome_servico
+        servico.Descricao = descricao
+        servico.Valor = valor
+        servico.tipo_servico = tipo_servico
+        servico.planos = planos
+
+        # Atualizar colaboradores
+        if colaboradores_ids:
+            colaboradores = Colaboradores.query.filter(Colaboradores.ID_Colaborador.in_(colaboradores_ids)).all()
+            if len(colaboradores) != len(colaboradores_ids):
+                return jsonify({"error": "Um ou mais colaboradores não encontrados."}), 404
+            servico.colaboradores = colaboradores
+
+        db.session.commit()
+
+        return jsonify({"message": "Serviço atualizado com sucesso!"}), 200
+    except Exception as e:
+        return jsonify({"error": f"Erro ao editar serviço: {str(e)}"}), 500
+
 @main.route('/api/deletar_servico/<int:id>', methods=['DELETE'])
 @jwt_required()
 def deletar_servico(id):
@@ -930,4 +983,145 @@ def deletar_servico(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Erro ao deletar serviço: {str(e)}"}), 500
- 
+
+    
+@main.route('/add_servico', methods=['POST'])
+def add_servico():
+    try:
+        data = request.get_json()
+        nome_servico = data.get('nome_servico')
+        descricao = data.get('descricao')
+        valor = data.get('valor')  # Apenas para serviços de fisioterapia
+        tipo_servico = data.get('tipo_servico')
+        planos = data.get('planos')  # Planos, obrigatório para Pilates
+        colaboradores_ids = data.get('colaboradores_ids')  # IDs dos colaboradores
+
+        if not nome_servico or not descricao or not tipo_servico:
+            return jsonify({"error": "Nome, descrição e tipo de serviço são obrigatórios."}), 400
+
+        if tipo_servico == 'pilates' and not planos:
+            return jsonify({"error": "Serviços de Pilates devem incluir planos de pagamento."}), 400
+
+        # Criar o serviço
+        novo_servico = Servicos(
+            Nome_servico=nome_servico,
+            Descricao=descricao,
+            Valor=valor,
+            tipo_servico=tipo_servico,
+            planos=planos,
+        )
+
+        # Adicionar colaboradores ao serviço
+        if colaboradores_ids:
+            colaboradores = Colaboradores.query.filter(Colaboradores.ID_Colaborador.in_(colaboradores_ids)).all()
+            if len(colaboradores) != len(colaboradores_ids):
+                return jsonify({"error": "Um ou mais colaboradores não encontrados."}), 404
+            novo_servico.colaboradores = colaboradores
+
+        db.session.add(novo_servico)
+        db.session.commit()
+
+        return jsonify({"message": "Serviço adicionado com sucesso!"}), 201
+    except Exception as e:
+        return jsonify({"error": f"Erro ao adicionar serviço: {str(e)}"}), 500
+    
+@main.route('/api/remover_plano/<int:id_servico>', methods=['PUT'])
+@jwt_required()
+def remover_plano(id_servico):
+    try:
+        # Obtendo o serviço pelo ID
+        servico = Servicos.query.get(id_servico)
+
+        if not servico:
+            return jsonify({"message": "Serviço não encontrado"}), 404
+
+        # Obtendo o ID do plano a ser removido
+        plano_id = request.json.get('planoId')  # Plano ID enviado no corpo da requisição
+
+        # Verificando se o serviço tem planos
+        if not servico.planos:
+            return jsonify({"message": "Este serviço não possui planos."}), 400
+
+        # Removendo o plano pelo ID
+        planos_atualizados = [plano for plano in servico.planos if plano.ID != plano_id]
+
+        # Se não encontrou o plano
+        if len(planos_atualizados) == len(servico.planos):
+            return jsonify({"message": "Plano não encontrado"}), 404
+
+        # Atualizando os planos no serviço
+        servico.planos = planos_atualizados
+
+        # Salvando a atualização no banco de dados
+        db.session.commit()
+
+        return jsonify({"message": "Plano removido com sucesso!"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Erro ao remover plano: {str(e)}"}), 500
+
+@main.route('/api/adicionar_colaboradores_servico/<int:id>', methods=['POST'])
+def adicionar_colaboradores_servico(id):
+    try:
+        data = request.get_json()
+        colaboradores_ids = data.get('colaboradores_ids')  # IDs dos colaboradores a serem adicionados
+
+        servico = Servicos.query.get(id)
+
+        if not servico:
+            return jsonify({"error": "Serviço não encontrado."}), 404
+
+        if not colaboradores_ids:
+            return jsonify({"error": "Nenhum colaborador especificado."}), 400
+
+        # Obter colaboradores da base de dados
+        colaboradores = Colaboradores.query.filter(Colaboradores.ID_Colaborador.in_(colaboradores_ids)).all()
+        if len(colaboradores) != len(colaboradores_ids):
+            return jsonify({"error": "Um ou mais colaboradores não encontrados."}), 404
+
+        # Adicionar os colaboradores ao serviço
+        for colaborador in colaboradores:
+            # Verificar se a relação já existe para evitar duplicação
+            if not any(colaborador in servico.colaboradores for colaborador in colaboradores):
+                servico.colaboradores.append(colaborador)
+
+        db.session.commit()
+
+        return jsonify({"message": "Colaboradores adicionados ao serviço com sucesso!"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Erro ao adicionar colaboradores: {str(e)}"}), 500
+    
+@main.route('/api/remover_colaboradores_servico/<int:id>', methods=['DELETE'])
+def remover_colaboradores_servico(id):
+    try:
+        data = request.get_json()
+        colaboradores_ids = data.get('colaboradores_ids')  # IDs dos colaboradores a serem removidos
+
+        servico = Servicos.query.get(id)
+
+        if not servico:
+            return jsonify({"error": "Serviço não encontrado."}), 404
+
+        if not colaboradores_ids:
+            return jsonify({"error": "Nenhum colaborador especificado."}), 400
+
+        # Obter colaboradores da base de dados
+        colaboradores = Colaboradores.query.filter(Colaboradores.ID_Colaborador.in_(colaboradores_ids)).all()
+        if len(colaboradores) != len(colaboradores_ids):
+            return jsonify({"error": "Um ou mais colaboradores não encontrados."}), 404
+
+        # Remover os colaboradores do serviço
+        for colaborador in colaboradores:
+            if colaborador in servico.colaboradores:
+                servico.colaboradores.remove(colaborador)
+
+        db.session.commit()
+
+        return jsonify({"message": "Colaboradores removidos do serviço com sucesso!"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Erro ao remover colaboradores: {str(e)}"}), 500

@@ -12,7 +12,7 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
     const [cargo, setCargo] = useState(usuario.cargo || '');
   
     const handleSave = async () => {
-        console.log("Usuário Editando:", usuario);  // Verifique se o ID é válido
+        console.log("Usuário Editando:", usuario);  
         
         const dadosAtualizados = {
             nome,
@@ -25,10 +25,9 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
             cargo: role === 'colaborador' ? cargo : undefined,
         };
         
-        const idUsuario = role === 'cliente' ? usuario.ID_Cliente : usuario.ID_Colaborador;
-        console.log("ID do Usuário:", idUsuario);  
+        const idUsuario = usuario.ID;
         
-        
+               
         if (!idUsuario) {
             alert("ID do usuário inválido.");
             return;

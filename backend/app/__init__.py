@@ -1,7 +1,12 @@
 #python -m venv venv
 #.\venv\Scripts\activate
 #pip install -r requirements.txt
-#admin@teste.com  12345
+#fisiomaispilatesefisioterapia@gmail.com  12345
+
+#flask db migrate -m "mensagem"
+#flask db upgrade
+
+
 from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
