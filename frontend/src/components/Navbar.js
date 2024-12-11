@@ -220,11 +220,7 @@ function Navbar() {
                     <li>
                       <Link className="dropdown-item" to="/criaragendamento">Agendar Sessão</Link>
                     </li>
-                    {role === "admin" || role === "colaborador" ? (
-                      <>
-                        <li>
-                          <Link className="dropdown-item" to="/addservico">Adicionar Serviço</Link>
-                        </li>
+                   
                         {role === "admin" && (
                           <>
                             <li>
@@ -238,10 +234,10 @@ function Navbar() {
                             </li>
                           </>
                         )}
-                      </>
-                    ) : null}
+                      
+                    
                     <li>
-                      <Link className="dropdown-item" to="/VisualizarDados">Visualizar Agendamentos</Link>
+                      <Link className="dropdown-item" to="/visualizaragendamentos">Visualizar Agendamentos</Link>
                     </li>
                     <li>
                       <button

@@ -10,14 +10,16 @@ function Agendamento() {
   const [colaboradores, setColaboradores] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [role, setRole] = useState('');
-
+  const [planos, setPlanos] = useState([]);
+  const [tipoServico, setTipoServico] = useState('');
+  const [horariosDisponiveis, setHorariosDisponiveis] = useState([]);
   const horarios = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
+  const [loading, setLoading] = useState(false); // Estado para o carregamento
 
   useEffect(() => {
     const savedRole = localStorage.getItem('role');
     setRole(savedRole);
 
-    // Preenche automaticamente o cliente se for um cliente logado
     if (savedRole === 'cliente') {
       const userId = localStorage.getItem('userId');
       setCliente(userId);
@@ -31,14 +33,31 @@ function Agendamento() {
   useEffect(() => {
     if (servico) {
       fetchColaboradores();
+      const servicoSelecionado = servicos.find((s) => s.ID_Servico === parseInt(servico));
+      if (servicoSelecionado && servicoSelecionado.Tipo === 'pilates') {
+        setTipoServico('pilates');
+        setPlanos(servicoSelecionado.Planos || []);
+      } else {
+        setTipoServico('');
+        setPlanos([]);
+      }
     }
-  }, [servico]);
+  }, [servico, servicos]);
+
+  useEffect(() => {
+    if (data && servico) {
+      fetchHorariosDisponiveis(data, servico);
+    }
+  }, [data, servico]);
 
   const fetchServicos = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/servicos');
+      const response = await fetch('http://localhost:5000/api/listar_servicos');
       if (response.ok) {
-        setServicos(await response.json());
+        const servicosData = await response.json();
+        setServicos(servicosData);
+      } else {
+        console.error('Erro ao buscar serviços');
       }
     } catch (error) {
       console.error('Erro ao buscar serviços:', error);
@@ -46,13 +65,17 @@ function Agendamento() {
   };
 
   const fetchColaboradores = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/colaboradores');
-      if (response.ok) {
-        setColaboradores(await response.json());
+    if (servico) {
+      try {
+        const response = await fetch(`http://localhost:5000/api/colaboradores?servico_id=${servico}`);
+        if (response.ok) {
+          setColaboradores(await response.json());
+        } else {
+          console.error('Erro ao buscar colaboradores');
+        }
+      } catch (error) {
+        console.error('Erro ao buscar colaboradores:', error);
       }
-    } catch (error) {
-      console.error('Erro ao buscar colaboradores:', error);
     }
   };
 
@@ -67,15 +90,26 @@ function Agendamento() {
     }
   };
 
+  const fetchHorariosDisponiveis = async (data, servico_id) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/horarios-disponiveis?data=${data}&servico_id=${servico_id}`);
+      if (response.ok) {
+        const horarios = await response.json();
+        setHorariosDisponiveis(horarios.map(h => h.horario));
+      } else {
+        console.error('Erro ao buscar horários disponíveis');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar horários disponíveis:', error);
+    }
+  };
+
   const handleSubmit = async (e) => {
+    setLoading(true);
     e.preventDefault();
-    // Adicionar um dia à data fornecida pelo usuário
     const dataEscolhida = new Date(data);
     dataEscolhida.setDate(dataEscolhida.getDate() + 1);
-
-    // Formatando a data no formato adequado
     const dataFormatada = dataEscolhida.toISOString().split('T')[0];
-
     const dataHora = `${dataFormatada} ${hora}:00`;
 
     const agendamentoData = {
@@ -86,9 +120,9 @@ function Agendamento() {
     };
 
     const token = localStorage.getItem('token');
-
     if (!token) {
       alert('Por favor, faça login para agendar.');
+      setLoading(false);
       return;
     }
 
@@ -112,122 +146,155 @@ function Agendamento() {
       alert('Erro ao enviar agendamento.');
       console.error('Erro no agendamento:', error);
     }
+    setLoading(false);
   };
 
   return (
-    <div className="container col-md-5 my-5">
-      <div className="card shadow agendamento">
-        <div className="card-header agendamento-header">
-          <h2 className="text-center agendamento-titulo">Agendar Atendimento</h2>
-        </div>
-  
-        <div className="card-body ">
-          <form onSubmit={handleSubmit} className="row g-3">
-            <div className="row mb-3 d-flex justify-content-center">
-            <div className="col-md-3">
-              <label className="form-label">Data</label>
-              <input
-                type="date"
-                className="form-control rounded-3 shadow-sm"
-                value={data}
-                onChange={(e) => setData(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
-                required
-              />
+    <div className="container py-5">
+      <div className="row align-items-center">
+        <div className="col-md-5">
+          <div className="card shadow-lg border-0">
+            <div className="card-header text-center agendamento-header text-white rounded-top">
+              <h3 className="fw-bold">Agendar Atendimento</h3>
             </div>
-              <div className="col-md-2">
-                <label className="form-label">Hora</label>
-                <select
-                  className="form-control"
-                  value={hora}
-                  onChange={(e) => setHora(e.target.value)}
-                  required
-                >
-                  <option value="">Selecione o horário</option>
-                  {horarios.map((horario, index) => (
-                    <option key={index} value={horario}>
-                      {horario}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-md-4">
-                <label className="form-label">Serviço</label>
-                <select
-                  className="form-control"
-                  value={servico}
-                  onChange={(e) => setServico(e.target.value)}
-                  required
-                >
-                  <option value="">Selecione um serviço</option>
-                  {servicos.map((serv) => (
-                    <option key={serv.ID_Servico} value={serv.ID_Servico}>
-                      {serv.Nome_servico}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-  
-            <div className="row mb-3 d-flex justify-content-center">
-              <div className="col-md-4">
-                <label className="form-label">Colaborador</label>
-                <select
-                  className="form-control"
-                  value={colaborador}
-                  onChange={(e) => setColaborador(e.target.value)}
-                  required
-                >
-                  <option value="">Selecione um colaborador</option>
-                  {colaboradores.map((colab) => (
-                    <option key={colab.ID_Colaborador} value={colab.ID_Colaborador}>
-                      {colab.Nome}
-                    </option>
-                  ))}
-                </select>
-              </div>
-  
-              {role === 'cliente' ? (
-                <div className="col-md-5">
-                  <label className="form-label">Cliente</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={localStorage.getItem('userName')}
-                    readOnly
-                  />
-                </div>
-              ) : (
-                <div className="col-md-5">
-                  <label className="form-label">Cliente</label>
+            <div className="card-body p-4">
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <label htmlFor="servico" className="form-label">Serviço</label>
                   <select
-                    className="form-control"
-                    value={cliente}
-                    onChange={(e) => setCliente(e.target.value)}
+                    id="servico"
+                    className="form-select"
+                    value={servico}
+                    onChange={(e) => setServico(e.target.value)}
                     required
                   >
-                    <option value="">Selecione um cliente</option>
-                    {clientes.map((cli) => (
-                      <option key={cli.ID_Cliente} value={cli.ID_Cliente}>
-                        {cli.Nome}
+                    <option value="">Selecione um serviço</option>
+                    {servicos.map((serv) => (
+                      <option key={serv.ID_Servico} value={serv.ID_Servico}>
+                        {serv.Nome_servico}
                       </option>
                     ))}
                   </select>
                 </div>
-              )}
+
+                {tipoServico === 'pilates' && (
+                  <div className="mb-3">
+                    <label htmlFor="plano" className="form-label">Plano de Pilates</label>
+                    <select
+                      id="plano"
+                      className="form-select"
+                      required
+                    >
+                      <option value="">Selecione um plano</option>
+                      {planos.map((plano) => (
+                        <option key={plano.ID_Plano} value={plano.ID_Plano}>
+                          {plano.Nome_plano} - R${plano.Valor}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div className="mb-3">
+                  <label htmlFor="colaborador" className="form-label">Colaborador</label>
+                  <select
+                    id="colaborador"
+                    className="form-select"
+                    value={colaborador}
+                    onChange={(e) => setColaborador(e.target.value)}
+                    required
+                  >
+                    <option value="">Selecione um colaborador</option>
+                    {colaboradores.map((colab) => (
+                      <option key={colab.ID_Colaborador} value={colab.ID_Colaborador}>
+                        {colab.Nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label htmlFor="data" className="form-label">Data</label>
+                    <input
+                      id="data"
+                      type="date"
+                      className="form-control"
+                      value={data}
+                      onChange={(e) => setData(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      required
+                    />
+                  </div>
+                  <div className="col-md-6 mb-3">
+                    <label htmlFor="hora" className="form-label">Hora</label>
+                    <select
+                      id="hora"
+                      className="form-select"
+                      value={hora}
+                      onChange={(e) => setHora(e.target.value)}
+                      required
+                    >
+                      <option value="">Selecione o horário</option>
+                      {horariosDisponiveis.map((horario) => (
+                        <option key={horario} value={horario}>
+                          {horario}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mb-3">
+                  <label htmlFor="cliente" className="form-label">Cliente</label>
+                  {role === 'cliente' ? (
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={localStorage.getItem('userName')}
+                      readOnly
+                    />
+                  ) : (
+                    <select
+                      id="cliente"
+                      className="form-select"
+                      value={cliente}
+                      onChange={(e) => setCliente(e.target.value)}
+                      required
+                    >
+                      <option value="">Selecione um cliente</option>
+                      {clientes.map((cli) => (
+                        <option key={cli.ID_Cliente} value={cli.ID_Cliente}>
+                          {cli.Nome}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                <button type="submit" className="btn btn-signup w-100 text-uppercase fw-bold">
+                  {loading ? (
+                    <i className="bi bi-arrow-repeat spinner"></i> 
+                  ) : (
+                    <i className="bi bi-calendar-check"></i>
+                  )}{' '}
+                  {loading ? 'Carregando...' : 'Agendar sessão'}
+                </button>
+              </form>
             </div>
-  
-            <div className="col-12 text-center">
-              <button type="submit" className="btn btn-signup w-auto mx-auto">
-                Agendar
-              </button>
-            </div>
-          </form>
+          </div>
+        </div>
+
+        <div className="col-md-7 d-flex justify-content-center">
+          <img
+            src="https://via.placeholder.com/600x400"
+            alt="Agendamento"
+            className="img-fluid shadow "
+          />
         </div>
       </div>
     </div>
   );
-  
 }
 
 export default Agendamento;

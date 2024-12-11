@@ -87,7 +87,7 @@ function Cadastro() {
   return (
     <div className="container col-md-9 my-5">      
       {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
-      <div className="card shadow agendamento">
+      <div className="card shadow ">
         <div className="card-header agendamento-header">
           <h2 className="text-center agendamento-titulo">Cadastro</h2>
         </div>
@@ -243,7 +243,8 @@ function Cadastro() {
   
             <div className="col-12 text-center">
               <button type="submit" className="btn btn-signup w-auto mx-auto" disabled={loading}>
-                {loading ? "Carregando..." : "Inscrever-se"}
+              <i className="bi bi-person-plus"></i>
+                {loading ? "Carregando..." : " Inscrever-se"}
               </button>
             </div>
           </form>

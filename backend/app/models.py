@@ -150,7 +150,7 @@ def populate_database():
             admin.set_password('12345')  # Certifique-se de que o método de criptografia funciona corretamente
             db.session.add(admin)
 
-    # Definir os serviços
+   # Definir os serviços
     servicos = [
         {
             "Nome_servico": "Fisioterapia Clássica",
@@ -185,24 +185,29 @@ def populate_database():
         {
             "Nome_servico": "Pilates Clínico",
             "Descricao": "Focado no controle da respiração, fortalecimento do core e melhoria da postura.",
-            "Valor": None,  # Valor não aplicável, pois será definido conforme a necessidade
+            "Valor": None,  # Valor não aplicável diretamente, definido pelos planos
             "tipo_servico": "pilates",
-            "planos": None  # Pilates Clínico não tem planos fixos
+            "planos": [
+                {"ID_Plano": 1, "Nome_plano": "Plano Mensal", "Valor": 300.00},
+                {"ID_Plano": 2, "Nome_plano": "2 dias por semana", "Valor": 250.00},
+                {"ID_Plano": 3, "Nome_plano": "1 dia por semana", "Valor": 200.00},
+            ],
         },
         {
             "Nome_servico": "Pilates Tradicional",
             "Descricao": "Aulas de Pilates para aumentar flexibilidade e força.",
-            "Valor": None,  # Valor não aplicável, será determinado pelos planos
+            "Valor": None,  # Valor não aplicável diretamente, definido pelos planos
             "tipo_servico": "pilates",
             "planos": [
-                {"plano": "Plano anuais", "valor": 200.00},
-                {"plano": "Plano mensais", "valor": 300.00},
-                {"plano": "3 dias por semana", "valor": 349.99},
-                {"plano": "2 dias por semana", "valor": 299.00},
-                {"plano": "1 dia por semana", "valor": 200.00},
+                {"ID_Plano": 4, "Nome_plano": "Plano Anual", "Valor": 2000.00},
+                {"ID_Plano": 5, "Nome_plano": "Plano Mensal", "Valor": 300.00},
+                {"ID_Plano": 6, "Nome_plano": "3 dias por semana", "Valor": 349.99},
+                {"ID_Plano": 7, "Nome_plano": "2 dias por semana", "Valor": 299.00},
+                {"ID_Plano": 8, "Nome_plano": "1 dia por semana", "Valor": 200.00},
             ],
         },
     ]
+
 
     # Inserir os serviços no banco de dados
     for servico in servicos:

@@ -220,7 +220,7 @@ function Home() {
       </>
     ) : (
       <>
-        <i className="bi bi-person-plus"></i> Inscrever-se
+        <i className="bi bi-person-plus"></i> Inscreva-se
       </>
     )}
   </Link>

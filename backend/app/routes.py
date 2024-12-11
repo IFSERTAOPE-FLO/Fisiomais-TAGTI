@@ -28,26 +28,28 @@ def login():
     email = data.get('email', '')
     senha = data.get('senha', '')
 
-    # Verificar se o email pertence a um colaborador
+     # Verificar se o email pertence a um colaborador
     colaborador = Colaboradores.query.filter_by(email=email).first()
-
     if colaborador and colaborador.check_password(senha):
         access_token = create_access_token(identity=email)
-        response = {"access_token": access_token, "name": colaborador.nome, "photo": colaborador.photo}
-
-        if colaborador.is_admin:
-            response["role"] = "admin"  # Permissão de administrador
-        else:
-            response["role"] = "colaborador"  # Permissão de colaborador comum
-
+        response = {
+            "access_token": access_token,
+            "name": colaborador.nome,
+            "photo": colaborador.photo if colaborador.photo else "",  # Retorna vazio se não houver foto
+            "role": "admin" if colaborador.is_admin else "colaborador"
+        }
         return jsonify(response), 200
 
     # Verificar se o email pertence a um cliente
     cliente = Clientes.query.filter_by(email=email).first()
-
     if cliente and cliente.check_password(senha):
         access_token = create_access_token(identity=email)
-        return jsonify(access_token=access_token, name=cliente.nome, role="cliente", photo=cliente.photo), 200
+        return jsonify(
+            access_token=access_token,
+            name=cliente.nome,
+            role="cliente",
+            photo=cliente.photo if cliente.photo else ""  # Retorna vazio se não houver foto
+        ), 200
 
     # Se o email ou senha estiverem incorretos
     return jsonify(message="Credenciais inválidas"), 401
@@ -281,9 +283,18 @@ def horario_disponivel(data_e_hora, colaborador_id):
 
 @main.route('/api/colaboradores', methods=['GET'])
 def get_colaboradores():
-    colaboradores = Colaboradores.query.filter_by(is_admin=False).all()
+    servico_id = request.args.get('servico_id')
+    if not servico_id:
+        return jsonify({"error": "Servico ID é necessário"}), 400
     
-    print(colaboradores)  # Verifique os dados
+    colaboradores = Colaboradores.query.filter(
+        Colaboradores.servicos.any(ID_Servico=servico_id),
+        Colaboradores.is_admin == False
+    ).all()
+    
+    if not colaboradores:
+        return jsonify({"message": "Nenhum colaborador encontrado para o serviço solicitado"}), 404
+    
     colaboradores_list = [{"ID_Colaborador": c.ID_Colaborador, "Nome": c.nome} for c in colaboradores]
     return jsonify(colaboradores_list)
 
@@ -318,13 +329,19 @@ def listar_agendamentos():
             cliente = Clientes.query.get(agendamento.ID_Cliente)
             servico = Servicos.query.get(agendamento.ID_Servico)  # Relacionamento com serviços
 
+            # Checa se o serviço é de pilates
+            plano_pagamento = None
+            if servico and servico.Nome_servico.lower() == 'pilates':
+                plano_pagamento = PlanosPagamento.query.filter_by(ID_Servico=servico.ID_Servico).all()
+
             agendamentos_data.append({
                 'id': agendamento.ID_Agendamento,
                 'nome_cliente': cliente.nome if cliente else 'Cliente não encontrado',
                 'data': agendamento.data_e_hora.strftime('%Y-%m-%d'),
                 'hora': agendamento.data_e_hora.strftime('%H:%M:%S'),
                 'nome_servico': servico.Nome_servico if servico else 'Serviço não encontrado',
-                'valor_servico': float(servico.Valor) if servico and servico.Valor else 'Valor não informado'
+                'valor_servico': float(servico.Valor) if servico and servico.Valor else None,
+                'plano_pagamento': servico.planos if servico and servico.planos else []
             })
 
         return jsonify(agendamentos_data), 200
@@ -332,6 +349,7 @@ def listar_agendamentos():
     except Exception as e:
         print(f"Erro ao carregar agendamentos: {str(e)}")
         return jsonify({'message': f'Erro ao carregar agendamentos: {str(e)}'}), 500
+
 
 
 
@@ -565,17 +583,8 @@ def notificar_atendimentos():
         if cliente:
             enviar_email(cliente.email, agendamento)
 
-# Rota para enviar notificações manualmente (usado em testes ou acionamento manual via API)
-@main.route('/api/notificar_atendimentos', methods=['GET'])
-def notificar_atendimentos_route():
-    """Rota da API para acionar as notificações manualmente."""
-    try:
-        notificar_atendimentos()  # Chama a função de notificação
-        return jsonify({"message": "Notificações enviadas para os clientes."}), 200
-    except Exception as e:
-        return jsonify({"message": f"Erro ao enviar notificações: {str(e)}"}), 500
 
-
+from flask import current_app
 
 @main.route('/api/agendamento', methods=['POST'])
 @jwt_required()
@@ -629,17 +638,29 @@ def agendamento():
         db.session.add(novo_agendamento)
         db.session.commit()
 
-        # Enviar notificação de e-mail
+        # Enviar notificação de e-mail para o cliente
         subject = "Lembrete: Seu atendimento foi agendado!"
         body = f"Olá {cliente.nome},\n\nSeu atendimento foi agendado para {data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\nAtenciosamente,\nEquipe FisioMais"
-        msg = Message(subject=subject, recipients=[cliente.email], body=body)
-        
-        try:
-            mail.send(msg)
-        except Exception as e:
-            print(f"Erro ao enviar email: {str(e)}")
+        msg_cliente = Message(subject=subject, recipients=[cliente.email], body=body)
 
-        return jsonify({'message': 'Agendamento realizado com sucesso e notificação enviada'}), 201
+        # Enviar notificação de e-mail para o colaborador responsável
+        body_colaborador = f"Olá {colaborador.nome},\n\nVocê tem um atendimento agendado para o cliente {cliente.nome} em {data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\nAtenciosamente,\nEquipe FisioMais"
+        msg_colaborador = Message(subject="Novo agendamento", recipients=[colaborador.email], body=body_colaborador)
+
+        # Enviar notificação para o MAIL_DEFAULT_SENDER
+        subject_sender = "Novo agendamento realizado"
+        body_sender = f"Um novo agendamento foi realizado para o cliente {cliente.nome} com o colaborador {colaborador.nome} em {data_e_hora.strftime('%d/%m/%Y %H:%M')}."
+        msg_sender = Message(subject=subject_sender, recipients=[current_app.config['MAIL_DEFAULT_SENDER']], body=body_sender)
+
+        try:
+            # Enviar todos os e-mails
+            mail.send(msg_cliente)
+            mail.send(msg_colaborador)
+            mail.send(msg_sender)
+        except Exception as e:
+            print(f"Erro ao enviar e-mail: {str(e)}")
+
+        return jsonify({'message': 'Agendamento realizado com sucesso e notificações enviadas'}), 201
 
     except Exception as e:
         db.session.rollback()
@@ -1025,41 +1046,6 @@ def add_servico():
     except Exception as e:
         return jsonify({"error": f"Erro ao adicionar serviço: {str(e)}"}), 500
     
-@main.route('/api/remover_plano/<int:id_servico>', methods=['PUT'])
-@jwt_required()
-def remover_plano(id_servico):
-    try:
-        # Obtendo o serviço pelo ID
-        servico = Servicos.query.get(id_servico)
-
-        if not servico:
-            return jsonify({"message": "Serviço não encontrado"}), 404
-
-        # Obtendo o ID do plano a ser removido
-        plano_id = request.json.get('planoId')  # Plano ID enviado no corpo da requisição
-
-        # Verificando se o serviço tem planos
-        if not servico.planos:
-            return jsonify({"message": "Este serviço não possui planos."}), 400
-
-        # Removendo o plano pelo ID
-        planos_atualizados = [plano for plano in servico.planos if plano.ID != plano_id]
-
-        # Se não encontrou o plano
-        if len(planos_atualizados) == len(servico.planos):
-            return jsonify({"message": "Plano não encontrado"}), 404
-
-        # Atualizando os planos no serviço
-        servico.planos = planos_atualizados
-
-        # Salvando a atualização no banco de dados
-        db.session.commit()
-
-        return jsonify({"message": "Plano removido com sucesso!"}), 200
-
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"message": f"Erro ao remover plano: {str(e)}"}), 500
 
 @main.route('/api/adicionar_colaboradores_servico/<int:id>', methods=['POST'])
 def adicionar_colaboradores_servico(id):
@@ -1108,7 +1094,7 @@ def remover_colaboradores_servico(id):
         if not colaboradores_ids:
             return jsonify({"error": "Nenhum colaborador especificado."}), 400
 
-        # Obter colaboradores da base de dados
+        # Obter colaboradores da base  dados
         colaboradores = Colaboradores.query.filter(Colaboradores.ID_Colaborador.in_(colaboradores_ids)).all()
         if len(colaboradores) != len(colaboradores_ids):
             return jsonify({"error": "Um ou mais colaboradores não encontrados."}), 404

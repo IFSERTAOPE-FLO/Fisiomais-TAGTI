@@ -151,12 +151,12 @@ const Perfil = () => {
 
   return (
     <div className="container col-md-8 my-5">
-      <div className="card shadow agendamento">
+      <div className="card shadow ">
         <div className="card-header agendamento-header">
           <h1 className="text-center agendamento-titulo">Perfil do Usuário</h1>
         </div>
   
-        <div className="card-body agendamento">
+        <div className="card-body ">
           {erro && <p className="alert alert-danger">{erro}</p>}
           {sucesso && <p className="alert alert-success">{sucesso}</p>}
   

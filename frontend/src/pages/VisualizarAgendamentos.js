@@ -79,7 +79,7 @@ const VisualizarDados = () => {
 
   return (
     <div className="container col-md-6 my-5">
-      <div className="card shadow agendamento">
+      <div className="card shadow">
         <div className="card-header agendamento-header">
           <h2 className="text-center agendamento-titulo fw-bold">Visualizar Agendamentos</h2>
         </div>
@@ -87,7 +87,7 @@ const VisualizarDados = () => {
         <div className="card-body">
           {erro && <div className="alert alert-danger">{erro}</div>}
   
-          <table className="table table-str iped table-bordered mt-4 ">
+          <table className="table table-striped table-bordered mt-4 agendamento-header">
             <thead>
               <tr >
                 <th>#</th>
@@ -109,10 +109,30 @@ const VisualizarDados = () => {
                     <td>{agendamento.hora || 'Hora não informada'}</td>
                     <td>{agendamento.nome_servico || 'Serviço não encontrado'}</td>
                     <td>
-                      {agendamento.valor_servico
-                        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.valor_servico)
-                        : 'Valor não informado'}
+                      {agendamento.nome_servico === 'Pilates' && agendamento.plano_pagamento && agendamento.plano_pagamento.length > 0 ? (
+                        <ul>
+                          {agendamento.plano_pagamento.map((plano, index) => (
+                            <li key={index}>
+                              {plano.plano} -{' '}
+                              {new Intl.NumberFormat('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL',
+                              }).format(plano.valor)}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : agendamento.nome_servico.includes('Fisioterapia') && agendamento.valor_servico ? (
+                        <span>
+                          {new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL',
+                          }).format(agendamento.valor_servico)}
+                        </span>
+                      ) : (
+                        'Valor não disponível'
+                      )}
                     </td>
+
                     <td>
                       <button
                         className="btn btn-outline-info btn-sm"
