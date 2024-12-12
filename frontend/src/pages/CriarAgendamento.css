@@ -1,0 +1,9 @@
+.background-gif {
+    background-image: url('/src/images/atendF.gif');
+    background-size: cover; /* A imagem vai cobrir a área da div, mas manterá a proporção */
+    background-position: center center; /* Centraliza a imagem */
+    background-repeat: no-repeat; /* Impede a repetição */
+    position: relative;
+    width: 100%; /* A largura será 100% da tela */
+    padding-top: 36.46%; /* Para manter a proporção 1920x700, use o cálculo (700/1920) * 100 */
+  }

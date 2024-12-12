@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './CriarAgendamento.css'; // Importar o arquivo CSS para estilos
 
 function Agendamento() {
   const [data, setData] = useState('');
@@ -151,7 +152,7 @@ function Agendamento() {
   };
 
   return (
-    <div className="container py-5">
+    <div className="container py-5 background-gif">
       <div className="row align-items-center">
         <div className="col-md-5">
           <div className="card shadow-lg border-0">
@@ -286,14 +287,6 @@ function Agendamento() {
               </form>
             </div>
           </div>
-        </div>
-
-        <div className="col-md-7 d-flex justify-content-center">
-          <img
-            src="https://via.placeholder.com/600x400"
-            alt="Agendamento"
-            className="img-fluid shadow"
-          />
         </div>
       </div>
     </div>
