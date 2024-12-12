@@ -218,7 +218,7 @@ function Navbar() {
                       <Link className="dropdown-item" to="/perfil">Meu Perfil</Link>
                     </li>
                     <li>
-                      <Link className="dropdown-item" to="/criaragendamento">Agendar Sessão</Link>
+                      <Link className="dropdown-item" to="/criaragendamento">Agendar Atendimento</Link>
                     </li>
                    
                         {role === "admin" && (

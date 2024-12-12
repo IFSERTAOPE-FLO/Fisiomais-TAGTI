@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Modal, Button } from 'react-bootstrap';
+import "./Estilos.css";
 
-const VisualizarDados = () => {
+const VisualizarAgendamentos = () => {
   const [agendamentos, setAgendamentos] = useState([]);
   const [erro, setErro] = useState(null);
   const [selectedAgendamento, setSelectedAgendamento] = useState(null);
@@ -88,68 +89,70 @@ const VisualizarDados = () => {
           {erro && <div className="alert alert-danger">{erro}</div>}
   
           <table className="table table-striped table-bordered mt-4 agendamento-header">
-            <thead>
-              <tr >
-                <th>#</th>
-                <th>Nome Cliente</th>
-                <th>Data</th>
-                <th>Hora</th>
-                <th>Serviço</th>
-                <th>Valor (R$)</th>
-                <th>Detalhes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {agendamentos.length > 0 ? (
-                agendamentos.map((agendamento, index) => (
-                  <tr key={agendamento.id}>
-                    <td>{index + 1}</td>
-                    <td>{agendamento.nome_cliente || 'Cliente não informado'}</td>
-                    <td>{new Date(agendamento.data).toLocaleDateString()}</td>
-                    <td>{agendamento.hora || 'Hora não informada'}</td>
-                    <td>{agendamento.nome_servico || 'Serviço não encontrado'}</td>
-                    <td>
-                      {agendamento.nome_servico === 'Pilates' && agendamento.plano_pagamento && agendamento.plano_pagamento.length > 0 ? (
-                        <ul>
-                          {agendamento.plano_pagamento.map((plano, index) => (
-                            <li key={index}>
-                              {plano.plano} -{' '}
-                              {new Intl.NumberFormat('pt-BR', {
-                                style: 'currency',
-                                currency: 'BRL',
-                              }).format(plano.valor)}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : agendamento.nome_servico.includes('Fisioterapia') && agendamento.valor_servico ? (
-                        <span>
-                          {new Intl.NumberFormat('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL',
-                          }).format(agendamento.valor_servico)}
-                        </span>
-                      ) : (
-                        'Valor não disponível'
-                      )}
-                    </td>
+          
+  <thead className="agendamento-header">
+    <tr>
+      <th>#</th>
+      <th>Nome Cliente</th>
+      <th>Data</th>
+      <th>Hora</th>
+      <th>Serviço</th>
+      <th>Valor (R$)</th>
+      <th>Detalhes</th>
+    </tr>
+  </thead>
+  <tbody>
+    {agendamentos.length > 0 ? (
+      agendamentos.map((agendamento, index) => (
+        <tr key={agendamento.id}>
+          <td>{index + 1}</td>
+          <td>{agendamento.nome_cliente || 'Cliente não informado'}</td>
+          <td>{new Date(agendamento.data).toLocaleDateString()}</td>
+          <td>{agendamento.hora || 'Hora não informada'}</td>
+          <td>{agendamento.nome_servico || 'Serviço não encontrado'}</td>
+          <td>
+            {agendamento.plano_pagamento.length > 0 ? (
+              <ul  className="list-unstyled">
+                {agendamento.plano_pagamento.map((plano, index) => (
+                  <li key={index}>
+                    {plano.Nome_plano} -{' '}
+                    {new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                    }).format(plano.Valor)}
+                  </li>
+                ))}
+              </ul>
+            ) : agendamento.valor_servico ? (
+              <span>
+                {new Intl.NumberFormat('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                }).format(agendamento.valor_servico)}
+              </span>
+            ) : (
+              'Valor não disponível'
+            )}
+          </td>
+          <td>
+            <button
+              className="btn btn-outline-info btn-sm"
+              onClick={() => handleShowDetails(agendamento)}
+            >
+              Ver Detalhes
+            </button>
+          </td>
+        </tr>
+      ))
+    ) : (
+      <tr>
+        <td colSpan="7" className="text-center">Nenhum agendamento encontrado</td>
+      </tr>
+    )}
+  </tbody>
+</table>
 
-                    <td>
-                      <button
-                        className="btn btn-outline-info btn-sm"
-                        onClick={() => handleShowDetails(agendamento)}
-                      >
-                        Ver Detalhes
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="7" className="text-center">Nenhum agendamento encontrado</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+
   
           {/* Modal de detalhes do agendamento */}
           {selectedAgendamento && (
@@ -162,7 +165,31 @@ const VisualizarDados = () => {
                 <p><strong>Data:</strong> {new Date(selectedAgendamento.data).toLocaleDateString()}</p>
                 <p><strong>Hora:</strong> {selectedAgendamento.hora}</p>
                 <p><strong>Serviço:</strong> {selectedAgendamento.nome_servico || 'Não informado'}</p>
-                <p><strong>Valor:</strong> {selectedAgendamento.valor_servico ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAgendamento.valor_servico) : 'Não informado'}</p>
+                <p>
+        <strong>Valor:</strong>
+        {selectedAgendamento.plano_pagamento && selectedAgendamento.plano_pagamento.length > 0 ? (
+          <ul  className="list-unstyled">
+            {selectedAgendamento.plano_pagamento.map((plano, index) => (
+              <li key={index}>
+                {plano.Nome_plano} -{' '}
+                {new Intl.NumberFormat('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                }).format(plano.Valor)}
+              </li>
+            ))}
+              </ul>
+            ) : selectedAgendamento.valor_servico ? (
+              <span>
+                {new Intl.NumberFormat('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                }).format(selectedAgendamento.valor_servico)}
+              </span>
+            ) : (
+              'Valor não disponível'
+            )}
+          </p>
               </Modal.Body>
   
               <Modal.Footer>
@@ -185,4 +212,4 @@ const VisualizarDados = () => {
   );
 };
 
-export default VisualizarDados;
+export default VisualizarAgendamentos;

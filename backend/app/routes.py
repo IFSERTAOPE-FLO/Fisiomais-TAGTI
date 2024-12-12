@@ -232,45 +232,42 @@ def get_clientes():
 
 
 
-# Endpoint para verificar horários disponíveis
 @main.route('/api/horarios-disponiveis', methods=['GET'])
 def get_horarios_disponiveis():
     data = request.args.get('data')
     servico_id = request.args.get('servico_id')
 
-    # Converte a data recebida em formato datetime
     try:
         data_formatada = datetime.strptime(data, '%Y-%m-%d')
     except ValueError:
         return jsonify({"error": "Formato de data inválido"}), 400
 
-    # Buscar os colaboradores que oferecem o serviço
     colaboradores = Colaboradores.query.filter(
         Colaboradores.servicos.any(ID_Servico=servico_id)).all()
 
     if not colaboradores:
         return jsonify({"error": "Nenhum colaborador encontrado para o serviço solicitado"}), 404
 
-    # Horários possíveis entre 8h às 12h e 13h às 17h
     horarios_possiveis = ["08:00", "09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"]
-    horarios_disponiveis = []
+    horarios_status = []  # Lista para armazenar os horários com status
 
-    for colaborador in colaboradores:
-        for horario in horarios_possiveis:
+    for horario in horarios_possiveis:
+        horario_ocupado = False  # Assume que o horário está livre
+
+        for colaborador in colaboradores:
+            # Combina data e hora para verificar disponibilidade
             data_e_hora = datetime.combine(data_formatada, datetime.strptime(horario, "%H:%M").time())
-            
-            # Verificar se o horário está disponível para o colaborador
-            if horario_disponivel(data_e_hora, colaborador.ID_Colaborador):
-                horarios_disponiveis.append({
-                    "colaborador_id": colaborador.ID_Colaborador,
-                    "nome_colaborador": colaborador.nome,
-                    "horario": horario
-                })
-    
-    if not horarios_disponiveis:
-        return jsonify({"message": "Nenhum horário disponível para a data selecionada"}), 200
+            if not horario_disponivel(data_e_hora, colaborador.ID_Colaborador):
+                horario_ocupado = True
+                break  # Se qualquer colaborador já está ocupado, o horário é marcado como ocupado
 
-    return jsonify(horarios_disponiveis)
+        horarios_status.append({
+            "horario": horario,
+            "ocupado": horario_ocupado
+        })
+
+    return jsonify(horarios_status)
+
 
 def horario_disponivel(data_e_hora, colaborador_id):
     agendamento_existente = Agendamentos.query.filter_by(
@@ -298,9 +295,10 @@ def get_colaboradores():
     colaboradores_list = [{"ID_Colaborador": c.ID_Colaborador, "Nome": c.nome} for c in colaboradores]
     return jsonify(colaboradores_list)
 
+
+
    
 
-# Rota para obter os agendamentos
 @main.route('/api/listar_agendamentos', methods=['GET'])
 @jwt_required()
 def listar_agendamentos():
@@ -309,7 +307,6 @@ def listar_agendamentos():
 
         # Identifica se o usuário é colaborador ou cliente
         usuario = Colaboradores.query.filter_by(email=usuario_email).first()
-
         if not usuario:
             usuario = Clientes.query.filter_by(email=usuario_email).first()
             if not usuario:
@@ -327,21 +324,22 @@ def listar_agendamentos():
         agendamentos_data = []
         for agendamento in agendamentos:
             cliente = Clientes.query.get(agendamento.ID_Cliente)
-            servico = Servicos.query.get(agendamento.ID_Servico)  # Relacionamento com serviços
+            servico = Servicos.query.get(agendamento.ID_Servico)
 
-            # Checa se o serviço é de pilates
-            plano_pagamento = None
-            if servico and servico.Nome_servico.lower() == 'pilates':
-                plano_pagamento = PlanosPagamento.query.filter_by(ID_Servico=servico.ID_Servico).all()
+            plano_pagamento = []
+            if servico and servico.tipo_servico == 'pilates' and hasattr(agendamento, 'ID_Plano'):  # Verifica se o plano está associado ao agendamento
+                plano_selecionado = next((plano for plano in servico.planos if plano['ID_Plano'] == agendamento.ID_Plano), None)
+                if plano_selecionado:
+                    plano_pagamento.append(plano_selecionado)
 
             agendamentos_data.append({
                 'id': agendamento.ID_Agendamento,
                 'nome_cliente': cliente.nome if cliente else 'Cliente não encontrado',
                 'data': agendamento.data_e_hora.strftime('%Y-%m-%d'),
-                'hora': agendamento.data_e_hora.strftime('%H:%M:%S'),
+                'hora': agendamento.data_e_hora.strftime('%H:%M'),
                 'nome_servico': servico.Nome_servico if servico else 'Serviço não encontrado',
                 'valor_servico': float(servico.Valor) if servico and servico.Valor else None,
-                'plano_pagamento': servico.planos if servico and servico.planos else []
+                'plano_pagamento': plano_pagamento
             })
 
         return jsonify(agendamentos_data), 200
@@ -349,8 +347,6 @@ def listar_agendamentos():
     except Exception as e:
         print(f"Erro ao carregar agendamentos: {str(e)}")
         return jsonify({'message': f'Erro ao carregar agendamentos: {str(e)}'}), 500
-
-
 
 
 @main.route('/api/deletar_agendamento/<int:id>', methods=['DELETE'])
@@ -370,10 +366,6 @@ def deletar_agendamento(id):
         print(f"Erro ao deletar agendamento: {str(e)}")
         return jsonify({'message': f'Erro ao deletar agendamento: {str(e)}'}), 500
 
-from flask_mail import Message
-from app import mail
-from flask import jsonify, request
-from app.models import Agendamentos, Colaboradores, Clientes
 
 @main.route('/api/notificar_admin', methods=['POST'])
 @jwt_required()
@@ -584,7 +576,7 @@ def notificar_atendimentos():
             enviar_email(cliente.email, agendamento)
 
 
-from flask import current_app
+
 
 @main.route('/api/agendamento', methods=['POST'])
 @jwt_required()
@@ -601,12 +593,13 @@ def agendamento():
     if not cliente and not colaborador:
         return jsonify({'message': 'Usuário não encontrado'}), 404
 
+    # Verificar se o colaborador está agendando para um cliente específico
     if colaborador and 'cliente_id' in data and data['cliente_id']:
         cliente = Clientes.query.get(data['cliente_id'])
         if not cliente:
             return jsonify({'message': 'Cliente não encontrado'}), 404
     elif not colaborador:
-        cliente = Clientes.query.filter_by(email=usuario_email).first()
+        # Usuário logado deve ser cliente
         if not cliente:
             return jsonify({'message': 'Cliente não encontrado'}), 404
 
@@ -620,6 +613,20 @@ def agendamento():
     if not servico:
         return jsonify({'message': 'Serviço não encontrado'}), 404
 
+    # Validar o plano apenas para serviços que não sejam fisioterapia
+    plano_id = data.get('plano_id')
+    if servico.tipo_servico != 'fisioterapia':  # Verifica o tipo do serviço
+        if plano_id is None:
+            return jsonify({'message': 'Plano não fornecido'}), 400
+        if not servico.planos:
+            return jsonify({'message': 'O serviço selecionado não possui planos'}), 400
+
+        plano_selecionado = next((p for p in servico.planos if p['ID_Plano'] == plano_id), None)
+        if not plano_selecionado:
+            return jsonify({'message': 'Plano não encontrado'}), 404
+    else:
+        plano_id = None  # Remove o plano para serviços de fisioterapia
+
     try:
         # Verificar disponibilidade do horário
         data_e_hora = datetime.fromisoformat(data['data']).astimezone(BRASILIA)
@@ -632,28 +639,27 @@ def agendamento():
             data_e_hora=data_e_hora,
             ID_Cliente=cliente.ID_Cliente,
             ID_Colaborador=colaborador.ID_Colaborador,
-            ID_Servico=servico.ID_Servico
+            ID_Servico=servico.ID_Servico,
+            ID_Plano=plano_id  
         )
 
         db.session.add(novo_agendamento)
         db.session.commit()
 
-        # Enviar notificação de e-mail para o cliente
-        subject = "Lembrete: Seu atendimento foi agendado!"
-        body = f"Olá {cliente.nome},\n\nSeu atendimento foi agendado para {data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\nAtenciosamente,\nEquipe FisioMais"
-        msg_cliente = Message(subject=subject, recipients=[cliente.email], body=body)
+        # Enviar notificações de e-mail
+        subject_cliente = "Lembrete: Seu atendimento foi agendado!"
+        body_cliente = f"Olá {cliente.nome},\n\nSeu atendimento foi agendado para {data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\nAtenciosamente,\nEquipe FisioMais"
+        msg_cliente = Message(subject=subject_cliente, recipients=[cliente.email], body=body_cliente)
 
-        # Enviar notificação de e-mail para o colaborador responsável
+        subject_colaborador = "Novo agendamento"
         body_colaborador = f"Olá {colaborador.nome},\n\nVocê tem um atendimento agendado para o cliente {cliente.nome} em {data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\nAtenciosamente,\nEquipe FisioMais"
-        msg_colaborador = Message(subject="Novo agendamento", recipients=[colaborador.email], body=body_colaborador)
+        msg_colaborador = Message(subject=subject_colaborador, recipients=[colaborador.email], body=body_colaborador)
 
-        # Enviar notificação para o MAIL_DEFAULT_SENDER
         subject_sender = "Novo agendamento realizado"
         body_sender = f"Um novo agendamento foi realizado para o cliente {cliente.nome} com o colaborador {colaborador.nome} em {data_e_hora.strftime('%d/%m/%Y %H:%M')}."
         msg_sender = Message(subject=subject_sender, recipients=[current_app.config['MAIL_DEFAULT_SENDER']], body=body_sender)
 
         try:
-            # Enviar todos os e-mails
             mail.send(msg_cliente)
             mail.send(msg_colaborador)
             mail.send(msg_sender)
@@ -676,8 +682,6 @@ def horario_disponivel(data_e_hora, colaborador_id):
 
 
 # Rota para adicionar serviço
-
-
 @main.route('/api/editar_usuario/<role>/<int:user_id>', methods=['PUT'])
 @jwt_required()
 def editar_usuario(role, user_id):
@@ -1069,7 +1073,7 @@ def adicionar_colaboradores_servico(id):
         # Adicionar os colaboradores ao serviço
         for colaborador in colaboradores:
             # Verificar se a relação já existe para evitar duplicação
-            if not any(colaborador in servico.colaboradores for colaborador in colaboradores):
+            if colaborador not in servico.colaboradores:
                 servico.colaboradores.append(colaborador)
 
         db.session.commit()
@@ -1079,6 +1083,7 @@ def adicionar_colaboradores_servico(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Erro ao adicionar colaboradores: {str(e)}"}), 500
+
     
 @main.route('/api/remover_colaboradores_servico/<int:id>', methods=['DELETE'])
 def remover_colaboradores_servico(id):

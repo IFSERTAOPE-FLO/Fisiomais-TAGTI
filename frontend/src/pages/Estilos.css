@@ -7,15 +7,29 @@
 .agendamento-header {
   border-bottom: 1px solid #f1f1f1;
   background-color: #2d9184;
-  padding: 15px;
-  border-top-left-radius: 15px;
-  border-top-right-radius: 15px;
+  color: white;
 }
 
 .agendamento-titulo {
   color: white;
   margin: 0;
 }
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #e6f2f0; /* Variação de verde mais claro */
+}
+
+.table-striped tbody tr:nth-of-type(even) {
+  background-color: #ccdedb; /* Outra variação de verde mais claro */
+}
+
+.table thead th {
+  background-color: #3bd0bc; /* Fundo verde escuro */
+  color: white; /* Texto branco */
+  font-weight: bold; /* Texto em negrito */
+  text-align: center; /* Texto centralizado */
+}
+
 
 
 

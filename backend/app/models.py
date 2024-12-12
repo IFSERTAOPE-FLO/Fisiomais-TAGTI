@@ -78,6 +78,7 @@ class ColaboradoresServicos(db.Model):
     colaborador = db.relationship('Colaboradores', backref=db.backref('colaboradores_servicos', lazy=True))
     servico = db.relationship('Servicos', backref=db.backref('colaboradores_servicos', lazy=True))
 
+
 # Modelo: Agendamentos
 class Agendamentos(db.Model):
     __tablename__ = 'agendamentos'
@@ -86,16 +87,19 @@ class Agendamentos(db.Model):
     ID_Cliente = db.Column(db.Integer, db.ForeignKey('clientes.ID_Cliente'), nullable=False)
     ID_Colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.ID_Colaborador'), nullable=False)
     ID_Servico = db.Column(db.Integer, db.ForeignKey('servicos.ID_Servico'), nullable=False)  # Novo relacionamento
+    ID_Plano = db.Column(db.Integer, nullable=True)  # Novo campo para armazenar o ID do plano selecionado
 
     cliente = db.relationship('Clientes', backref=db.backref('agendamentos', lazy=True))
     colaborador = db.relationship('Colaboradores', backref=db.backref('agendamentos', lazy=True))
     servico = db.relationship('Servicos', backref=db.backref('agendamentos', lazy=True))  # Relacionamento com serviços
 
-    def __init__(self, data_e_hora, ID_Cliente, ID_Colaborador, ID_Servico):
+    def __init__(self, data_e_hora, ID_Cliente, ID_Colaborador, ID_Servico, ID_Plano=None):
         self.data_e_hora = data_e_hora
         self.ID_Cliente = ID_Cliente
         self.ID_Colaborador = ID_Colaborador
-        self.ID_Servico = ID_Servico  
+        self.ID_Servico = ID_Servico
+        self.ID_Plano = ID_Plano  # Novo campo para inicializar o ID do plano
+
 
 
 # Modelo: Servicos
@@ -249,30 +253,43 @@ def populate_database():
 
     # Salvar colaboradores no banco de dados
     db.session.commit()
+    
 
     # Associar colaboradores aos serviços
     for colaborador in Colaboradores.query.all():
         # Exemplo de atribuição de serviços aos colaboradores
         if colaborador.nome == "João Victor Ramos de Souza":
             servico = Servicos.query.filter_by(Nome_servico="Fisioterapia Clássica").first()
-            if servico not in colaborador.servicos:  # Verifica se o serviço já está associado
+            if servico and servico not in colaborador.servicos:  # Verifica se o serviço já está associado
                 colaborador.servicos.append(servico)
+            servico2 = Servicos.query.filter_by(Nome_servico="Pilates Clínico").first()
+            if servico2 and servico2 not in colaborador.servicos:  # Verifica se o serviço já está associado
+                colaborador.servicos.append(servico2)
         if colaborador.nome == "Lucas Alves":
             servico = Servicos.query.filter_by(Nome_servico="Reabilitação Pós-Cirúrgica").first()
-            if servico not in colaborador.servicos:
+            if servico and servico not in colaborador.servicos:
                 colaborador.servicos.append(servico)
         if colaborador.nome == "Manases":
             servico = Servicos.query.filter_by(Nome_servico="Neurológica para Adultos").first()
-            if servico not in colaborador.servicos:
+            if servico and servico not in colaborador.servicos:
                 colaborador.servicos.append(servico)
         if colaborador.nome == "Aline Rayane":
             servico = Servicos.query.filter_by(Nome_servico="Ortopédica").first()
-            if servico not in colaborador.servicos:
+            if servico and servico not in colaborador.servicos:
                 colaborador.servicos.append(servico)
+            servico2 = Servicos.query.filter_by(Nome_servico="Reeducação Postural Global (RPG)").first()
+            if servico2 and servico2 not in colaborador.servicos:
+                colaborador.servicos.append(servico2)
         if colaborador.nome == "Eveline Santos":
             servico = Servicos.query.filter_by(Nome_servico="Reeducação Postural Global (RPG)").first()
-            if servico not in colaborador.servicos:
+            if servico and servico not in colaborador.servicos:
                 colaborador.servicos.append(servico)
+            servico2 = Servicos.query.filter_by(Nome_servico="Pilates Tradicional").first()
+            if servico2 and servico2 not in colaborador.servicos:
+                colaborador.servicos.append(servico2)
+
+    db.session.commit()
+
 
     # Salvar as associações no banco de dados
     db.session.commit()

@@ -13,7 +13,7 @@ function Agendamento() {
   const [planos, setPlanos] = useState([]);
   const [tipoServico, setTipoServico] = useState('');
   const [horariosDisponiveis, setHorariosDisponiveis] = useState([]);
-  const horarios = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
+  const [planoSelecionado, setPlanoSelecionado] = useState('');
   const [loading, setLoading] = useState(false); // Estado para o carregamento
 
   useEffect(() => {
@@ -117,6 +117,7 @@ function Agendamento() {
       colaborador_id: colaborador,
       data: dataHora,
       cliente_id: cliente,
+      plano_id: planoSelecionado // Adiciona o plano selecionado
     };
 
     const token = localStorage.getItem('token');
@@ -183,6 +184,8 @@ function Agendamento() {
                     <select
                       id="plano"
                       className="form-select"
+                      value={planoSelecionado}
+                      onChange={(e) => setPlanoSelecionado(parseInt(e.target.value, 10))}  // Certifique-se de enviar um número
                       required
                     >
                       <option value="">Selecione um plano</option>
@@ -289,7 +292,7 @@ function Agendamento() {
           <img
             src="https://via.placeholder.com/600x400"
             alt="Agendamento"
-            className="img-fluid shadow "
+            className="img-fluid shadow"
           />
         </div>
       </div>
