@@ -297,8 +297,6 @@ def get_colaboradores():
 
 
 
-   
-
 @main.route('/api/listar_agendamentos', methods=['GET'])
 @jwt_required()
 def listar_agendamentos():
@@ -947,51 +945,6 @@ def get_list_servicos():
     except Exception as e:
         return jsonify({"message": f"Erro ao listar serviços: {str(e)}"}), 500
 
-
-
-
-@main.route('/api/editar_servico/<int:id>', methods=['PUT'])
-def editar_servico(id):
-    try:
-        data = request.get_json()
-        nome_servico = data.get('nome_servico')
-        descricao = data.get('descricao')
-        valor = data.get('valor')  # Apenas para serviços de fisioterapia
-        tipo_servico = data.get('tipo_servico')
-        planos = data.get('planos')  # Planos, obrigatório para Pilates
-        colaboradores_ids = data.get('colaboradores_ids')  # IDs dos colaboradores
-
-        servico = Servicos.query.get(id)
-
-        if not servico:
-            return jsonify({"error": "Serviço não encontrado."}), 404
-
-        if not nome_servico or not descricao or not tipo_servico:
-            return jsonify({"error": "Nome, descrição e tipo de serviço são obrigatórios."}), 400
-
-        if tipo_servico == 'pilates' and not planos:
-            return jsonify({"error": "Serviços de Pilates devem incluir planos de pagamento."}), 400
-
-        # Atualizar os dados do serviço
-        servico.Nome_servico = nome_servico
-        servico.Descricao = descricao
-        servico.Valor = valor
-        servico.tipo_servico = tipo_servico
-        servico.planos = planos
-
-        # Atualizar colaboradores
-        if colaboradores_ids:
-            colaboradores = Colaboradores.query.filter(Colaboradores.ID_Colaborador.in_(colaboradores_ids)).all()
-            if len(colaboradores) != len(colaboradores_ids):
-                return jsonify({"error": "Um ou mais colaboradores não encontrados."}), 404
-            servico.colaboradores = colaboradores
-
-        db.session.commit()
-
-        return jsonify({"message": "Serviço atualizado com sucesso!"}), 200
-    except Exception as e:
-        return jsonify({"error": f"Erro ao editar serviço: {str(e)}"}), 500
-
 @main.route('/api/deletar_servico/<int:id>', methods=['DELETE'])
 @jwt_required()
 def deletar_servico(id):
@@ -1016,24 +969,21 @@ def add_servico():
         data = request.get_json()
         nome_servico = data.get('nome_servico')
         descricao = data.get('descricao')
-        valor = data.get('valor')  # Apenas para serviços de fisioterapia
+        valor = data.get('valor')
         tipo_servico = data.get('tipo_servico')
-        planos = data.get('planos')  # Planos, obrigatório para Pilates
         colaboradores_ids = data.get('colaboradores_ids')  # IDs dos colaboradores
+        planos = data.get('planos')  # Planos para serviços de pilates, se houver
 
         if not nome_servico or not descricao or not tipo_servico:
             return jsonify({"error": "Nome, descrição e tipo de serviço são obrigatórios."}), 400
-
-        if tipo_servico == 'pilates' and not planos:
-            return jsonify({"error": "Serviços de Pilates devem incluir planos de pagamento."}), 400
 
         # Criar o serviço
         novo_servico = Servicos(
             Nome_servico=nome_servico,
             Descricao=descricao,
-            Valor=valor,
+            Valor=valor if tipo_servico == 'fisioterapia' else None,  # Valor só para fisioterapia
             tipo_servico=tipo_servico,
-            planos=planos,
+            planos=planos if tipo_servico == 'pilates' else None  # Somente planos para pilates
         )
 
         # Adicionar colaboradores ao serviço
@@ -1043,76 +993,11 @@ def add_servico():
                 return jsonify({"error": "Um ou mais colaboradores não encontrados."}), 404
             novo_servico.colaboradores = colaboradores
 
+        # Inserir no banco de dados
         db.session.add(novo_servico)
         db.session.commit()
 
-        return jsonify({"message": "Serviço adicionado com sucesso!"}), 201
+        return jsonify({"message": "Serviço adicionado com sucesso!", "servico": novo_servico}), 201
     except Exception as e:
         return jsonify({"error": f"Erro ao adicionar serviço: {str(e)}"}), 500
     
-
-@main.route('/api/adicionar_colaboradores_servico/<int:id>', methods=['POST'])
-def adicionar_colaboradores_servico(id):
-    try:
-        data = request.get_json()
-        colaboradores_ids = data.get('colaboradores_ids')  # IDs dos colaboradores a serem adicionados
-
-        servico = Servicos.query.get(id)
-
-        if not servico:
-            return jsonify({"error": "Serviço não encontrado."}), 404
-
-        if not colaboradores_ids:
-            return jsonify({"error": "Nenhum colaborador especificado."}), 400
-
-        # Obter colaboradores da base de dados
-        colaboradores = Colaboradores.query.filter(Colaboradores.ID_Colaborador.in_(colaboradores_ids)).all()
-        if len(colaboradores) != len(colaboradores_ids):
-            return jsonify({"error": "Um ou mais colaboradores não encontrados."}), 404
-
-        # Adicionar os colaboradores ao serviço
-        for colaborador in colaboradores:
-            # Verificar se a relação já existe para evitar duplicação
-            if colaborador not in servico.colaboradores:
-                servico.colaboradores.append(colaborador)
-
-        db.session.commit()
-
-        return jsonify({"message": "Colaboradores adicionados ao serviço com sucesso!"}), 200
-
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": f"Erro ao adicionar colaboradores: {str(e)}"}), 500
-
-    
-@main.route('/api/remover_colaboradores_servico/<int:id>', methods=['DELETE'])
-def remover_colaboradores_servico(id):
-    try:
-        data = request.get_json()
-        colaboradores_ids = data.get('colaboradores_ids')  # IDs dos colaboradores a serem removidos
-
-        servico = Servicos.query.get(id)
-
-        if not servico:
-            return jsonify({"error": "Serviço não encontrado."}), 404
-
-        if not colaboradores_ids:
-            return jsonify({"error": "Nenhum colaborador especificado."}), 400
-
-        # Obter colaboradores da base  dados
-        colaboradores = Colaboradores.query.filter(Colaboradores.ID_Colaborador.in_(colaboradores_ids)).all()
-        if len(colaboradores) != len(colaboradores_ids):
-            return jsonify({"error": "Um ou mais colaboradores não encontrados."}), 404
-
-        # Remover os colaboradores do serviço
-        for colaborador in colaboradores:
-            if colaborador in servico.colaboradores:
-                servico.colaboradores.remove(colaborador)
-
-        db.session.commit()
-
-        return jsonify({"message": "Colaboradores removidos do serviço com sucesso!"}), 200
-
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": f"Erro ao remover colaboradores: {str(e)}"}), 500

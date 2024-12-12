@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Modal, Button } from 'react-bootstrap';
-import "./Estilos.css";
+import { FaCalendarAlt } from 'react-icons/fa'; // Ícone de calendário
+import './Estilos.css';
+import Calendar from 'react-calendar'; // Para exibir o calendário
 
 const VisualizarAgendamentos = () => {
   const [agendamentos, setAgendamentos] = useState([]);
@@ -9,16 +11,19 @@ const VisualizarAgendamentos = () => {
   const [selectedAgendamento, setSelectedAgendamento] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [role, setRole] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [showDateFilterModal, setShowDateFilterModal] = useState(false); // Para controlar o novo modal de filtro de data
 
   useEffect(() => {
     const fetchAgendamentos = async () => {
       try {
         const response = await axios.get('http://localhost:5000/api/listar_agendamentos', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
 
         if (response.data.length === 0) {
-          setAgendamentos([]); // Apenas setando um array vazio, sem mensagem de erro
+          setAgendamentos([]);
         } else {
           setAgendamentos(response.data);
         }
@@ -52,9 +57,9 @@ const VisualizarAgendamentos = () => {
   const handleDeleteAgendamento = async (id) => {
     try {
       await axios.delete(`http://localhost:5000/api/deletar_agendamento/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      setAgendamentos(agendamentos.filter(ag => ag.id !== id)); // Atualiza a lista localmente
+      setAgendamentos(agendamentos.filter((ag) => ag.id !== id));
       handleCloseModal();
     } catch (error) {
       console.error('Erro ao deletar agendamento:', error);
@@ -64,11 +69,13 @@ const VisualizarAgendamentos = () => {
 
   const handleNotifyAdmin = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/api/notificar_admin', {
-        agendamento_id: selectedAgendamento.id
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      await axios.post(
+        'http://localhost:5000/api/notificar_admin',
+        { agendamento_id: selectedAgendamento.id },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        }
+      );
       alert('Administrador notificado com sucesso!');
       handleCloseModal();
     } catch (error) {
@@ -76,84 +83,179 @@ const VisualizarAgendamentos = () => {
       alert('Erro ao notificar admin.');
     }
   };
-  
+
+  const handleSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const handleDateFilter = (date) => {
+    setSelectedDate(date);
+    setShowDateFilterModal(false); // Fecha o modal de filtro de data após selecionar a data
+  };
+
+  const sortedAgendamentos = React.useMemo(() => {
+    let filteredAgendamentos = agendamentos;
+
+    // Filtrando por data selecionada
+    if (selectedDate) {
+      filteredAgendamentos = filteredAgendamentos.filter(
+        (agendamento) =>
+          new Date(agendamento.data).toLocaleDateString() === new Date(selectedDate).toLocaleDateString()
+      );
+    }
+
+    // Ordenando agendamentos por data e hora
+    filteredAgendamentos.sort((a, b) => {
+      const dateA = new Date(a.data);
+      const dateB = new Date(b.data);
+
+      if (dateA.getTime() !== dateB.getTime()) {
+        return dateA - dateB;
+      }
+
+      const timeA = a.hora.split(':').map(Number);
+      const timeB = b.hora.split(':').map(Number);
+
+      const minutesA = timeA[0] * 60 + timeA[1];
+      const minutesB = timeB[0] * 60 + timeB[1];
+
+      return minutesA - minutesB;
+    });
+
+    // Se houver a configuração de ordenação, aplicar
+    if (sortConfig.key) {
+      filteredAgendamentos.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return filteredAgendamentos;
+  }, [agendamentos, sortConfig, selectedDate]);
 
   return (
-    <div className="container col-md-6 my-5">
+    <div className="container col-md-8 my-5">
       <div className="card shadow">
-        <div className="card-header agendamento-header">
-          <h2 className="text-center agendamento-titulo fw-bold">Visualizar Agendamentos</h2>
+        <div className="card-header ">
+          <h2 className="text-center text-primary fw-bold">Visualizar Agendamentos</h2>
         </div>
-  
+
         <div className="card-body">
-          {erro && <div className="alert alert-danger">{erro}</div>}
-  
+          {erro && agendamentos.length > 0 && <div className="alert alert-danger">{erro}</div>}
+
           <table className="table table-striped table-bordered mt-4 agendamento-header">
-          
-  <thead className="agendamento-header">
-    <tr>
-      <th>#</th>
-      <th>Nome Cliente</th>
-      <th>Data</th>
-      <th>Hora</th>
-      <th>Serviço</th>
-      <th>Valor (R$)</th>
-      <th>Detalhes</th>
-    </tr>
-  </thead>
-  <tbody>
-    {agendamentos.length > 0 ? (
-      agendamentos.map((agendamento, index) => (
-        <tr key={agendamento.id}>
-          <td>{index + 1}</td>
-          <td>{agendamento.nome_cliente || 'Cliente não informado'}</td>
-          <td>{new Date(agendamento.data).toLocaleDateString()}</td>
-          <td>{agendamento.hora || 'Hora não informada'}</td>
-          <td>{agendamento.nome_servico || 'Serviço não encontrado'}</td>
-          <td>
-            {agendamento.plano_pagamento.length > 0 ? (
-              <ul  className="list-unstyled">
-                {agendamento.plano_pagamento.map((plano, index) => (
-                  <li key={index}>
-                    {plano.Nome_plano} -{' '}
-                    {new Intl.NumberFormat('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL',
-                    }).format(plano.Valor)}
-                  </li>
-                ))}
-              </ul>
-            ) : agendamento.valor_servico ? (
-              <span>
-                {new Intl.NumberFormat('pt-BR', {
-                  style: 'currency',
-                  currency: 'BRL',
-                }).format(agendamento.valor_servico)}
-              </span>
-            ) : (
-              'Valor não disponível'
-            )}
-          </td>
-          <td>
-            <button
-              className="btn btn-outline-info btn-sm"
-              onClick={() => handleShowDetails(agendamento)}
+            <thead className="agendamento-header">
+              <tr>
+                <th>#</th>
+                <th
+                  onClick={() => handleSort('nome_cliente')}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Nome Cliente{' '}
+                  {sortConfig.key === 'nome_cliente' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                </th>
+                
+              <th
+              onClick={() => handleSort('data')}
+              style={{ cursor: 'pointer', verticalAlign: 'middle' }} // Garante alinhamento vertical no <th>
             >
-              Ver Detalhes
-            </button>
-          </td>
-        </tr>
-      ))
-    ) : (
-      <tr>
-        <td colSpan="7" className="text-center">Nenhum agendamento encontrado</td>
-      </tr>
-    )}
-  </tbody>
-</table>
+              Data{' '}
+              {sortConfig.key === 'data' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+              <Button
+                variant="btn-light" 
+                onClick={(e) => {
+                  e.stopPropagation(); // Impede a propagação do clique para o <th>
+                  setShowDateFilterModal(true); // Exibe o modal de filtro de data
+                }}
+                className="ms-2 align-middle p-0" // Adiciona espaço à esquerda e remove padding extra
+                style={{ lineHeight: 1, height: 'auto' }} // Garante altura consistente
+              >
+                <FaCalendarAlt />
+              </Button>
+            </th>
+                <th>Hora</th>
+                <th>Serviço</th>
+                <th>Valor (R$)</th>
+                <th>Detalhes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedAgendamentos.length > 0 ? (
+                sortedAgendamentos.map((agendamento, index) => (
+                  <tr key={agendamento.id}>
+                    <td>{index + 1}</td>
+                    <td>{agendamento.nome_cliente || 'Cliente não informado'}</td>
+                    <td>{new Date(agendamento.data).toLocaleDateString()}</td>
+                    <td>{agendamento.hora || 'Hora não informada'}</td>
+                    <td>{agendamento.nome_servico || 'Serviço não encontrado'}</td>
+                    <td>
+                      {agendamento.plano_pagamento.length > 0 ? (
+                        <ul className="list-unstyled">
+                          {agendamento.plano_pagamento.map((plano, index) => (
+                            <li key={index}>
+                              {plano.Nome_plano} -{' '}
+                              {new Intl.NumberFormat('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL',
+                              }).format(plano.Valor)}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : agendamento.valor_servico ? (
+                        <span>
+                          {new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL',
+                          }).format(agendamento.valor_servico)}
+                        </span>
+                      ) : (
+                        'Valor não disponível'
+                      )}
+                    </td>
+                    <td>
+                      <button
+                        className="btn btn-outline-info btn-sm"
+                        onClick={() => handleShowDetails(agendamento)}
+                      >
+                        Ver Detalhes
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="7" className="text-center">
+                    Nenhum agendamento encontrado
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
 
+          {/* Modal de filtro de data */}
+          <Modal show={showDateFilterModal} onHide={() => setShowDateFilterModal(false)}>
+            <Modal.Header closeButton>
+              <Modal.Title>Filtro de Datas</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <Calendar value={selectedDate} onChange={handleDateFilter} />
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="btn btn-secondary" onClick={() => setShowDateFilterModal(false)}>
+                Fechar
+              </Button>
+            </Modal.Footer>
+          </Modal>
 
-  
           {/* Modal de detalhes do agendamento */}
           {selectedAgendamento && (
             <Modal show={showModal} onHide={handleCloseModal}>
@@ -161,39 +263,49 @@ const VisualizarAgendamentos = () => {
                 <Modal.Title>Detalhes do Agendamento</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                <p><strong>Nome do Cliente:</strong> {selectedAgendamento.nome_cliente}</p>
-                <p><strong>Data:</strong> {new Date(selectedAgendamento.data).toLocaleDateString()}</p>
-                <p><strong>Hora:</strong> {selectedAgendamento.hora}</p>
-                <p><strong>Serviço:</strong> {selectedAgendamento.nome_servico || 'Não informado'}</p>
                 <p>
-        <strong>Valor:</strong>
-        {selectedAgendamento.plano_pagamento && selectedAgendamento.plano_pagamento.length > 0 ? (
-          <ul  className="list-unstyled">
-            {selectedAgendamento.plano_pagamento.map((plano, index) => (
-              <li key={index}>
-                {plano.Nome_plano} -{' '}
-                {new Intl.NumberFormat('pt-BR', {
-                  style: 'currency',
-                  currency: 'BRL',
-                }).format(plano.Valor)}
-              </li>
-            ))}
-              </ul>
-            ) : selectedAgendamento.valor_servico ? (
-              <span>
-                {new Intl.NumberFormat('pt-BR', {
-                  style: 'currency',
-                  currency: 'BRL',
-                }).format(selectedAgendamento.valor_servico)}
-              </span>
-            ) : (
-              'Valor não disponível'
-            )}
-          </p>
+                  <strong>Nome do Cliente:</strong> {selectedAgendamento.nome_cliente}
+                </p>
+                <p>
+                  <strong>Data:</strong> {new Date(selectedAgendamento.data).toLocaleDateString()}
+                </p>
+                <p>
+                  <strong>Hora:</strong> {selectedAgendamento.hora}
+                </p>
+                <p>
+                  <strong>Serviço:</strong> {selectedAgendamento.nome_servico || 'Não informado'}
+                </p>
+                <p>
+                  <strong>Valor:</strong>
+                  {selectedAgendamento.plano_pagamento && selectedAgendamento.plano_pagamento.length > 0 ? (
+                    <ul className="list-unstyled">
+                      {selectedAgendamento.plano_pagamento.map((plano, index) => (
+                        <li key={index}>
+                          {plano.Nome_plano} -{' '}
+                          {new Intl.NumberFormat('pt-BR', {
+                            style: 'currency',
+                            currency: 'BRL',
+                          }).format(plano.Valor)}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : selectedAgendamento.valor_servico ? (
+                    <span>
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      }).format(selectedAgendamento.valor_servico)}
+                    </span>
+                  ) : (
+                    'Valor não disponível'
+                  )}
+                </p>
               </Modal.Body>
-  
+
               <Modal.Footer>
-                <Button variant="btn btn-secondary" onClick={handleCloseModal}>Fechar</Button>
+                <Button variant="btn btn-secondary" onClick={handleCloseModal}>
+                  Fechar
+                </Button>
                 {role === 'admin' ? (
                   <Button variant="btn btn-danger" onClick={() => handleDeleteAgendamento(selectedAgendamento.id)}>
                     Apagar Agendamento
@@ -203,6 +315,7 @@ const VisualizarAgendamentos = () => {
                     Notificar Administrador
                   </Button>
                 )}
+               
               </Modal.Footer>
             </Modal>
           )}

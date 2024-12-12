@@ -155,8 +155,8 @@ function Agendamento() {
       <div className="row align-items-center">
         <div className="col-md-5">
           <div className="card shadow-lg border-0">
-            <div className="card-header text-center agendamento-header text-white rounded-top">
-              <h3 className="fw-bold">Agendar Atendimento</h3>
+            <div className="card-header text-center  rounded-top">
+              <h3 className="fw-bold  text-primary ">Agendar atendimento</h3>
             </div>
             <div className="card-body p-4">
               <form onSubmit={handleSubmit}>
