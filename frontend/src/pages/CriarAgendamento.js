@@ -275,7 +275,7 @@ function Agendamento() {
                     </select>
                   )}
                 </div>
-
+            
                 <button type="submit" className="btn btn-signup w-100 text-uppercase fw-bold">
                   {loading ? (
                     <i className="bi bi-arrow-repeat spinner"></i> 
@@ -283,11 +283,22 @@ function Agendamento() {
                     <i className="bi bi-calendar-check"></i>
                   )}{' '}
                   {loading ? 'Carregando...' : 'Agendar sessão'}
-                </button>
+                  </button>
               </form>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Aqui ficam as imagens animadas */}
+      <div className="images-group">
+        <img src="/images/logo.png" alt="Logo 1" className="imagem-animada logo1" />
+        <img src="/images/logo1.png" alt="Logo 2" className="imagem-animada logo2" />
+        <img src="/images/logo2.png" alt="Logo 3" className="imagem-animada logo3" />
+        <img src="/images/logo3.png" alt="Logo 4" className="imagem-animada logo4" />
+        <img src="/images/logo4.png" alt="Logo 5" className="imagem-animada logo5" />
+        <img src="/images/smart.png" alt="Smart" className="imagem-animada smart" />
+        <img src="/images/client.png" alt="Client" className="imagem-animada client" />
       </div>
     </div>
   );
