@@ -32,7 +32,12 @@
 
 
 
-
+form select, 
+form input[type="date"] {
+  cursor: pointer; /* Muda o cursor para pointer */
+}
+  
+ 
 .btn-pink {
   background-color: #bc155b;
   color: white;
