@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
-import './Estilos.css';
+import '../css/Estilos.css';
 
 function Cadastro() {
   const [nome, setNome] = useState('');
@@ -88,15 +88,15 @@ function Cadastro() {
     <div className="container col-md-9 my-5">      
       {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
       <div className="card shadow ">
-        <div className="card-header agendamento-header">
-          <h2 className="text-center agendamento-titulo">Cadastro</h2>
+        <div className="card-header ">
+          <h2 className="text-center text-primary">Cadastro</h2>
         </div>
         <div className="card-body">
           <form onSubmit={(e) => { e.preventDefault(); handleRegister(); }}>
             {/* Nome e Email */}
             <div className="row mb-2">
               <div className="col-12 col-md-4">
-                <label htmlFor="nome" className="form-label">Nome*</label>
+                <label htmlFor="nome" className="form-label text-secondary">Nome*</label>
                 <input
                   type="text"
                   className="form-control"
@@ -107,7 +107,7 @@ function Cadastro() {
                 />
               </div>
               <div className="col-12 col-md-2">
-                <label htmlFor="cpf" className="form-label">CPF*</label>
+                <label htmlFor="cpf" className="form-label text-secondary">CPF*</label>
                 <input
                   type="text"
                   className="form-control"
@@ -119,7 +119,7 @@ function Cadastro() {
                 />
               </div>
               <div className="col-12 col-md-3">
-                <label htmlFor="email" className="form-label">Email*</label>
+                <label htmlFor="email" className="form-label text-secondary">Email*</label>
                 <input
                   type="email"
                   className="form-control"
@@ -130,7 +130,7 @@ function Cadastro() {
                 />
               </div>
               <div className="col-12 col-md-3">
-                <label htmlFor="confirmarEmail" className="form-label">Confirme seu Email*</label>
+                <label htmlFor="confirmarEmail" className="form-label text-secondary">Confirme seu Email*</label>
                 <input
                   type="email"
                   className="form-control"
@@ -145,7 +145,7 @@ function Cadastro() {
             {/* Senha e Confirmação */}
             <div className="row mb-3">
               <div className="col-12 col-md-2">
-                <label htmlFor="senha" className="form-label">Senha*</label>
+                <label htmlFor="senha" className="form-label text-secondary">Senha*</label>
                 <input
                   type="password"
                   className="form-control"
@@ -156,7 +156,7 @@ function Cadastro() {
                 />
               </div>
               <div className="col-12 col-md-2">
-                <label htmlFor="confirmarSenha" className="form-label">Confirme sua Senha*</label>
+                <label htmlFor="confirmarSenha" className="form-label text-secondary">Confirme sua Senha*</label>
                 <input
                   type="password"
                   className="form-control"
@@ -167,7 +167,7 @@ function Cadastro() {
                 />
               </div>
               <div className="col-12 col-md-2">
-                <label htmlFor="dtNasc" className="form-label">Data de Nascimento</label>
+                <label htmlFor="dtNasc" className="form-label text-secondary">Data de Nascimento</label>
                 <input
                   type="date"
                   className="form-control"
@@ -177,7 +177,7 @@ function Cadastro() {
                 />
               </div>
               <div className="col-12 col-md-2">
-                <label htmlFor="telefone" className="form-label">Telefone</label>
+                <label htmlFor="telefone" className="form-label text-secondary">Telefone</label>
                 <input
                   type="tel"
                   className="form-control"
@@ -187,7 +187,7 @@ function Cadastro() {
                 />
               </div>
               <div className="col-12 col-md-3">
-                <label htmlFor="cidade" className="form-label">Cidade</label>
+                <label htmlFor="cidade" className="form-label text-secondary">Cidade</label>
                 <input
                   type="text"
                   className="form-control"
@@ -197,7 +197,7 @@ function Cadastro() {
                 />
               </div>
               <div className="col-12 col-md-1">
-                <label htmlFor="estado" className="form-label">Estado</label>
+                <label htmlFor="estado" className="form-label text-secondary">Estado</label>
                 <input
                   type="text"
                   className="form-control"
@@ -210,7 +210,7 @@ function Cadastro() {
   
             <div className="row mb-2">
               <div className="col-12 col-md-5">
-                <label htmlFor="endereco" className="form-label">Endereço</label>
+                <label htmlFor="endereco" className="form-label text-secondary">Endereço</label>
                 <input
                   type="text"
                   className="form-control"
@@ -220,7 +220,7 @@ function Cadastro() {
                 />
               </div>
               <div className="col-12 col-md-3">
-                <label htmlFor="bairro" className="form-label">Bairro</label>
+                <label htmlFor="bairro" className="form-label text-secondary">Bairro</label>
                 <input
                   type="text"
                   className="form-control"
@@ -230,7 +230,7 @@ function Cadastro() {
                 />
               </div>
               <div className="col-12 col-md-4">
-                <label htmlFor="referencias" className="form-label">Referências</label>
+                <label htmlFor="referencias" className="form-label text-secondary">Referências</label>
                 <input
                   type="text"
                   className="form-control"

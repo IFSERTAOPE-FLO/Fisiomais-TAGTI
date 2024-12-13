@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Modal, Button } from 'react-bootstrap';
 import { FaCalendarAlt } from 'react-icons/fa'; // Ícone de calendário
-import './Estilos.css';
+import '../css/Estilos.css';
 import Calendar from 'react-calendar'; // Para exibir o calendário
 
 const VisualizarAgendamentos = () => {
@@ -171,12 +171,12 @@ const VisualizarAgendamentos = () => {
               Data{' '}
               {sortConfig.key === 'data' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
               <Button
-                variant="btn-light" 
+                variant="btn-danger" 
                 onClick={(e) => {
                   e.stopPropagation(); // Impede a propagação do clique para o <th>
                   setShowDateFilterModal(true); // Exibe o modal de filtro de data
                 }}
-                className="ms-2 align-middle p-0" // Adiciona espaço à esquerda e remove padding extra
+                className="ms-2 align-top p-0 text-white" // Adiciona espaço à esquerda e remove padding extra
                 style={{ lineHeight: 1, height: 'auto' }} // Garante altura consistente
               >
                 <FaCalendarAlt />
@@ -311,7 +311,7 @@ const VisualizarAgendamentos = () => {
                     Apagar Agendamento
                   </Button>
                 ) : (
-                  <Button variant="btn btn-outline-primary" onClick={handleNotifyAdmin}>
+                  <Button variant="btn btn-primary" onClick={handleNotifyAdmin}>
                     Notificar Administrador
                   </Button>
                 )}

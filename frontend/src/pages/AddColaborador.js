@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
-import './Estilos.css';
+import '../css/Estilos.css';
 
 function AddColaborador() {
   const [nome, setNome] = useState('');
@@ -91,8 +91,8 @@ function AddColaborador() {
     <div className="container col-md-9 my-5">
       {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
       <div className="card shadow">
-        <div className="card-header agendamento-header">
-          <h2 className="text-center agendamento-titulo">Adicionar Colaborador</h2>
+        <div className="card-header ">
+          <h2 className="text-center text-primary">Adicionar Colaborador</h2>
         </div>
         <div className="card-body">
           <form onSubmit={(e) => { e.preventDefault(); handleRegister(); }}>
@@ -179,7 +179,7 @@ function AddColaborador() {
                   onChange={(e) => setDtNasc(e.target.value)}
                 />
               </div>
-              <div className="col-12 col-md-2">
+              <div className="col-12 col-md-3">
                 <label htmlFor="telefone" className="form-label">Telefone</label>
                 <input
                   type="tel"
@@ -246,7 +246,7 @@ function AddColaborador() {
                     checked={isAdmin}
                     onChange={(e) => setIsAdmin(e.target.checked)}
                   />
-                  <label className="form-check-label" htmlFor="isAdmin">Administrador</label>
+                  <label className="form-label " htmlFor="isAdmin">Administrador</label>
                 </div>
               </div>
             </div>

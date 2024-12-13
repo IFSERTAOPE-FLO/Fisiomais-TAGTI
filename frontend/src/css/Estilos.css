@@ -36,7 +36,9 @@ form select,
 form input[type="date"] {
   cursor: pointer; /* Muda o cursor para pointer */
 }
-  
+.form-label:not(.modal .form-label) {
+  color: var(--bs-secondary);
+}
  
 .btn-pink {
   background-color: #bc155b;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './CriarAgendamento.css'; // Importar o arquivo CSS para estilos
+import '../css/CriarAgendamento.css'; // Importar o arquivo CSS para estilos
 
 function Agendamento() {
   const [data, setData] = useState('');
@@ -154,8 +154,8 @@ function Agendamento() {
   return (
     <div className="container py-5 background-gif">
       <div className="row align-items-center">
-        <div className="col-md-5">
-          <div className="card shadow-lg border-0">
+        <div className="col-md-5 agendamentoback " >
+          <div className="card shadow-lg border-0 ">
             <div className="card-header text-center  rounded-top">
               <h3 className="fw-bold  text-primary ">Agendar atendimento</h3>
             </div>

@@ -19,16 +19,5 @@
     filter: invert(1); /* Deixa os ícones brancos */
   }
   
-  /* Botão de ação */
-  .btn-primary {
-    background-color: #007bff;
-    border-color: #007bff;
-    padding: 10px 20px;
-    font-size: 1.2em;
-  }
   
-  .btn-primary:hover {
-    background-color: #0056b3;
-    border-color: #004085;
-  }
   

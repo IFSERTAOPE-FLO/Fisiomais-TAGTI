@@ -102,7 +102,6 @@ class Agendamentos(db.Model):
 
 
 
-# Modelo: Servicos
 class Servicos(db.Model):
     __tablename__ = 'servicos'
     ID_Servico = db.Column(db.Integer, primary_key=True)
@@ -114,7 +113,6 @@ class Servicos(db.Model):
 
     colaboradores = db.relationship('Colaboradores', secondary='colaboradores_servicos', back_populates='servicos')
 
-    # Validação para tipo de serviço
     def __init__(self, Nome_servico, Descricao, Valor=None, tipo_servico=None, planos=None):
         if tipo_servico not in ['fisioterapia', 'pilates']:
             raise ValueError("O tipo de serviço deve ser 'fisioterapia' ou 'pilates'.")
@@ -128,6 +126,18 @@ class Servicos(db.Model):
 
     def __repr__(self):
         return f'<Servico {self.Nome_servico} - {self.tipo_servico}>'
+
+    def to_dict(self):
+        # Retorna um dicionário com os dados do serviço
+        return {
+            'ID_Servico': self.ID_Servico,
+            'Nome_servico': self.Nome_servico,
+            'Descricao': self.Descricao,
+            'Valor': str(self.Valor) if self.Valor is not None else None,  # Converte Decimal para string
+            'Tipo': self.tipo_servico,
+            'Planos': self.planos,
+            'Colaboradores': [colaborador.to_dict() for colaborador in self.colaboradores]  # Inclui colaboradores se houver
+        }
 
 class BlacklistedToken(db.Model):
     __tablename__ = 'blacklisted_tokens'

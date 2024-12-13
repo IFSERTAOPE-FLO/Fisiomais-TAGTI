@@ -11,8 +11,9 @@ const GerenciarServicos = () => {
     planos: [],
     colaboradores_ids: [],
   });
+  const [novoPlano, setNovoPlano] = useState({ nome: "", valor: "" });
   const [erro, setErro] = useState("");
-  const [mensagem, setMensagem] = useState(""); 
+  const [mensagem, setMensagem] = useState("");
 
   const buscarServicos = async () => {
     try {
@@ -44,12 +45,8 @@ const GerenciarServicos = () => {
       }
 
       const data = await response.json();
-      if (Array.isArray(data)) {
-        const colaboradores = data.filter((usuario) => usuario.role === "colaborador");
-        setColaboradores(colaboradores);
-      } else {
-        setErro("A resposta da API não é um array.");
-      }
+      const colaboradores = data.filter((usuario) => usuario.role === "colaborador");
+      setColaboradores(colaboradores);
     } catch (err) {
       setErro("Erro ao buscar usuários.");
     }
@@ -61,16 +58,25 @@ const GerenciarServicos = () => {
   }, []);
 
   const salvarServico = async () => {
-    const metodo = "POST";  // Certifique-se de que está criando um novo serviço
-    const url = "http://localhost:5000/add_servico";  // URL para adicionar o serviço
+    if (!novoServico.nome_servico || !novoServico.descricao || !novoServico.valor || !novoServico.tipo_servico) {
+      setErro("Preencha todos os campos obrigatórios do serviço.");
+      return;
+    }
+
+    if (novoServico.tipo_servico === "pilates" && novoServico.planos.length === 0) {
+      setErro("Serviços de Pilates precisam ter ao menos um plano.");
+      return;
+    }
 
     try {
-      const response = await fetch(url, {
-        method: metodo,
+      const response = await fetch("http://localhost:5000/add_servico", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(novoServico),
       });
+
       const data = await response.json();
+
       if (response.ok) {
         setServicos((prev) => [...prev, data.servico]);
         resetForm();
@@ -92,24 +98,40 @@ const GerenciarServicos = () => {
       planos: [],
       colaboradores_ids: [],
     });
+    setNovoPlano({ nome: "", valor: "" });
+  };
+
+  const adicionarPlano = () => {
+    if (!novoPlano.nome || !novoPlano.valor) {
+      setErro("Preencha os campos Nome e Valor do plano.");
+      return;
+    }
+
+    setNovoServico((prev) => ({
+      ...prev,
+      planos: [...prev.planos, { Nome_plano: novoPlano.nome, Valor: parseFloat(novoPlano.valor) }],
+    }));
+
+    setNovoPlano({ nome: "", valor: "" });
+    setErro("");
   };
 
   const deletarServico = async (idServico) => {
     try {
-      const token = localStorage.getItem("token");  // Verifique se o token está no localStorage
+      const token = localStorage.getItem("token");
       if (!token) {
         setErro("Token não encontrado.");
         return;
       }
-  
+
       const response = await fetch(`http://localhost:5000/api/deletar_servico/${idServico}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,  // Enviar o token no cabeçalho
+          Authorization: `Bearer ${token}`,
         },
       });
-  
+
       const data = await response.json();
       if (response.ok) {
         setServicos((prev) => prev.filter((servico) => servico.ID_Servico !== idServico));
@@ -122,30 +144,12 @@ const GerenciarServicos = () => {
     }
   };
 
-  const removerColaborador = (id) => {
-    setNovoServico((prev) => ({
-      ...prev,
-      colaboradores_ids: prev.colaboradores_ids.filter((cid) => cid !== id),
-    }));
-  };
-
-  const adicionarColaborador = (id) => {
-    setNovoServico((prev) => ({
-      ...prev,
-      colaboradores_ids: [...prev.colaboradores_ids, id],
-    }));
-  };
-
-  const colaboradoresDisponiveis = colaboradores.filter(
-    (colaborador) => !novoServico.colaboradores_ids.includes(colaborador.ID_Colaborador)
-  );
-
   const handleTipoServicoChange = (e) => {
     const tipo = e.target.value;
     setNovoServico((prev) => ({
       ...prev,
       tipo_servico: tipo,
-      planos: tipo === "pilates" ? [] : prev.planos, // Limpar planos se não for Pilates
+      planos: tipo === "pilates" ? [] : prev.planos,
     }));
   };
 
@@ -154,6 +158,7 @@ const GerenciarServicos = () => {
       <h2 className="mb-4">Gerenciar Serviços</h2>
       {erro && <div className="alert alert-danger">{erro}</div>}
       {mensagem && <div className="alert alert-success">{mensagem}</div>}
+
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -199,86 +204,96 @@ const GerenciarServicos = () => {
             <input
               type="text"
               placeholder="Nome do Plano"
-              value={novoServico.plano_nome}
-              onChange={(e) => setNovoServico({ ...novoServico, plano_nome: e.target.value })}
+              value={novoPlano.nome}
+              onChange={(e) => setNovoPlano({ ...novoPlano, nome: e.target.value })}
               className="form-control mb-2"
             />
             <input
               type="number"
               placeholder="Valor do Plano"
-              value={novoServico.plano_valor}
-              onChange={(e) => setNovoServico({ ...novoServico, plano_valor: e.target.value })}
+              value={novoPlano.valor}
+              onChange={(e) => setNovoPlano({ ...novoPlano, valor: e.target.value })}
               className="form-control mb-2"
             />
+            <button type="button" onClick={adicionarPlano} className="btn btn-primary mb-2">
+              Adicionar Plano
+            </button>
+
+            {novoServico.planos.length > 0 && (
+              <div>
+                <h5>Planos Adicionados:</h5>
+                <ul>
+                  {novoServico.planos.map((plano, index) => (
+                    <li key={index}>
+                      {plano.Nome_plano} - R${plano.Valor.toFixed(2)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </>
         )}
 
-        <div className="mb-3">
-          <h5>Colaboradores Adicionados</h5>
-          {novoServico.colaboradores_ids.map((id) => {
-            const colaborador = colaboradores.find((col) => col.ID_Colaborador === id);
-            return (
-              <div key={id} className="d-flex justify-content-between align-items-center border p-2 mb-2 rounded">
-                <span>{colaborador?.nome || "Desconhecido"}</span>
-                <button className="btn btn-danger btn-sm" onClick={() => removerColaborador(id)}>
-                  Remover
-                </button>
-              </div>
-            );
-          })}
-        </div>
+        <button type="submit" className="btn btn-success">
+          Adicionar Serviço
+        </button>
+      </form>   
+ 
 
-        <div className="mb-3">
-          <h5>Adicionar Colaboradores</h5>
-          <div className="row">
-            {colaboradoresDisponiveis.map((colaborador) => (
-              <div className="col-md-4 mb-2" key={colaborador.ID_Colaborador}>
-                <div className="card p-2">
-                  <span>{colaborador.nome}</span>
-                  <button
-                    className="btn btn-success btn-sm mt-2"
-                    onClick={() => adicionarColaborador(colaborador.ID_Colaborador)}
-                  >
-                    Adicionar
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <button type="submit" className="btn btn-primary">Adicionar Serviço</button>
-      </form>
 
       <h3>Lista de Serviços</h3>
       <table className="table">
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Descrição</th>
-            <th>Valor</th>
-            <th>Tipo</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {servicos.map((servico) => (
-            <tr key={servico.ID_Servico}>
-              <td>{servico.Nome_servico}</td>
-              <td>{servico.Descricao}</td>
-              <td>{servico.Valor}</td>
-              <td>{servico.Tipo}</td>
-              <td>
-                <button className="btn btn-danger btn-sm" onClick={() => deletarServico(servico.ID_Servico)}>
-                  Deletar
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+  <thead>
+    <tr>
+      <th>Nome</th>
+      <th>Descrição</th>
+      <th>Valor</th>
+      <th>Tipo</th>
+      <th>Planos</th>
+      <th>Colaboradores</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    {servicos.map((servico) => (
+      <tr key={servico.ID_Servico}>
+        <td>{servico.Nome_servico}</td>
+        <td>{servico.Descricao}</td>
+        <td>{servico.Valor}</td>
+        <td>{servico.Tipo}</td>
+        <td className="text-center">
+          {servico.Tipo === "pilates" && servico.Planos && servico.Planos.length > 0 ? (
+            <ul className="list-unstyled">
+              {servico.Planos.map((plano, index) => (
+                <li key={index}>
+                  {plano.Nome_plano} - R${plano.Valor.toFixed(2)}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            servico.Tipo === "pilates" ? "Nenhum plano adicionado" : <span className="d-block">-</span>
+          )}
+        </td>
+        <td>
+          {servico.Colaboradores && servico.Colaboradores.length > 0
+            ? servico.Colaboradores.join(", ")
+            : "Nenhum colaborador"}
+        </td>
+        <td>
+          <button
+            className="btn btn-danger btn-sm"
+            onClick={() => deletarServico(servico.ID_Servico)}
+          >
+            Deletar
+          </button>
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
     </div>
   );
 };
 
 export default GerenciarServicos;
+
