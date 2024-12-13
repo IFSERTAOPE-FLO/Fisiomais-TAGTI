@@ -1,0 +1,65 @@
+.agendamento {
+  background-color: #36ab9c;
+  color: white;
+  border-radius: 15px;
+}
+
+.agendamento-header {
+  border-bottom: 1px solid #f1f1f1;
+  background-color: #2d9184;
+  color: white;
+}
+
+.agendamento-titulo {
+  color: white;
+  margin: 0;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #e6f2f0; /* Variação de verde mais claro */
+}
+
+.table-striped tbody tr:nth-of-type(even) {
+  background-color: #ccdedb; /* Outra variação de verde mais claro */
+}
+
+.table thead th {
+  background-color: #3bd0bc; /* Fundo verde escuro */
+  color: white; /* Texto branco */
+  font-weight: bold; /* Texto em negrito */
+  text-align: center; /* Texto centralizado */
+}
+
+
+
+form select, 
+form input[type="date"] {
+  cursor: pointer; /* Muda o cursor para pointer */
+}
+.form-label:not(.modal .form-label) {
+  color: var(--bs-secondary);
+}
+ 
+.btn-pink {
+  background-color: #bc155b;
+  color: white;
+  border-radius: 20px;
+  padding: 10px 20px; /* Ajustado para maior largura */
+  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.btn-pink:hover {
+  background-color: #9c2456;
+  font-weight: bold;
+  transform: scale(1.05); /* Aumenta um pouco o tamanho do botão */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adiciona sombra ao redor do botão */
+}
+
+.btn-pink:active {
+  transform: scale(1); /* Remove a escala ao clicar */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra um pouco mais suave ao clicar */
+}
+footer {
+  
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}

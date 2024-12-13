@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
-import './Estilos.css';
+import '../css/Estilos.css';
 
 function AddCliente() {
   const [nome, setNome] = useState('');
@@ -88,8 +88,8 @@ function AddCliente() {
     <div className="container col-md-9 my-5">      
       {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
       <div className="card shadow ">
-        <div className="card-header agendamento-header">
-          <h2 className="text-center agendamento-titulo">Adicionar Cliente</h2>
+        <div className="card-header ">
+          <h2 className="text-center text-primary">Adicionar Cliente</h2>
         </div>
         <div className="card-body">
           <form onSubmit={(e) => { e.preventDefault(); handleRegister(); }}>

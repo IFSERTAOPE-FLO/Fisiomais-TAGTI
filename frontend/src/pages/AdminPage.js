@@ -12,7 +12,7 @@ const AdminPage = () => {
 
   return (
     <div className="container mt-5">
-      <h1 className="text-center mb-4">Painel do Administrador</h1>
+      <h1 className="text-center mb-4 text-primary">Painel do Administrador</h1>
 
       {/* Escolha de Opção */}
       <div className="row mb-4">

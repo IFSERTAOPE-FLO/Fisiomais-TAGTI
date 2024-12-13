@@ -1,0 +1,12 @@
+.background-gif {
+  background-image: url('/src/images/atendF.gif');
+  background-size: contain; /* Ajusta o GIF para caber inteiramente dentro da div */
+  background-position: center center; /* Centraliza a imagem */
+  background-repeat: no-repeat; /* Impede a repetição */
+  position: relative; /* Para garantir o controle de posição */
+  width: 100%; /* A largura será 100% da tela */
+  height: 100vh; /* A altura será 100% da tela */
+}
+.agendamentoback{
+  margin-left: 115px; /* Ajuste o valor conforme necessário */
+}

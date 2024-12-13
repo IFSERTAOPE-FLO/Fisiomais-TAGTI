@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import './Contato.css';
+import '../css/Contato.css';
 
 function Contato() {
   const [formData, setFormData] = useState({
@@ -50,7 +50,7 @@ function Contato() {
     <div className="container my-5">
       <div className="row align-items-center">
         {/* Bloco de Informações de Contato */}
-        <div className="col-md-5">
+        <div className="col-md-4">
           <h3 className="mb-4 text-primary fw-bold">Informações de Contato</h3>
           <div className="info-box mb-3">
             <i className="bi bi-geo-alt-fill text-primary"></i>
@@ -72,9 +72,9 @@ function Contato() {
 
         {/* Formulário de Contato */}
         <div className="col-md-7">
-          <div className="card shadow agendamento">
-            <div className="card-header agendamento-header">
-              <h2 className="text-center agendamento-titulo">Fale Conosco</h2>
+          <div className="card shadow ">
+            <div className="card-header ">
+              <h2 className="text-center text-primary">Fale Conosco</h2>
             </div>
             <div className="card-body">
               {successMessage && <div className="alert alert-success">{successMessage}</div>}
@@ -128,7 +128,7 @@ function Contato() {
                     required
                   ></textarea>
                 </div>
-                <button type="submit" className="btn btn-pink w-100">Enviar</button>
+                <button type="submit" className="btn btn-signup w-100">Enviar</button>
               </form>
             </div>
           </div>
