@@ -1033,7 +1033,7 @@ def add_servico():
         return jsonify({"error": f"Erro ao adicionar serviço: {str(e)}"}), 500
 
 
-    
+   
     
 @main.route('/api/editar_servico/<tipo>/<int:id>', methods=['PUT'])
 @jwt_required()
@@ -1063,9 +1063,10 @@ def editar_servico(tipo, id):
         if not planos or not isinstance(planos, list):
             return jsonify({"error": "Planos são obrigatórios e devem ser uma lista para serviços de Pilates"}), 400
         
-        # Atualiza os planos, adicionando um ID a cada um
-        for idx, plano in enumerate(planos, start=1):
-            plano["ID_Plano"] = idx
+        # Atualiza os planos
+        for plano in planos:
+            if 'Nome_plano' not in plano or 'Valor' not in plano:
+                return jsonify({"error": "Cada plano deve conter 'Nome_plano' e 'Valor'"}), 400
         servico.planos = planos
     else:
         # Se o tipo não for Pilates, limpa os planos
@@ -1077,6 +1078,7 @@ def editar_servico(tipo, id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Erro ao atualizar serviço: {str(e)}"}), 500
+
 
 
     

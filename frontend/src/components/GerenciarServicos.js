@@ -364,7 +364,7 @@ const GerenciarServicos = () => {
             );
             fecharModalColaboradores();
           }}
-          onClose={fecharModalEditarServico}
+          onClose={fecharModalColaboradores}
         />
       )}
     </div>

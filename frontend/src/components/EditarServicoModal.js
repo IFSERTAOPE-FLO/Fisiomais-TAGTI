@@ -66,9 +66,10 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
     setFormData((prev) => ({
       ...prev,
       Tipo: value,
-      Planos: value === "pilates" ? prev.Planos : [], // Limpa os planos somente se necessário
+      Planos: value === "pilates" ? prev.Planos : [], // Limpa os planos apenas se o tipo não for Pilates
     }));
   };
+  
 
   const adicionarPlano = () => {
     setFormData((prev) => ({
@@ -83,21 +84,29 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
       setErro("É necessário adicionar pelo menos um plano para o tipo Pilates.");
       return;
     }
-
+  
     try {
-      const token = localStorage.getItem("token"); // Or however you're storing the token
-        const response = await fetch(
-          `http://localhost:5000/api/editar_servico/${formData.Tipo}/${servico.ID_Servico}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${token}`, // Ensure this header is included
-            },
-            body: JSON.stringify(formData),
-          }
-        );
-
+      // Cria uma cópia do formData para enviar
+      const dataToSend = { ...formData };
+  
+      // Remove o campo Planos para fisioterapia
+      if (formData.Tipo === "fisioterapia") {
+        delete dataToSend.Planos;
+      }
+  
+      const token = localStorage.getItem("token"); // Substitua conforme o método de autenticação usado
+      const response = await fetch(
+        `http://localhost:5000/api/editar_servico/${formData.Tipo}/${servico.ID_Servico}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(dataToSend),
+        }
+      );
+  
       const data = await response.json();
       if (response.ok) {
         onSave(data); // Atualiza a lista de serviços após salvar
@@ -108,6 +117,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
       setErro(err.message);
     }
   };
+  
 
   return (
     <div
