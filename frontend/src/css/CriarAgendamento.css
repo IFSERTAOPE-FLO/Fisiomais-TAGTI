@@ -1,173 +1,93 @@
-/* Estilo do contêiner principal */
-.appointment-thumb {
-  position: relative;
-  width: 100%;
-  height: 100vh;
-  overflow: hidden;
+@keyframes subirDescer1 {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+    100% {
+        transform: translateY(0);
+    }
 }
 
-/* Estilo do grupo de imagens com animação */
-.images-group {
-  position: absolute;
-  top: 100px; /* Ajuste conforme necessário */
-  left: 50px; /* Ajuste conforme necessário */
+@keyframes subirDescer2 {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-30px);
+    }
+    100% {
+        transform: translateY(0);
+    }
 }
 
-/* Estilo comum para as imagens dentro do grupo */
-.images-group img {
-  position: absolute;
-  width: 100px;
-  height: auto;
-  opacity: 0.8;
-  z-index: 1;
+@keyframes subirDescer3 {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-40px);
+    }
+    100% {
+        transform: translateY(0);
+    }
 }
 
-/* Animações das imagens */
-@keyframes left-right {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(20px);
-  }
+@keyframes subirDescer4 {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-25px);
+    }
+    100% {
+        transform: translateY(0);
+    }
 }
 
-@keyframes up-down {
-  0% {
-    transform: translateY(0);
-  }
-  100% {
-    transform: translateY(20px);
-  }
+@keyframes subirDescer5 {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-15px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+.animate-subir-descer1 {
+    animation: subirDescer1 5.5s ease-in-out infinite;
 }
 
-/* Estilos individuais para cada imagem dentro do grupo */
-.appointment-thumb .images-group .logo1 {
-  right: 16px;
-  bottom: 16px;
-  height: 130px;
-  animation: left-right 2s infinite alternate;
+.animate-subir-descer2 {
+    animation: subirDescer2 4.2s ease-in-out infinite;
 }
 
-.appointment-thumb .images-group .logo2 {
-  left: 80px;
-  bottom: 120px;
-  width: 130px;
-  animation: up-down 2s infinite alternate;
+.animate-subir-descer3 {
+    animation: subirDescer3 4.8s ease-in-out infinite;
 }
 
-.appointment-thumb .images-group .logo3 {
-  right: 260px;
-  bottom: 80px;
-  width: 130px;
-  animation: up-down 2.5s infinite alternate;
+.animate-subir-descer4 {
+    animation: subirDescer4 4.6s ease-in-out infinite;
 }
 
-.appointment-thumb .images-group .logo4 {
-  left: 120px;
-  top: 150px;
-  animation: up-down 1.5s infinite alternate;
+@keyframes girar {
+    0% {
+        transform: rotate(0deg); /* Início da rotação */
+    }
+    100% {
+        transform: rotate(360deg); /* Completa uma volta */
+    }
 }
 
-.appointment-thumb .images-group .logo5 {
-  right: 70px;
-  top: 30px;
-  animation: up-down 2s infinite alternate;
-}
-
-.appointment-thumb .images-group .smart {
-  left: 200px;
-  top: 200px;
-  width: 120px;
-  animation: up-down 1.8s infinite alternate;
-}
-
-.appointment-thumb .images-group .client {
-  right: 150px;
-  top: 100px;
-  width: 100px;
-  animation: up-down 2s infinite alternate;
-}
-
-/* Responsividade: ajustes para diferentes tamanhos de tela */
-@media only screen and (max-width: 1199px) {
-  .appointment-thumb .images-group .logo1 {
-    right: 10px;
-    bottom: 10px;
-    height: 100px;
-  }
-
-  .appointment-thumb .images-group .logo2 {
-    left: 60px;
-    bottom: 90px;
-    width: 100px;
-  }
-
-  .appointment-thumb .images-group .logo3 {
-    right: 160px;
-    bottom: 60px;
-    width: 110px;
-  }
-
-  .appointment-thumb .images-group .logo4 {
-    left: 70px;
-    top: 120px;
-  }
-
-  .appointment-thumb .images-group .logo5 {
-    right: 50px;
-    top: 40px;
-  }
-
-  .appointment-thumb .images-group .smart {
-    left: 150px;
-    top: 180px;
-    width: 100px;
-  }
-
-  .appointment-thumb .images-group .client {
-    right: 120px;
-    top: 80px;
-    width: 90px;
-  }
-}
-
-@media only screen and (max-width: 991px) {
-  .appointment-thumb .images-group .logo1 {
-    height: 80px;
-  }
-
-  .appointment-thumb .images-group .logo2 {
-    left: 50px;
-    width: 80px;
-    bottom: 70px;
-  }
-
-  .appointment-thumb .images-group .logo3 {
-    right: 120px;
-    width: 90px;
-  }
-
-  .appointment-thumb .images-group .logo4 {
-    left: 40px;
-    width: 60px;
-  }
-
-  .appointment-thumb .images-group .logo5 {
-    right: 40px;
-    width: 60px;
-    top: 50px;
-  }
-
-  .appointment-thumb .images-group .smart {
-    left: 120px;
-    width: 80px;
-    top: 160px;
-  }
-
-  .appointment-thumb .images-group .client {
-    right: 100px;
-    width: 70px;
-    top: 60px;
-  }
+/* Classe para o elemento girando */
+.girar {
+    animation: girar 2s linear infinite; /* 2 segundos, rotação constante, repetição infinita */
+    position: fixed; /* Ou `absolute`, dependendo do layout desejado */
+    top: 100px; /* Ajuste conforme necessário */
+    left: 100px; /* Ajuste conforme necessário */
+    width: 90px; /* Tamanho do elemento */
+    height: auto;
 }

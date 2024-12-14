@@ -289,17 +289,48 @@ function Agendamento() {
           </div>
         </div>
       </div>
-
-      {/* Aqui ficam as imagens animadas */}
-      <div className="images-group">
-        <img src="/images/logo.png" alt="Logo 1" className="imagem-animada logo1" />
-        <img src="/images/logo1.png" alt="Logo 2" className="imagem-animada logo2" />
-        <img src="/images/logo2.png" alt="Logo 3" className="imagem-animada logo3" />
-        <img src="/images/logo3.png" alt="Logo 4" className="imagem-animada logo4" />
-        <img src="/images/logo4.png" alt="Logo 5" className="imagem-animada logo5" />
-        <img src="/images/smart.png" alt="Smart" className="imagem-animada smart" />
-        <img src="/images/client.png" alt="Client" className="imagem-animada client" />
-      </div>
+      <div>
+    <img 
+        src="/images/logo.png" 
+        alt="Logo 1"
+        className="animate-subir-descer1"  
+        style={{ width: '605px', height: 'auto', position: 'absolute', top: '90px', left: '10px', zIndex: -2}} 
+    />
+    <img 
+        src="/images/logo1.png" 
+        alt="Logo 2" 
+        className="animate-subir-descer2" 
+        style={{ width: '55px', height: 'auto', position: 'absolute', top: '275px', left: '680px' }} 
+    />
+    <img 
+        src="/images/logo2.png" 
+        alt="Logo 3" 
+        className="animate-subir-descer3" 
+        style={{ width: '55px', height: 'auto', position: 'absolute', top: '425px', left: '680px' }} 
+    />
+    <img 
+        src="/images/logo3.png" 
+        alt="Logo 4" 
+        className="animate-subir-descer4" 
+        style={{ width: '55px', height: 'auto', position: 'absolute', top: '550px', left: '680px' }} 
+    />
+    <img 
+        src="/images/logo4.png" 
+        alt="Logo 5" 
+        className="girar" 
+        style={{ width: '70px', height: 'auto', position: 'absolute', top: '580px', left: '1150px' }} 
+    />
+    <img 
+        src="/images/smart.png" 
+        alt="Smart" 
+        style={{ width: '450px', height: 'auto', position: 'absolute', top: '250px', left: '650px' }} 
+    />
+    <img 
+        src="/images/client.gif" 
+        alt="Client" 
+        style={{ width: '300px', height: 'auto', position: 'absolute', top: '383px', left: '770px' }} 
+    />
+</div>
     </div>
   );
 }
