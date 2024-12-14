@@ -166,18 +166,18 @@ const VisualizarAgendamentos = () => {
                 
               <th
               onClick={() => handleSort('data')}
-              style={{ cursor: 'pointer', verticalAlign: 'middle' }} // Garante alinhamento vertical no <th>
+              style={{ cursor: 'pointer', verticalAlign: 'middle' }} 
             >
               Data{' '}
               {sortConfig.key === 'data' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
               <Button
                 variant="btn-danger" 
                 onClick={(e) => {
-                  e.stopPropagation(); // Impede a propagação do clique para o <th>
-                  setShowDateFilterModal(true); // Exibe o modal de filtro de data
+                  e.stopPropagation(); 
+                  setShowDateFilterModal(true); 
                 }}
-                className="ms-2 align-top p-0 text-white" // Adiciona espaço à esquerda e remove padding extra
-                style={{ lineHeight: 1, height: 'auto' }} // Garante altura consistente
+                className="ms-2 align-top p-0 text-white" 
+                style={{ lineHeight: 1, height: 'auto' }} 
               >
                 <FaCalendarAlt />
               </Button>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import EditarUsuario from "./EditarUsuario"; // Componente de edição de usuário
+import EditarUsuario from "./EditarUsuario"; 
 
 const GerenciarUsuarios = () => {
     const [usuarios, setUsuarios] = useState([]);
@@ -89,7 +89,7 @@ const GerenciarUsuarios = () => {
           Atualizar Lista
         </button>
         {erro && <p className="alert alert-danger">{erro}</p>}
-        <table className="table">
+        <table className="table table-striped table-bordered mt-4 agendamento-header">
           <thead>
             <tr>
               <th>Nome</th>

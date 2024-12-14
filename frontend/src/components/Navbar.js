@@ -237,7 +237,7 @@ function Navbar() {
                       
                     
                     <li>
-                      <Link className="dropdown-item" to="/visualizaragendamentos">Visualizar Agendamentos</Link>
+                      <Link className="dropdown-item" to="/visualizaragendamentos">Meus Agendamentos</Link>
                     </li>
                     <li>
                       <button

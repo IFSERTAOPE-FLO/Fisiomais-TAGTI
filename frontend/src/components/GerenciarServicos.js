@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import EditarServicoModal from "./EditarServicoModal";
+import AddColaboradoresServicos from "./AddColaboradoresServicos";
+import { FaUserPlus, FaEdit, FaTrashAlt } from "react-icons/fa";
 
 const GerenciarServicos = () => {
   const [servicos, setServicos] = useState([]);
@@ -14,6 +17,9 @@ const GerenciarServicos = () => {
   const [novoPlano, setNovoPlano] = useState({ nome: "", valor: "" });
   const [erro, setErro] = useState("");
   const [mensagem, setMensagem] = useState("");
+  const [modalColaboradoresVisible, setModalColaboradoresVisible] = useState(false);
+  const [modalServicoVisible, setModalServicoVisible] = useState(false);
+  const [selectedServico, setSelectedServico] = useState(null);
 
   const buscarServicos = async () => {
     try {
@@ -153,9 +159,33 @@ const GerenciarServicos = () => {
     }));
   };
 
+  const abrirModalColaboradores = (servico) => {
+    setSelectedServico(servico);
+    setModalColaboradoresVisible(true);
+  };
+
+  const abrirModalEditarServico = (servico) => {
+    setSelectedServico(servico);
+    setModalServicoVisible(true);
+  };
+
+  const fecharModalColaboradores = () => {
+    setModalColaboradoresVisible(false);
+    setSelectedServico(null);
+    buscarServicos(); 
+    
+  };
+
+  const fecharModalEditarServico = () => {
+    setModalServicoVisible(false);
+    setSelectedServico(null);
+    buscarServicos(); 
+    
+  };
+
   return (
     <div className="container">
-      <h2 className="mb-4">Gerenciar Serviços</h2>
+      <h2 className="mb-4 text-primary">Gerenciar Serviços</h2>
       {erro && <div className="alert alert-danger">{erro}</div>}
       {mensagem && <div className="alert alert-success">{mensagem}</div>}
 
@@ -215,14 +245,14 @@ const GerenciarServicos = () => {
               onChange={(e) => setNovoPlano({ ...novoPlano, valor: e.target.value })}
               className="form-control mb-2"
             />
-            <button type="button" onClick={adicionarPlano} className="btn btn-primary mb-2">
+            <button type="button" onClick={adicionarPlano} className="btn btn-primary ">
               Adicionar Plano
             </button>
 
             {novoServico.planos.length > 0 && (
               <div>
-                <h5>Planos Adicionados:</h5>
-                <ul>
+                <h5 className="text">Planos Adicionados:</h5>
+                <ul className="list-unstyled">
                   {novoServico.planos.map((plano, index) => (
                     <li key={index}>
                       {plano.Nome_plano} - R${plano.Valor.toFixed(2)}
@@ -237,63 +267,108 @@ const GerenciarServicos = () => {
         <button type="submit" className="btn btn-success">
           Adicionar Serviço
         </button>
-      </form>   
- 
+      </form>
 
+      <h3 className="text-primary">Lista de Serviços</h3>
+      <table className="table ">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Descrição</th>
+            <th>Valor</th>
+            <th>Tipo</th>
+            <th>Planos</th>
+            <th>Colaboradores</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {servicos.map((servico) => (
+            <tr key={servico.ID_Servico}>
+              <td>{servico.Nome_servico}</td>
+              <td>{servico.Descricao}</td>
+              <td>{servico.Valor}</td>
+              <td>{servico.Tipo}</td>
+              <td className="text-center">
+                {servico.Tipo === "pilates" && servico.Planos && servico.Planos.length > 0 ? (
+                  <ul className="list-unstyled">
+                    {servico.Planos.map((plano, index) => (
+                      <li key={index}>
+                        {plano.Nome_plano} - R${plano.Valor.toFixed(2)}                        
+                      </li>
+                      
+                    ))}
+                  </ul>
+                ) : (
+                  servico.Tipo === "pilates" ? "Nenhum plano adicionado" : <span className="d-block">-</span>
+                )}
+              </td>
+              <td>
+                {servico.Colaboradores && servico.Colaboradores.length > 0
+                  ? servico.Colaboradores.join(", ")
+                  : "Nenhum colaborador"}
+              </td>
+              <td className="d-flex justify-content-start align-items-center align-middle border-0">
+                
 
-      <h3>Lista de Serviços</h3>
-      <table className="table">
-  <thead>
-    <tr>
-      <th>Nome</th>
-      <th>Descrição</th>
-      <th>Valor</th>
-      <th>Tipo</th>
-      <th>Planos</th>
-      <th>Colaboradores</th>
-      <th>Ações</th>
-    </tr>
-  </thead>
-  <tbody>
-    {servicos.map((servico) => (
-      <tr key={servico.ID_Servico}>
-        <td>{servico.Nome_servico}</td>
-        <td>{servico.Descricao}</td>
-        <td>{servico.Valor}</td>
-        <td>{servico.Tipo}</td>
-        <td className="text-center">
-          {servico.Tipo === "pilates" && servico.Planos && servico.Planos.length > 0 ? (
-            <ul className="list-unstyled">
-              {servico.Planos.map((plano, index) => (
-                <li key={index}>
-                  {plano.Nome_plano} - R${plano.Valor.toFixed(2)}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            servico.Tipo === "pilates" ? "Nenhum plano adicionado" : <span className="d-block">-</span>
-          )}
-        </td>
-        <td>
-          {servico.Colaboradores && servico.Colaboradores.length > 0
-            ? servico.Colaboradores.join(", ")
-            : "Nenhum colaborador"}
-        </td>
-        <td>
-          <button
-            className="btn btn-danger btn-sm"
-            onClick={() => deletarServico(servico.ID_Servico)}
-          >
-            Deletar
-          </button>
-        </td>
-      </tr>
-    ))}
-  </tbody>
-</table>
+                <button
+                  className="btn btn-primary btn-sm ms "
+                  onClick={() => abrirModalEditarServico(servico)}
+                >
+                  <FaEdit className="fs-7" />
+                </button>
+
+                <button
+                  className="btn btn-info btn-sm ms-2"
+                  onClick={() => abrirModalColaboradores(servico)}
+                >
+                  <FaUserPlus className="fs-7"  />
+                </button>
+                <button
+                  className="btn btn-danger btn-sm ms-2"
+                  onClick={() => deletarServico(servico.ID_Servico)}
+                >
+                  <FaTrashAlt className="fs-7"  />
+                  
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {modalServicoVisible && selectedServico && (
+        <EditarServicoModal
+          servico={selectedServico}
+          onSave={(updatedServico) => {
+            setServicos((prev) =>
+              prev.map((s) => (s.ID_Servico === updatedServico.ID_Servico ? updatedServico : s))
+            );
+            fecharModalEditarServico();
+          }}
+          
+          onClose={fecharModalEditarServico}
+        />
+      )}
+
+      {modalColaboradoresVisible && selectedServico && (
+        <AddColaboradoresServicos
+          servicoId={selectedServico.ID_Servico}
+          onSave={(colaboradoresSelecionados) => {
+            setServicos((prev) =>
+              prev.map((s) =>
+                s.ID_Servico === selectedServico.ID_Servico
+                  ? { ...s, Colaboradores: colaboradoresSelecionados }
+                  : s
+              )
+            );
+            fecharModalColaboradores();
+          }}
+          onClose={fecharModalEditarServico}
+        />
+      )}
     </div>
   );
 };
 
 export default GerenciarServicos;
-
