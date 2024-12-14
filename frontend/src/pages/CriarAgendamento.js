@@ -290,46 +290,62 @@ function Agendamento() {
         </div>
       </div>
       <div>
+      <div className="container" style={{ position: 'relative' }}>
+    {/* Imagem Logo 1 */}
     <img 
         src="/images/logo.png" 
         alt="Logo 1"
         className="animate-subir-descer1 pulsar"
-        style={{ width: '600px', height: 'auto', position: 'absolute', top: '70px', left: '0px', zIndex: -2}} 
+        style={{ width: '750px', height: 'auto', position: 'absolute', top: '-570px', left: '-170px', zIndex: -2 }}
     />
+
+    {/* Imagem Logo 2 */}
     <img 
         src="/images/logo1.png" 
         alt="Logo 2" 
-        className="animate-subir-descer2" 
-        style={{ width: '55px', height: 'auto', position: 'absolute', top: '325px', left: '880px' }} 
+        className="animate-subir-descer2"
+        style={{ width: '55px', height: 'auto', position: 'absolute', top: '-125px', left: '880px' }}
     />
+
+    {/* Imagem Logo 3 */}
     <img 
         src="/images/logo2.png" 
         alt="Logo 3" 
-        className="animate-subir-descer3" 
-        style={{ width: '55px', height: 'auto', position: 'absolute', top: '445px', left: '880px' }} 
+        className="animate-subir-descer3"
+        style={{ width: '55px', height: 'auto', position: 'absolute', top: '-245px', left: '880px' }}
     />
+
+    {/* Imagem Logo 4 */}
     <img 
         src="/images/logo3.png" 
         alt="Logo 4" 
-        className="animate-subir-descer4" 
-        style={{ width: '55px', height: 'auto', position: 'absolute', top: '580px', left: '880px' }} 
+        className="animate-subir-descer4"
+        style={{ width: '55px', height: 'auto', position: 'absolute', top: '-380px', left: '880px' }}
     />
+
+    {/* Imagem Logo 5 */}
     <img 
         src="/images/logo4.png" 
         alt="Logo 5" 
-        className="girar" 
-        style={{ width: '70px', height: 'auto', position: 'absolute', top: '580px', left: '1300px' }} 
+        className="girar"
+        style={{ width: '90px', height: 'auto', position: 'absolute', top: '-80px', left: '1400px' }}
     />
+
+    {/* Imagem Smart */}
     <img 
         src="/images/smart.png" 
-        alt="Smart" 
-        style={{ width: '450px', height: 'auto', position: 'absolute', top: '250px', left: '840px' }} 
+        alt="Smart"
+        style={{ width: '700px', height: 'auto', position: 'absolute', top: '-540px', left: '820px' }}
     />
+
+    {/* Imagem Client */}
     <img 
         src="/images/client.gif" 
-        alt="Client" 
-        style={{ width: '300px', height: 'auto', position: 'absolute', top: '383px', left: '960px' }} 
+        alt="Client"
+        style={{ width: '500px', height: 'auto', position: 'absolute', top: '-364px', left: '960px' }}
     />
+</div>
+
 </div>
     </div>
   );
