@@ -293,42 +293,42 @@ function Agendamento() {
     <img 
         src="/images/logo.png" 
         alt="Logo 1"
-        className="animate-subir-descer1"  
-        style={{ width: '605px', height: 'auto', position: 'absolute', top: '90px', left: '10px', zIndex: -2}} 
+        className="animate-subir-descer1 pulsar"
+        style={{ width: '600px', height: 'auto', position: 'absolute', top: '70px', left: '0px', zIndex: -2}} 
     />
     <img 
         src="/images/logo1.png" 
         alt="Logo 2" 
         className="animate-subir-descer2" 
-        style={{ width: '55px', height: 'auto', position: 'absolute', top: '275px', left: '680px' }} 
+        style={{ width: '55px', height: 'auto', position: 'absolute', top: '325px', left: '880px' }} 
     />
     <img 
         src="/images/logo2.png" 
         alt="Logo 3" 
         className="animate-subir-descer3" 
-        style={{ width: '55px', height: 'auto', position: 'absolute', top: '425px', left: '680px' }} 
+        style={{ width: '55px', height: 'auto', position: 'absolute', top: '445px', left: '880px' }} 
     />
     <img 
         src="/images/logo3.png" 
         alt="Logo 4" 
         className="animate-subir-descer4" 
-        style={{ width: '55px', height: 'auto', position: 'absolute', top: '550px', left: '680px' }} 
+        style={{ width: '55px', height: 'auto', position: 'absolute', top: '580px', left: '880px' }} 
     />
     <img 
         src="/images/logo4.png" 
         alt="Logo 5" 
         className="girar" 
-        style={{ width: '70px', height: 'auto', position: 'absolute', top: '580px', left: '1150px' }} 
+        style={{ width: '70px', height: 'auto', position: 'absolute', top: '580px', left: '1300px' }} 
     />
     <img 
         src="/images/smart.png" 
         alt="Smart" 
-        style={{ width: '450px', height: 'auto', position: 'absolute', top: '250px', left: '650px' }} 
+        style={{ width: '450px', height: 'auto', position: 'absolute', top: '250px', left: '840px' }} 
     />
     <img 
         src="/images/client.gif" 
         alt="Client" 
-        style={{ width: '300px', height: 'auto', position: 'absolute', top: '383px', left: '770px' }} 
+        style={{ width: '300px', height: 'auto', position: 'absolute', top: '383px', left: '960px' }} 
     />
 </div>
     </div>

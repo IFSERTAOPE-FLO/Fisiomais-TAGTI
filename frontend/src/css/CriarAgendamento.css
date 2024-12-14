@@ -1,13 +1,18 @@
-@keyframes subirDescer1 {
+@keyframes pulsar {
     0% {
-        transform: translateY(0);
+        transform: scale(1); /* Tamanho original */
     }
     50% {
-        transform: translateY(-20px);
+        transform: scale(1.1); /* Aumenta um pouco o tamanho */
     }
     100% {
-        transform: translateY(0);
+        transform: scale(1); /* Retorna ao tamanho original */
     }
+}
+
+/* Aplica a animação de pulsar */
+.pulsar {
+    animation: pulsar 7s ease-in-out infinite; /* Duração de 1.5s, com suavização e repetição infinita */
 }
 
 @keyframes subirDescer2 {
@@ -57,9 +62,6 @@
         transform: translateY(0);
     }
 }
-.animate-subir-descer1 {
-    animation: subirDescer1 5.5s ease-in-out infinite;
-}
 
 .animate-subir-descer2 {
     animation: subirDescer2 4.2s ease-in-out infinite;
@@ -70,7 +72,7 @@
 }
 
 .animate-subir-descer4 {
-    animation: subirDescer4 4.6s ease-in-out infinite;
+    animation: subirDescer4 4.5s ease-in-out infinite;
 }
 
 @keyframes girar {
