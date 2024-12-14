@@ -304,7 +304,7 @@ function Agendamento() {
         src="/images/logo1.png" 
         alt="Logo 2" 
         className="animate-subir-descer2"
-        style={{ width: '55px', height: 'auto', position: 'absolute', top: '-125px', left: '880px' }}
+        style={{ width: '75px', height: 'auto', position: 'absolute', top: '-125px', left: '880px' }}
     />
 
     {/* Imagem Logo 3 */}
@@ -312,7 +312,7 @@ function Agendamento() {
         src="/images/logo2.png" 
         alt="Logo 3" 
         className="animate-subir-descer3"
-        style={{ width: '55px', height: 'auto', position: 'absolute', top: '-245px', left: '880px' }}
+        style={{ width: '75px', height: 'auto', position: 'absolute', top: '-245px', left: '880px' }}
     />
 
     {/* Imagem Logo 4 */}
@@ -320,7 +320,7 @@ function Agendamento() {
         src="/images/logo3.png" 
         alt="Logo 4" 
         className="animate-subir-descer4"
-        style={{ width: '55px', height: 'auto', position: 'absolute', top: '-380px', left: '880px' }}
+        style={{ width: '75px', height: 'auto', position: 'absolute', top: '-380px', left: '880px' }}
     />
 
     {/* Imagem Logo 5 */}
