@@ -15,6 +15,10 @@
   margin: 0;
 }
 
+form select option:hover { 
+  cursor: pointer; 
+ background-color: #3bd0bc;
+ }
 .table-striped tbody tr:nth-of-type(odd) {
   background-color: #e6f2f0; /* Variação de verde mais claro */
 }

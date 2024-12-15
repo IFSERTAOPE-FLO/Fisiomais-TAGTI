@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../css/CriarAgendamento.css'; // Importar o arquivo CSS para estilos
+import '../css/Estilos.css'; // Importar o arquivo CSS para estilos
 
 function Agendamento() {
   const [data, setData] = useState('');

@@ -1,6 +1,6 @@
 from flask import Blueprint, current_app, send_from_directory, request, jsonify
 from datetime import datetime, timedelta
-from app.models import Agendamentos, Clientes, Colaboradores, Servicos,  BlacklistedToken, db
+from app.models import Agendamentos, Clientes, Colaboradores, ColaboradoresServicos, Servicos,  BlacklistedToken, db
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
@@ -982,13 +982,24 @@ def deletar_servico(id):
         if not servico:
             return jsonify({"message": "Serviço não encontrado"}), 404
 
+        # Remover os relacionamentos entre colaboradores e serviço
+        if servico.colaboradores:
+            for colaborador in servico.colaboradores:
+                # Deletar a entrada na tabela de junção 'colaboradores_servicos'
+                colaborador_servico = ColaboradoresServicos.query.filter_by(ID_Colaborador=colaborador.ID_Colaborador, ID_Servico=servico.ID_Servico).first()
+                if colaborador_servico:
+                    db.session.delete(colaborador_servico)
+
+        # Agora, deletar o próprio serviço
         db.session.delete(servico)
         db.session.commit()
-        return jsonify({"message": "Serviço deletado com sucesso!"}), 200
+
+        return jsonify({"message": "Serviço e seus relacionamentos com colaboradores deletados com sucesso!"}), 200
 
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Erro ao deletar serviço: {str(e)}"}), 500
+
 
     
 @main.route('/add_servico', methods=['POST'])
@@ -1077,7 +1088,10 @@ def editar_servico(tipo, id):
         return jsonify({"message": "Serviço atualizado com sucesso!", "servico": servico.to_dict()}), 200
     except Exception as e:
         db.session.rollback()
+        # Log do erro no console para depuração
+        print(f"Erro ao atualizar serviço: {e}")
         return jsonify({"error": f"Erro ao atualizar serviço: {str(e)}"}), 500
+
 
 
 

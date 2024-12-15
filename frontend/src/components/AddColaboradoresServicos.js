@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaUserPlus, FaTrashAlt } from "react-icons/fa";
+import { FaUserPlus, FaUserMinus } from "react-icons/fa";
 
 const AddColaboradoresServicos = ({ servicoId, onSave, onClose }) => {
   const [colaboradoresDisponiveis, setColaboradoresDisponiveis] = useState([]);
@@ -26,41 +26,74 @@ const AddColaboradoresServicos = ({ servicoId, onSave, onClose }) => {
     if (servicoId) fetchColaboradores();
   }, [servicoId]);
 
-  const adicionarColaborador = async (colaboradorId) => {
-    try {
-      const response = await fetch("http://localhost:5000/api/adicionar_colaboradores", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ servico_id: servicoId, colaboradores_ids: [colaboradorId] }),
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        setColaboradoresServico((prev) => [...prev, data.colaborador]);
-        onSave([...colaboradoresServico, data.colaborador]);
-      } else {
-        setErro(data.error);
-      }
-    } catch (err) {
-      setErro(err.message);
-    }
+  const adicionarColaborador = (colaboradorId) => {
+    setColaboradoresDisponiveis((prev) =>
+      prev.filter((colaborador) => colaborador.ID_Colaborador !== colaboradorId)
+    );
+    setColaboradoresServico((prev) => [
+      ...prev,
+      colaboradoresDisponiveis.find((colaborador) => colaborador.ID_Colaborador === colaboradorId)
+    ]);
   };
 
-  const removerColaborador = async (colaboradorId) => {
-    try {
-      const response = await fetch("http://localhost:5000/api/remover_colaboradores", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ servico_id: servicoId, colaboradores_ids: [colaboradorId] }),
-      });
+  const removerColaborador = (colaboradorId) => {
+    setColaboradoresDisponiveis((prev) => [
+      ...prev,
+      colaboradoresServico.find((colaborador) => colaborador.ID_Colaborador === colaboradorId)
+    ]);
+    setColaboradoresServico((prev) =>
+      prev.filter((colaborador) => colaborador.ID_Colaborador !== colaboradorId)
+    );
+  };
 
-      const data = await response.json();
-      if (response.ok) {
-        setColaboradoresServico((prev) => prev.filter((c) => c.ID_Colaborador !== colaboradorId));
-        onSave(colaboradoresServico.filter((c) => c.ID_Colaborador !== colaboradorId));
-      } else {
-        setErro(data.error);
+  const salvarAlteracoes = async () => {
+    if (colaboradoresServico.length === 0) {
+      setErro("Pelo menos um colaborador precisa ser adicionado.");
+      return;
+    }
+
+    try {
+      const adicionarIds = colaboradoresServico
+        .filter((colaborador) => !colaboradoresDisponiveis.find((item) => item.ID_Colaborador === colaborador.ID_Colaborador))
+        .map((colaborador) => colaborador.ID_Colaborador);
+
+      const removerIds = colaboradoresDisponiveis
+        .filter((colaborador) => !colaboradoresServico.find((item) => item.ID_Colaborador === colaborador.ID_Colaborador))
+        .map((colaborador) => colaborador.ID_Colaborador);
+
+      if (adicionarIds.length > 0) {
+        const responseAdicionar = await fetch("http://localhost:5000/api/adicionar_colaboradores", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ servico_id: servicoId, colaboradores_ids: adicionarIds }),
+        });
+
+        if (!responseAdicionar.ok) {
+          const data = await responseAdicionar.json();
+          setErro(data.error);
+          return;
+        }
       }
+
+      if (removerIds.length > 0) {
+        const responseRemover = await fetch("http://localhost:5000/api/remover_colaboradores", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ servico_id: servicoId, colaboradores_ids: removerIds }),
+        });
+
+        if (!responseRemover.ok) {
+          const data = await responseRemover.json();
+          setErro(data.error);
+          return;
+        }
+      }
+
+      // Atualiza o estado principal com a lista final de colaboradores
+      onSave(colaboradoresServico);
+
+      // Fechar o modal após salvar as alterações
+      onClose();
     } catch (err) {
       setErro(err.message);
     }
@@ -100,7 +133,7 @@ const AddColaboradoresServicos = ({ servicoId, onSave, onClose }) => {
                     <li key={colaborador.ID_Colaborador} className="list-group-item d-flex justify-content-between align-items-center">
                       {colaborador.Nome}
                       <button className="btn btn-danger" onClick={() => removerColaborador(colaborador.ID_Colaborador)}>
-                        <FaTrashAlt />
+                        <FaUserMinus />
                       </button>
                     </li>
                   ))}
@@ -111,6 +144,9 @@ const AddColaboradoresServicos = ({ servicoId, onSave, onClose }) => {
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               Fechar
+            </button>
+            <button type="button" className="btn btn-primary" onClick={salvarAlteracoes}>
+              Salvar Alterações
             </button>
           </div>
         </div>

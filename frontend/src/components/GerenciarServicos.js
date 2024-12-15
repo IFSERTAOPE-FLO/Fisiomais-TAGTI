@@ -20,6 +20,9 @@ const GerenciarServicos = () => {
   const [modalColaboradoresVisible, setModalColaboradoresVisible] = useState(false);
   const [modalServicoVisible, setModalServicoVisible] = useState(false);
   const [selectedServico, setSelectedServico] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
+  const [tipoAlternado, setTipoAlternado] = useState(true);
+  const [pesquisaNome, setPesquisaNome] = useState(""); 
 
   const buscarServicos = async () => {
     try {
@@ -183,12 +186,53 @@ const GerenciarServicos = () => {
     
   };
 
+  const toggleTipo = () => {
+    setTipoAlternado(!tipoAlternado);
+  };
+const sortedServicos = React.useMemo(() => {
+    let sorted = [...servicos];
+    if (sortConfig.key && sortConfig.direction) {
+      sorted.sort((a, b) => {
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
+
+        if (typeof aValue === "string" && typeof bValue === "string") {
+          const aStr = aValue.toLowerCase();
+          const bStr = bValue.toLowerCase();
+          if (aStr < bStr) return sortConfig.direction === "ascending" ? -1 : 1;
+          if (aStr > bStr) return sortConfig.direction === "ascending" ? 1 : -1;
+        } else if (typeof aValue === "number" && typeof bValue === "number") {
+          if (aValue < bValue) return sortConfig.direction === "ascending" ? -1 : 1;
+          if (aValue > bValue) return sortConfig.direction === "ascending" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sorted;
+  }, [servicos, sortConfig]);
+
+  const handleSort = (key) => {
+    let direction = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const servicosFiltrados = sortedServicos.filter((servico) => {
+    return (
+      servico.Nome_servico.toLowerCase().includes(pesquisaNome.toLowerCase()) &&
+      (tipoAlternado ? servico.Tipo === "fisioterapia" : servico.Tipo === "pilates")
+    );
+  });
+ 
+
   return (
     <div className="container">
-      <h2 className="mb-4 text-primary">Gerenciar Serviços</h2>
+      <h2 className="mb-4 text-secondary">Gerenciar Serviços</h2>
       {erro && <div className="alert alert-danger">{erro}</div>}
       {mensagem && <div className="alert alert-success">{mensagem}</div>}
-
+      
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -270,20 +314,40 @@ const GerenciarServicos = () => {
       </form>
 
       <h3 className="text-primary">Lista de Serviços</h3>
+      <div className="input-group mb-3">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Pesquisar por nome do serviço"
+                  value={pesquisaNome}
+                  onChange={(e) => setPesquisaNome(e.target.value)}
+                />
+                <button className="btn btn-primary" type="button" id="button-addon2">
+                  <i className="bi bi-search"></i>
+                </button>
+              </div>
       <table className="table ">
         <thead>
           <tr>
-            <th>Nome</th>
+          <th
+              onClick={() => handleSort("Nome_servico")}
+              style={{ cursor: "pointer" }}
+            >
+              Nome
+              {sortConfig.key === "Nome_servico" && (sortConfig.direction === "ascending" ? " ↑" : " ↓")}
+            </th>
             <th>Descrição</th>
-            <th>Valor</th>
-            <th>Tipo</th>
+            <th>Valor (R$)</th>
+            <th onClick={toggleTipo} style={{ cursor: "pointer" }}>
+                            Tipo {tipoAlternado ? "*" : "*"}
+                        </th>
             <th>Planos</th>
             <th>Colaboradores</th>
             <th>Ações</th>
           </tr>
         </thead>
         <tbody>
-          {servicos.map((servico) => (
+          {servicosFiltrados.map((servico) => (
             <tr key={servico.ID_Servico}>
               <td>{servico.Nome_servico}</td>
               <td>{servico.Descricao}</td>

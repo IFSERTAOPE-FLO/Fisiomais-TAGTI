@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import AddColaboradoresServicos from "./AddColaboradoresServicos";
 
 const EditarServicoModal = ({ servico, onSave, onClose }) => {
   const [formData, setFormData] = useState({
@@ -80,21 +81,24 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
   };
 
   const handleSave = async () => {
-    if (formData.Tipo === "pilates" && (!formData.Planos || formData.Planos.length === 0)) {
-      setErro("É necessário adicionar pelo menos um plano para o tipo Pilates.");
-      return;
+    // Valida o campo Valor antes de enviar
+    const valorValido =
+      formData.Valor && !isNaN(parseFloat(formData.Valor))
+        ? parseFloat(formData.Valor)
+        : null;
+  
+    const dataToSend = {
+      ...formData,
+      Valor: valorValido, // Garante que seja um número ou null
+    };
+  
+    // Remove o campo Planos se o tipo for fisioterapia
+    if (formData.Tipo === "fisioterapia") {
+      delete dataToSend.Planos;
     }
   
     try {
-      // Cria uma cópia do formData para enviar
-      const dataToSend = { ...formData };
-  
-      // Remove o campo Planos para fisioterapia
-      if (formData.Tipo === "fisioterapia") {
-        delete dataToSend.Planos;
-      }
-  
-      const token = localStorage.getItem("token"); // Substitua conforme o método de autenticação usado
+      const token = localStorage.getItem("token");
       const response = await fetch(
         `http://localhost:5000/api/editar_servico/${formData.Tipo}/${servico.ID_Servico}`,
         {
@@ -109,7 +113,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
   
       const data = await response.json();
       if (response.ok) {
-        onSave(data); // Atualiza a lista de serviços após salvar
+        onSave(data);
       } else {
         setErro(data.message || "Erro ao atualizar o serviço.");
       }
@@ -117,6 +121,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
       setErro(err.message);
     }
   };
+  
   
 
   return (
@@ -152,11 +157,19 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
                   type="number"
                   name="Valor"
                   className="form-control"
-                  value={formData.Valor}
-                  onChange={handleChange}
+                  value={formData.Tipo === "pilates" ? "" : formData.Valor} // Limpa o campo se for Pilates
+                  onChange={(e) => {
+                    if (formData.Tipo === "pilates") {
+                      setFormData((prev) => ({ ...prev, Valor: null })); // Define como null para Pilates
+                    } else {
+                      const valor = e.target.value ? parseFloat(e.target.value) : "";
+                      setFormData((prev) => ({ ...prev, Valor: valor }));
+                    }
+                  }}
                   disabled={formData.Tipo !== "fisioterapia"}
                 />
               </div>
+
             </div>
 
             <div className="mb-3">
@@ -230,26 +243,8 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
                 )}
               </>
             )}
+            
 
-            <div className="mb-3">
-              <label className="form-label">Colaboradores:</label>
-              <ul className="list-group">
-                {colaboradoresDisponiveis.map((colaborador) => (
-                  <li
-                    key={colaborador.ID_Colaborador}
-                    className={`list-group-item ${
-                      formData.Colaboradores.includes(colaborador.ID_Colaborador)
-                        ? "list-group-item-success"
-                        : ""
-                    }`}
-                    onClick={() => toggleColaborador(colaborador)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    {colaborador.Nome}
-                  </li>
-                ))}
-              </ul>
-            </div>
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={onClose}>

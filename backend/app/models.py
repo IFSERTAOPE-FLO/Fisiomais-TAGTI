@@ -39,6 +39,12 @@ class Colaboradores(db.Model):
         if self.photo:
             return url_for('main.serve_photo', filename=self.photo, _external=True)
         return None  # Caso não tenha foto
+    def to_dict(self):
+        return {
+            'ID_Colaborador': self.ID_Colaborador,
+            'nome': self.nome
+            
+        }
 
 # Modelo: Clientes
 class Clientes(db.Model):
