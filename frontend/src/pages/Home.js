@@ -260,7 +260,6 @@ function Home() {
       </div>
     </div>
 
-
   );
 }
 
