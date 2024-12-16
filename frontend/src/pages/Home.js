@@ -142,7 +142,8 @@ function Home() {
       {/* Carrossel de Serviços */}
       <div className="mt-5">
         <h2 className="text-center  text-primary mb-3">Nossos Serviços</h2>
-        <p className="text-center  text-primary mb-3">Sinta-se em casa e descubra como podemos ajudar você a se movimentar com mais <strong className="cor-pink">força</strong>, <strong className="cor-pink">equilíbrio</strong> e <strong className="cor-pink">bem-estar</strong>.  </p>
+        <p className="text-center  text-primary mb-3">Sinta-se em casa e descubra como podemos ajudar 
+          você a se movimentar com mais <strong className="cor-pink">força</strong>, <strong className="cor-pink">equilíbrio</strong> e <strong className="cor-pink">bem-estar</strong>.  </p>
         
         <div id="carouselServicos" className="carousel slide" data-bs-ride="carousel">
           <div className="carousel-inner">
