@@ -107,7 +107,7 @@ function Especialidades() {
         <p className="fs-5 text-secondary">
           Não perca tempo! Agende uma consulta e aproveite os benefícios dos nossos tratamentos.
         </p>
-        <Link to="/agendamento" className="btn btn-signup gap-2">
+        <Link to="/criaragendamento" className="btn btn-signup gap-2">
           <i className="bi bi-calendar-check"></i> Agendar Sessão
         </Link>
       </div>
