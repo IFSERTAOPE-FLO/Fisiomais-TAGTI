@@ -150,7 +150,7 @@ function Contato() {
     <img 
         src="/images/fisiomaisboneco.png" 
         alt="Logo 0" 
-        className="animate-subir-descer1 pulsar"
+        className="animate-subir-descer4 pulsar"
         style={{ width: '90px', height: 'auto', position: 'absolute', top: '-545px', left: '-530px', zIndex: -2  }}
     />
 
@@ -164,7 +164,7 @@ function Contato() {
 
     {/* Imagem Logo 2 */}
     <img 
-        src="/images/2.ico" 
+        src="/images/logo3.png" 
         alt="Logo 2" 
         className="animate-subir-descer4"
         style={{ width: '90px', height: 'auto', position: 'absolute', top: '-90px', left: '-530px', zIndex: -2  }}
@@ -172,7 +172,7 @@ function Contato() {
 
     {/* Imagem logo 3 */}
     <img 
-        src="/images/3.ico" 
+        src="/images/logo1.png" 
         alt="3"
         className="animate-subir-descer4"
         style={{ width: '90px', height: 'auto', position: 'absolute', top: '-560px', left: '-130px', zIndex: -2  }}
