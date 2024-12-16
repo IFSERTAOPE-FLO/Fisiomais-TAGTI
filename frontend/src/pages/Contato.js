@@ -53,8 +53,8 @@ function Contato() {
         {/* Bloco de Informações de Contato */}
         
         <div className="col-md-4">
-        <div className="card shadow  ">
-        <div className="card-header agendamento info ">
+        <div className="card shadow rounded">
+        <div className="card-header agendamento rounded  info ">
           <h3 className="mb-4 agendamento-titulo fw-bold  text-center ">Nossas clinicas</h3>
           
           <div className="info-box border-bottom border-top mb-3 ">
@@ -148,7 +148,7 @@ function Contato() {
           <div className="container" style={{ position: 'relative' }}>
           {/* Imagem Logo 0 */}
     <img 
-        src="/images/0.ico" 
+        src="/images/fisiomaisboneco.png" 
         alt="Logo 0" 
         className="animate-subir-descer1 pulsar"
         style={{ width: '100px', height: 'auto', position: 'absolute', top: '-545px', left: '-580px', zIndex: -2  }}
@@ -156,10 +156,10 @@ function Contato() {
 
     {/* Imagem Logo 1 */}
     <img 
-        src="/images/1.ico" 
+        src="/images/fisiomaisboneco.png" 
         alt="Logo 1" 
         className="animate-subir-descer1 pulsar"
-        style={{ width: '100px', height: 'auto', position: 'absolute', top: '-130px', left: '-150px', zIndex: -2  }}
+        style={{ width: '100px', height: 'auto', position: 'absolute', top: '-105px', left: '-150px', zIndex: -2  }}
     />
 
     {/* Imagem Logo 2 */}

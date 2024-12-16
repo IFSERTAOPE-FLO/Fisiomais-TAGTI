@@ -11,7 +11,7 @@ const AdminPage = () => {
   };
 
   return (
-    <div className="container mt-5">
+    <div className="container mt-5 text-center p-4 bg-light rounded shadow">
       <h1 className="text-center mb-4 text-primary">Painel do Administrador</h1>
 
       {/* Escolha de Opção */}

@@ -5,7 +5,7 @@ import '../css/Estilos.css';
 
 function Especialidades() {
   return (
-    <div className="container my-5">
+    <div className="container my-5 mt-5 text-center p-4 bg-light rounded shadow">
       {/* Título da Página */}
       <h2 className="text-center text-primary mb-4">
         Nossas <strong className='cor-pink'>Especialidades</strong>
@@ -19,7 +19,7 @@ function Especialidades() {
             <div className="row">
               <div className="col-4">
                 <img
-                  src="https://via.placeholder.com/150x100?text=Pilates"
+                  src="https://via.placeholder.com/150x100?text=Serviços+1"
                   className="d-block w-100"
                   alt="Pilates"
                 />
@@ -28,7 +28,7 @@ function Especialidades() {
               </div>
               <div className="col-4">
                 <img
-                  src="https://via.placeholder.com/150x100?text=Reabilitação+Física"
+                  src="https://via.placeholder.com/150x100?text=Serviços+2"
                   className="d-block w-100"
                   alt="Reabilitação Física"
                 />
@@ -37,7 +37,7 @@ function Especialidades() {
               </div>
               <div className="col-4">
                 <img
-                  src="https://via.placeholder.com/150x100?text=Massoterapia"
+                  src="https://via.placeholder.com/150x100?text=Serviços+3"
                   className="d-block w-100"
                   alt="Massoterapia"
                 />
@@ -46,12 +46,13 @@ function Especialidades() {
               </div>
             </div>
           </div>
+
           {/* Slide 2 */}
           <div className="carousel-item">
             <div className="row">
               <div className="col-4">
                 <img
-                  src="https://via.placeholder.com/150x100?text=Acupuntura"
+                  src="https://via.placeholder.com/150x100?text=Serviços+4"
                   className="d-block w-100"
                   alt="Acupuntura"
                 />
@@ -60,7 +61,7 @@ function Especialidades() {
               </div>
               <div className="col-4">
                 <img
-                  src="https://via.placeholder.com/150x100?text=RPG"
+                  src="https://via.placeholder.com/150x100?text=Serviços+5"
                   className="d-block w-100"
                   alt="RPG"
                 />
@@ -69,7 +70,7 @@ function Especialidades() {
               </div>
               <div className="col-4">
                 <img
-                  src="https://via.placeholder.com/150x100?text=Hidroterapia"
+                  src="https://via.placeholder.com/150x100?text=Serviços+6"
                   className="d-block w-100"
                   alt="Hidroterapia"
                 />
@@ -100,6 +101,45 @@ function Especialidades() {
           <span className="visually-hidden">Próximo</span>
         </button>
       </div>
+
+      {/* Detalhes das Especialidades */}
+      <div className="row mt-5">
+        <div className="col-12 rounded mb-4">
+          <div className="card shadow-sm rounded p-3">
+            <h4 className="text-primary fw-bold">Pilates</h4>
+            <p>O Pilates é uma prática que promove a consciência corporal, melhora a postura e fortalece os músculos através de exercícios personalizados que combinam respiração e movimentos precisos.</p>
+          </div>
+        </div>
+        <div className="col-12 mb-4">
+          <div className="card shadow-sm rounded p-3">
+            <h4 className="text-primary fw-bold">Reabilitação Física</h4>
+            <p>Programas focados na recuperação funcional pós-lesões, cirurgias e problemas ortopédicos. Trabalhamos para restaurar a mobilidade, reduzir dores e melhorar sua qualidade de vida.</p>
+          </div>
+        </div>
+        <div className="col-12 mb-4">
+          <div className="card shadow-sm  p-3">
+            <h4 className="text-primary fw-bold">Massoterapia</h4>
+            <p>Massagens terapêuticas que aliviam dores musculares, reduzem o estresse e proporcionam relaxamento profundo para um melhor bem-estar físico e mental.</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5">
+        <h3 className="text-center text-primary mb-4">O que nossos colaboradores dizem</h3>
+        <div className="card shadow-lg bg-light p-3  mb-3 bg-light border-0">
+          <blockquote className="blockquote text-center">
+            <p className="mb-0"><strong className='cor-pink fw-bold fs-1'>&#8220;</strong>Nossa missão é ver cada paciente retornar às suas atividades com saúde e alegria.<strong className='cor-pink fw-bold fs-1'>&#8220;</strong></p>
+            <footer className="blockquote-footer mt-2">João Silva, <cite title="Source Title">Fisioterapeuta</cite></footer>
+          </blockquote>
+        </div>
+        <div className="card shadow-lg p-3 bg-light  border-0">
+          <blockquote className="blockquote text-center">
+            <p className="mb-0"><strong className='cor-pink fw-bold fs-1'>&#8220;</strong>A qualidade do nosso atendimento e dos nossos programas nos diferencia e gera resultados.<strong className='cor-pink fw-bold fs-1'>&#8220;</strong></p>
+            <footer className="blockquote-footer mt-2">Ana Oliveira, <cite title="Source Title">Especialista em RPG</cite></footer>
+          </blockquote>
+        </div>
+      </div>
+
 
       {/* Convite para agendamento */}
       <div className="mt-5 text-center p-4 bg-light rounded shadow">
