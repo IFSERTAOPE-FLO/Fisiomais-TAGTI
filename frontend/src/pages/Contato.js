@@ -151,7 +151,7 @@ function Contato() {
         src="/images/0.ico" 
         alt="Logo 0" 
         className="animate-subir-descer1 pulsar"
-        style={{ width: '100px', height: 'auto', position: 'absolute', top: '-545px', left: '-580px', zIndex: -2  }}
+        style={{ width: '90px', height: 'auto', position: 'absolute', top: '-545px', left: '-530px', zIndex: -2  }}
     />
 
     {/* Imagem Logo 1 */}
@@ -159,23 +159,23 @@ function Contato() {
         src="/images/1.ico" 
         alt="Logo 1" 
         className="animate-subir-descer1 pulsar"
-        style={{ width: '100px', height: 'auto', position: 'absolute', top: '-130px', left: '-150px', zIndex: -2  }}
+        style={{ width: '90px', height: 'auto', position: 'absolute', top: '-80px', left: '-150px', zIndex: -2  }}
     />
 
     {/* Imagem Logo 2 */}
     <img 
-        src="/images/2.png" 
+        src="/images/2.ico" 
         alt="Logo 2" 
         className="animate-subir-descer4"
-        style={{ width: '300px', height: 'auto', position: 'absolute', top: '-110px', left: '-680px', zIndex: -2  }}
+        style={{ width: '90px', height: 'auto', position: 'absolute', top: '-90px', left: '-530px', zIndex: -2  }}
     />
 
     {/* Imagem logo 3 */}
     <img 
-        src="/images/3.png" 
+        src="/images/3.ico" 
         alt="3"
         className="animate-subir-descer4"
-        style={{ width: '300px', height: 'auto', position: 'absolute', top: '-545px', left: '-250px', zIndex: -2  }}
+        style={{ width: '90px', height: 'auto', position: 'absolute', top: '-560px', left: '-130px', zIndex: -2  }}
     />
      <img 
         src="/images/contat.png" 
