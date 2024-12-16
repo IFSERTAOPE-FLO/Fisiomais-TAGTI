@@ -145,7 +145,61 @@ function Contato() {
               </form>
             </div>
           </div>
-        </div>
+          <div className="container" style={{ position: 'relative' }}>
+          {/* Imagem Logo 0 */}
+    <img 
+        src="/images/0.ico" 
+        alt="Logo 0" 
+        className="animate-subir-descer1 pulsar"
+        style={{ width: '100px', height: 'auto', position: 'absolute', top: '-545px', left: '-580px', zIndex: -2  }}
+    />
+
+    {/* Imagem Logo 1 */}
+    <img 
+        src="/images/1.ico" 
+        alt="Logo 1" 
+        className="animate-subir-descer1 pulsar"
+        style={{ width: '100px', height: 'auto', position: 'absolute', top: '-130px', left: '-150px', zIndex: -2  }}
+    />
+
+    {/* Imagem Logo 2 */}
+    <img 
+        src="/images/2.png" 
+        alt="Logo 2" 
+        className="animate-subir-descer4"
+        style={{ width: '300px', height: 'auto', position: 'absolute', top: '-110px', left: '-680px', zIndex: -2  }}
+    />
+
+    {/* Imagem logo 3 */}
+    <img 
+        src="/images/3.png" 
+        alt="3"
+        className="animate-subir-descer4"
+        style={{ width: '300px', height: 'auto', position: 'absolute', top: '-545px', left: '-250px', zIndex: -2  }}
+    />
+     <img 
+        src="/images/contat.png" 
+        alt="5"
+        style={{ width: '1320px', height: 'auto', position: 'absolute', top: '-630px', left: '-130px', zIndex: -2 }}
+        
+    />
+        {/* Imagem logo 4 */}
+        <img 
+        src="/images/4.png" 
+        alt="4"
+        className="girar"
+        style={{ width: '350px', height: 'auto', position: 'absolute', top: '-100px', left: '860px', zIndex: -2  }}
+        
+    />
+     <img 
+        src="/images/5.png" 
+        alt="5"
+        className="girar"
+        style={{ width: '350px', height: 'auto', position: 'absolute', top: '-280px', left: '700px',zIndex: -2  }}
+        
+    />
+      </div>
+      </div>
       </div>
     </div>
   );
