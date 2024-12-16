@@ -74,7 +74,9 @@
 .animate-subir-descer4 {
     animation: subirDescer4 4.5s ease-in-out infinite;
 }
-
+.animate-subir-descer5 {
+    animation: subirDescer4 4.9s ease-in-out infinite;
+}
 @keyframes girar {
     0% {
         transform: rotate(0deg); /* Início da rotação */

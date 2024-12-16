@@ -296,7 +296,7 @@ function Agendamento() {
     <img 
         src="/images/logo.png" 
         alt="Logo 1"
-        className="animate-subir-descer1 pulsar"
+        className="pulsar"
         style={{ width: '750px', height: 'auto', position: 'absolute', top: '-570px', left: '-170px', zIndex: -2 }}
     />
 

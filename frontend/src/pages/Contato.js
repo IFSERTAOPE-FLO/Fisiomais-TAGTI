@@ -150,16 +150,16 @@ function Contato() {
     <img 
         src="/images/fisiomaisboneco.png" 
         alt="Logo 0" 
-        className="animate-subir-descer4 pulsar"
-        style={{ width: '90px', height: 'auto', position: 'absolute', top: '-545px', left: '-530px', zIndex: -2  }}
+        className="animate-subir-descer5"
+        style={{ width: '100px', height: 'auto', position: 'absolute', top: '-585px', left: '-530px', zIndex: -2  }}
     />
 
     {/* Imagem Logo 1 */}
     <img 
         src="/images/fisiomaisboneco.png" 
         alt="Logo 1" 
-        className="animate-subir-descer4"
-        style={{ width: '90px', height: 'auto', position: 'absolute', top: '-75px', left: '-130px', zIndex: -2  }}
+        className="animate-subir-descer3"
+        style={{ width: '70px', height: 'auto', position: 'absolute', top: '-55px', left: '-130px', zIndex: -2  }}
     />
 
     {/* Imagem Logo 2 */}
@@ -167,15 +167,15 @@ function Contato() {
         src="/images/fisiomaisboneco.png" 
         alt="Logo 2" 
         className="animate-subir-descer4"
-        style={{ width: '90px', height: 'auto', position: 'absolute', top: '-80px', left: '-510px', zIndex: -2  }}
+        style={{ width: '70px', height: 'auto', position: 'absolute', top: '-80px', left: '-510px', zIndex: -2  }}
     />
 
     {/* Imagem logo 3 */}
     <img 
         src="/images/fisiomaisboneco.png" 
         alt="3"
-        className="animate-subir-descer4"
-        style={{ width: '90px', height: 'auto', position: 'absolute', top: '-590px', left: '-130px', zIndex: -2  }}
+        className="animate-subir-descer2"
+        style={{ width: '70px', height: 'auto', position: 'absolute', top: '-590px', left: '-130px', zIndex: -2  }}
     />
      <img 
         src="/images/contat.png" 
