@@ -48,26 +48,39 @@ function Contato() {
 
   return (
     <div className="container my-5">
-      <div className="row align-items-center">
+      
+      <div className="row align-items-center ">
         {/* Bloco de Informações de Contato */}
+        
         <div className="col-md-4">
-          <h3 className="mb-4 text-primary fw-bold">Informações de Contato</h3>
-          <div className="info-box mb-3">
-            <i className="bi bi-geo-alt-fill text-primary"></i>
+        <div className="card shadow  ">
+        <div className="card-header agendamento info ">
+          <h3 className="mb-4 agendamento-titulo fw-bold  text-center ">Nossas clinicas</h3>
+          
+          <div className="info-box border-bottom border-top mb-3 ">
+            
+            <i className="bi bi-geo-alt-fill  cor-pink "></i>
             <div>
-              <p className="mb-1"><strong>Floresta</strong></p>
+            <br></br>
+              <p className="mb-1 fw-bold agendamento-titulo ">Floresta</p>
               <p>Rua 123, 372 - Centro, Floresta - PE</p>
-              <p>Segunda a Sexta: 07:00–19:00<br />Sábado e Domingo: Fechado</p>
+              <p>Segunda a Sexta: 07:00–19:00 </p>
+                <p>Sábado e Domingo: Fechado</p>
+              <br />
             </div>
           </div>
-          <div className="info-box mb-3">
-            <i className="bi bi-geo-alt-fill text-primary"></i>
+          <div className="info-box mb-3 border-bottom ">
+            <i className="bi bi-geo-alt-fill   cor-pink "></i>
             <div>
-              <p className="mb-1"><strong>Serra Talhada</strong></p>
+              <p className="mb-1 fw-bold">Serra Talhada</p>
               <p>Rua 123, 372 - Centro, Serra Talhada - PE</p>
-              <p>Segunda a Sexta: 07:00–19:00<br />Sábado e Domingo: Fechado</p>
+              <p>Segunda a Sexta: 07:00–19:00</p>
+              <p>Sábado e Domingo: Fechado</p>
+              <br />
             </div>
           </div>
+        </div>
+        </div>
         </div>
 
         {/* Formulário de Contato */}

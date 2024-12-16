@@ -265,7 +265,7 @@ const VisualizarAgendamentos = () => {
               <Modal.Header closeButton>
                 <Modal.Title>Detalhes do Agendamento</Modal.Title>
               </Modal.Header>
-              <Modal.Body>
+              <Modal.Body >
                 <p>
                   <strong>Nome do Cliente:</strong> {selectedAgendamento.nome_cliente}
                 </p>

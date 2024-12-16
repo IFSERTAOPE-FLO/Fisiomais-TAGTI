@@ -1,19 +1,31 @@
 .agendamento {
   background-color: #36ab9c;
   color: white;
-  border-radius: 15px;
-}
+  border-radius: 15px;  
+} 
 
 .agendamento-header {
   border-bottom: 1px solid #f1f1f1;
   background-color: #2d9184;
   color: white;
+  
 }
 
 .agendamento-titulo {
   color: white;
   margin: 0;
+  
 }
+p {
+  text-indent: 30px; /* Define o recuo do início do parágrafo */
+}
+
+/* Remove o recuo dos parágrafos dentro de uma div com a classe 'info' */
+.info p {
+  text-indent: 0px; /* Define o recuo do início do parágrafo como 0px */
+}
+
+
 
 form select option:hover { 
   cursor: pointer; 
@@ -44,6 +56,11 @@ form input[type="date"] {
   color: var(--bs-secondary);
 }
  
+.cor-pink {
+    color: #bc155b;
+  
+  
+}
 .btn-pink {
   background-color: #bc155b;
   color: white;
