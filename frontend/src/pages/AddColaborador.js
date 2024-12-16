@@ -3,6 +3,8 @@ import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import '../css/Estilos.css';
+import { Link} from "react-router-dom";
+
 
 function AddColaborador() {
   const [nome, setNome] = useState('');
@@ -252,10 +254,16 @@ function AddColaborador() {
             </div>
   
             <div className="col-12 text-center">
-              <button type="submit" className="btn btn-signup w-auto mx-auto" disabled={loading}>
+              <button type="submit" className="btn btn-login w-auto mx-auto ms-2" disabled={loading}>
+              <i className="bi bi-person-plus me-1"></i>
                 {loading ? "Carregando..." : "Cadastrar"}
               </button>
+              <Link  className="btn btn-signup w-auto  mx-auto ms-2" to="/adminpage" disabled={loading}>
+              <i class="bi bi-arrow-return-left me-2"></i>
+                            {loading ? "Carregando..." : "Voltar"}
+            </Link>
             </div>
+            
           </form>
         </div>
       </div>

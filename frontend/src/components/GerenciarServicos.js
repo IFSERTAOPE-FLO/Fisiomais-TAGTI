@@ -308,7 +308,7 @@ const sortedServicos = React.useMemo(() => {
           </>
         )}
 
-        <button type="submit" className="btn btn-success">
+        <button type="submit" className="btn btn-login">
           Adicionar Serviço
         </button>
       </form>
@@ -322,7 +322,7 @@ const sortedServicos = React.useMemo(() => {
                   value={pesquisaNome}
                   onChange={(e) => setPesquisaNome(e.target.value)}
                 />
-                <button className="btn btn-primary" type="button" id="button-addon2">
+                <button className="btn btn-secondary" type="button" id="button-addon2">
                   <i className="bi bi-search"></i>
                 </button>
               </div>

@@ -127,21 +127,41 @@ const GerenciarUsuarios = () => {
     return (
         <div>
             <h2 className="mb-3 text-secondary">Gerenciar Usuários</h2>
-            
-            {erro && <p className="alert alert-danger">{erro}</p>}
 
-            <div className="input-group mb-3">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Pesquisar por nome"
-                  value={pesquisaNome}
-                  onChange={(e) => setPesquisaNome(e.target.value)}
-                />
-                <button className="btn btn-primary" type="button" id="button-addon2">
-                  <i className="bi bi-search"></i>
-                </button>
-              </div>
+            {erro && <p className="alert alert-danger">{erro}</p>}
+            <div className="container mb-3">
+                <div className="row align-items-center g-2">
+                    {/* Coluna para o campo de pesquisa */}
+                    <div className="col-md-6 col-lg-8">
+                        <div className="input-group">
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder="Pesquisar por nome"
+                                value={pesquisaNome}
+                                onChange={(e) => setPesquisaNome(e.target.value)}
+                            />
+                            <button className="btn btn-secondary" type="button" id="button-addon2">
+                                <i className="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    
+                    <div className="col-auto">
+                        <Link className="btn btn-login " to="/addcliente">
+                            <i className="bi bi-person-plus"></i> Cliente
+                        </Link>
+                    </div>
+
+                    
+                    <div className="col-auto">
+                        <Link className="btn btn-login " to="/addcolaborador">
+                            <i className="bi bi-person-workspace"></i> Colaborador
+                        </Link>
+                    </div>
+                </div>
+            </div>
 
             <table className="table table-striped table-bordered mt-4">
                 <thead>
@@ -173,31 +193,24 @@ const GerenciarUsuarios = () => {
                             <td>{usuario.email}</td>
                             <td>{usuario.role}</td>
                             <td>
-                              
-                              <button
-                                className="btn btn-warning btn-sm me-2"
-                                onClick={() => handleEditarUsuario(usuario)}
-                              >
-                                <i className="bi bi-pencil"></i> Editar
-                              </button>
 
-                              
-                              <button
-                                className="btn btn-danger btn-sm me-2"
-                                onClick={() => deletarUsuario(usuario.role, usuario.ID)}
-                              >
-                                <i className="bi bi-trash"></i> Excluir
-                              </button>
+                                <button
+                                    className="btn btn-warning btn-sm me-2"
+                                    onClick={() => handleEditarUsuario(usuario)}
+                                >
+                                    <i className="bi bi-pencil"></i> Editar
+                                </button>
 
-                              
-                              <Link className="btn btn-success btn-sm me-2" to="/addcliente">
-                                <i className="bi bi-person-plus"></i> Cliente
-                              </Link>
 
-                              
-                              <Link className="btn btn-success btn-sm" to="/addcolaborador">
-                                <i className="bi bi-person-workspace"></i> Colaborador
-                              </Link>
+                                <button
+                                    className="btn btn-danger btn-sm me-2"
+                                    onClick={() => deletarUsuario(usuario.role, usuario.ID)}
+                                >
+                                    <i className="bi bi-trash"></i> Excluir
+                                </button>
+
+
+
                             </td>
 
                         </tr>

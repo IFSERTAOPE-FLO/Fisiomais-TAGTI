@@ -352,6 +352,7 @@ def listar_agendamentos():
         for agendamento in agendamentos:
             cliente = Clientes.query.get(agendamento.ID_Cliente)
             servico = Servicos.query.get(agendamento.ID_Servico)
+            colaborador = Colaboradores.query.get(agendamento.ID_Colaborador)  # Adicionado para buscar o colaborador
 
             plano_pagamento = []
             if servico and servico.tipo_servico == 'pilates' and hasattr(agendamento, 'ID_Plano'):  # Verifica se o plano está associado ao agendamento
@@ -366,6 +367,7 @@ def listar_agendamentos():
                 'hora': agendamento.data_e_hora.strftime('%H:%M'),
                 'nome_servico': servico.Nome_servico if servico else 'Serviço não encontrado',
                 'valor_servico': float(servico.Valor) if servico and servico.Valor else None,
+                'nome_colaborador': colaborador.nome if colaborador else 'Colaborador não encontrado',  # Adicionado
                 'plano_pagamento': plano_pagamento
             })
 
@@ -374,6 +376,7 @@ def listar_agendamentos():
     except Exception as e:
         print(f"Erro ao carregar agendamentos: {str(e)}")
         return jsonify({'message': f'Erro ao carregar agendamentos: {str(e)}'}), 500
+
 
 
 @main.route('/api/deletar_agendamento/<int:id>', methods=['DELETE'])

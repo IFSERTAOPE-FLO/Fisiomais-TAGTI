@@ -18,13 +18,13 @@ const AdminPage = () => {
       <div className="row mb-4">
         <div className="col-12 text-center">
           <button
-            className="btn btn-primary mx-2"
+            className="btn btn-login mx-2"
             onClick={() => handleOpcaoChange("usuarios")}
           >
             Gerenciar Usuários
           </button>
           <button
-            className="btn btn-success mx-2"
+            className="btn btn-signup mx-2"
             onClick={() => handleOpcaoChange("servicos")}
           >
             Gerenciar Serviços

@@ -163,28 +163,29 @@ const VisualizarAgendamentos = () => {
                   Nome Cliente{' '}
                   {sortConfig.key === 'nome_cliente' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
                 </th>
-                
-              <th
-              onClick={() => handleSort('data')}
-              style={{ cursor: 'pointer', verticalAlign: 'middle' }} 
-            >
-              Data{' '}
-              {sortConfig.key === 'data' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              <Button
-                variant="btn-danger" 
-                onClick={(e) => {
-                  e.stopPropagation(); 
-                  setShowDateFilterModal(true); 
-                }}
-                className="ms-2 align-top p-0 text-white" 
-                style={{ lineHeight: 1, height: 'auto' }} 
-              >
-                <FaCalendarAlt />
-              </Button>
-            </th>
+
+                <th
+                  onClick={() => handleSort('data')}
+                  style={{ cursor: 'pointer', verticalAlign: 'middle' }}
+                >
+                  Data{' '}
+                  {sortConfig.key === 'data' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  <Button
+                    variant="btn-danger"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDateFilterModal(true);
+                    }}
+                    className="ms-2 align-top p-0 text-white"
+                    style={{ lineHeight: 1, height: 'auto' }}
+                  >
+                    <FaCalendarAlt />
+                  </Button>
+                </th>
                 <th>Hora</th>
                 <th>Serviço</th>
                 <th>Valor (R$)</th>
+                <th>Colaborador</th>
                 <th>Detalhes</th>
               </tr>
             </thead>
@@ -221,6 +222,7 @@ const VisualizarAgendamentos = () => {
                         'Valor não disponível'
                       )}
                     </td>
+                    <td>{agendamento.nome_colaborador || 'Colaborador não encontrado'}</td> {/* Exibe o colaborador */}
                     <td>
                       <button
                         className="btn btn-outline-info btn-sm"
@@ -233,12 +235,13 @@ const VisualizarAgendamentos = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="text-center">
+                  <td colSpan="8" className="text-center">
                     Nenhum agendamento encontrado
                   </td>
                 </tr>
               )}
             </tbody>
+
           </table>
 
           {/* Modal de filtro de data */}
@@ -274,6 +277,9 @@ const VisualizarAgendamentos = () => {
                 </p>
                 <p>
                   <strong>Serviço:</strong> {selectedAgendamento.nome_servico || 'Não informado'}
+                </p>
+                <p>
+                  <strong>Colaborador:</strong> {selectedAgendamento.nome_colaborador || 'Não informado'}
                 </p>
                 <p>
                   <strong>Valor:</strong>
@@ -312,10 +318,10 @@ const VisualizarAgendamentos = () => {
                   </Button>
                 ) : (
                   <Button variant="btn btn-primary" onClick={handleNotifyAdmin}>
-                    Notificar Administrador
+                    Pedir cancelamento
                   </Button>
                 )}
-               
+
               </Modal.Footer>
             </Modal>
           )}
