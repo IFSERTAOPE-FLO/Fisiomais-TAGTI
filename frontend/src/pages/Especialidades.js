@@ -19,8 +19,8 @@ function Especialidades() {
             <div className="row">
               <div className="col-4">
                 <img
-                  src="https://via.placeholder.com/150x100?text=Serviços+1"
-                  className="d-block w-100"
+                  src="/images/pilates1.jpg"
+                  className="d-block w-100 custom-image" 
                   alt="Pilates"
                 />
                 <h5 className="text-center fw-bold text-secondary">Pilates</h5>
@@ -28,8 +28,8 @@ function Especialidades() {
               </div>
               <div className="col-4">
                 <img
-                  src="https://via.placeholder.com/150x100?text=Serviços+2"
-                  className="d-block w-100"
+                  src="/images/pilates2.png"
+                  className="d-block w-100 custom-image"
                   alt="Reabilitação Física"
                 />
                 <h5 className="text-center fw-bold text-secondary">Reabilitação Física</h5>
@@ -37,8 +37,8 @@ function Especialidades() {
               </div>
               <div className="col-4">
                 <img
-                  src="https://via.placeholder.com/150x100?text=Serviços+3"
-                  className="d-block w-100"
+                  src="https://policonsultas.com.br/wp-content/uploads/2023/01/massoterapia-1.jpg"
+                  className="d-block w-100 custom-image"
                   alt="Massoterapia"
                 />
                 <h5 className="text-center fw-bold text-secondary">Massoterapia</h5>
@@ -52,8 +52,8 @@ function Especialidades() {
             <div className="row">
               <div className="col-4">
                 <img
-                  src="https://via.placeholder.com/150x100?text=Serviços+4"
-                  className="d-block w-100"
+                  src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4VWSjnFu2LvpsnTrGAnSUtkpFgeYXaTeSVw&s"
+                  className="d-block w-100 custom-image"
                   alt="Acupuntura"
                 />
                 <h5 className="text-center fw-bold text-secondary">Acupuntura</h5>
@@ -61,8 +61,8 @@ function Especialidades() {
               </div>
               <div className="col-4">
                 <img
-                  src="https://via.placeholder.com/150x100?text=Serviços+5"
-                  className="d-block w-100"
+                  src="https://static.wixstatic.com/media/0dac19_cb0b9eec411e458aa7a46e65c364402b~mv2.jpg/v1/fill/w_849,h_429,al_c,q_85/RPG_CHIBAFISIOMED.jpg"
+                  className="d-block w-100 custom-image"
                   alt="RPG"
                 />
                 <h5 className="text-center fw-bold text-secondary">Reeducação Postural Global</h5>
@@ -70,8 +70,8 @@ function Especialidades() {
               </div>
               <div className="col-4">
                 <img
-                  src="https://via.placeholder.com/150x100?text=Serviços+6"
-                  className="d-block w-100"
+                  src="https://www.institutoreaction.com.br/wp-content/uploads/2020/06/beneficios-hidroterapia-miniatura.jpg"
+                  className="d-block w-100 custom-image"
                   alt="Hidroterapia"
                 />
                 <h5 className="text-center fw-bold text-secondary">Hidroterapia</h5>
@@ -103,26 +103,49 @@ function Especialidades() {
       </div>
 
       {/* Detalhes das Especialidades */}
-      <div className="row mt-5">
-        <div className="col-12 rounded mb-4">
-          <div className="card shadow-sm rounded p-3">
-            <h4 className="text-primary fw-bold">Pilates</h4>
-            <p>O Pilates é uma prática que promove a consciência corporal, melhora a postura e fortalece os músculos através de exercícios personalizados que combinam respiração e movimentos precisos.</p>
-          </div>
-        </div>
-        <div className="col-12 mb-4">
-          <div className="card shadow-sm rounded p-3">
-            <h4 className="text-primary fw-bold">Reabilitação Física</h4>
-            <p>Programas focados na recuperação funcional pós-lesões, cirurgias e problemas ortopédicos. Trabalhamos para restaurar a mobilidade, reduzir dores e melhorar sua qualidade de vida.</p>
-          </div>
-        </div>
-        <div className="col-12 mb-4">
-          <div className="card shadow-sm  p-3">
-            <h4 className="text-primary fw-bold">Massoterapia</h4>
-            <p>Massagens terapêuticas que aliviam dores musculares, reduzem o estresse e proporcionam relaxamento profundo para um melhor bem-estar físico e mental.</p>
-          </div>
-        </div>
+<div className="row mt-5 g-4 text-justify">
+  {[
+    {
+      title: "Pilates",
+      description:
+        "O Pilates é uma prática que promove a consciência corporal, melhora a postura e fortalece os músculos através de exercícios personalizados que combinam respiração e movimentos precisos.",
+    },
+    {
+      title: "Reabilitação Física",
+      description:
+        "Programas focados na recuperação funcional pós-lesões, cirurgias e problemas ortopédicos. Trabalhamos para restaurar a mobilidade, reduzir dores e melhorar sua qualidade de vida.",
+    },
+    {
+      title: "Massoterapia",
+      description:
+        "Massagens terapêuticas que aliviam dores musculares, reduzem o estresse e proporcionam relaxamento profundo para um melhor bem-estar físico e mental.",
+    },
+    {
+      title: "Acupuntura",
+      description:
+        "Terapia milenar que utiliza estímulos em pontos específicos do corpo para aliviar dores, equilibrar o fluxo energético e promover o bem-estar geral.",
+    },
+    {
+      title: "Reeducação Postural Global",
+      description:
+        "Método focado na correção postural através de técnicas globais para aliviar dores crônicas, melhorar a mobilidade e prevenir lesões.",
+    },
+    {
+      title: "Hidroterapia",
+      description:
+        "Terapias aquáticas realizadas em piscina, ideais para recuperação de mobilidade, fortalecimento muscular e alívio de dores.",
+    },
+  ].map((item, index) => (
+    <div key={index} className="col-12 col-md-6 col-lg-4">
+      <div className="card shadow-sm rounded p-3">
+        <h4 className="text-primary fw-bold">{item.title}</h4>
+        <p>{item.description}</p>
       </div>
+    </div>
+  ))}
+</div>
+
+      
 
       <div className="mt-5">
         <h3 className="text-center text-primary mb-4">O que nossos colaboradores dizem</h3>
@@ -139,6 +162,7 @@ function Especialidades() {
           </blockquote>
         </div>
       </div>
+      
 
 
       {/* Convite para agendamento */}
