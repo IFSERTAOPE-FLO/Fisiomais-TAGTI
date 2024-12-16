@@ -1,0 +1,50 @@
+.info-box {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.info-box i {
+  font-size: 24px;
+}
+
+.info-box p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.info-box strong {
+  font-size: 1.1em;
+  color: #36ab9c;
+}
+
+.agendamento {
+  background-color: #36ab9c;
+  color: white;
+  border-radius: 15px;
+}
+
+.agendamento-header {
+  background-color: #2d9184;
+  padding: 15px;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+}
+
+.agendamento-titulo {
+  color: white;
+  margin: 0;
+}
+
+.btn-pink {
+  background-color: #bc155b;
+  color: white;
+  border-radius: 20px;
+  padding: 10px;
+  transition: 0.3s;
+}
+
+.btn-pink:hover {
+  background-color: #9c2456;
+  transform: scale(1.05);
+}
