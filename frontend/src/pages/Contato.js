@@ -158,24 +158,24 @@ function Contato() {
     <img 
         src="/images/fisiomaisboneco.png" 
         alt="Logo 1" 
-        className="animate-subir-descer1 pulsar"
-        style={{ width: '100px', height: 'auto', position: 'absolute', top: '-105px', left: '-150px', zIndex: -2  }}
+        className="animate-subir-descer4"
+        style={{ width: '90px', height: 'auto', position: 'absolute', top: '-75px', left: '-130px', zIndex: -2  }}
     />
 
     {/* Imagem Logo 2 */}
     <img 
-        src="/images/logo3.png" 
+        src="/images/fisiomaisboneco.png" 
         alt="Logo 2" 
         className="animate-subir-descer4"
-        style={{ width: '90px', height: 'auto', position: 'absolute', top: '-90px', left: '-530px', zIndex: -2  }}
+        style={{ width: '90px', height: 'auto', position: 'absolute', top: '-80px', left: '-510px', zIndex: -2  }}
     />
 
     {/* Imagem logo 3 */}
     <img 
-        src="/images/logo1.png" 
+        src="/images/fisiomaisboneco.png" 
         alt="3"
         className="animate-subir-descer4"
-        style={{ width: '90px', height: 'auto', position: 'absolute', top: '-560px', left: '-130px', zIndex: -2  }}
+        style={{ width: '90px', height: 'auto', position: 'absolute', top: '-590px', left: '-130px', zIndex: -2  }}
     />
      <img 
         src="/images/contat.png" 
