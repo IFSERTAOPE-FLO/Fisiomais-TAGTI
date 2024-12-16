@@ -4,31 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 function SobreNos() {
   return (
     <div className="container my-5">
-      <img
-        src="/images/linhas.png"
-        alt="Logo 3"
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: -100,
-          width: '19%',
-          height: 'auto',
-          zIndex: -1 // Coloca a imagem atrás do texto
-        }}
-      />
-      <img
-        src="/images/linhas.png"
-        alt="Logo 3"
-        style={{
-          position: 'absolute',
-          top: 0,
-          right: -100,
-          width: '19%',
-          height: 'auto',
-          transform: 'scaleX(-1)',
-          zIndex: -1 // Coloca a imagem atrás do texto
-        }}
-      />
+     
       <h2 className="text-center text-primary mb-4">
         Sobre a <strong className='cor-pink'>FISIOMAIS</strong>
       </h2>
