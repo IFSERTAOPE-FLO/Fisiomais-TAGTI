@@ -18,6 +18,7 @@ import Cadastro from "./pages/Cadastro";
 import Perfil from "./pages/Perfil";
 import VisualizarAgendamentos from "./pages/VisualizarAgendamentos";
 import AdminPage from "./pages/AdminPage"; 
+import Especialidades from "./pages/Especialidades"; 
 
 
 
@@ -33,6 +34,7 @@ function App() {
           <Route path="/criaragendamento" element={<CriarAgendamento />} />
           <Route path="/contato" element={<Contato />} />
           <Route path="/sobrenos" element={<SobreNos />} />
+          <Route path="/especialidades" element={<Especialidades />} /> 
           <Route path="/cadastro" element={<Cadastro />} />
           <Route path="/perfil" element={<Perfil />} />     
           <Route path="/visualizaragendamentos" element={<VisualizarAgendamentos />} />           
