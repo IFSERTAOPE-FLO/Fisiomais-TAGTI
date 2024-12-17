@@ -191,36 +191,44 @@ function Agendamento() {
 
                 {tipoServico === "fisioterapia" && valorServico && (
                   <div className="mb-3">
-                    <label htmlFor="valor" className="form-label">Valor do Serviço</label>
-                    <input
-                      id="valor"
-                      className="form-control"
-                      type="text"
-                      value={`R$ ${valorServico}`}
-                      readOnly
-                    />
+                    <label htmlFor="valor" className="form-label ">Valor do Serviço</label>
+                    <div className="input-group ">
+                      
+                      <input
+                        id="valor"
+                        className="form-control btn-plano"
+                        type="text"
+                        value={`R$ ${valorServico}`}
+                        readOnly
+                      />
+                    </div>
                   </div>
                 )}
 
                 {tipoServico === 'pilates' && (
                   <div className="mb-3">
-                    <label htmlFor="plano" className="form-label">Plano de Pilates</label>
-                    <select
-                      id="plano"
-                      className="form-select"
-                      value={planoSelecionado}
-                      onChange={(e) => setPlanoSelecionado(parseInt(e.target.value, 10))}  // Certifique-se de enviar um número
-                      required
-                    >
-                      <option value="">Selecione um plano</option>
+                    <label className="form-label">Plano de Pilates</label>
+                    <div className="d-flex flex-column  gap-2">
                       {planos.map((plano) => (
-                        <option key={plano.ID_Plano} value={plano.ID_Plano}>
-                          {plano.Nome_plano}  R${plano.Valor}
-                        </option>
+                        <div
+                          key={plano.ID_Plano}
+                          className={`d-flex justify-content-between align-items-center p-3 border btn-plano rounded ${planoSelecionado === plano.ID_Plano ? 'active' : ''}`}
+                          onClick={() => setPlanoSelecionado(plano.ID_Plano)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <div className="flex-grow-1">
+                            <strong>{plano.Nome_plano}</strong>
+                          </div>
+                          <div className="text-end">
+                            <span className="badge btn-secondary ">R$ {plano.Valor}</span>
+                          </div>
+                        </div>
                       ))}
-                    </select>
+                    </div>
                   </div>
                 )}
+
+
 
                 <div className="mb-3">
                   <label htmlFor="colaborador" className="form-label">Colaborador</label>
@@ -253,7 +261,7 @@ function Agendamento() {
                       required
                     />
                   </div>
-                  <div className="col-md-6 mb-3">
+                  <div className="col-md-6 mb-4">
                     <label htmlFor="hora" className="form-label">Hora</label>
                     <select
                       id="hora"

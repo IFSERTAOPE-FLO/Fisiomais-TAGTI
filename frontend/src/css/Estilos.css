@@ -32,7 +32,25 @@ p {
   border-radius: 10px; /* Arredondamento das bordas */
 }
 
+.btn-plano {
+  font-size: 0.85rem;
+  border-radius: 20px;
+  padding: 8px 12px;
+  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  margin-right: 5px; /* Espaço reduzido entre os botões */
+  border: none;
+  background-color: #36ab9c;
+  color: white;
+}
 
+
+
+/* Estilo para estado ativo */
+.btn-plano.active {
+  background-color: #2d9485; /* Mesma cor do hover */
+  transform: scale(1.02); /* Efeito de "pressionado" */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Sombra mais intensa */
+}
 
 
 form select option:hover { 
@@ -73,7 +91,7 @@ form input[type="date"] {
   background-color: #bc155b;
   color: white;
   border-radius: 20px;
-  padding: 10px 20px; /* Ajustado para maior largura */
+  padding: 5px 10px; /* Ajustado para maior largura */
   transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
