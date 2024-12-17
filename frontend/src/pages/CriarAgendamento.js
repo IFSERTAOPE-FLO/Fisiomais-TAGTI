@@ -29,6 +29,12 @@ function Agendamento() {
       console.log('ID do cliente logado:', userId);
     }
 
+    if (savedRole === 'colaborador') {
+      const userId = localStorage.getItem('userId');
+      setColaborador(userId); // Define automaticamente o colaborador logado
+      fetchHorariosColaborador(userId); // Carrega os horários do colaborador logado
+    }
+
     fetchServicos();
     fetchClientes();
   }, []);
@@ -56,10 +62,28 @@ function Agendamento() {
   }, [servico, servicos]);
 
   useEffect(() => {
-    if (data && servico) {
-      fetchHorariosDisponiveis(data, servico);
+    if (colaborador) {
+      fetchHorariosColaborador(colaborador);
     }
-  }, [data, servico]);
+  }, [colaborador]);
+
+  const fetchHorariosColaborador = async (colaboradorId) => {
+    if (colaboradorId) {
+      try {
+        const response = await fetch(`http://localhost:5000/horarios/horarios-colaborador/${colaboradorId}`);
+        if (response.ok) {
+          const horarios = await response.json();
+          setHorariosDisponiveis(horarios); // Atualiza o estado com os horários do colaborador
+        } else {
+          console.error('Erro ao buscar horários do colaborador');
+        }
+      } catch (error) {
+        console.error('Erro ao buscar horários do colaborador:', error);
+      }
+    }
+  };
+
+
 
   const fetchServicos = async () => {
     try {
@@ -192,16 +216,11 @@ function Agendamento() {
                 {tipoServico === "fisioterapia" && valorServico && (
                   <div className="mb-3">
                     <label htmlFor="valor" className="form-label ">Valor do Serviço</label>
-                    <div className="input-group ">
-                      
-                      <input
-                        id="valor"
-                        className="form-control btn-plano"
-                        type="text"
-                        value={`R$ ${valorServico}`}
-                        readOnly
-                      />
+                    <div className=" flex-column  gap-2">
+                      <span className="fw-bold btn-plano  mb-2  align-items-center p-2 border btn-plano rounded">{`R$ ${valorServico}`}</span>
                     </div>
+
+
                   </div>
                 )}
 
@@ -220,15 +239,13 @@ function Agendamento() {
                             <strong>{plano.Nome_plano}</strong>
                           </div>
                           <div className="text-end">
-                            <span className="badge btn-secondary ">R$ {plano.Valor}</span>
+                            <span className="fw-bold  ">R$ {plano.Valor}</span>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
-
-
 
                 <div className="mb-3">
                   <label htmlFor="colaborador" className="form-label">Colaborador</label>
@@ -237,6 +254,7 @@ function Agendamento() {
                     className="form-select"
                     value={colaborador}
                     onChange={(e) => setColaborador(e.target.value)}
+                    disabled={role === 'colaborador'} // Desativa o select para colaboradores logados
                     required
                   >
                     <option value="">Selecione um colaborador</option>
@@ -246,6 +264,11 @@ function Agendamento() {
                       </option>
                     ))}
                   </select>
+                  {role === 'colaborador' && (
+                    <small className="form-text text-muted">
+                      Você está agendando como colaborador.
+                    </small>
+                  )}
                 </div>
 
                 <div className="row">
@@ -271,13 +294,15 @@ function Agendamento() {
                       required
                     >
                       <option value="">Selecione o horário</option>
-                      {horariosDisponiveis.map((horario) => (
-                        <option key={horario} value={horario}>
-                          {horario}
+                      {horariosDisponiveis.map((horario, index) => (
+                        <option key={index} value={`${horario.hora_inicio} - ${horario.hora_fim}`}>
+                          {horario.dia_semana}: {horario.hora_inicio} - {horario.hora_fim}
                         </option>
                       ))}
                     </select>
+
                   </div>
+
                 </div>
 
                 <div className="mb-3">
@@ -325,7 +350,7 @@ function Agendamento() {
           <img
             src="/images/logo.png"
             alt="Logo 1"
-            className="pulsar"
+            className="pulsar .img-fluid"
             style={{ width: '750px', height: 'auto', position: 'absolute', top: '-570px', left: '-170px', zIndex: -2 }}
           />
 
@@ -341,7 +366,7 @@ function Agendamento() {
           <img
             src="/images/logo2.png"
             alt="Logo 3"
-            className="animate-subir-descer3"
+            className="animate-subir-descer3 "
             style={{ width: '75px', height: 'auto', position: 'absolute', top: '-245px', left: '880px' }}
           />
 

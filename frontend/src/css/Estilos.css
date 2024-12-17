@@ -47,9 +47,9 @@ p {
 
 /* Estilo para estado ativo */
 .btn-plano.active {
-  background-color: #2d9485; /* Mesma cor do hover */
+  background-color: #38beaa; /* Mesma cor do hover */
   transform: scale(1.02); /* Efeito de "pressionado" */
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Sombra mais intensa */
+  box-shadow: 0 6px 12px rgba(0, 80, 15, 0.3); /* Sombra mais intensa */
 }
 
 

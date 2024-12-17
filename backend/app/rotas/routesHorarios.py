@@ -4,7 +4,28 @@ from datetime import datetime, timedelta
 
 horarios= Blueprint('horarios', __name__)
 
-@horarios.route('/api/horarios-disponiveis', methods=['GET'])
+@horarios.route('/horarios-colaborador/<int:colaborador_id>', methods=['GET'])
+def get_horarios_colaborador(colaborador_id):
+    try:
+        horarios = Horarios.query.filter_by(ID_Colaborador=colaborador_id).all()
+        if not horarios:
+            return jsonify({"error": "Nenhum horário encontrado para este colaborador"}), 404
+
+        horarios_dict = [
+            {
+                "dia_semana": horario.dia_semana,
+                "hora_inicio": horario.hora_inicio.strftime('%H:%M'),
+                "hora_fim": horario.hora_fim.strftime('%H:%M'),
+            }
+            for horario in horarios
+        ]
+
+        return jsonify(horarios_dict), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@horarios.route('/horarios-disponiveis', methods=['GET'])
 def get_horarios_disponiveis():
     data = request.args.get('data')
     servico_id = request.args.get('servico_id')

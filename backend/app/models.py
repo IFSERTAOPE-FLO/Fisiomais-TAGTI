@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from flask import url_for
 
+
 # Modelo: Colaboradores
 class Colaboradores(db.Model):
     __tablename__ = 'colaboradores'
@@ -309,6 +310,35 @@ def populate_database():
 
     # Salvar as associações no banco de dados
     db.session.commit()
+
+    # Inserir horários para os colaboradores
+    # Criar horários para colaboradores (garantir pelo menos um para cada)
+    from datetime import datetime
+
+
+    # Criar horários para colaboradores (garantir pelo menos um para cada)
+    default_horarios = [
+        {"dia_semana": "Segunda-feira", "hora_inicio": "08:00:00", "hora_fim": "12:00:00"},
+        {"dia_semana": "Quarta-feira", "hora_inicio": "14:00:00", "hora_fim": "18:00:00"},
+    ]
+
+    colaboradores_registrados = Colaboradores.query.all()
+    for idx, colaborador in enumerate(colaboradores_registrados):
+        horario_existe = Horarios.query.filter_by(ID_Colaborador=colaborador.ID_Colaborador).first()
+        if not horario_existe:
+            horario = default_horarios[idx % len(default_horarios)]
+            new_horario = Horarios(
+                ID_Colaborador=colaborador.ID_Colaborador,
+                dia_semana=horario["dia_semana"],
+                hora_inicio=datetime.strptime(horario["hora_inicio"], "%H:%M:%S").time(),
+                hora_fim=datetime.strptime(horario["hora_fim"], "%H:%M:%S").time()
+            )
+            db.session.add(new_horario)
+
+    db.session.commit()
+    print("Banco de dados populado com horários para todos os colaboradores.")
+
+
 
     # Criar clientes
     clientes = [
