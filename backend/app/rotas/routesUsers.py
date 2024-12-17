@@ -1,11 +1,10 @@
 from flask import Blueprint, current_app, send_from_directory, request, jsonify
-
+import os
 from app.models import Colaboradores, Clientes, db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 
 usuarios = Blueprint('usuarios', __name__)
-# Rota para adicionar serviço
 @usuarios.route('/editar_usuario/<role>/<int:user_id>', methods=['PUT'])
 @jwt_required()
 def editar_usuario(role, user_id):

@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
-from app.models import Colaboradores,  Servicos, db
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.models import Colaboradores, Servicos, ColaboradoresServicos, db  # ColaboradoresServicos importado
+from flask_jwt_extended import jwt_required
 
 
 servicos= Blueprint('servicos', __name__)
