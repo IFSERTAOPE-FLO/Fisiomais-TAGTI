@@ -18,7 +18,7 @@ const VisualizarAgendamentos = () => {
   useEffect(() => {
     const fetchAgendamentos = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/listar_agendamentos', {
+        const response = await axios.get('http://localhost:5000/agendamentos/listar_agendamentos', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
 
@@ -56,7 +56,7 @@ const VisualizarAgendamentos = () => {
 
   const handleDeleteAgendamento = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/deletar_agendamento/${id}`, {
+      await axios.delete(`http://localhost:5000/agendamentos/deletar_agendamento/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       setAgendamentos(agendamentos.filter((ag) => ag.id !== id));

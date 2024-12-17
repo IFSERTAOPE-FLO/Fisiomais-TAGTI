@@ -55,3 +55,22 @@ def listar_agendamentos():
     except Exception as e:
         print(f"Erro ao carregar agendamentos: {str(e)}")
         return jsonify({'message': f'Erro ao carregar agendamentos: {str(e)}'}), 500
+    
+
+
+@agendamentos.route('deletar_agendamento/<int:id>', methods=['DELETE'])
+@jwt_required()
+def deletar_agendamento(id):
+    try:
+        agendamento = Agendamentos.query.get(id)
+
+        if not agendamento:
+            return jsonify({'message': 'Agendamento não encontrado'}), 404
+
+        db.session.delete(agendamento)
+        db.session.commit()
+
+        return jsonify({'message': 'Agendamento deletado com sucesso'}), 200
+    except Exception as e:
+        print(f"Erro ao deletar agendamento: {str(e)}")
+        return jsonify({'message': f'Erro ao deletar agendamento: {str(e)}'}), 500
