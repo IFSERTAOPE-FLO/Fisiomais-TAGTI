@@ -14,7 +14,7 @@ const GerenciarUsuarios = () => {
     const buscarUsuarios = async () => {
         try {
             const token = localStorage.getItem("token");
-            const response = await fetch("http://localhost:5000/api/listar_usuarios", {
+            const response = await fetch("http://localhost:5000/usuarios/listar_usuarios", {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -44,7 +44,7 @@ const GerenciarUsuarios = () => {
         try {
             const token = localStorage.getItem("token");
             const response = await fetch(
-                `http://localhost:5000/api/deletar_usuario/${tipo}/${id}`,
+                `http://localhost:5000/usuarios/deletar_usuario/${tipo}/${id}`,
                 {
                     method: "DELETE",
                     headers: {

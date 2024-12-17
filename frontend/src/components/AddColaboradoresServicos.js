@@ -9,7 +9,7 @@ const AddColaboradoresServicos = ({ servicoId, onSave, onClose }) => {
   useEffect(() => {
     const fetchColaboradores = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/colaboradoresdisponiveis?servico_id=${servicoId}`);
+        const response = await fetch(`http://localhost:5000/colaboradores/colaboradoresdisponiveis?servico_id=${servicoId}`);
         const data = await response.json();
 
         if (response.ok) {
@@ -62,7 +62,7 @@ const AddColaboradoresServicos = ({ servicoId, onSave, onClose }) => {
         .map((colaborador) => colaborador.ID_Colaborador);
 
       if (adicionarIds.length > 0) {
-        const responseAdicionar = await fetch("http://localhost:5000/api/adicionar_colaboradores", {
+        const responseAdicionar = await fetch("http://localhost:5000/servicos/adicionar_colaboradores", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ servico_id: servicoId, colaboradores_ids: adicionarIds }),
@@ -76,7 +76,7 @@ const AddColaboradoresServicos = ({ servicoId, onSave, onClose }) => {
       }
 
       if (removerIds.length > 0) {
-        const responseRemover = await fetch("http://localhost:5000/api/remover_colaboradores", {
+        const responseRemover = await fetch("http://localhost:5000/servicos/remover_colaboradores", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ servico_id: servicoId, colaboradores_ids: removerIds }),

@@ -23,7 +23,31 @@ function Home() {
       <p className="text-center  text-primary mb-3">Na <strong className="cor-pink"> FISIOMAIS</strong>, cuidamos de você com profissionalismo e dedicação.
         < br/>Nossa missão é promover a sua saúde, reabilitação e qualidade de vida por meio de tratamentos personalizados, unindo as melhores prátcias de  <strong className="cor-pink">Fisioterapia</strong> e os benefícios do <strong className="cor-pink">Pilates</strong>.</p>
 
-
+        <div className="mt-5 text-center p-4 bg-light rounded shadow">
+        <h3 className="fw-bold text-primary mb-3">
+          Não perca tempo!
+        </h3>
+        <p className="fs-5 text-secondary">
+          Agende uma sessão conosco para melhorar sua saúde e bem-estar.
+          Nossos profissionais estão prontos para ajudar você a alcançar seus objetivos!
+        </p>
+        <div className="mt-4 text-center">
+          <Link
+            to={isLoggedIn ? "/criaragendamento" : "/cadastro"}
+            className="btn btn-signup gap-2"
+          >
+            {isLoggedIn ? (
+              <>
+                <i className="bi bi-calendar-check"></i> Agendar Sessão
+              </>
+            ) : (
+              <>
+                <i className="bi bi-person-plus"></i> Inscreva-se
+              </>
+            )}
+          </Link>
+        </div>
+      </div>
       {/* Carrossel de Colaboradores */}
       <div className="mt-5">
         <h2 className="text-center text-primary mb-3">Nossos Colaboradores</h2>
@@ -209,31 +233,7 @@ function Home() {
         </div>
       </div>
 
-      <div className="mt-5 text-center p-4 bg-light rounded shadow">
-        <h3 className="fw-bold text-primary mb-3">
-          Não perca tempo!
-        </h3>
-        <p className="fs-5 text-secondary">
-          Agende uma sessão conosco para melhorar sua saúde e bem-estar.
-          Nossos profissionais estão prontos para ajudar você a alcançar seus objetivos!
-        </p>
-        <div className="mt-4 text-center">
-          <Link
-            to={isLoggedIn ? "/criaragendamento" : "/cadastro"}
-            className="btn btn-signup gap-2"
-          >
-            {isLoggedIn ? (
-              <>
-                <i className="bi bi-calendar-check"></i> Agendar Sessão
-              </>
-            ) : (
-              <>
-                <i className="bi bi-person-plus"></i> Inscreva-se
-              </>
-            )}
-          </Link>
-        </div>
-      </div>
+      
     </div>
 
   );

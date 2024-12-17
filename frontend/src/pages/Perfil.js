@@ -15,7 +15,7 @@ const Perfil = () => {
   
 
   const token = localStorage.getItem("token");
-  const apiBaseUrl = "http://localhost:5000/api";
+  const apiBaseUrl = "http://localhost:5000/usuarios";
 
   const buscarDadosUsuario = useCallback(async () => {
     try {

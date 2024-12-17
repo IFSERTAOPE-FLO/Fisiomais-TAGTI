@@ -24,35 +24,40 @@ function Navbar() {
         email,
         senha,
       });
-
+  
       const { access_token, name, role, userId, photo } = response.data;
-      
+  
       setIsLoggedIn(true);
       setUserName(name);
       setRole(role);
-      setUserId(userId); // Atualiza o ID do usuário no estado
-      setUserPhoto(photo); // Atualiza o estado da foto do usuário
+      setUserId(userId);
+      setUserPhoto(photo);
       localStorage.setItem("token", access_token);
       localStorage.setItem("userName", name);
       localStorage.setItem("role", role);
       localStorage.setItem("userId", userId);
-      localStorage.setItem("userPhoto", photo); // Salva a foto no localStorage
-
+      localStorage.setItem("userPhoto", photo);
+  
       // Fechar o modal
       const modalElement = document.getElementById("loginModal");
       const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
       if (modalInstance) {
         modalInstance.hide();
       }
-
+  
       document.querySelectorAll(".modal-backdrop").forEach((backdrop) => backdrop.remove());
-
+  
       console.log("Usuário logado:", name);
-
+  
+      // Redirecionar com base no papel do usuário
       setTimeout(() => {
-        navigate("/");
+        if (role === "admin") {
+          navigate("/adminpage");
+        } else {
+          navigate("/");
+        }
         window.location.reload();
-      }, 500);
+      }, 300); // Reduzido o tempo para 300ms
     } catch (error) {
       console.error("Erro no login:", error);
       alert("Erro ao fazer login. Verifique suas credenciais.");

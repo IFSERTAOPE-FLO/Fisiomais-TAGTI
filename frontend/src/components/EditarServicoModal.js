@@ -29,7 +29,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
       const fetchColaboradores = async () => {
         try {
           const response = await fetch(
-            `http://localhost:5000/api/colaboradoresdisponiveis?servico_id=${servico.ID_Servico}`
+            `http://localhost:5000/servicos/colaboradoresdisponiveis?servico_id=${servico.ID_Servico}`
           );
           const data = await response.json();
           if (response.ok) {
@@ -100,7 +100,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:5000/api/editar_servico/${formData.Tipo}/${servico.ID_Servico}`,
+        `http://localhost:5000/servicos/editar_servico/${formData.Tipo}/${servico.ID_Servico}`,
         {
           method: "PUT",
           headers: {

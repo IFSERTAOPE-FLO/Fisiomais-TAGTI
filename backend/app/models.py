@@ -3,29 +3,29 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from flask import url_for
 
-
 # Modelo: Colaboradores
 class Colaboradores(db.Model):
     __tablename__ = 'colaboradores'
     ID_Colaborador = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(255))
-    telefone = db.Column(db.String(20), unique=True)  # Modificado para apenas um telefone
+    nome = db.Column(db.String(255), nullable=False)
+    telefone = db.Column(db.String(20), unique=True)  # Apenas um telefone
     email = db.Column(db.String(255), unique=True, nullable=False)  # Campo de email único
     senha = db.Column(db.String(255), nullable=False)  # Campo de senha obrigatório
-    is_admin = db.Column(db.Boolean, default=False)  # Novo campo para determinar se é administrador
+    is_admin = db.Column(db.Boolean, default=False)  # Determina se é administrador
     referencias = db.Column(db.Text)
-    cargo = db.Column(db.String(100))
-    endereco = db.Column(db.String(255))
-    rua = db.Column(db.String(255))
+    cargo = db.Column(db.String(100), nullable=False)  # Fisioterapeuta, Instrutor, etc.
+    endereco = db.Column(db.String(255))    
     cpf = db.Column(db.String(11), unique=True, nullable=False)
     estado = db.Column(db.String(50))
     cidade = db.Column(db.String(100))
     bairro = db.Column(db.String(100))
     photo = db.Column(db.String(255), nullable=True)
 
+    # Relacionamentos
     servicos = db.relationship('Servicos', secondary='colaboradores_servicos', back_populates='colaboradores')
+    horarios = db.relationship('Horarios', back_populates='colaborador')
 
-    # Métodos para criptografar e verificar a senha
+    # Métodos de senha
     def set_password(self, password):
         self.senha = generate_password_hash(password)
 
@@ -34,48 +34,93 @@ class Colaboradores(db.Model):
 
     def __repr__(self):
         return f'<Colaborador {self.nome}>'
+
     def get_photo_url(self):
         """Retorna o URL público da foto."""
         if self.photo:
             return url_for('main.serve_photo', filename=self.photo, _external=True)
         return None  # Caso não tenha foto
+
     def to_dict(self):
         return {
             'ID_Colaborador': self.ID_Colaborador,
-            'nome': self.nome
-            
+            'nome': self.nome,
+            'cargo': self.cargo
         }
+
+
+# Modelo: Horários
+class Horarios(db.Model):
+    __tablename__ = 'horarios'
+    ID_Horario = db.Column(db.Integer, primary_key=True)
+    ID_Colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.ID_Colaborador'), nullable=False)
+    dia_semana = db.Column(db.String(50), nullable=False)  # Segunda, Terça, etc.
+    hora_inicio = db.Column(db.Time, nullable=False)
+    hora_fim = db.Column(db.Time, nullable=False)
+
+    colaborador = db.relationship('Colaboradores', back_populates='horarios')
+
+    def __repr__(self):
+        return f'<Horário {self.dia_semana} - {self.hora_inicio} até {self.hora_fim}>'
+
 
 # Modelo: Clientes
 class Clientes(db.Model):
     __tablename__ = 'clientes'
     ID_Cliente = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(255))
-    telefone = db.Column(db.String(20), unique=True)  # Modificado para apenas um telefone
-    email = db.Column(db.String(255), unique=True, nullable=False)  # Campo de email único
-    senha = db.Column(db.String(255), nullable=False)  # Campo de senha obrigatório
+    nome = db.Column(db.String(255), nullable=False)
+    telefone = db.Column(db.String(20), unique=True)
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    senha = db.Column(db.String(255), nullable=False)
     referencias = db.Column(db.Text)
     dt_nasc = db.Column(db.Date)
     endereco = db.Column(db.String(255))
-    rua = db.Column(db.String(255))
     estado = db.Column(db.String(50))
     cidade = db.Column(db.String(100))
     bairro = db.Column(db.String(100))
     cpf = db.Column(db.String(11), unique=True, nullable=False)
     photo = db.Column(db.String(255), nullable=True)
 
-    # Métodos para criptografar e verificar a senha
     def set_password(self, password):
         self.senha = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.senha, password)
+
     def get_photo_url(self):
         """Retorna o URL público da foto."""
         if self.photo:
             return url_for('main.serve_photo', filename=self.photo, _external=True)
-        return None  # Caso não tenha foto
-    
+        return None
+
+
+# Modelo: Serviços
+class Servicos(db.Model):
+    __tablename__ = 'servicos'
+    ID_Servico = db.Column(db.Integer, primary_key=True)
+    Nome_servico = db.Column(db.String(255), nullable=False)
+    Descricao = db.Column(db.Text)
+    Valor = db.Column(db.Numeric(10, 2))  # Mantido para serviços de Fisioterapia
+    tipo_servico = db.Column(db.String(50), nullable=False)  # Tipo: fisioterapia ou pilates
+    planos = db.Column(db.JSON, nullable=True)
+
+    colaboradores = db.relationship('Colaboradores', secondary='colaboradores_servicos', back_populates='servicos')
+
+    def __repr__(self):
+        return f'<Servico {self.Nome_servico} - {self.tipo_servico}>'
+
+    def to_dict(self):
+        return {
+            'ID_Servico': self.ID_Servico,
+            'Nome_servico': self.Nome_servico,
+            'Descricao': self.Descricao,
+            'Valor': str(self.Valor) if self.Valor is not None else None,
+            'Tipo': self.tipo_servico,
+            'Planos': self.planos
+        }
+
+
+# Tabela associativa para colaboradores e serviços
 class ColaboradoresServicos(db.Model):
     __tablename__ = 'colaboradores_servicos'
     ID_Colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.ID_Colaborador'), primary_key=True)
@@ -92,58 +137,12 @@ class Agendamentos(db.Model):
     data_e_hora = db.Column(db.DateTime, nullable=False)
     ID_Cliente = db.Column(db.Integer, db.ForeignKey('clientes.ID_Cliente'), nullable=False)
     ID_Colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.ID_Colaborador'), nullable=False)
-    ID_Servico = db.Column(db.Integer, db.ForeignKey('servicos.ID_Servico'), nullable=False)  # Novo relacionamento
-    ID_Plano = db.Column(db.Integer, nullable=True)  # Novo campo para armazenar o ID do plano selecionado
+    ID_Servico = db.Column(db.Integer, db.ForeignKey('servicos.ID_Servico'), nullable=False)
+    ID_Plano = db.Column(db.Integer, nullable=True)
 
     cliente = db.relationship('Clientes', backref=db.backref('agendamentos', lazy=True))
     colaborador = db.relationship('Colaboradores', backref=db.backref('agendamentos', lazy=True))
-    servico = db.relationship('Servicos', backref=db.backref('agendamentos', lazy=True))  # Relacionamento com serviços
-
-    def __init__(self, data_e_hora, ID_Cliente, ID_Colaborador, ID_Servico, ID_Plano=None):
-        self.data_e_hora = data_e_hora
-        self.ID_Cliente = ID_Cliente
-        self.ID_Colaborador = ID_Colaborador
-        self.ID_Servico = ID_Servico
-        self.ID_Plano = ID_Plano  # Novo campo para inicializar o ID do plano
-
-
-
-class Servicos(db.Model):
-    __tablename__ = 'servicos'
-    ID_Servico = db.Column(db.Integer, primary_key=True)
-    Nome_servico = db.Column(db.String(255), nullable=False)
-    Descricao = db.Column(db.Text)
-    Valor = db.Column(db.Numeric(10, 2))  # Mantido para serviços de Fisioterapia
-    tipo_servico = db.Column(db.String(50), nullable=False)  # Tipo: fisioterapia ou pilates
-    planos = db.Column(db.JSON, nullable=True)  # Campo para armazenar planos de Pilates
-
-    colaboradores = db.relationship('Colaboradores', secondary='colaboradores_servicos', back_populates='servicos')
-
-    def __init__(self, Nome_servico, Descricao, Valor=None, tipo_servico=None, planos=None):
-        if tipo_servico not in ['fisioterapia', 'pilates']:
-            raise ValueError("O tipo de serviço deve ser 'fisioterapia' ou 'pilates'.")
-        if tipo_servico == 'pilates' and not planos:
-            raise ValueError("Serviços de Pilates devem incluir planos de pagamento.")
-        self.Nome_servico = Nome_servico
-        self.Descricao = Descricao
-        self.Valor = Valor
-        self.tipo_servico = tipo_servico
-        self.planos = planos
-
-    def __repr__(self):
-        return f'<Servico {self.Nome_servico} - {self.tipo_servico}>'
-
-    def to_dict(self):
-        # Retorna um dicionário com os dados do serviço
-        return {
-            'ID_Servico': self.ID_Servico,
-            'Nome_servico': self.Nome_servico,
-            'Descricao': self.Descricao,
-            'Valor': str(self.Valor) if self.Valor is not None else None,  # Converte Decimal para string
-            'Tipo': self.tipo_servico,
-            'Planos': self.planos,
-            'Colaboradores': [colaborador.to_dict() for colaborador in self.colaboradores]  # Inclui colaboradores se houver
-        }
+    servico = db.relationship('Servicos', backref=db.backref('agendamentos', lazy=True))
 
 class BlacklistedToken(db.Model):
     __tablename__ = 'blacklisted_tokens'
@@ -153,6 +152,7 @@ class BlacklistedToken(db.Model):
 
     def __repr__(self):
         return f'<BlacklistedToken {self.jti}>'
+
 
 def populate_database():
     # Criar o administrador se não existir

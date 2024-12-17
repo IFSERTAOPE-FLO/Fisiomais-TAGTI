@@ -26,7 +26,7 @@ const GerenciarServicos = () => {
 
   const buscarServicos = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/listar_servicos");
+      const response = await fetch("http://localhost:5000/servicos/listar_servicos");
       const data = await response.json();
       if (Array.isArray(data)) {
         setServicos(data);
@@ -41,7 +41,7 @@ const GerenciarServicos = () => {
   const buscarUsuarios = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/listar_usuarios", {
+      const response = await fetch("http://localhost:5000/usuarios/listar_usuarios", {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -78,7 +78,7 @@ const GerenciarServicos = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/add_servico", {
+      const response = await fetch("http://localhost:5000/servicos/add_servico", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(novoServico),

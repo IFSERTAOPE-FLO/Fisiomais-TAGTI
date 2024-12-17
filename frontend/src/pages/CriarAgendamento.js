@@ -14,6 +14,7 @@ function Agendamento() {
   const [role, setRole] = useState('');
   const [planos, setPlanos] = useState([]);
   const [tipoServico, setTipoServico] = useState('');
+  const [valorServico, setValorServico] = useState(0)
   const [horariosDisponiveis, setHorariosDisponiveis] = useState([]);
   const [planoSelecionado, setPlanoSelecionado] = useState('');
   const [loading, setLoading] = useState(false); // Estado para o carregamento
@@ -36,12 +37,20 @@ function Agendamento() {
     if (servico) {
       fetchColaboradores();
       const servicoSelecionado = servicos.find((s) => s.ID_Servico === parseInt(servico));
-      if (servicoSelecionado && servicoSelecionado.Tipo === 'pilates') {
-        setTipoServico('pilates');
-        setPlanos(servicoSelecionado.Planos || []);
-      } else {
-        setTipoServico('');
-        setPlanos([]);
+      if (servicoSelecionado) {
+        if (servicoSelecionado.Tipo === 'pilates') {
+          setTipoServico('pilates');
+          setPlanos(servicoSelecionado.Planos || []);
+          setValorServico(0); // Zera o valor para serviços de pilates
+        } else if (servicoSelecionado.Tipo === 'fisioterapia') {
+          setTipoServico('fisioterapia');
+          setValorServico(servicoSelecionado.Valor || 0); // Configura o valor do serviço
+          setPlanos([]); // Zera os planos
+        } else {
+          setTipoServico('');
+          setPlanos([]);
+          setValorServico(0);
+        }
       }
     }
   }, [servico, servicos]);
@@ -54,7 +63,7 @@ function Agendamento() {
 
   const fetchServicos = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/listar_servicos');
+      const response = await fetch('http://localhost:5000/servicos/listar_servicos');
       if (response.ok) {
         const servicosData = await response.json();
         setServicos(servicosData);
@@ -69,7 +78,7 @@ function Agendamento() {
   const fetchColaboradores = async () => {
     if (servico) {
       try {
-        const response = await fetch(`http://localhost:5000/api/colaboradores?servico_id=${servico}`);
+        const response = await fetch(`http://localhost:5000/colaboradores?servico_id=${servico}`);
         if (response.ok) {
           setColaboradores(await response.json());
         } else {
@@ -83,7 +92,7 @@ function Agendamento() {
 
   const fetchClientes = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/clientes');
+      const response = await fetch('http://localhost:5000/clientes');
       if (response.ok) {
         setClientes(await response.json());
       }
@@ -94,7 +103,7 @@ function Agendamento() {
 
   const fetchHorariosDisponiveis = async (data, servico_id) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/horarios-disponiveis?data=${data}&servico_id=${servico_id}`);
+      const response = await fetch(`http://localhost:5000/horarios-disponiveis?data=${data}&servico_id=${servico_id}`);
       if (response.ok) {
         const horarios = await response.json();
         setHorariosDisponiveis(horarios.map(h => h.horario));
@@ -130,7 +139,7 @@ function Agendamento() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/agendamento', {
+      const response = await fetch('http://localhost:5000/agendamento', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -180,6 +189,19 @@ function Agendamento() {
                   </select>
                 </div>
 
+                {tipoServico === "fisioterapia" && valorServico && (
+                  <div className="mb-3">
+                    <label htmlFor="valor" className="form-label">Valor do Serviço</label>
+                    <input
+                      id="valor"
+                      className="form-control"
+                      type="text"
+                      value={`R$ ${valorServico}`}
+                      readOnly
+                    />
+                  </div>
+                )}
+
                 {tipoServico === 'pilates' && (
                   <div className="mb-3">
                     <label htmlFor="plano" className="form-label">Plano de Pilates</label>
@@ -193,7 +215,7 @@ function Agendamento() {
                       <option value="">Selecione um plano</option>
                       {planos.map((plano) => (
                         <option key={plano.ID_Plano} value={plano.ID_Plano}>
-                          {plano.Nome_plano} - R${plano.Valor}
+                          {plano.Nome_plano}  R${plano.Valor}
                         </option>
                       ))}
                     </select>
@@ -251,103 +273,102 @@ function Agendamento() {
                 </div>
 
                 <div className="mb-3">
-                  <label htmlFor="cliente" className="form-label">Cliente</label>
+
                   {role === 'cliente' ? (
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={localStorage.getItem('userName')}
-                      readOnly
-                    />
+                    <br />
                   ) : (
-                    <select
-                      id="cliente"
-                      className="form-select"
-                      value={cliente}
-                      onChange={(e) => setCliente(e.target.value)}
-                      required
-                    >
-                      <option value="">Selecione um cliente</option>
-                      {clientes.map((cli) => (
-                        <option key={cli.ID_Cliente} value={cli.ID_Cliente}>
-                          {cli.Nome}
-                        </option>
-                      ))}
-                    </select>
+                    <>
+                      <label htmlFor="cliente" className="form-label">Cliente</label>
+                      <select
+                        id="cliente"
+                        className="form-select"
+                        value={cliente}
+                        onChange={(e) => setCliente(e.target.value)}
+                        required
+                      >
+                        <option value="">Selecione um cliente</option>
+                        {clientes.map((cli) => (
+                          <option key={cli.ID_Cliente} value={cli.ID_Cliente}>
+                            {cli.Nome}
+                          </option>
+                        ))}
+                      </select>
+                    </>
                   )}
+
                 </div>
-            
+
                 <button type="submit" className="btn btn-signup w-100 text-uppercase fw-bold">
                   {loading ? (
-                    <i className="bi bi-arrow-repeat spinner"></i> 
+                    <i className="bi bi-arrow-repeat spinner"></i>
                   ) : (
                     <i className="bi bi-calendar-check"></i>
                   )}{' '}
                   {loading ? 'Carregando...' : 'Agendar sessão'}
-                  </button>
+                </button>
               </form>
             </div>
           </div>
         </div>
       </div>
       <div>
-      <div className="container" style={{ position: 'relative' }}>
-    {/* Imagem Logo 1 */}
-    <img 
-        src="/images/logo.png" 
-        alt="Logo 1"
-        className="pulsar"
-        style={{ width: '750px', height: 'auto', position: 'absolute', top: '-570px', left: '-170px', zIndex: -2 }}
-    />
+        <div className="container" style={{ position: 'relative' }}>
+          {/* Imagem Logo 1 */}
+          <img
+            src="/images/logo.png"
+            alt="Logo 1"
+            className="pulsar"
+            style={{ width: '750px', height: 'auto', position: 'absolute', top: '-570px', left: '-170px', zIndex: -2 }}
+          />
 
-    {/* Imagem Logo 2 */}
-    <img 
-        src="/images/logo1.png" 
-        alt="Logo 2" 
-        className="animate-subir-descer2"
-        style={{ width: '75px', height: 'auto', position: 'absolute', top: '-125px', left: '880px' }}
-    />
+          {/* Imagem Logo 2 */}
+          <img
+            src="/images/logo1.png"
+            alt="Logo 2"
+            className="animate-subir-descer2"
+            style={{ width: '75px', height: 'auto', position: 'absolute', top: '-125px', left: '880px' }}
+          />
 
-    {/* Imagem Logo 3 */}
-    <img 
-        src="/images/logo2.png" 
-        alt="Logo 3" 
-        className="animate-subir-descer3"
-        style={{ width: '75px', height: 'auto', position: 'absolute', top: '-245px', left: '880px' }}
-    />
+          {/* Imagem Logo 3 */}
+          <img
+            src="/images/logo2.png"
+            alt="Logo 3"
+            className="animate-subir-descer3"
+            style={{ width: '75px', height: 'auto', position: 'absolute', top: '-245px', left: '880px' }}
+          />
 
-    {/* Imagem Logo 4 */}
-    <img 
-        src="/images/logo3.png" 
-        alt="Logo 4" 
-        className="animate-subir-descer4"
-        style={{ width: '75px', height: 'auto', position: 'absolute', top: '-380px', left: '880px' }}
-    />
+          {/* Imagem Logo 4 */}
+          <img
+            src="/images/logo3.png"
+            alt="Logo 4"
+            className="animate-subir-descer4"
+            style={{ width: '75px', height: 'auto', position: 'absolute', top: '-380px', left: '880px' }}
+          />
 
-    {/* Imagem Logo 5 */}
-    <img 
-        src="/images/logo4.png" 
-        alt="Logo 5" 
-        className="girar"
-        style={{ width: '90px', height: 'auto', position: 'absolute', top: '-80px', left: '1400px' }}
-    />
+          {/* Imagem Logo 5 */}
+          <img
+            src="/images/logo4.png"
+            alt="Logo 5"
+            className="girar"
+            style={{ width: '90px', height: 'auto', position: 'absolute', top: '-80px', left: '1400px' }}
+          />
 
-    {/* Imagem Smart */}
-    <img 
-        src="/images/smart.png" 
-        alt="Smart"
-        style={{ width: '700px', height: 'auto', position: 'absolute', top: '-540px', left: '820px' }}
-    />
+          {/* Imagem Smart */}
+          <img
+            src="/images/smart.png"
+            alt="Smart"
+            style={{ width: '700px', height: 'auto', position: 'absolute', top: '-540px', left: '820px' }}
+          />
 
-    {/* Imagem Client */}
-    <img 
-        src="/images/client.gif" 
-        alt="Client"
-        style={{ width: '500px', height: 'auto', position: 'absolute', top: '-364px', left: '960px' }}
-    />
-</div>
+          {/* Imagem Client */}
+          <img
+            src="/images/client.gif"
+            alt="Client"
+            style={{ width: '500px', height: 'auto', position: 'absolute', top: '-364px', left: '960px' }}
+          />
+        </div>
 
-</div>
+      </div>
     </div>
   );
 }
