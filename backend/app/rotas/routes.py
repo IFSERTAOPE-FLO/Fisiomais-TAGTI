@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from app.models import Agendamentos, Clientes, Colaboradores, ColaboradoresServicos, Servicos, Horarios,  BlacklistedToken, db
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 
-from werkzeug.utils import secure_filename
 from flask_mail import Message
 from app import mail
 from sqlalchemy import cast, Date
