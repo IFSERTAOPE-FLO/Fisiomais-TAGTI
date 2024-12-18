@@ -78,13 +78,19 @@ class ColaboradoresServicos(db.Model):
     colaborador = db.relationship('Colaboradores', backref=db.backref('colaboradores_servicos', lazy=True))
     servico = db.relationship('Servicos', backref=db.backref('colaboradores_servicos', lazy=True))
 
+<<<<<<< Updated upstream
 # Modelo: Agendamentos
+=======
+
+>>>>>>> Stashed changes
 class Agendamentos(db.Model):
     __tablename__ = 'agendamentos'
+
     ID_Agendamento = db.Column(db.Integer, primary_key=True)
     data_e_hora = db.Column(db.DateTime, nullable=False)
     ID_Cliente = db.Column(db.Integer, db.ForeignKey('clientes.ID_Cliente'), nullable=False)
     ID_Colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.ID_Colaborador'), nullable=False)
+<<<<<<< Updated upstream
     ID_Servico = db.Column(db.Integer, db.ForeignKey('servicos.ID_Servico'), nullable=False)  # Novo relacionamento
 
     cliente = db.relationship('Clientes', backref=db.backref('agendamentos', lazy=True))
@@ -124,7 +130,18 @@ class Servicos(db.Model):
 
     def __repr__(self):
         return f'<Servico {self.Nome_servico} - {self.tipo_servico}>'
+=======
+    ID_Servico = db.Column(db.Integer, db.ForeignKey('servicos.ID_Servico'), nullable=False)
+    ID_Plano = db.Column(db.Integer, nullable=True)  # Opcional para serviços como fisioterapia
+    status = db.Column(db.String(20), default="pendente")  # Adicionado o campo status
 
+    cliente = db.relationship('Clientes', backref='agendamentos')
+    colaborador = db.relationship('Colaboradores', backref='agendamentos')
+    servico = db.relationship('Servicos', backref='agendamentos')
+>>>>>>> Stashed changes
+
+    def __repr__(self):
+        return f'<Agendamento {self.ID_Agendamento} - Status: {self.status}>'
 class BlacklistedToken(db.Model):
     __tablename__ = 'blacklisted_tokens'
 

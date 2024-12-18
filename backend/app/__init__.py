@@ -48,7 +48,40 @@ def create_app():
 
     # Registrar os modelos e criar tabelas
     with app.app_context():
+<<<<<<< Updated upstream
         from app.models import Colaboradores, Clientes, Agendamentos, Servicos, populate_database
+=======
+        # Importar modelos e rotas aqui dentro para evitar importação circular
+        from app.models import  populate_database
+        from app.rotas.routes import main
+        from app.rotas.routesClientes import clientes
+        from app.rotas.routesColaboradores import colaboradores
+        from app.rotas.routesAgendamentos import agendamentos
+        from app.rotas.routesHorarios import horarios
+        from app.rotas.routesUsers import usuarios
+        from app.rotas.routesServicos import servicos
+
+
+        CORS(app, origins=["http://localhost:3000"])
+        
+
+        app.register_blueprint(main, url_prefix='/')
+        app.register_blueprint(usuarios, url_prefix='/usuarios')
+        app.register_blueprint(colaboradores, url_prefix='/colaboradores')
+        app.register_blueprint(clientes, url_prefix='/clientes')
+        app.register_blueprint(servicos, url_prefix='/servicos')
+        app.register_blueprint(agendamentos, url_prefix='/agendamentos')
+        app.register_blueprint(horarios, url_prefix='/horarios')
+        
+
+       
+
+        # Garantir que a pasta de uploads exista
+        if not os.path.exists(app.config['UPLOAD_FOLDER']):
+            os.makedirs(app.config['UPLOAD_FOLDER'])
+
+        # Registrar os modelos e criar tabelas
+>>>>>>> Stashed changes
         db.create_all()  # Cria as tabelas no banco de dados
         populate_database()  # Popular o banco com dados iniciais, se necessário
 

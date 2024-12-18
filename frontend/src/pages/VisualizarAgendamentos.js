@@ -96,6 +96,11 @@ const VisualizarDados = () => {
                 <th>Hora</th>
                 <th>Serviço</th>
                 <th>Valor (R$)</th>
+<<<<<<< Updated upstream
+=======
+                <th>Colaborador</th>
+                <th>Status</th> {/* Coluna para exibir o status */}
+>>>>>>> Stashed changes
                 <th>Detalhes</th>
               </tr>
             </thead>
@@ -132,7 +137,16 @@ const VisualizarDados = () => {
                         'Valor não disponível'
                       )}
                     </td>
+<<<<<<< Updated upstream
 
+=======
+                    <td>{agendamento.nome_colaborador || 'Colaborador não encontrado'}</td>
+                    <td>
+                      <span className={`badge ${agendamento.status === 'confirmado' ? 'badge-success' : 'badge-warning'}`}>
+                        {agendamento.status === 'confirmado' ? 'Confirmado' : 'Pendente'}
+                      </span>
+                    </td>
+>>>>>>> Stashed changes
                     <td>
                       <button
                         className="btn btn-outline-info btn-sm"
@@ -145,7 +159,13 @@ const VisualizarDados = () => {
                 ))
               ) : (
                 <tr>
+<<<<<<< Updated upstream
                   <td colSpan="7" className="text-center">Nenhum agendamento encontrado</td>
+=======
+                  <td colSpan="9" className="text-center">
+                    Nenhum agendamento encontrado
+                  </td>
+>>>>>>> Stashed changes
                 </tr>
               )}
             </tbody>
@@ -158,6 +178,7 @@ const VisualizarDados = () => {
                 <Modal.Title>Detalhes do Agendamento</Modal.Title>
               </Modal.Header>
               <Modal.Body>
+<<<<<<< Updated upstream
                 <p><strong>Nome do Cliente:</strong> {selectedAgendamento.nome_cliente}</p>
                 <p><strong>Data:</strong> {new Date(selectedAgendamento.data).toLocaleDateString()}</p>
                 <p><strong>Hora:</strong> {selectedAgendamento.hora}</p>
@@ -176,6 +197,36 @@ const VisualizarDados = () => {
                     Notificar Administrador
                   </Button>
                 )}
+=======
+                <p><strong>Cliente:</strong> {selectedAgendamento.nome_cliente}</p>
+                <p><strong>Data:</strong> {new Date(selectedAgendamento.data).toLocaleDateString()}</p>
+                <p><strong>Hora:</strong> {selectedAgendamento.hora}</p>
+                <p><strong>Serviço:</strong> {selectedAgendamento.nome_servico}</p>
+                <p><strong>Valor:</strong> 
+                  {selectedAgendamento.valor_servico ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAgendamento.valor_servico) : 'Não disponível'}
+                </p>
+                <p><strong>Colaborador:</strong> {selectedAgendamento.nome_colaborador}</p>
+                <p><strong>Status:</strong>
+                  <span className={`badge ${selectedAgendamento.status === 'confirmado' ? 'badge-success' : 'badge-warning'}`}>
+                    {selectedAgendamento.status === 'confirmado' ? 'Confirmado' : 'Pendente'}
+                  </span>
+                </p>
+              </Modal.Body>
+              <Modal.Footer>
+                {role === 'admin' && (
+                  <>
+                    <Button variant="btn btn-danger" onClick={() => handleDeleteAgendamento(selectedAgendamento.id)}>
+                      Deletar Agendamento
+                    </Button>
+                    <Button variant="btn btn-warning" onClick={handleNotifyAdmin}>
+                      Notificar Admin
+                    </Button>
+                  </>
+                )}
+                <Button variant="btn btn-secondary" onClick={handleCloseModal}>
+                  Fechar
+                </Button>
+>>>>>>> Stashed changes
               </Modal.Footer>
             </Modal>
           )}
