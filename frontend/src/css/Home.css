@@ -1,0 +1,23 @@
+/* Remove bordas e cores de fundo do carrossel */
+.carousel-item img {
+    border: none;
+    background-color: transparent;
+    box-shadow: none;
+  }
+  
+  /* Centraliza e estiliza legendas */
+  .carousel-caption {
+    background-color: rgba(0, 0, 0, 0.5); /* Fundo semitransparente */
+    color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+  }
+  
+  /* Botões de navegação */
+  .carousel-control-prev-icon,
+  .carousel-control-next-icon {
+    filter: invert(1); /* Deixa os ícones brancos */
+  }
+  
+  
+  

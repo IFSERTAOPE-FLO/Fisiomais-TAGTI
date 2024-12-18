@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "./Profile.css";
+import "../css/Profile.css";
 
 const Perfil = () => {
   const [dadosUsuario, setDadosUsuario] = useState({});
@@ -15,7 +15,7 @@ const Perfil = () => {
   
 
   const token = localStorage.getItem("token");
-  const apiBaseUrl = "http://localhost:5000/api";
+  const apiBaseUrl = "http://localhost:5000/usuarios";
 
   const buscarDadosUsuario = useCallback(async () => {
     try {
@@ -152,8 +152,8 @@ const Perfil = () => {
   return (
     <div className="container col-md-8 my-5">
       <div className="card shadow ">
-        <div className="card-header agendamento-header">
-          <h1 className="text-center agendamento-titulo">Perfil do Usuário</h1>
+        <div className="card-header ">
+          <h1 className="text-center text-primary ">Perfil do Usuário</h1>
         </div>
   
         <div className="card-body ">
@@ -259,7 +259,11 @@ const Perfil = () => {
                           onChange={(e) => setSenhaAtual(e.target.value)}
                         />
                       </div>
-                      <div className="col-12 col-md-6">
+                      
+                    </div>
+                    
+                    <div className="row mb-3">
+                    <div className="col-12 col-md-6">
                         <label htmlFor="novaSenha" className="form-label">Nova Senha</label>
                         <input
                           type="password"
@@ -269,8 +273,6 @@ const Perfil = () => {
                           onChange={(e) => setNovaSenha(e.target.value)}
                         />
                       </div>
-                    </div>
-                    <div className="row mb-3">
                       <div className="col-12 col-md-6">
                         <label htmlFor="confirmarSenha" className="form-label">Confirmar Nova Senha</label>
                         <input

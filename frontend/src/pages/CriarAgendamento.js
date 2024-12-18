@@ -17,8 +17,9 @@ function Agendamento() {
   const [role, setRole] = useState('');
   const [planos, setPlanos] = useState([]);
   const [tipoServico, setTipoServico] = useState('');
+  const [valorServico, setValorServico] = useState(0)
   const [horariosDisponiveis, setHorariosDisponiveis] = useState([]);
-  const horarios = ['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
+  const [planoSelecionado, setPlanoSelecionado] = useState('');
   const [loading, setLoading] = useState(false); // Estado para o carregamento
   const [diasPermitidos, setDiasPermitidos] = useState([]);
   const [feriados, setFeriados] = useState([]);
@@ -90,20 +91,28 @@ function Agendamento() {
     if (servico) {
       fetchColaboradores();
       const servicoSelecionado = servicos.find((s) => s.ID_Servico === parseInt(servico));
-      if (servicoSelecionado && servicoSelecionado.Tipo === 'pilates') {
-        setTipoServico('pilates');
-        setPlanos(servicoSelecionado.Planos || []);
-      } else {
-        setTipoServico('');
-        setPlanos([]);
+      if (servicoSelecionado) {
+        if (servicoSelecionado.Tipo === 'pilates') {
+          setTipoServico('pilates');
+          setPlanos(servicoSelecionado.Planos || []);
+          setValorServico(0); // Zera o valor para serviços de pilates
+        } else if (servicoSelecionado.Tipo === 'fisioterapia') {
+          setTipoServico('fisioterapia');
+          setValorServico(servicoSelecionado.Valor || 0); // Configura o valor do serviço
+          setPlanos([]); // Zera os planos
+        } else {
+          setTipoServico('');
+          setPlanos([]);
+          setValorServico(0);
+        }
       }
     }
   }, [servico, fetchColaboradores, servicos]);
   
 
   useEffect(() => {
-    if (data && servico) {
-      fetchHorariosDisponiveis(data, servico);
+    if (colaborador) {
+      fetchHorariosColaborador(colaborador);
     }
   }, [colaborador]);
 
@@ -126,7 +135,7 @@ function Agendamento() {
 
   const fetchClientes = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/clientes');
+      const response = await fetch('http://localhost:5000/clientes');
       if (response.ok) {
         setClientes(await response.json());
       }
@@ -149,6 +158,7 @@ function Agendamento() {
       colaborador_id: colaborador,
       data: dataHora,
       cliente_id: cliente,
+      plano_id: planoSelecionado // Adiciona o plano selecionado
     };
 
     const token = localStorage.getItem('token');
@@ -194,12 +204,12 @@ function Agendamento() {
   };
 
   return (
-    <div className="container py-5">
+    <div className="container py-5 background-gif">
       <div className="row align-items-center">
-        <div className="col-md-5">
-          <div className="card shadow-lg border-0">
-            <div className="card-header text-center agendamento-header text-white rounded-top">
-              <h3 className="fw-bold">Agendar Atendimento</h3>
+        <div className="col-md-5 agendamentoback " >
+          <div className="card shadow-lg border-0 ">
+            <div className="card-header text-center  rounded-top">
+              <h3 className="fw-bold  text-primary ">Agendar atendimento</h3>
             </div>
             <div className="card-body p-4">
               <form onSubmit={handleSubmit}>
@@ -221,21 +231,37 @@ function Agendamento() {
                   </select>
                 </div>
 
+                {tipoServico === "fisioterapia" && valorServico && (
+                  <div className="mb-3">
+                    <label htmlFor="valor" className="form-label ">Valor do Serviço</label>
+                    <div className=" flex-column  gap-2">
+                      <span className="fw-bold btn-plano  mb-2  align-items-center p-2 border btn-plano rounded">{`R$ ${valorServico}`}</span>
+                    </div>
+
+
+                  </div>
+                )}
+
                 {tipoServico === 'pilates' && (
                   <div className="mb-3">
-                    <label htmlFor="plano" className="form-label">Plano de Pilates</label>
-                    <select
-                      id="plano"
-                      className="form-select"
-                      required
-                    >
-                      <option value="">Selecione um plano</option>
+                    <label className="form-label">Plano de Pilates</label>
+                    <div className="d-flex flex-column  gap-2">
                       {planos.map((plano) => (
-                        <option key={plano.ID_Plano} value={plano.ID_Plano}>
-                          {plano.Nome_plano} - R${plano.Valor}
-                        </option>
+                        <div
+                          key={plano.ID_Plano}
+                          className={`d-flex justify-content-between align-items-center p-3 border btn-plano rounded ${planoSelecionado === plano.ID_Plano ? 'active' : ''}`}
+                          onClick={() => setPlanoSelecionado(plano.ID_Plano)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <div className="flex-grow-1">
+                            <strong>{plano.Nome_plano}</strong>
+                          </div>
+                          <div className="text-end">
+                            <span className="fw-bold  ">R$ {plano.Valor}</span>
+                          </div>
+                        </div>
                       ))}
-                    </select>
+                    </div>
                   </div>
                 )}
 
@@ -306,35 +332,34 @@ function Agendamento() {
                 </div>
 
                 <div className="mb-3">
-                  <label htmlFor="cliente" className="form-label">Cliente</label>
+
                   {role === 'cliente' ? (
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={localStorage.getItem('userName')}
-                      readOnly
-                    />
+                    <br />
                   ) : (
-                    <select
-                      id="cliente"
-                      className="form-select"
-                      value={cliente}
-                      onChange={(e) => setCliente(e.target.value)}
-                      required
-                    >
-                      <option value="">Selecione um cliente</option>
-                      {clientes.map((cli) => (
-                        <option key={cli.ID_Cliente} value={cli.ID_Cliente}>
-                          {cli.Nome}
-                        </option>
-                      ))}
-                    </select>
+                    <>
+                      <label htmlFor="cliente" className="form-label">Cliente</label>
+                      <select
+                        id="cliente"
+                        className="form-select"
+                        value={cliente}
+                        onChange={(e) => setCliente(e.target.value)}
+                        required
+                      >
+                        <option value="">Selecione um cliente</option>
+                        {clientes.map((cli) => (
+                          <option key={cli.ID_Cliente} value={cli.ID_Cliente}>
+                            {cli.Nome}
+                          </option>
+                        ))}
+                      </select>
+                    </>
                   )}
+
                 </div>
 
                 <button type="submit" className="btn btn-signup w-100 text-uppercase fw-bold">
                   {loading ? (
-                    <i className="bi bi-arrow-repeat spinner"></i> 
+                    <i className="bi bi-arrow-repeat spinner"></i>
                   ) : (
                     <i className="bi bi-calendar-check"></i>
                   )}{' '}
@@ -344,14 +369,64 @@ function Agendamento() {
             </div>
           </div>
         </div>
-
-        <div className="col-md-7 d-flex justify-content-center">
+      </div>
+      <div>
+        <div className="container" style={{ position: 'relative' }}>
+          {/* Imagem Logo 1 */}
           <img
-            src="https://via.placeholder.com/600x400"
-            alt="Agendamento"
-            className="img-fluid shadow "
+            src="/images/logo.png"
+            alt="Logo 1"
+            className="pulsar .img-fluid"
+            style={{ width: '750px', height: 'auto', position: 'absolute', top: '-570px', left: '-170px', zIndex: -2 }}
+          />
+
+          {/* Imagem Logo 2 */}
+          <img
+            src="/images/logo1.png"
+            alt="Logo 2"
+            className="animate-subir-descer2"
+            style={{ width: '75px', height: 'auto', position: 'absolute', top: '-125px', left: '880px' }}
+          />
+
+          {/* Imagem Logo 3 */}
+          <img
+            src="/images/logo2.png"
+            alt="Logo 3"
+            className="animate-subir-descer3 "
+            style={{ width: '75px', height: 'auto', position: 'absolute', top: '-245px', left: '880px' }}
+          />
+
+          {/* Imagem Logo 4 */}
+          <img
+            src="/images/logo3.png"
+            alt="Logo 4"
+            className="animate-subir-descer4"
+            style={{ width: '75px', height: 'auto', position: 'absolute', top: '-380px', left: '880px' }}
+          />
+
+          {/* Imagem Logo 5 */}
+          <img
+            src="/images/logo4.png"
+            alt="Logo 5"
+            className="girar"
+            style={{ width: '90px', height: 'auto', position: 'absolute', top: '-80px', left: '1400px' }}
+          />
+
+          {/* Imagem Smart */}
+          <img
+            src="/images/smart.png"
+            alt="Smart"
+            style={{ width: '700px', height: 'auto', position: 'absolute', top: '-540px', left: '820px' }}
+          />
+
+          {/* Imagem Client */}
+          <img
+            src="/images/client.gif"
+            alt="Client"
+            style={{ width: '500px', height: 'auto', position: 'absolute', top: '-364px', left: '960px' }}
           />
         </div>
+
       </div>
     </div>
   );

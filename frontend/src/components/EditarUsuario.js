@@ -35,7 +35,7 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
         
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:5000/api/editar_usuario/${role}/${idUsuario}`, {
+            const response = await fetch(`http://localhost:5000/editar_usuario/${role}/${idUsuario}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
-import "./Navbar.css";
+import "../css/Navbar.css";
 
 function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -24,35 +24,40 @@ function Navbar() {
         email,
         senha,
       });
-
+  
       const { access_token, name, role, userId, photo } = response.data;
-      
+  
       setIsLoggedIn(true);
       setUserName(name);
       setRole(role);
-      setUserId(userId); // Atualiza o ID do usuário no estado
-      setUserPhoto(photo); // Atualiza o estado da foto do usuário
+      setUserId(userId);
+      setUserPhoto(photo);
       localStorage.setItem("token", access_token);
       localStorage.setItem("userName", name);
       localStorage.setItem("role", role);
       localStorage.setItem("userId", userId);
-      localStorage.setItem("userPhoto", photo); // Salva a foto no localStorage
-
+      localStorage.setItem("userPhoto", photo);
+  
       // Fechar o modal
       const modalElement = document.getElementById("loginModal");
       const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
       if (modalInstance) {
         modalInstance.hide();
       }
-
+  
       document.querySelectorAll(".modal-backdrop").forEach((backdrop) => backdrop.remove());
-
+  
       console.log("Usuário logado:", name);
-
+  
+      // Redirecionar com base no papel do usuário
       setTimeout(() => {
-        navigate("/");
+        if (role === "admin") {
+          navigate("/adminpage");
+        } else {
+          navigate("/");
+        }
         window.location.reload();
-      }, 500);
+      }, 300); // Reduzido o tempo para 300ms
     } catch (error) {
       console.error("Erro no login:", error);
       alert("Erro ao fazer login. Verifique suas credenciais.");
@@ -167,7 +172,7 @@ function Navbar() {
                 <Link className="nav-link" to="/sobrenos">Sobre Nós</Link>
               </li>
               <li className="nav-item">
-                <Link className="nav-link" to="/sobrenos">Especialidades</Link>
+                <Link className="nav-link" to="/especialidades">Especialidades</Link>
               </li>
               <li className="nav-item">
                 <Link className="nav-link" to="/contato">Fale conosco</Link>
@@ -218,7 +223,7 @@ function Navbar() {
                       <Link className="dropdown-item" to="/perfil">Meu Perfil</Link>
                     </li>
                     <li>
-                      <Link className="dropdown-item" to="/criaragendamento">Agendar Sessão</Link>
+                      <Link className="dropdown-item" to="/criaragendamento">Agendar Atendimento</Link>
                     </li>
                    
                         {role === "admin" && (
@@ -237,7 +242,7 @@ function Navbar() {
                       
                     
                     <li>
-                      <Link className="dropdown-item" to="/visualizaragendamentos">Visualizar Agendamentos</Link>
+                      <Link className="dropdown-item" to="/visualizaragendamentos">Meus Agendamentos</Link>
                     </li>
                     <li>
                       <button

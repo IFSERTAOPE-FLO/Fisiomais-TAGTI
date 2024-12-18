@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
-import './Estilos.css';
+import '../css/Estilos.css';
+import { Link } from "react-router-dom";
 
 function AddCliente() {
   const [nome, setNome] = useState('');
@@ -27,20 +28,20 @@ function AddCliente() {
       alert('Por favor, preencha os campos obrigatórios.');
       return;
     }
-  
+
     if (email !== confirmarEmail) {
       alert('Os emails não correspondem.');
       return;
     }
-  
+
     if (senha !== confirmarSenha) {
       alert('As senhas não correspondem.');
       return;
     }
-  
+
     setLoading(true);
     setErrorMessage('');
-  
+
     try {
       const response = await axios.post("http://localhost:5000/register", {
         nome,
@@ -56,7 +57,7 @@ function AddCliente() {
         bairro,
         dt_nasc: dtNasc,
       });
-  
+
       if (response.status === 201) {
         alert("Cliente adicionado com sucesso!");
         // Resetar os campos
@@ -85,11 +86,11 @@ function AddCliente() {
   };
 
   return (
-    <div className="container col-md-9 my-5">      
+    <div className="container col-md-9 my-5">
       {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
       <div className="card shadow ">
-        <div className="card-header agendamento-header">
-          <h2 className="text-center agendamento-titulo">Adicionar Cliente</h2>
+        <div className="card-header ">
+          <h2 className="text-center text-primary">Adicionar Cliente</h2>
         </div>
         <div className="card-body">
           <form onSubmit={(e) => { e.preventDefault(); handleRegister(); }}>
@@ -141,7 +142,7 @@ function AddCliente() {
                 />
               </div>
             </div>
-  
+
             {/* Senha e Confirmação */}
             <div className="row mb-3">
               <div className="col-12 col-md-2">
@@ -207,7 +208,7 @@ function AddCliente() {
                 />
               </div>
             </div>
-  
+
             <div className="row mb-2">
               <div className="col-12 col-md-5">
                 <label htmlFor="endereco" className="form-label">Endereço</label>
@@ -240,20 +241,25 @@ function AddCliente() {
                 />
               </div>
             </div>
-  
+
             <div className="col-12 text-center">
-              <button type="submit" className="btn btn-signup w-auto mx-auto" disabled={loading}>
-              <i className="bi bi-person-plus"></i>
-                {loading ? "Carregando..." : " Cadastrar Cliente"}
+              <button type="submit" className="btn btn-login w-auto mx-auto" disabled={loading}>
+                <i className="bi bi-person-plus me-1"></i>
+                {loading ? "Carregando..." : "Cadastrar"}
               </button>
+              <Link className="btn btn-signup w-auto  mx-auto ms-2" to="/adminpage" disabled={loading}>
+                <i class="bi bi-arrow-return-left me-2"></i>
+                {loading ? "Carregando..." : "Voltar"}
+              </Link>
+
             </div>
           </form>
         </div>
       </div>
     </div>
   );
-  
-  
+
+
 }
 
 export default AddCliente;

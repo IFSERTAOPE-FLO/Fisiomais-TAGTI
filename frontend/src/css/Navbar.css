@@ -1,0 +1,417 @@
+  .custom-navbar {
+    background-color: #ffffff;
+    padding: 0px 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .navbar-brand img {
+    height: 80px; 
+    width: 220px;
+        display: block; 
+  }
+
+  .navbar-nav {
+    justify-content: center; 
+    
+  }
+
+  .navbar-nav .nav-item {
+    margin: 0 10px; /* Espaço entre os itens do menu */
+    
+  }
+.custom-navbar {
+  background-color: #ffffff;
+  padding: 0 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand img {
+  height: 80px;
+  width: 220px;
+  margin-top: 0;
+  margin-left: 90px;
+  display: block;
+}
+
+.nav-link:not(.dropdown-toggle):hover {
+  background-color: #2d9485;
+  transform: scale(1.01);
+}
+
+.navbar-nav {
+  justify-content: center;
+}
+
+.navbar-nav .nav-item {
+  margin: 0 5px; /* Espaço reduzido entre os itens do menu */
+}
+
+.nav-link {
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background-color: #36ab9c;
+  border-radius: 5px;
+  margin: 0 4px;
+  padding: 8px 12px;
+  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+}
+
+.nav-link:hover {
+  background-color: #2d9485;
+  color: white;
+  transform: scale(1.01); /* Efeito de hover */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adiciona sombra ao redor do botão */
+}
+/* Exceção para o dropdown do usuário */
+.nav-link.dropdown-toggle.btn-user:hover {
+  background-color: transparent;  /* Sem mudança no fundo */
+  color: inherit;  /* Mantém a cor original */
+  transform: none; /* Sem efeito de escala */
+  box-shadow: none; /* Remove a sombra */
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -5px; /* Espaço abaixo da linha */
+  height: 2px;
+  background-color: #2d9485;
+  transition: width 0.3s ease;
+}
+
+
+.btn-login, .btn-signup {
+  font-size: 0.85rem;
+  border-radius: 20px;
+  padding: 8px 12px;
+  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  margin-right: 5px; /* Espaço reduzido entre os botões */
+  border: none;
+}
+
+.btn-login {
+  background-color: #36ab9c;
+  color: white;
+}
+
+.btn-signup {
+  background-color: #bc155b;
+  color: white;
+}
+
+
+.btn-login:hover{
+  background-color: #2d9485;
+  color: white;
+  transform: scale(1.01); /* Efeito de hover */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adiciona sombra ao redor do botão */
+}
+.btn-signup:hover {
+  background-color: #9b0845;
+  color: white;
+  transform: scale(1.01); /* Efeito de hover */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adiciona sombra ao redor do botão */
+}
+
+#iconeuser {
+  font-size: 50px;
+  margin-right: 7px;
+}
+
+
+/* Centralizar o dropdown à direita */
+.navbar-nav.ms-auto {
+  margin-left: auto;
+}
+
+
+
+  .nav-link:hover {
+    background-color: #2d9485;
+  }
+
+  .btn-login {
+    background-color: #36ab9c;
+    color: white;
+    font-size: 0.85rem;
+    border-radius: 20px;
+    padding: 10px 20px; /* Ajustado para maior largura */
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease; 
+    margin-right: 10px;
+  
+  }
+
+  
+
+  .custom-navbar .navbar-collapse {
+    justify-content: space-between;
+  }
+
+  /* Novo estilo para o botão Inscrever-se */
+  .btn-signup {
+    background-color: #bc155b; 
+    color: white;
+    font-size: 0.85rem;
+    border-radius: 20px;
+    padding: 10px 20px; 
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    margin-right: 10px;
+    border: none;
+  }
+
+  
+
+  /* Estilização do botão do usuário logado */
+  .btn-user {
+    background-color: white; /* Fundo transparente */
+    font-size: 0.85rem;
+    border-radius: 20px;
+    padding: 5px 10px;
+    transition: all 0.3s ease;
+    margin-right: 10px;
+    color: #919292;
+    border: none; /* Remove bordas adicionais */
+  }
+
+  .btn-user:hover {  
+    background-color: White; /* Fundo transparente */  
+    color: Black;
+  }
+
+  /* Assegura que a navbar-toggler aparece apenas em telas pequenas */
+.navbar-toggler {
+  border: none;
+  background-color: transparent;
+}
+
+/* Resolve o problema de colapso no mobile */
+.navbar-collapse {
+  transition: height 0.3s ease;
+}
+
+.dropdown-menu {
+  right: 0; /* Alinha o menu dropdown à direita */
+  left: auto; /* Remove alinhamento automático à esquerda */
+}
+
+  /* Menu dropdown do usuário */
+  .dropdown-menu {
+    border-radius: 10px; /* Bordas arredondadas */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra leve */
+  }
+
+  .dropdown-item {
+    font-size: 0.9rem; /* Tamanho do texto do dropdown */
+    color: #525252;
+  }
+
+  .dropdown-item:hover {
+    background-color: #f8f9fa; /* Cor de fundo clara no hover */
+    color: #333; /* Cor do texto no hover */
+  }
+
+  .navbar-nav {
+    justify-content: center; /* Centraliza os itens do menu */
+    flex-grow: 1; /* Permite que o menu ocupe o espaço necessário */
+  }
+  .navbar-nav.ms-auto {
+    flex-grow: 0; /* Garante que os itens na direita não interfiram no centro */
+  }
+  /* Centralizar o dropdown à direita */
+  .navbar-nav.ms-auto {
+    margin-left: auto; /* Empurra o dropdown para a direita */
+  }
+
+  .user-photo {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    margin-right: 10px;
+    object-fit: cover; /* Evita distorção da imagem */
+  }
+
+
+  /* Cor do fundo e botão de login */
+  .modal-content {
+    background-color: #36ab9c;
+    color: white;
+  }
+
+  .modal-header {
+    border-bottom: 1px solid #f1f1f1;
+  }
+
+  .modal-title {
+    color: white;
+  }
+
+  .form-label {
+    font-weight: 600;
+  }
+
+  /* Estilizando os campos do formulário */
+  .form-control {
+    border-radius: 5px;
+    padding: 10px;
+  }
+
+  .btn-pink {
+    background-color: #bc155b;
+    color: white;
+    border-radius: 20px;
+    padding: 10px 20px; /* Ajustado para maior largura */
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .btn-pink:hover {
+    background-color: #9c2456;
+    font-weight: bold;
+    transform: scale(1.005); /* Aumenta um pouco o tamanho do botão */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adiciona sombra ao redor do botão */
+  }
+  
+  .btn-pink:active {
+    transform: scale(1); /* Remove a escala ao clicar */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra um pouco mais suave ao clicar */
+  }
+
+  /* Links e checkbox */
+  .form-check-label {
+    color: #ffffff;
+  }
+
+  .text-primary {
+    color: #36ab9c !important;
+  }
+
+  /* Estilos para os ícones de redes sociais */
+  /* Estilos de hover para redes sociais */
+.social-icons a:hover {
+  color: #fff;
+}
+
+.social-icons a:hover.bi-facebook {
+  background-color: #1877F2;
+}
+
+.social-icons a:hover.bi-google {
+  background-color: #db4437;
+}
+
+.social-icons a:hover.bi-linkedin {
+  background-color: #0077B5;
+}
+
+.social-icons a:hover.bi-instagram {
+  background-color: #E4405F;
+}
+
+
+
+.social-icons {
+    
+    gap: 10px;
+    border: 0px;
+  }
+
+.modal-footer p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.modal-footer .social-icons {
+  gap: 10px;
+  display: flex;
+  padding: 0;
+}
+
+  /* Responsividade */
+  @media (max-width: 576px) {
+    .modal-dialog {
+      max-width: 100%;
+      margin: 20px;
+    }
+  }
+  
+
+
+  /* Link "Inscreva-se" */
+  .modal-footer a {
+    text-decoration: none;
+    color: white;
+    
+    transition: color 0.3s ease;
+  }
+
+  .modal-footer a:hover {
+    color: #ffecf4;
+    font-weight: bold;
+    text-decoration: underline;
+  }
+
+  /* Botões de redes sociais */
+  .social-icons .btn-social {
+    width: 50px;
+    height: 50px;
+    font-size: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border: none; 
+  }
+
+  .social-icons .btn-outline-primary:hover {
+    background-color: #007bff;
+    color: white;
+  }
+
+  .social-icons .btn-outline-danger:hover {
+    background-color: #db4437;
+    color: white;
+  }
+
+  .social-icons .btn-outline-dark:hover {
+    background-color: #0077b5;
+    color: white;
+  }
+
+  /* Alinhar o botão dentro do input */
+  .input-group {
+    position: relative; /* Define como elemento pai para posicionamento relativo */
+  }
+
+  .input-group .form-control {
+    padding-right: 50px; /* Espaço para o botão */
+  }
+
+  .input-group .btn-outline-secondary {
+    position: absolute;
+    top: 50%; /* Centraliza verticalmente */
+    right: 10px; /* Alinha à direita dentro do campo */
+    transform: translateY(-50%); /* Ajuste para centralização */
+    background-color: transparent; /* Remove cor de fundo */
+    border: none; /* Remove borda */
+    padding: 0;
+    z-index: 2; /* Garante que o botão fique acima */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .input-group .btn-outline-secondary i {
+    font-size: 20px;
+    color: #6c757d; /* Cor do ícone */
+  }
+
+  .input-group .btn-outline-secondary:hover i {
+    color: #000; /* Cor do ícone no hover */
+    transform: scale(1.1); /* Destaca o ícone no hover */
+  }
+
+  

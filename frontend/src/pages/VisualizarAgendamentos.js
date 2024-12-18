@@ -1,23 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Modal, Button } from 'react-bootstrap';
+import { FaCalendarAlt } from 'react-icons/fa'; // Ícone de calendário
+import '../css/Estilos.css';
+import Calendar from 'react-calendar'; // Para exibir o calendário
 
-const VisualizarDados = () => {
+const VisualizarAgendamentos = () => {
   const [agendamentos, setAgendamentos] = useState([]);
   const [erro, setErro] = useState(null);
   const [selectedAgendamento, setSelectedAgendamento] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [role, setRole] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [showDateFilterModal, setShowDateFilterModal] = useState(false); // Para controlar o novo modal de filtro de data
 
   useEffect(() => {
     const fetchAgendamentos = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/listar_agendamentos', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        const response = await axios.get('http://localhost:5000/agendamentos/listar_agendamentos', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
 
         if (response.data.length === 0) {
-          setAgendamentos([]); // Apenas setando um array vazio, sem mensagem de erro
+          setAgendamentos([]);
         } else {
           setAgendamentos(response.data);
         }
@@ -50,10 +56,10 @@ const VisualizarDados = () => {
 
   const handleDeleteAgendamento = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/api/deletar_agendamento/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      await axios.delete(`http://localhost:5000/agendamentos/deletar_agendamento/${id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      setAgendamentos(agendamentos.filter(ag => ag.id !== id)); // Atualiza a lista localmente
+      setAgendamentos(agendamentos.filter((ag) => ag.id !== id));
       handleCloseModal();
     } catch (error) {
       console.error('Erro ao deletar agendamento:', error);
@@ -63,11 +69,13 @@ const VisualizarDados = () => {
 
   const handleNotifyAdmin = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/api/notificar_admin', {
-        agendamento_id: selectedAgendamento.id
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      await axios.post(
+        'http://localhost:5000/api/notificar_admin',
+        { agendamento_id: selectedAgendamento.id },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        }
+      );
       alert('Administrador notificado com sucesso!');
       handleCloseModal();
     } catch (error) {
@@ -75,24 +83,105 @@ const VisualizarDados = () => {
       alert('Erro ao notificar admin.');
     }
   };
-  
+
+  const handleSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const handleDateFilter = (date) => {
+    setSelectedDate(date);
+    setShowDateFilterModal(false); // Fecha o modal de filtro de data após selecionar a data
+  };
+
+  const sortedAgendamentos = React.useMemo(() => {
+    let filteredAgendamentos = agendamentos;
+
+    // Filtrando por data selecionada
+    if (selectedDate) {
+      filteredAgendamentos = filteredAgendamentos.filter(
+        (agendamento) =>
+          new Date(agendamento.data).toLocaleDateString() === new Date(selectedDate).toLocaleDateString()
+      );
+    }
+
+    // Ordenando agendamentos por data e hora
+    filteredAgendamentos.sort((a, b) => {
+      const dateA = new Date(a.data);
+      const dateB = new Date(b.data);
+
+      if (dateA.getTime() !== dateB.getTime()) {
+        return dateA - dateB;
+      }
+
+      const timeA = a.hora.split(':').map(Number);
+      const timeB = b.hora.split(':').map(Number);
+
+      const minutesA = timeA[0] * 60 + timeA[1];
+      const minutesB = timeB[0] * 60 + timeB[1];
+
+      return minutesA - minutesB;
+    });
+
+    // Se houver a configuração de ordenação, aplicar
+    if (sortConfig.key) {
+      filteredAgendamentos.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return filteredAgendamentos;
+  }, [agendamentos, sortConfig, selectedDate]);
 
   return (
-    <div className="container col-md-6 my-5">
+    <div className="container col-md-8 my-5">
       <div className="card shadow">
-        <div className="card-header agendamento-header">
-          <h2 className="text-center agendamento-titulo fw-bold">Visualizar Agendamentos</h2>
+        <div className="card-header ">
+          <h2 className="text-center text-primary fw-bold">Visualizar Agendamentos</h2>
         </div>
-  
+
         <div className="card-body">
-          {erro && <div className="alert alert-danger">{erro}</div>}
-  
+          {erro && agendamentos.length > 0 && <div className="alert alert-danger">{erro}</div>}
+
           <table className="table table-striped table-bordered mt-4 agendamento-header">
-            <thead>
-              <tr >
+            <thead className="agendamento-header">
+              <tr>
                 <th>#</th>
-                <th>Nome Cliente</th>
-                <th>Data</th>
+                <th
+                  onClick={() => handleSort('nome_cliente')}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Nome Cliente{' '}
+                  {sortConfig.key === 'nome_cliente' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                </th>
+
+                <th
+                  onClick={() => handleSort('data')}
+                  style={{ cursor: 'pointer', verticalAlign: 'middle' }}
+                >
+                  Data{' '}
+                  {sortConfig.key === 'data' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  <Button
+                    variant="btn-danger"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDateFilterModal(true);
+                    }}
+                    className="ms-2 align-top p-0 text-white"
+                    style={{ lineHeight: 1, height: 'auto' }}
+                  >
+                    <FaCalendarAlt />
+                  </Button>
+                </th>
                 <th>Hora</th>
                 <th>Serviço</th>
                 <th>Valor (R$)</th>
@@ -102,8 +191,8 @@ const VisualizarDados = () => {
               </tr>
             </thead>
             <tbody>
-              {agendamentos.length > 0 ? (
-                agendamentos.map((agendamento, index) => (
+              {sortedAgendamentos.length > 0 ? (
+                sortedAgendamentos.map((agendamento, index) => (
                   <tr key={agendamento.id}>
                     <td>{index + 1}</td>
                     <td>{agendamento.nome_cliente || 'Cliente não informado'}</td>
@@ -111,19 +200,19 @@ const VisualizarDados = () => {
                     <td>{agendamento.hora || 'Hora não informada'}</td>
                     <td>{agendamento.nome_servico || 'Serviço não encontrado'}</td>
                     <td>
-                      {agendamento.nome_servico === 'Pilates' && agendamento.plano_pagamento && agendamento.plano_pagamento.length > 0 ? (
-                        <ul>
+                      {agendamento.plano_pagamento.length > 0 ? (
+                        <ul className="list-unstyled">
                           {agendamento.plano_pagamento.map((plano, index) => (
                             <li key={index}>
-                              {plano.plano} -{' '}
+                              {plano.Nome_plano} -{' '}
                               {new Intl.NumberFormat('pt-BR', {
                                 style: 'currency',
                                 currency: 'BRL',
-                              }).format(plano.valor)}
+                              }).format(plano.Valor)}
                             </li>
                           ))}
                         </ul>
-                      ) : agendamento.nome_servico.includes('Fisioterapia') && agendamento.valor_servico ? (
+                      ) : agendamento.valor_servico ? (
                         <span>
                           {new Intl.NumberFormat('pt-BR', {
                             style: 'currency',
@@ -158,8 +247,24 @@ const VisualizarDados = () => {
                 </tr>
               )}
             </tbody>
+
           </table>
-  
+
+          {/* Modal de filtro de data */}
+          <Modal show={showDateFilterModal} onHide={() => setShowDateFilterModal(false)}>
+            <Modal.Header closeButton>
+              <Modal.Title>Filtro de Datas</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <Calendar value={selectedDate} onChange={handleDateFilter} />
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="btn btn-secondary" onClick={() => setShowDateFilterModal(false)}>
+                Fechar
+              </Button>
+            </Modal.Footer>
+          </Modal>
+
           {/* Modal de detalhes do agendamento */}
           {selectedAgendamento && (
             <Modal show={showModal} onHide={handleCloseModal}>
@@ -204,4 +309,4 @@ const VisualizarDados = () => {
   );
 };
 
-export default VisualizarDados;
+export default VisualizarAgendamentos;

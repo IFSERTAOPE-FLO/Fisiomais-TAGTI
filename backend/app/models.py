@@ -8,24 +8,25 @@ from flask import url_for
 class Colaboradores(db.Model):
     __tablename__ = 'colaboradores'
     ID_Colaborador = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(255))
-    telefone = db.Column(db.String(20), unique=True)  # Modificado para apenas um telefone
+    nome = db.Column(db.String(255), nullable=False)
+    telefone = db.Column(db.String(20), unique=True)  # Apenas um telefone
     email = db.Column(db.String(255), unique=True, nullable=False)  # Campo de email único
     senha = db.Column(db.String(255), nullable=False)  # Campo de senha obrigatório
-    is_admin = db.Column(db.Boolean, default=False)  # Novo campo para determinar se é administrador
+    is_admin = db.Column(db.Boolean, default=False)  # Determina se é administrador
     referencias = db.Column(db.Text)
-    cargo = db.Column(db.String(100))
-    endereco = db.Column(db.String(255))
-    rua = db.Column(db.String(255))
+    cargo = db.Column(db.String(100), nullable=False)  # Fisioterapeuta, Instrutor, etc.
+    endereco = db.Column(db.String(255))    
     cpf = db.Column(db.String(11), unique=True, nullable=False)
     estado = db.Column(db.String(50))
     cidade = db.Column(db.String(100))
     bairro = db.Column(db.String(100))
     photo = db.Column(db.String(255), nullable=True)
 
+    # Relacionamentos
     servicos = db.relationship('Servicos', secondary='colaboradores_servicos', back_populates='colaboradores')
+    horarios = db.relationship('Horarios', back_populates='colaborador')
 
-    # Métodos para criptografar e verificar a senha
+    # Métodos de senha
     def set_password(self, password):
         self.senha = generate_password_hash(password)
 
@@ -34,42 +35,93 @@ class Colaboradores(db.Model):
 
     def __repr__(self):
         return f'<Colaborador {self.nome}>'
+
     def get_photo_url(self):
         """Retorna o URL público da foto."""
         if self.photo:
             return url_for('main.serve_photo', filename=self.photo, _external=True)
         return None  # Caso não tenha foto
 
+    def to_dict(self):
+        return {
+            'ID_Colaborador': self.ID_Colaborador,
+            'nome': self.nome,
+            'cargo': self.cargo
+        }
+
+
+# Modelo: Horários
+class Horarios(db.Model):
+    __tablename__ = 'horarios'
+    ID_Horario = db.Column(db.Integer, primary_key=True)
+    ID_Colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.ID_Colaborador'), nullable=False)
+    dia_semana = db.Column(db.String(50), nullable=False)  # Segunda, Terça, etc.
+    hora_inicio = db.Column(db.Time, nullable=False)
+    hora_fim = db.Column(db.Time, nullable=False)
+
+    colaborador = db.relationship('Colaboradores', back_populates='horarios')
+
+    def __repr__(self):
+        return f'<Horário {self.dia_semana} - {self.hora_inicio} até {self.hora_fim}>'
+
+
 # Modelo: Clientes
 class Clientes(db.Model):
     __tablename__ = 'clientes'
     ID_Cliente = db.Column(db.Integer, primary_key=True)
-    nome = db.Column(db.String(255))
-    telefone = db.Column(db.String(20), unique=True)  # Modificado para apenas um telefone
-    email = db.Column(db.String(255), unique=True, nullable=False)  # Campo de email único
-    senha = db.Column(db.String(255), nullable=False)  # Campo de senha obrigatório
+    nome = db.Column(db.String(255), nullable=False)
+    telefone = db.Column(db.String(20), unique=True)
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    senha = db.Column(db.String(255), nullable=False)
     referencias = db.Column(db.Text)
     dt_nasc = db.Column(db.Date)
     endereco = db.Column(db.String(255))
-    rua = db.Column(db.String(255))
     estado = db.Column(db.String(50))
     cidade = db.Column(db.String(100))
     bairro = db.Column(db.String(100))
     cpf = db.Column(db.String(11), unique=True, nullable=False)
     photo = db.Column(db.String(255), nullable=True)
 
-    # Métodos para criptografar e verificar a senha
     def set_password(self, password):
         self.senha = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.senha, password)
+
     def get_photo_url(self):
         """Retorna o URL público da foto."""
         if self.photo:
             return url_for('main.serve_photo', filename=self.photo, _external=True)
-        return None  # Caso não tenha foto
-    
+        return None
+
+
+# Modelo: Serviços
+class Servicos(db.Model):
+    __tablename__ = 'servicos'
+    ID_Servico = db.Column(db.Integer, primary_key=True)
+    Nome_servico = db.Column(db.String(255), nullable=False)
+    Descricao = db.Column(db.Text)
+    Valor = db.Column(db.Numeric(10, 2))  # Mantido para serviços de Fisioterapia
+    tipo_servico = db.Column(db.String(50), nullable=False)  # Tipo: fisioterapia ou pilates
+    planos = db.Column(db.JSON, nullable=True)
+
+    colaboradores = db.relationship('Colaboradores', secondary='colaboradores_servicos', back_populates='servicos')
+
+    def __repr__(self):
+        return f'<Servico {self.Nome_servico} - {self.tipo_servico}>'
+
+    def to_dict(self):
+        return {
+            'ID_Servico': self.ID_Servico,
+            'Nome_servico': self.Nome_servico,
+            'Descricao': self.Descricao,
+            'Valor': str(self.Valor) if self.Valor is not None else None,
+            'Tipo': self.tipo_servico,
+            'Planos': self.planos
+        }
+
+
+# Tabela associativa para colaboradores e serviços
 class ColaboradoresServicos(db.Model):
     __tablename__ = 'colaboradores_servicos'
     ID_Colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.ID_Colaborador'), primary_key=True)
@@ -103,6 +155,7 @@ class BlacklistedToken(db.Model):
 
     def __repr__(self):
         return f'<BlacklistedToken {self.jti}>'
+
 
 def populate_database():
     # Criar o administrador se não existir
@@ -219,33 +272,75 @@ def populate_database():
 
     # Salvar colaboradores no banco de dados
     db.session.commit()
+    
 
     # Associar colaboradores aos serviços
     for colaborador in Colaboradores.query.all():
         # Exemplo de atribuição de serviços aos colaboradores
         if colaborador.nome == "João Victor Ramos de Souza":
             servico = Servicos.query.filter_by(Nome_servico="Fisioterapia Clássica").first()
-            if servico not in colaborador.servicos:  # Verifica se o serviço já está associado
+            if servico and servico not in colaborador.servicos:  # Verifica se o serviço já está associado
                 colaborador.servicos.append(servico)
+            servico2 = Servicos.query.filter_by(Nome_servico="Pilates Clínico").first()
+            if servico2 and servico2 not in colaborador.servicos:  # Verifica se o serviço já está associado
+                colaborador.servicos.append(servico2)
         if colaborador.nome == "Lucas Alves":
             servico = Servicos.query.filter_by(Nome_servico="Reabilitação Pós-Cirúrgica").first()
-            if servico not in colaborador.servicos:
+            if servico and servico not in colaborador.servicos:
                 colaborador.servicos.append(servico)
         if colaborador.nome == "Manases":
             servico = Servicos.query.filter_by(Nome_servico="Neurológica para Adultos").first()
-            if servico not in colaborador.servicos:
+            if servico and servico not in colaborador.servicos:
                 colaborador.servicos.append(servico)
         if colaborador.nome == "Aline Rayane":
             servico = Servicos.query.filter_by(Nome_servico="Ortopédica").first()
-            if servico not in colaborador.servicos:
+            if servico and servico not in colaborador.servicos:
                 colaborador.servicos.append(servico)
+            servico2 = Servicos.query.filter_by(Nome_servico="Reeducação Postural Global (RPG)").first()
+            if servico2 and servico2 not in colaborador.servicos:
+                colaborador.servicos.append(servico2)
         if colaborador.nome == "Eveline Santos":
             servico = Servicos.query.filter_by(Nome_servico="Reeducação Postural Global (RPG)").first()
-            if servico not in colaborador.servicos:
+            if servico and servico not in colaborador.servicos:
                 colaborador.servicos.append(servico)
+            servico2 = Servicos.query.filter_by(Nome_servico="Pilates Tradicional").first()
+            if servico2 and servico2 not in colaborador.servicos:
+                colaborador.servicos.append(servico2)
+
+    db.session.commit()
+
 
     # Salvar as associações no banco de dados
     db.session.commit()
+
+    # Inserir horários para os colaboradores
+    # Criar horários para colaboradores (garantir pelo menos um para cada)
+    from datetime import datetime
+
+
+    # Criar horários para colaboradores (garantir pelo menos um para cada)
+    default_horarios = [
+        {"dia_semana": "Segunda-feira", "hora_inicio": "08:00:00", "hora_fim": "12:00:00"},
+        {"dia_semana": "Quarta-feira", "hora_inicio": "14:00:00", "hora_fim": "18:00:00"},
+    ]
+
+    colaboradores_registrados = Colaboradores.query.all()
+    for idx, colaborador in enumerate(colaboradores_registrados):
+        horario_existe = Horarios.query.filter_by(ID_Colaborador=colaborador.ID_Colaborador).first()
+        if not horario_existe:
+            horario = default_horarios[idx % len(default_horarios)]
+            new_horario = Horarios(
+                ID_Colaborador=colaborador.ID_Colaborador,
+                dia_semana=horario["dia_semana"],
+                hora_inicio=datetime.strptime(horario["hora_inicio"], "%H:%M:%S").time(),
+                hora_fim=datetime.strptime(horario["hora_fim"], "%H:%M:%S").time()
+            )
+            db.session.add(new_horario)
+
+    db.session.commit()
+    print("Banco de dados populado com horários para todos os colaboradores.")
+
+
 
     # Criar clientes
     clientes = [

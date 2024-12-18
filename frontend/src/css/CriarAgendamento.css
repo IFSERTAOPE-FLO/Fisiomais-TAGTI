@@ -1,0 +1,97 @@
+@keyframes pulsar {
+    0% {
+        transform: scale(1); /* Tamanho original */
+    }
+    50% {
+        transform: scale(1.1); /* Aumenta um pouco o tamanho */
+    }
+    100% {
+        transform: scale(1); /* Retorna ao tamanho original */
+    }
+}
+
+/* Aplica a animação de pulsar */
+.pulsar {
+    animation: pulsar 7s ease-in-out infinite; /* Duração de 1.5s, com suavização e repetição infinita */
+}
+
+@keyframes subirDescer2 {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-30px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+@keyframes subirDescer3 {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-40px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+@keyframes subirDescer4 {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-25px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+@keyframes subirDescer5 {
+    0% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-15px);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+.animate-subir-descer2 {
+    animation: subirDescer2 4.2s ease-in-out infinite;
+}
+
+.animate-subir-descer3 {
+    animation: subirDescer3 4.8s ease-in-out infinite;
+}
+
+.animate-subir-descer4 {
+    animation: subirDescer4 4.5s ease-in-out infinite;
+}
+.animate-subir-descer5 {
+    animation: subirDescer4 4.9s ease-in-out infinite;
+}
+@keyframes girar {
+    0% {
+        transform: rotate(0deg); /* Início da rotação */
+    }
+    100% {
+        transform: rotate(360deg); /* Completa uma volta */
+    }
+}
+
+/* Classe para o elemento girando */
+.girar {
+    animation: girar 2s linear infinite; /* 2 segundos, rotação constante, repetição infinita */
+    position: fixed; /* Ou `absolute`, dependendo do layout desejado */
+    top: 100px; /* Ajuste conforme necessário */
+    left: 100px; /* Ajuste conforme necessário */
+    width: 90px; /* Tamanho do elemento */
+    height: auto;
+}
