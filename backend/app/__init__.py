@@ -48,9 +48,6 @@ def create_app():
 
     # Registrar os modelos e criar tabelas
     with app.app_context():
-<<<<<<< Updated upstream
-        from app.models import Colaboradores, Clientes, Agendamentos, Servicos, populate_database
-=======
         # Importar modelos e rotas aqui dentro para evitar importação circular
         from app.models import  populate_database
         from app.rotas.routes import main
@@ -81,7 +78,6 @@ def create_app():
             os.makedirs(app.config['UPLOAD_FOLDER'])
 
         # Registrar os modelos e criar tabelas
->>>>>>> Stashed changes
         db.create_all()  # Cria as tabelas no banco de dados
         populate_database()  # Popular o banco com dados iniciais, se necessário
 

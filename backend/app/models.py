@@ -78,11 +78,6 @@ class ColaboradoresServicos(db.Model):
     colaborador = db.relationship('Colaboradores', backref=db.backref('colaboradores_servicos', lazy=True))
     servico = db.relationship('Servicos', backref=db.backref('colaboradores_servicos', lazy=True))
 
-<<<<<<< Updated upstream
-# Modelo: Agendamentos
-=======
-
->>>>>>> Stashed changes
 class Agendamentos(db.Model):
     __tablename__ = 'agendamentos'
 
@@ -90,47 +85,6 @@ class Agendamentos(db.Model):
     data_e_hora = db.Column(db.DateTime, nullable=False)
     ID_Cliente = db.Column(db.Integer, db.ForeignKey('clientes.ID_Cliente'), nullable=False)
     ID_Colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.ID_Colaborador'), nullable=False)
-<<<<<<< Updated upstream
-    ID_Servico = db.Column(db.Integer, db.ForeignKey('servicos.ID_Servico'), nullable=False)  # Novo relacionamento
-
-    cliente = db.relationship('Clientes', backref=db.backref('agendamentos', lazy=True))
-    colaborador = db.relationship('Colaboradores', backref=db.backref('agendamentos', lazy=True))
-    servico = db.relationship('Servicos', backref=db.backref('agendamentos', lazy=True))  # Relacionamento com serviços
-
-    def __init__(self, data_e_hora, ID_Cliente, ID_Colaborador, ID_Servico):
-        self.data_e_hora = data_e_hora
-        self.ID_Cliente = ID_Cliente
-        self.ID_Colaborador = ID_Colaborador
-        self.ID_Servico = ID_Servico  
-
-
-# Modelo: Servicos
-class Servicos(db.Model):
-    __tablename__ = 'servicos'
-    ID_Servico = db.Column(db.Integer, primary_key=True)
-    Nome_servico = db.Column(db.String(255), nullable=False)
-    Descricao = db.Column(db.Text)
-    Valor = db.Column(db.Numeric(10, 2))  # Mantido para serviços de Fisioterapia
-    tipo_servico = db.Column(db.String(50), nullable=False)  # Tipo: fisioterapia ou pilates
-    planos = db.Column(db.JSON, nullable=True)  # Campo para armazenar planos de Pilates
-
-    colaboradores = db.relationship('Colaboradores', secondary='colaboradores_servicos', back_populates='servicos')
-
-    # Validação para tipo de serviço
-    def __init__(self, Nome_servico, Descricao, Valor=None, tipo_servico=None, planos=None):
-        if tipo_servico not in ['fisioterapia', 'pilates']:
-            raise ValueError("O tipo de serviço deve ser 'fisioterapia' ou 'pilates'.")
-        if tipo_servico == 'pilates' and not planos:
-            raise ValueError("Serviços de Pilates devem incluir planos de pagamento.")
-        self.Nome_servico = Nome_servico
-        self.Descricao = Descricao
-        self.Valor = Valor
-        self.tipo_servico = tipo_servico
-        self.planos = planos
-
-    def __repr__(self):
-        return f'<Servico {self.Nome_servico} - {self.tipo_servico}>'
-=======
     ID_Servico = db.Column(db.Integer, db.ForeignKey('servicos.ID_Servico'), nullable=False)
     ID_Plano = db.Column(db.Integer, nullable=True)  # Opcional para serviços como fisioterapia
     status = db.Column(db.String(20), default="pendente")  # Adicionado o campo status
@@ -138,7 +92,6 @@ class Servicos(db.Model):
     cliente = db.relationship('Clientes', backref='agendamentos')
     colaborador = db.relationship('Colaboradores', backref='agendamentos')
     servico = db.relationship('Servicos', backref='agendamentos')
->>>>>>> Stashed changes
 
     def __repr__(self):
         return f'<Agendamento {self.ID_Agendamento} - Status: {self.status}>'

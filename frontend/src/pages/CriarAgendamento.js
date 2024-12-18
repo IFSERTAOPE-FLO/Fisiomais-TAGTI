@@ -1,13 +1,9 @@
-<<<<<<< Updated upstream
-import React, { useState, useEffect } from 'react';
-=======
 import React, { useState, useEffect, useCallback } from 'react';
 import '../css/CriarAgendamento.css'; // Importar o arquivo CSS para estilos
 import '../css/Estilos.css'; // Importar o arquivo CSS para estilos
 import Calendar from 'react-calendar'; // Biblioteca React-Calendar
 import 'react-calendar/dist/Calendar.css'; // Estilos do React-Calendar
 
->>>>>>> Stashed changes
 
 function Agendamento() {
   const [data, setData] = useState('');
@@ -36,9 +32,6 @@ function Agendamento() {
       setCliente(userId);
       console.log('ID do cliente logado:', userId);
     }
-<<<<<<< Updated upstream
-
-=======
   
     if (savedRole === 'colaborador') {
       const userId = localStorage.getItem('userId');
@@ -46,7 +39,6 @@ function Agendamento() {
       fetchHorariosColaborador(userId); // Carrega os horários do colaborador logado
     }
   
->>>>>>> Stashed changes
     fetchServicos();
     fetchClientes();
   }, []);
@@ -113,19 +105,11 @@ function Agendamento() {
     if (data && servico) {
       fetchHorariosDisponiveis(data, servico);
     }
-<<<<<<< Updated upstream
-  }, [data, servico]);
-
-  const fetchServicos = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/listar_servicos');
-=======
   }, [colaborador]);
 
   const fetchHorariosColaborador = async (colaboradorId) => {
     try {
       const response = await fetch(`http://localhost:5000/horarios/horarios-colaborador/${colaboradorId}`);
->>>>>>> Stashed changes
       if (response.ok) {
         const horarios = await response.json();
         setHorariosDisponiveis(horarios);
@@ -139,24 +123,6 @@ function Agendamento() {
     }
   };
 
-<<<<<<< Updated upstream
-  const fetchColaboradores = async () => {
-    if (servico) {
-      try {
-        const response = await fetch(`http://localhost:5000/api/colaboradores?servico_id=${servico}`);
-        if (response.ok) {
-          setColaboradores(await response.json());
-        } else {
-          console.error('Erro ao buscar colaboradores');
-        }
-      } catch (error) {
-        console.error('Erro ao buscar colaboradores:', error);
-      }
-    }
-  };
-=======
-
->>>>>>> Stashed changes
 
   const fetchClientes = async () => {
     try {
@@ -169,23 +135,6 @@ function Agendamento() {
     }
   };
 
-<<<<<<< Updated upstream
-  const fetchHorariosDisponiveis = async (data, servico_id) => {
-    try {
-      const response = await fetch(`http://localhost:5000/api/horarios-disponiveis?data=${data}&servico_id=${servico_id}`);
-      if (response.ok) {
-        const horarios = await response.json();
-        setHorariosDisponiveis(horarios.map(h => h.horario));
-      } else {
-        console.error('Erro ao buscar horários disponíveis');
-      }
-    } catch (error) {
-      console.error('Erro ao buscar horários disponíveis:', error);
-    }
-  };
-=======
-
->>>>>>> Stashed changes
 
   const handleSubmit = async (e) => {
     setLoading(true);
@@ -210,11 +159,7 @@ function Agendamento() {
     }
 
     try {
-<<<<<<< Updated upstream
-      const response = await fetch('http://localhost:5000/api/agendamento', {
-=======
       const response = await fetch('http://localhost:5000/agendamentos', {
->>>>>>> Stashed changes
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -294,25 +239,6 @@ function Agendamento() {
                   </div>
                 )}
 
-<<<<<<< Updated upstream
-                <div className="mb-3">
-                  <label htmlFor="colaborador" className="form-label">Colaborador</label>
-                  <select
-                    id="colaborador"
-                    className="form-select"
-                    value={colaborador}
-                    onChange={(e) => setColaborador(e.target.value)}
-                    required
-                  >
-                    <option value="">Selecione um colaborador</option>
-                    {colaboradores.map((colab) => (
-                      <option key={colab.ID_Colaborador} value={colab.ID_Colaborador}>
-                        {colab.Nome}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-=======
                  {/* Collaborator Selection */}
                  {role !== 'colaborador' && (
                   <div className="mb-3">
@@ -333,7 +259,6 @@ function Agendamento() {
                     </select>
                   </div>
                 )}
->>>>>>> Stashed changes
 
                 <div className="row">
                   <div className="col-md-6 mb-3">                    
@@ -347,25 +272,6 @@ function Agendamento() {
                       required
                     />
                   </div>
-<<<<<<< Updated upstream
-                  <div className="col-md-6 mb-3">
-                    <label htmlFor="hora" className="form-label">Hora</label>
-                    <select
-                      id="hora"
-                      className="form-select"
-                      value={hora}
-                      onChange={(e) => setHora(e.target.value)}
-                      required
-                    >
-                      <option value="">Selecione o horário</option>
-                      {horariosDisponiveis.map((horario) => (
-                        <option key={horario} value={horario}>
-                          {horario}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-=======
                   <div className="mb-3">
                   <label htmlFor="data" className="form-label">Data</label>
                   <Calendar
@@ -397,7 +303,6 @@ function Agendamento() {
                   </div>
 
 
->>>>>>> Stashed changes
                 </div>
 
                 <div className="mb-3">
