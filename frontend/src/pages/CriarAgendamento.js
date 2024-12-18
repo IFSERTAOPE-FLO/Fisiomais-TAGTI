@@ -27,19 +27,19 @@ function Agendamento() {
   useEffect(() => {
     const savedRole = localStorage.getItem('role');
     setRole(savedRole);
-  
+
     if (savedRole === 'cliente') {
       const userId = localStorage.getItem('userId');
       setCliente(userId);
       console.log('ID do cliente logado:', userId);
     }
-  
+
     if (savedRole === 'colaborador') {
       const userId = localStorage.getItem('userId');
       setColaborador(userId); // Define automaticamente o colaborador logado
       fetchHorariosColaborador(userId); // Carrega os horários do colaborador logado
     }
-  
+
     fetchServicos();
     fetchClientes();
   }, []);
@@ -69,7 +69,7 @@ function Agendamento() {
     ]);
   };
 
-  
+
 
 
   const fetchColaboradores = useCallback(async () => {
@@ -108,7 +108,7 @@ function Agendamento() {
       }
     }
   }, [servico, fetchColaboradores, servicos]);
-  
+
 
   useEffect(() => {
     if (colaborador) {
@@ -118,7 +118,7 @@ function Agendamento() {
 
   const fetchHorariosColaborador = async (colaboradorId) => {
     try {
-      const response = await fetch(`http://localhost:5000/horarios/horarios-colaborador/${colaboradorId}`);
+      const response = await fetch(`http://localhost:5000/agendamentos/horarios-colaborador/${colaboradorId}`);
       if (response.ok) {
         const horarios = await response.json();
         setHorariosDisponiveis(horarios);
@@ -265,8 +265,8 @@ function Agendamento() {
                   </div>
                 )}
 
-                 {/* Collaborator Selection */}
-                 {role !== 'colaborador' && (
+                {/* Collaborator Selection */}
+                {role !== 'colaborador' && (
                   <div className="mb-3">
                     <label htmlFor="colaborador" className="form-label">Colaborador</label>
                     <select
@@ -287,7 +287,7 @@ function Agendamento() {
                 )}
 
                 <div className="row">
-                  <div className="col-md-6 mb-3">                    
+                  <div className="col-md-6 mb-3">
                     <input
                       id="data"
                       type="date"
@@ -299,20 +299,19 @@ function Agendamento() {
                     />
                   </div>
                   <div className="mb-3">
-                  <label htmlFor="data" className="form-label">Data</label>
-                  <Calendar
-                    onChange={handleDateChange}
-                    tileDisabled={({ date }) => isDateDisabled(date)}
-                    minDate={new Date()} // Desabilita datas anteriores ao dia atual
-                  />
-                </div>
+                    <label htmlFor="data" className="form-label">Data</label>
+                    <Calendar
+                      onChange={handleDateChange}
+                      tileDisabled={({ date }) => isDateDisabled(date)}
+                      minDate={new Date()} // Desabilita datas anteriores ao dia atual
+                    />
+                  </div>
                   <div className="col-md-6 mb-3 gap-2">
                     {horariosDisponiveis.map((horario, index) => (
                       <div
                         key={index}
-                        className={`d-flex justify-content-between align-items-center p-3 border btn-plano rounded ${
-                          hora === `${horario.hora_inicio} - ${horario.hora_fim}` ? 'active' : ''
-                        }`}
+                        className={`d-flex justify-content-between align-items-center p-3 border btn-plano rounded ${hora === `${horario.hora_inicio} - ${horario.hora_fim}` ? 'active' : ''
+                          }`}
                         onClick={() => setHora(`${horario.hora_inicio} - ${horario.hora_fim}`)}
                         style={{ cursor: 'pointer' }}
                       >
@@ -326,6 +325,7 @@ function Agendamento() {
                         </div>
                       </div>
                     ))}
+
                   </div>
 
 
