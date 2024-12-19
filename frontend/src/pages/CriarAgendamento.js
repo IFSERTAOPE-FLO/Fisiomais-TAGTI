@@ -345,61 +345,108 @@ function Agendamento() {
         </div>
       </div>
       <div>
-        <div className="container" style={{ position: 'relative' }}>
-          {/* Imagem Logo 1 */}
-          <img
-            src="/images/logo.png"
-            alt="Logo 1"
-            className="pulsar .img-fluid"
-            style={{ width: '750px', height: 'auto', position: 'absolute', top: '-570px', left: '-170px', zIndex: -2 }}
-          />
+      <div className="container position-relative d-flex flex-wrap justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
+  {/* Imagem Logo 1 */}
+  <img
+    src="/images/logo.png"
+    alt="Logo 1"
+    className="img-fluid"
+    style={{
+      maxWidth: '750px',
+      height: 'auto',
+      position: 'relative',
+      zIndex: -2,
+      marginTop: '-570px', // Ajuste de posição
+      marginLeft: '-170px', // Ajuste de posição
+    }}
+  />
 
-          {/* Imagem Logo 2 */}
-          <img
-            src="/images/logo1.png"
-            alt="Logo 2"
-            className="animate-subir-descer2"
-            style={{ width: '75px', height: 'auto', position: 'absolute', top: '-125px', left: '880px' }}
-          />
+  {/* Imagem Logo 2 */}
+  <img
+    src="/images/logo1.png"
+    alt="Logo 2"
+    className="img-fluid animate-subir-descer2"
+    style={{
+      maxWidth: '75px',
+      height: 'auto',
+      position: 'relative',
+      top: '-300px',
+      left: '-50px',
+    }}
+  />
 
-          {/* Imagem Logo 3 */}
-          <img
-            src="/images/logo2.png"
-            alt="Logo 3"
-            className="animate-subir-descer3 "
-            style={{ width: '75px', height: 'auto', position: 'absolute', top: '-245px', left: '880px' }}
-          />
+  {/* Imagem Logo 3 */}
+  <img
+    src="/images/logo2.png"
+    alt="Logo 3"
+    className="img-fluid animate-subir-descer3"
+    style={{
+      maxWidth: '75px',
+      height: 'auto',
+      position: 'relative',
+      top: '-400px',
+      left: '-125px',
+    }}
+  />
 
-          {/* Imagem Logo 4 */}
-          <img
-            src="/images/logo3.png"
-            alt="Logo 4"
-            className="animate-subir-descer4"
-            style={{ width: '75px', height: 'auto', position: 'absolute', top: '-380px', left: '880px' }}
-          />
+  {/* Imagem Logo 4 */}
+  <img
+    src="/images/logo3.png"
+    alt="Logo 4"
+    className="img-fluid animate-subir-descer4"
+    style={{
+      maxWidth: '75px',
+      height: 'auto',
+      position: 'relative',
+      top: '-500px',
+      left: '-200px',
+    }}
+  />
 
-          {/* Imagem Logo 5 */}
-          <img
-            src="/images/logo4.png"
-            alt="Logo 5"
-            className="girar"
-            style={{ width: '90px', height: 'auto', position: 'absolute', top: '-80px', left: '1400px' }}
-          />
+  {/* Imagem Logo 5 */}
+  <img
+    src="/images/logo4.png"
+    alt="Logo 5"
+    className="img-fluid girar"
+    style={{
+      maxWidth: '90px',
+      height: 'auto',
+      position: 'relative',
+      top: '-200px',
+      left: '200px',
+    }}
+  />
 
-          {/* Imagem Smart */}
-          <img
-            src="/images/smart.png"
-            alt="Smart"
-            style={{ width: '700px', height: 'auto', position: 'absolute', top: '-540px', left: '820px' }}
-          />
+  {/* Imagem Smart */}
+  <img
+    src="/images/smart.png"
+    alt="Smart"
+    className="img-fluid"
+    style={{
+      width: '100%',
+      maxWidth: '600px',
+      height: 'auto',
+      position: 'relative',
+      top: '-840px',
+      left: '560px',
+    }}
+  />
 
-          {/* Imagem Client */}
-          <img
-            src="/images/client.gif"
-            alt="Client"
-            style={{ width: '500px', height: 'auto', position: 'absolute', top: '-364px', left: '960px' }}
-          />
-        </div>
+  {/* Imagem Client */}
+  <img
+    src="/images/client.gif"
+    alt="Client"
+    className="img-fluid"
+    style={{
+      width: '100%',
+      maxWidth: '500px',
+      height: 'auto',
+      position: 'relative',
+      top: '-764px',
+      left: '60px',
+    }}
+  />
+</div>
 
       </div>
     </div>
