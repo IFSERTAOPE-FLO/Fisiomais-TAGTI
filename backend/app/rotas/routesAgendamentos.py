@@ -5,9 +5,11 @@ from flask_mail import Message
 from flask import current_app
 from app import mail
 from datetime import datetime
+from pytz import timezone
 
 
 agendamentos= Blueprint('agendamentos', __name__)
+BRASILIA = timezone('America/Sao_Paulo')
 
 import traceback
 

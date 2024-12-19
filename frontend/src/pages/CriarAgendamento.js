@@ -1,9 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../css/CriarAgendamento.css'; // Importar o arquivo CSS para estilos
 import '../css/Estilos.css'; // Importar o arquivo CSS para estilos
-import Calendar from 'react-calendar'; // Biblioteca React-Calendar
-import 'react-calendar/dist/Calendar.css'; // Estilos do React-Calendar
-
 
 function Agendamento() {
   const [data, setData] = useState('');
@@ -17,32 +14,43 @@ function Agendamento() {
   const [role, setRole] = useState('');
   const [planos, setPlanos] = useState([]);
   const [tipoServico, setTipoServico] = useState('');
-  const [valorServico, setValorServico] = useState(0)
   const [horariosDisponiveis, setHorariosDisponiveis] = useState([]);
   const [planoSelecionado, setPlanoSelecionado] = useState('');
   const [loading, setLoading] = useState(false); // Estado para o carregamento
-  const [diasPermitidos, setDiasPermitidos] = useState([]);
-  const [feriados, setFeriados] = useState([]);
 
   useEffect(() => {
     const savedRole = localStorage.getItem('role');
     setRole(savedRole);
-  
+
     if (savedRole === 'cliente') {
       const userId = localStorage.getItem('userId');
       setCliente(userId);
       console.log('ID do cliente logado:', userId);
     }
-  
-    if (savedRole === 'colaborador') {
-      const userId = localStorage.getItem('userId');
-      setColaborador(userId); // Define automaticamente o colaborador logado
-      fetchHorariosColaborador(userId); // Carrega os horários do colaborador logado
-    }
-  
+
     fetchServicos();
     fetchClientes();
   }, []);
+
+  useEffect(() => {
+    if (servico) {
+      fetchColaboradores();
+      const servicoSelecionado = servicos.find((s) => s.ID_Servico === parseInt(servico));
+      if (servicoSelecionado && servicoSelecionado.Tipo === 'pilates') {
+        setTipoServico('pilates');
+        setPlanos(servicoSelecionado.Planos || []);
+      } else {
+        setTipoServico('');
+        setPlanos([]);
+      }
+    }
+  }, [servico, servicos]);
+
+  useEffect(() => {
+    if (data && servico) {
+      fetchHorariosDisponiveis(data, servico);
+    }
+  }, [data, servico]);
 
   const fetchServicos = async () => {
     try {
@@ -58,21 +66,7 @@ function Agendamento() {
     }
   };
 
-  const fetchFeriados = () => {
-    // Exemplo de feriados nacionais
-    setFeriados([
-      '2024-01-01', // Ano Novo
-      '2024-04-21', // Tiradentes
-      '2024-05-01', // Dia do Trabalho
-      '2024-09-07', // Independência do Brasil
-      '2024-12-25', // Natal
-    ]);
-  };
-
-  
-
-
-  const fetchColaboradores = useCallback(async () => {
+  const fetchColaboradores = async () => {
     if (servico) {
       try {
         const response = await fetch(`http://localhost:5000/colaboradores?servico_id=${servico}`);
@@ -85,53 +79,7 @@ function Agendamento() {
         console.error('Erro ao buscar colaboradores:', error);
       }
     }
-  }, [servico]);
-
-  useEffect(() => {
-    if (servico) {
-      fetchColaboradores();
-      const servicoSelecionado = servicos.find((s) => s.ID_Servico === parseInt(servico));
-      if (servicoSelecionado) {
-        if (servicoSelecionado.Tipo === 'pilates') {
-          setTipoServico('pilates');
-          setPlanos(servicoSelecionado.Planos || []);
-          setValorServico(0); // Zera o valor para serviços de pilates
-        } else if (servicoSelecionado.Tipo === 'fisioterapia') {
-          setTipoServico('fisioterapia');
-          setValorServico(servicoSelecionado.Valor || 0); // Configura o valor do serviço
-          setPlanos([]); // Zera os planos
-        } else {
-          setTipoServico('');
-          setPlanos([]);
-          setValorServico(0);
-        }
-      }
-    }
-  }, [servico, fetchColaboradores, servicos]);
-  
-
-  useEffect(() => {
-    if (colaborador) {
-      fetchHorariosColaborador(colaborador);
-    }
-  }, [colaborador]);
-
-  const fetchHorariosColaborador = async (colaboradorId) => {
-    try {
-      const response = await fetch(`http://localhost:5000/horarios/horarios-colaborador/${colaboradorId}`);
-      if (response.ok) {
-        const horarios = await response.json();
-        setHorariosDisponiveis(horarios);
-
-        // Extrair dias da semana permitidos (segunda = 1, terça = 2, etc.)
-        const dias = horarios.map((h) => h.dia_semana);
-        setDiasPermitidos(dias);
-      }
-    } catch (error) {
-      console.error('Erro ao buscar horários do colaborador:', error);
-    }
   };
-
 
   const fetchClientes = async () => {
     try {
@@ -144,6 +92,19 @@ function Agendamento() {
     }
   };
 
+  const fetchHorariosDisponiveis = async (data, servico_id) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/horarios-disponiveis?data=${data}&servico_id=${servico_id}`);
+      if (response.ok) {
+        const horarios = await response.json();
+        setHorariosDisponiveis(horarios.map(h => h.horario));
+      } else {
+        console.error('Erro ao buscar horários disponíveis');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar horários disponíveis:', error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     setLoading(true);
@@ -169,7 +130,7 @@ function Agendamento() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/agendamentos', {
+      const response = await fetch('http://localhost:5000/api/agendamento', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -189,18 +150,6 @@ function Agendamento() {
       console.error('Erro no agendamento:', error);
     }
     setLoading(false);
-  };
-
-  const isDateDisabled = (date) => {
-    const diaSemana = date.getDay(); // 0 = Domingo, 1 = Segunda, etc.
-    const dataFormatada = date.toISOString().split('T')[0];
-
-    // Verifica se a data é um feriado ou não está nos dias permitidos
-    return !diasPermitidos.includes(diaSemana) || feriados.includes(dataFormatada);
-  };
-
-  const handleDateChange = (value) => {
-    setData(value.toISOString().split('T')[0]);
   };
 
   return (
@@ -231,63 +180,47 @@ function Agendamento() {
                   </select>
                 </div>
 
-                {tipoServico === "fisioterapia" && valorServico && (
-                  <div className="mb-3">
-                    <label htmlFor="valor" className="form-label ">Valor do Serviço</label>
-                    <div className=" flex-column  gap-2">
-                      <span className="fw-bold btn-plano  mb-2  align-items-center p-2 border btn-plano rounded">{`R$ ${valorServico}`}</span>
-                    </div>
-
-
-                  </div>
-                )}
-
                 {tipoServico === 'pilates' && (
                   <div className="mb-3">
-                    <label className="form-label">Plano de Pilates</label>
-                    <div className="d-flex flex-column  gap-2">
-                      {planos.map((plano) => (
-                        <div
-                          key={plano.ID_Plano}
-                          className={`d-flex justify-content-between align-items-center p-3 border btn-plano rounded ${planoSelecionado === plano.ID_Plano ? 'active' : ''}`}
-                          onClick={() => setPlanoSelecionado(plano.ID_Plano)}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          <div className="flex-grow-1">
-                            <strong>{plano.Nome_plano}</strong>
-                          </div>
-                          <div className="text-end">
-                            <span className="fw-bold  ">R$ {plano.Valor}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                 {/* Collaborator Selection */}
-                 {role !== 'colaborador' && (
-                  <div className="mb-3">
-                    <label htmlFor="colaborador" className="form-label">Colaborador</label>
+                    <label htmlFor="plano" className="form-label">Plano de Pilates</label>
                     <select
-                      id="colaborador"
+                      id="plano"
                       className="form-select"
-                      value={colaborador}
-                      onChange={(e) => setColaborador(e.target.value)}
+                      value={planoSelecionado}
+                      onChange={(e) => setPlanoSelecionado(parseInt(e.target.value, 10))}  // Certifique-se de enviar um número
                       required
                     >
-                      <option value="">Selecione um colaborador</option>
-                      {colaboradores.map((colab) => (
-                        <option key={colab.ID_Colaborador} value={colab.ID_Colaborador}>
-                          {colab.Nome}
+                      <option value="">Selecione um plano</option>
+                      {planos.map((plano) => (
+                        <option key={plano.ID_Plano} value={plano.ID_Plano}>
+                          {plano.Nome_plano} - R${plano.Valor}
                         </option>
                       ))}
                     </select>
                   </div>
                 )}
 
+                <div className="mb-3">
+                  <label htmlFor="colaborador" className="form-label">Colaborador</label>
+                  <select
+                    id="colaborador"
+                    className="form-select"
+                    value={colaborador}
+                    onChange={(e) => setColaborador(e.target.value)}
+                    required
+                  >
+                    <option value="">Selecione um colaborador</option>
+                    {colaboradores.map((colab) => (
+                      <option key={colab.ID_Colaborador} value={colab.ID_Colaborador}>
+                        {colab.Nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="row">
-                  <div className="col-md-6 mb-3">                    
+                  <div className="col-md-6 mb-3">
+                    <label htmlFor="data" className="form-label">Data</label>
                     <input
                       id="data"
                       type="date"
@@ -298,136 +231,123 @@ function Agendamento() {
                       required
                     />
                   </div>
-                  <div className="mb-3">
-                  <label htmlFor="data" className="form-label">Data</label>
-                  <Calendar
-                    onChange={handleDateChange}
-                    tileDisabled={({ date }) => isDateDisabled(date)}
-                    minDate={new Date()} // Desabilita datas anteriores ao dia atual
-                  />
-                </div>
-                  <div className="col-md-6 mb-3 gap-2">
-                    {horariosDisponiveis.map((horario, index) => (
-                      <div
-                        key={index}
-                        className={`d-flex justify-content-between align-items-center p-3 border btn-plano rounded ${
-                          hora === `${horario.hora_inicio} - ${horario.hora_fim}` ? 'active' : ''
-                        }`}
-                        onClick={() => setHora(`${horario.hora_inicio} - ${horario.hora_fim}`)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <div className="flex-grow-1">
-                          <strong>{horario.dia_semana}</strong>
-                        </div>
-                        <div className="text-end">
-                          <span>
-                            {horario.hora_inicio} - {horario.hora_fim}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="col-md-6 mb-3">
+                    <label htmlFor="hora" className="form-label">Hora</label>
+                    <select
+                      id="hora"
+                      className="form-select"
+                      value={hora}
+                      onChange={(e) => setHora(e.target.value)}
+                      required
+                    >
+                      <option value="">Selecione o horário</option>
+                      {horariosDisponiveis.map((horario) => (
+                        <option key={horario} value={horario}>
+                          {horario}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-
-
                 </div>
 
                 <div className="mb-3">
-
+                  <label htmlFor="cliente" className="form-label">Cliente</label>
                   {role === 'cliente' ? (
-                    <br />
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={localStorage.getItem('userName')}
+                      readOnly
+                    />
                   ) : (
-                    <>
-                      <label htmlFor="cliente" className="form-label">Cliente</label>
-                      <select
-                        id="cliente"
-                        className="form-select"
-                        value={cliente}
-                        onChange={(e) => setCliente(e.target.value)}
-                        required
-                      >
-                        <option value="">Selecione um cliente</option>
-                        {clientes.map((cli) => (
-                          <option key={cli.ID_Cliente} value={cli.ID_Cliente}>
-                            {cli.Nome}
-                          </option>
-                        ))}
-                      </select>
-                    </>
+                    <select
+                      id="cliente"
+                      className="form-select"
+                      value={cliente}
+                      onChange={(e) => setCliente(e.target.value)}
+                      required
+                    >
+                      <option value="">Selecione um cliente</option>
+                      {clientes.map((cli) => (
+                        <option key={cli.ID_Cliente} value={cli.ID_Cliente}>
+                          {cli.Nome}
+                        </option>
+                      ))}
+                    </select>
                   )}
-
                 </div>
-
+            
                 <button type="submit" className="btn btn-signup w-100 text-uppercase fw-bold">
                   {loading ? (
-                    <i className="bi bi-arrow-repeat spinner"></i>
+                    <i className="bi bi-arrow-repeat spinner"></i> 
                   ) : (
                     <i className="bi bi-calendar-check"></i>
                   )}{' '}
                   {loading ? 'Carregando...' : 'Agendar sessão'}
-                </button>
+                  </button>
               </form>
             </div>
           </div>
         </div>
       </div>
       <div>
-        <div className="container" style={{ position: 'relative' }}>
-          {/* Imagem Logo 1 */}
-          <img
-            src="/images/logo.png"
-            alt="Logo 1"
-            className="pulsar .img-fluid"
-            style={{ width: '750px', height: 'auto', position: 'absolute', top: '-570px', left: '-170px', zIndex: -2 }}
-          />
+      <div className="container" style={{ position: 'relative' }}>
+    {/* Imagem Logo 1 */}
+    <img 
+        src="/images/logo.png" 
+        alt="Logo 1"
+        className="animate-subir-descer1 pulsar"
+        style={{ width: '750px', height: 'auto', position: 'absolute', top: '-570px', left: '-170px', zIndex: -2 }}
+    />
 
-          {/* Imagem Logo 2 */}
-          <img
-            src="/images/logo1.png"
-            alt="Logo 2"
-            className="animate-subir-descer2"
-            style={{ width: '75px', height: 'auto', position: 'absolute', top: '-125px', left: '880px' }}
-          />
+    {/* Imagem Logo 2 */}
+    <img 
+        src="/images/logo1.png" 
+        alt="Logo 2" 
+        className="animate-subir-descer2"
+        style={{ width: '75px', height: 'auto', position: 'absolute', top: '-125px', left: '880px' }}
+    />
 
-          {/* Imagem Logo 3 */}
-          <img
-            src="/images/logo2.png"
-            alt="Logo 3"
-            className="animate-subir-descer3 "
-            style={{ width: '75px', height: 'auto', position: 'absolute', top: '-245px', left: '880px' }}
-          />
+    {/* Imagem Logo 3 */}
+    <img 
+        src="/images/logo2.png" 
+        alt="Logo 3" 
+        className="animate-subir-descer3"
+        style={{ width: '75px', height: 'auto', position: 'absolute', top: '-245px', left: '880px' }}
+    />
 
-          {/* Imagem Logo 4 */}
-          <img
-            src="/images/logo3.png"
-            alt="Logo 4"
-            className="animate-subir-descer4"
-            style={{ width: '75px', height: 'auto', position: 'absolute', top: '-380px', left: '880px' }}
-          />
+    {/* Imagem Logo 4 */}
+    <img 
+        src="/images/logo3.png" 
+        alt="Logo 4" 
+        className="animate-subir-descer4"
+        style={{ width: '75px', height: 'auto', position: 'absolute', top: '-380px', left: '880px' }}
+    />
 
-          {/* Imagem Logo 5 */}
-          <img
-            src="/images/logo4.png"
-            alt="Logo 5"
-            className="girar"
-            style={{ width: '90px', height: 'auto', position: 'absolute', top: '-80px', left: '1400px' }}
-          />
+    {/* Imagem Logo 5 */}
+    <img 
+        src="/images/logo4.png" 
+        alt="Logo 5" 
+        className="girar"
+        style={{ width: '90px', height: 'auto', position: 'absolute', top: '-80px', left: '1400px' }}
+    />
 
-          {/* Imagem Smart */}
-          <img
-            src="/images/smart.png"
-            alt="Smart"
-            style={{ width: '700px', height: 'auto', position: 'absolute', top: '-540px', left: '820px' }}
-          />
+    {/* Imagem Smart */}
+    <img 
+        src="/images/smart.png" 
+        alt="Smart"
+        style={{ width: '700px', height: 'auto', position: 'absolute', top: '-540px', left: '820px' }}
+    />
 
-          {/* Imagem Client */}
-          <img
-            src="/images/client.gif"
-            alt="Client"
-            style={{ width: '500px', height: 'auto', position: 'absolute', top: '-364px', left: '960px' }}
-          />
-        </div>
+    {/* Imagem Client */}
+    <img 
+        src="/images/client.gif" 
+        alt="Client"
+        style={{ width: '500px', height: 'auto', position: 'absolute', top: '-364px', left: '960px' }}
+    />
+</div>
 
-      </div>
+</div>
     </div>
   );
 }

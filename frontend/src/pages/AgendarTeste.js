@@ -42,6 +42,7 @@ function AgendarTeste() {
   
     fetchServicos();
     fetchClientes();
+    fetchFeriados();
   }, []);
 
   const fetchServicos = async () => {
@@ -194,7 +195,7 @@ function AgendarTeste() {
   const isDateDisabled = (date) => {
     const diaSemana = date.getDay(); // 0 = Domingo, 1 = Segunda, etc.
     const dataFormatada = date.toISOString().split('T')[0];
-
+  
     // Verifica se a data é um feriado ou não está nos dias permitidos
     return !diasPermitidos.includes(diaSemana) || feriados.includes(dataFormatada);
   };
@@ -287,27 +288,15 @@ function AgendarTeste() {
                 )}
 
                 <div className="row">
-                  <div className="col-md-6 mb-3">                    
-                    <input
-                      id="data"
-                      type="date"
-                      className="form-control"
-                      value={data}
-                      onChange={(e) => setData(e.target.value)}
-                      min={new Date().toISOString().split('T')[0]}
-                      required
-                    />
-                  </div>
+                  
                   <div className="mb-3">
                   <label htmlFor="data" className="form-label">Data</label>
-                  const isDateDisabled = (date) => {
-  const diaSemana = date.getDay(); // 0 = Domingo, 1 = Segunda, etc.
-  const dataFormatada = date.toISOString().split('T')[0];
-
-  // Verifica se a data é um feriado ou não está nos dias permitidos
-  return !diasPermitidos.includes(diaSemana) || feriados.includes(dataFormatada);
-};
-
+                  <Calendar
+                    onChange={handleDateChange}
+                    //tileDisabled={({ date }) => isDateDisabled(date)}  implementar a funcionalidade              
+                    minDate={new Date()} // Desabilita datas anteriores ao dia atual
+                  />
+                  </div>
                   <div className="col-md-6 mb-3 gap-2">
                     {horariosDisponiveis.map((horario, index) => (
                       <div
@@ -371,19 +360,21 @@ function AgendarTeste() {
             </div>
           </div>
         </div>
-      </div>
+      
       <div>
       {/* Coluna de imagens */}
-    <div className="col-md-7 d-flex flex-wrap justify-content-center align-items-center">
+      <div className="col-md-5 d-flex flex-wrap justify-content-center align-items-center">
       <img src="/images/logo.png" alt="Logo 1" className="img-fluid animate-subir-descer4 m-2" style={{ maxWidth: '200px' }} />
       <img src="/images/logo1.png" alt="Logo 2" className="img-fluid animate-subir-descer2 m-2" style={{ maxWidth: '75px' }} />
       <img src="/images/logo2.png" alt="Logo 3" className="img-fluid animate-subir-descer2 m-2" style={{ maxWidth: '75px' }} />
       <img src="/images/logo3.png" alt="Logo 4" className="img-fluid animate-subir-descer2 m-2" style={{ maxWidth: '75px' }} />
       <img src="/images/logo4.png" alt="Logo 5" className="img-fluid animate-subir-descer2 m-2" style={{ maxWidth: '90px' }} />
-      <img src="/images/smart.png" alt="Smart" className="img-fluid m-2 " style={{ maxWidth: '300px' }} />
+      <img src="/images/smart.png" alt="Smart" className="img-fluid m-2" style={{ maxWidth: '300px' }} />
       <img src="/images/client.gif" alt="Client" className="img-fluid m-2" style={{ maxWidth: '250px' }} />
     </div>
+  
   </div>
+    </div>
     </div>
   );
 }

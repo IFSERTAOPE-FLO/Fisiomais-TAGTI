@@ -28,6 +28,7 @@ def create_app():
     db.init_app(app)
     mail.init_app(app)
     migrate.init_app(app, db)
+    CORS(app) # Habilita CORS
     jwt = JWTManager(app)
 
     with app.app_context():
@@ -42,7 +43,7 @@ def create_app():
         from app.rotas.routesServicos import servicos
 
 
-        CORS(app, origins=["http://localhost:3000"])
+        
         
 
         app.register_blueprint(main, url_prefix='/')

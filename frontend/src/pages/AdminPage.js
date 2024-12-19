@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import GerenciarUsuarios from "../components/GerenciarUsuarios"; // Importando o componente de Gerenciar Usuários
 import GerenciarServicos from "../components/GerenciarServicos"; // Importando o componente de Gerenciar Serviços
+import { Link } from "react-router-dom";
 
 const AdminPage = () => {
   const [opcaoSelecionada, setOpcaoSelecionada] = useState("");
@@ -29,6 +30,11 @@ const AdminPage = () => {
           >
             Gerenciar Serviços
           </button>
+          <Link
+            className="btn btn-primary mx-2"  to="/agendarteste"          
+          >
+            Adicionar agendamento
+          </Link>
         </div>
       </div>
 
