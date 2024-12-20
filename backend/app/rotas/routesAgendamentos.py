@@ -4,7 +4,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_mail import Message
 from flask import current_app
 from app import mail
-from datetime import datetime
+from datetime import datetime, timedelta
 from pytz import timezone
 
 
@@ -106,7 +106,28 @@ def agendamento():
     
 
 
+@agendamentos.route('/horarios-disponiveis/<int:colaborador_id>', methods=['GET'])
+def horarios_disponiveis(colaborador_id):
+    try:
+        # Obtém os horários do colaborador
+        horarios_colaborador = Horarios.query.filter_by(ID_Colaborador=colaborador_id).all()
 
+        horarios_disponiveis = []
+        for horario in horarios_colaborador:
+            hora_inicio = datetime.combine(datetime.today(), horario.hora_inicio)
+            hora_fim = datetime.combine(datetime.today(), horario.hora_fim)
+
+            while hora_inicio <= hora_fim:
+                # Verifica se já existe agendamento nesse horário
+                if horario_disponivel(hora_inicio, colaborador_id):
+                    horarios_disponiveis.append(hora_inicio.time().strftime('%H:%M'))
+
+                # Incrementa 1 hora
+                hora_inicio += timedelta(hours=1)
+
+        return jsonify(horarios_disponiveis), 200
+    except Exception as e:
+        return jsonify({'message': f'Erro ao buscar horários disponíveis: {str(e)}'}), 500
 
 
     

@@ -94,7 +94,7 @@ function Agendamento() {
 
   const fetchHorariosDisponiveis = async (data, servico_id) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/horarios-disponiveis?data=${data}&servico_id=${servico_id}`);
+      const response = await fetch(`http://localhost:5000/horarios/horarios-disponiveis?data=${data}&servico_id=${servico_id}`);
       if (response.ok) {
         const horarios = await response.json();
         setHorariosDisponiveis(horarios.map(h => h.horario));

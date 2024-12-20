@@ -27,19 +27,19 @@ function AgendarTeste() {
   useEffect(() => {
     const savedRole = localStorage.getItem('role');
     setRole(savedRole);
-  
+
     if (savedRole === 'cliente') {
       const userId = localStorage.getItem('userId');
       setCliente(userId);
       console.log('ID do cliente logado:', userId);
     }
-  
+
     if (savedRole === 'colaborador') {
       const userId = localStorage.getItem('userId');
       setColaborador(userId); // Define automaticamente o colaborador logado
       fetchHorariosColaborador(userId); // Carrega os horários do colaborador logado
     }
-  
+
     fetchServicos();
     fetchClientes();
     fetchFeriados();
@@ -70,7 +70,7 @@ function AgendarTeste() {
     ]);
   };
 
-  
+
 
 
   const fetchColaboradores = useCallback(async () => {
@@ -109,11 +109,12 @@ function AgendarTeste() {
       }
     }
   }, [servico, fetchColaboradores, servicos]);
-  
+
 
   useEffect(() => {
     if (colaborador) {
       fetchHorariosColaborador(colaborador);
+      fetchHorariosDisponiveis (colaborador);
     }
   }, [colaborador]);
 
@@ -132,7 +133,23 @@ function AgendarTeste() {
       console.error('Erro ao buscar horários do colaborador:', error);
     }
   };
-
+  const fetchHorariosDisponiveis = async (colaboradorId) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/agendamentos/horarios-disponiveis/${colaboradorId}`
+      );
+      if (response.ok) {
+        const horarios = await response.json();
+        setHorariosDisponiveis(horarios); // Atualiza a lista de horários disponíveis
+      } else {
+        const errorData = await response.json();
+        console.error('Erro ao buscar horários disponíveis:', errorData.message);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar horários disponíveis:', error);
+    }
+  };
+  
 
   const fetchClientes = async () => {
     try {
@@ -195,7 +212,7 @@ function AgendarTeste() {
   const isDateDisabled = (date) => {
     const diaSemana = date.getDay(); // 0 = Domingo, 1 = Segunda, etc.
     const dataFormatada = date.toISOString().split('T')[0];
-  
+
     // Verifica se a data é um feriado ou não está nos dias permitidos
     return !diasPermitidos.includes(diaSemana) || feriados.includes(dataFormatada);
   };
@@ -266,8 +283,8 @@ function AgendarTeste() {
                   </div>
                 )}
 
-                 {/* Collaborator Selection */}
-                 {role !== 'colaborador' && (
+                {/* Collaborator Selection */}
+                {role !== 'colaborador' && (
                   <div className="mb-3">
                     <label htmlFor="colaborador" className="form-label">Colaborador</label>
                     <select
@@ -288,36 +305,33 @@ function AgendarTeste() {
                 )}
 
                 <div className="row">
-                  
+
                   <div className="mb-3">
-                  <label htmlFor="data" className="form-label">Data</label>
-                  <Calendar
-                    onChange={handleDateChange}
-                    //tileDisabled={({ date }) => isDateDisabled(date)}  implementar a funcionalidade              
-                    minDate={new Date()} // Desabilita datas anteriores ao dia atual
-                  />
+                    <label htmlFor="data" className="form-label">Data</label>
+                    <Calendar
+                      onChange={handleDateChange}
+                      //tileDisabled={({ date }) => isDateDisabled(date)}  implementar a funcionalidade              
+                      minDate={new Date()} // Desabilita datas anteriores ao dia atual
+                    />
                   </div>
-                  <div className="col-md-6 mb-3 gap-2">
-                    {horariosDisponiveis.map((horario, index) => (
-                      <div
-                        key={index}
-                        className={`d-flex justify-content-between align-items-center p-3 border btn-plano rounded ${
-                          hora === `${horario.hora_inicio} - ${horario.hora_fim}` ? 'active' : ''
-                        }`}
-                        onClick={() => setHora(`${horario.hora_inicio} - ${horario.hora_fim}`)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <div className="flex-grow-1">
-                          <strong>{horario.dia_semana}</strong>
-                        </div>
-                        <div className="text-end">
-                          <span>
-                            {horario.hora_inicio} - {horario.hora_fim}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="col-md-6 mb-3">
+                    <label htmlFor="hora" className="form-label">Selecione um Horário</label>
+                    <select
+                      id="hora"
+                      className="form-select"
+                      value={hora}
+                      onChange={(e) => setHora(e.target.value)}
+                      required
+                    >
+                      <option value="">Escolha um horário</option>
+                      {horariosDisponiveis.map((horario, index) => (
+                        <option key={index} value={horario}>
+                          {horario}
+                        </option>
+                      ))}
+                    </select>
                   </div>
+
 
 
                 </div>
@@ -360,21 +374,21 @@ function AgendarTeste() {
             </div>
           </div>
         </div>
-      
-      <div>
-      {/* Coluna de imagens */}
-      <div className="col-md-5 d-flex flex-wrap justify-content-center align-items-center">
-      <img src="/images/logo.png" alt="Logo 1" className="img-fluid animate-subir-descer4 m-2" style={{ maxWidth: '200px' }} />
-      <img src="/images/logo1.png" alt="Logo 2" className="img-fluid animate-subir-descer2 m-2" style={{ maxWidth: '75px' }} />
-      <img src="/images/logo2.png" alt="Logo 3" className="img-fluid animate-subir-descer2 m-2" style={{ maxWidth: '75px' }} />
-      <img src="/images/logo3.png" alt="Logo 4" className="img-fluid animate-subir-descer2 m-2" style={{ maxWidth: '75px' }} />
-      <img src="/images/logo4.png" alt="Logo 5" className="img-fluid animate-subir-descer2 m-2" style={{ maxWidth: '90px' }} />
-      <img src="/images/smart.png" alt="Smart" className="img-fluid m-2" style={{ maxWidth: '300px' }} />
-      <img src="/images/client.gif" alt="Client" className="img-fluid m-2" style={{ maxWidth: '250px' }} />
-    </div>
-  
-  </div>
-    </div>
+
+        <div>
+          {/* Coluna de imagens */}
+          <div className="col-md-5 d-flex flex-wrap justify-content-center align-items-center">
+            <img src="/images/logo.png" alt="Logo 1" className="img-fluid animate-subir-descer4 m-2" style={{ maxWidth: '200px' }} />
+            <img src="/images/logo1.png" alt="Logo 2" className="img-fluid animate-subir-descer2 m-2" style={{ maxWidth: '75px' }} />
+            <img src="/images/logo2.png" alt="Logo 3" className="img-fluid animate-subir-descer2 m-2" style={{ maxWidth: '75px' }} />
+            <img src="/images/logo3.png" alt="Logo 4" className="img-fluid animate-subir-descer2 m-2" style={{ maxWidth: '75px' }} />
+            <img src="/images/logo4.png" alt="Logo 5" className="img-fluid animate-subir-descer2 m-2" style={{ maxWidth: '90px' }} />
+            <img src="/images/smart.png" alt="Smart" className="img-fluid m-2" style={{ maxWidth: '300px' }} />
+            <img src="/images/client.gif" alt="Client" className="img-fluid m-2" style={{ maxWidth: '250px' }} />
+          </div>
+
+        </div>
+      </div>
     </div>
   );
 }
