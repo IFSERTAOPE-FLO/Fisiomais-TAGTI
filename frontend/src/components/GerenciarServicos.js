@@ -24,19 +24,26 @@ const GerenciarServicos = () => {
   const [tipoAlternado, setTipoAlternado] = useState(true);
   const [pesquisaNome, setPesquisaNome] = useState(""); 
 
-  const buscarServicos = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/servicos/listar_servicos");
-      const data = await response.json();
-      if (Array.isArray(data)) {
-        setServicos(data);
-      } else {
-        setErro("A resposta da API não é um array.");
+  const buscarServicos = async () => {    
+      try {
+        const token = localStorage.getItem('token');  // Supondo que o token JWT esteja armazenado no localStorage
+        const response = await fetch('http://localhost:5000/servicos/listar_servicos', {
+          headers: {
+            'Authorization': `Bearer ${token}`  // Envia o token JWT no cabeçalho
+          }
+        });
+        
+        if (response.ok) {
+          const servicosData = await response.json();
+          setServicos(servicosData);
+        } else {
+          console.error('Erro ao buscar serviços: ', response.status);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar serviços:', error);
       }
-    } catch (err) {
-      setErro("Erro ao buscar serviços.");
-    }
-  };
+    };
+    
 
   const buscarUsuarios = async () => {
     try {
@@ -67,7 +74,7 @@ const GerenciarServicos = () => {
   }, []);
 
   const salvarServico = async () => {
-    if (!novoServico.nome_servico || !novoServico.descricao || !novoServico.valor || !novoServico.tipo_servico) {
+    if (!novoServico.nome_servico || !novoServico.descricao || !novoServico.tipo_servico) {
       setErro("Preencha todos os campos obrigatórios do serviço.");
       return;
     }
@@ -256,13 +263,7 @@ const sortedServicos = React.useMemo(() => {
           required
           className="form-control mb-2"
         />
-        <input
-          type="number"
-          placeholder="Valor"
-          value={novoServico.valor}
-          onChange={(e) => setNovoServico({ ...novoServico, valor: e.target.value })}
-          className="form-control mb-2"
-        />
+        
         <select
           value={novoServico.tipo_servico}
           onChange={handleTipoServicoChange}
@@ -272,7 +273,15 @@ const sortedServicos = React.useMemo(() => {
           <option value="fisioterapia">Fisioterapia</option>
           <option value="pilates">Pilates</option>
         </select>
-
+        {novoServico.tipo_servico === "fisioterapia" && (
+        <input
+          type="number"
+          placeholder="Valor"
+          value={novoServico.valor}
+          onChange={(e) => setNovoServico({ ...novoServico, valor: e.target.value })}
+          className="form-control mb-2"
+        />
+        )}
         {novoServico.tipo_servico === "pilates" && (
           <>
             <input
@@ -289,7 +298,7 @@ const sortedServicos = React.useMemo(() => {
               onChange={(e) => setNovoPlano({ ...novoPlano, valor: e.target.value })}
               className="form-control mb-2"
             />
-            <button type="button" onClick={adicionarPlano} className="btn btn-primary ">
+            <button type="button" onClick={adicionarPlano} className="btn btn-signup ">
               Adicionar Plano
             </button>
 

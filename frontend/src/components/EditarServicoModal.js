@@ -29,7 +29,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
       const fetchColaboradores = async () => {
         try {
           const response = await fetch(
-            `http://localhost:5000/servicos/colaboradoresdisponiveis?servico_id=${servico.ID_Servico}`
+            `http://localhost:5000/colaboradores/colaboradoresdisponiveis?servico_id=${servico.ID_Servico}`
           );
           const data = await response.json();
           if (response.ok) {

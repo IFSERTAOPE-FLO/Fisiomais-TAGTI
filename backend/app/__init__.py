@@ -28,6 +28,7 @@ def create_app():
     db.init_app(app)
     mail.init_app(app)
     migrate.init_app(app, db)
+    CORS(app) # Habilita CORS
     jwt = JWTManager(app)
 
     with app.app_context():
@@ -36,13 +37,9 @@ def create_app():
         from app.rotas.routes import main
         from app.rotas.routesClientes import clientes
         from app.rotas.routesColaboradores import colaboradores
-        from app.rotas.routesAgendamentos import agendamentos
-        from app.rotas.routesHorarios import horarios
+        from app.rotas.routesAgendamentos import agendamentos       
         from app.rotas.routesUsers import usuarios
         from app.rotas.routesServicos import servicos
-
-
-        CORS(app)
 
         app.register_blueprint(main, url_prefix='/')
         app.register_blueprint(usuarios, url_prefix='/usuarios')
@@ -50,10 +47,7 @@ def create_app():
         app.register_blueprint(clientes, url_prefix='/clientes')
         app.register_blueprint(servicos, url_prefix='/servicos')
         app.register_blueprint(agendamentos, url_prefix='/agendamentos')
-        app.register_blueprint(horarios, url_prefix='/horarios')
         
-
-       
 
         # Garantir que a pasta de uploads exista
         if not os.path.exists(app.config['UPLOAD_FOLDER']):

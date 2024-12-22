@@ -22,12 +22,13 @@ def login():
     email = data.get('email', '')
     senha = data.get('senha', '')
 
-     # Verificar se o email pertence a um colaborador
+    # Verificar se o email pertence a um colaborador
     colaborador = Colaboradores.query.filter_by(email=email).first()
     if colaborador and colaborador.check_password(senha):
         access_token = create_access_token(identity=email)
         response = {
             "access_token": access_token,
+            "userId": colaborador.ID_Colaborador,  # Inclui o ID
             "name": colaborador.nome,
             "photo": colaborador.photo if colaborador.photo else "",  # Retorna vazio se não houver foto
             "role": "admin" if colaborador.is_admin else "colaborador"
@@ -40,6 +41,7 @@ def login():
         access_token = create_access_token(identity=email)
         return jsonify(
             access_token=access_token,
+            userId=cliente.ID_Cliente,  # Inclui o ID
             name=cliente.nome,
             role="cliente",
             photo=cliente.photo if cliente.photo else ""  # Retorna vazio se não houver foto
@@ -47,6 +49,7 @@ def login():
 
     # Se o email ou senha estiverem incorretos
     return jsonify(message="Credenciais inválidas"), 401
+
 
 
 @main.route('/logout', methods=['POST'])
@@ -68,6 +71,10 @@ def logout():
     db.session.commit()  # Commit das mudanças no banco
 
     return jsonify(message="Logout realizado com sucesso"), 200
+@main.route('/', methods=['OPTIONS'])
+def handle_options():
+    return '', 200
+
 
 @main.route('/api/horarios-disponiveis', methods=['GET'])
 def get_horarios_disponiveis():

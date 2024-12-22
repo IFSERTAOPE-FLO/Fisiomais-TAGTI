@@ -101,10 +101,11 @@ class Servicos(db.Model):
     ID_Servico = db.Column(db.Integer, primary_key=True)
     Nome_servico = db.Column(db.String(255), nullable=False)
     Descricao = db.Column(db.Text)
-    Valor = db.Column(db.Numeric(10, 2))  # Mantido para serviços de Fisioterapia
+    Valor = db.Column(db.Numeric(10, 2))  # Para serviços com valor fixo
     tipo_servico = db.Column(db.String(50), nullable=False)  # Tipo: fisioterapia ou pilates
-    planos = db.Column(db.JSON, nullable=True)
+    planos = db.Column(db.JSON, nullable=True)  # Planos para serviços de Pilates (armazenados como JSON)
 
+    # Relacionamentos
     colaboradores = db.relationship('Colaboradores', secondary='colaboradores_servicos', back_populates='servicos')
 
     def __repr__(self):
@@ -121,6 +122,8 @@ class Servicos(db.Model):
         }
 
 
+
+
 # Tabela associativa para colaboradores e serviços
 class ColaboradoresServicos(db.Model):
     __tablename__ = 'colaboradores_servicos'
@@ -128,23 +131,26 @@ class ColaboradoresServicos(db.Model):
     ID_Servico = db.Column(db.Integer, db.ForeignKey('servicos.ID_Servico'), primary_key=True)
 
     colaborador = db.relationship('Colaboradores', backref=db.backref('colaboradores_servicos', lazy=True))
-    servico = db.relationship('Servicos', backref=db.backref('colaboradores_servicos', lazy=True))
+    servico = db.relationship('Servicos', backref=db.backref('colaboradores_servicos', lazy=True), overlaps="colaboradores,servicos")
 
 
-# Modelo: Agendamentos
 class Agendamentos(db.Model):
     __tablename__ = 'agendamentos'
+
     ID_Agendamento = db.Column(db.Integer, primary_key=True)
     data_e_hora = db.Column(db.DateTime, nullable=False)
     ID_Cliente = db.Column(db.Integer, db.ForeignKey('clientes.ID_Cliente'), nullable=False)
     ID_Colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.ID_Colaborador'), nullable=False)
     ID_Servico = db.Column(db.Integer, db.ForeignKey('servicos.ID_Servico'), nullable=False)
-    ID_Plano = db.Column(db.Integer, nullable=True)
+    ID_Plano = db.Column(db.Integer, nullable=True)  # Opcional para serviços como fisioterapia
+    status = db.Column(db.String(20), default="pendente")  # Adicionado o campo status
 
-    cliente = db.relationship('Clientes', backref=db.backref('agendamentos', lazy=True))
-    colaborador = db.relationship('Colaboradores', backref=db.backref('agendamentos', lazy=True))
-    servico = db.relationship('Servicos', backref=db.backref('agendamentos', lazy=True))
+    cliente = db.relationship('Clientes', backref='agendamentos')
+    colaborador = db.relationship('Colaboradores', backref='agendamentos')
+    servico = db.relationship('Servicos', backref='agendamentos')
 
+    def __repr__(self):
+        return f'<Agendamento {self.ID_Agendamento} - Status: {self.status}>'
 class BlacklistedToken(db.Model):
     __tablename__ = 'blacklisted_tokens'
 
@@ -306,15 +312,6 @@ def populate_database():
                 colaborador.servicos.append(servico2)
 
     db.session.commit()
-
-
-    # Salvar as associações no banco de dados
-    db.session.commit()
-
-    # Inserir horários para os colaboradores
-    # Criar horários para colaboradores (garantir pelo menos um para cada)
-    from datetime import datetime
-
 
     # Criar horários para colaboradores (garantir pelo menos um para cada)
     default_horarios = [

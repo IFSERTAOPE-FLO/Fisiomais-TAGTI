@@ -1,7 +1,10 @@
 from flask import Blueprint, jsonify, request
 from werkzeug.security import generate_password_hash
-from app.models import Colaboradores, db
+from app.models import Horarios, Colaboradores, db
 from app.utils import is_cpf_valid  # Função de validação de CPF, que pode ser movida para utils
+from flask import Blueprint, jsonify, request
+from flask_jwt_extended import jwt_required
+from datetime import datetime
 
 colaboradores = Blueprint('colaboradores', __name__)
 
@@ -113,3 +116,75 @@ def get_colaboradoresdisponiveis():
         "alocados": colaboradores_alocados_list,
         "disponiveis": colaboradores_disponiveis_list
     })
+    
+
+
+
+
+@colaboradores.route('/horarios/configurar', methods=['POST'])
+@jwt_required()
+def configurar_horarios():
+    try:
+        data = request.get_json()
+        colaborador_id = data.get('colaborador_id')
+        horarios_data = data.get('horarios')
+
+        for horario in horarios_data:
+            dia_semana = horario['dia_semana']
+            hora_inicio_str = horario['hora_inicio']
+            hora_fim_str = horario['hora_fim']
+
+            # Converter as strings de hora para objetos de time
+            hora_inicio = datetime.strptime(hora_inicio_str, '%H:%M').time()
+            hora_fim = datetime.strptime(hora_fim_str, '%H:%M').time()
+
+            # Verificar se já existe um horário para o colaborador no mesmo dia
+            horarios_existentes = Horarios.query.filter_by(ID_Colaborador=colaborador_id, dia_semana=dia_semana).all()
+
+            for horario_existente in horarios_existentes:
+                # Verificar se há conflito de horários
+                if (hora_inicio < horario_existente.hora_fim and hora_fim > horario_existente.hora_inicio):
+                    # Se houver conflito, apagar o horário existente
+                    db.session.delete(horario_existente)
+
+            # Criar e salvar o novo horário
+            novo_horario = Horarios(
+                ID_Colaborador=colaborador_id,
+                dia_semana=dia_semana,
+                hora_inicio=hora_inicio,
+                hora_fim=hora_fim
+            )
+            db.session.add(novo_horario)
+
+        db.session.commit()
+        return jsonify({"message": "Horário configurado com sucesso!"}), 200
+
+    except Exception as e:
+        return jsonify({"message": f"Erro ao configurar horário: {str(e)}"}), 500
+
+
+
+
+
+@colaboradores.route('/horarios/listar/<int:colaborador_id>', methods=['GET'])
+@jwt_required()
+def listar_horarios(colaborador_id):
+    try:
+        # Buscar horários do colaborador
+        horarios = Horarios.query.filter_by(ID_Colaborador=colaborador_id).all()
+        if not horarios:
+            return jsonify({"message": "Nenhum horário encontrado para o colaborador."}), 404
+
+        # Converter para JSON
+        horarios_list = [
+            {
+                "dia_semana": horario.dia_semana,
+                "hora_inicio": horario.hora_inicio.strftime('%H:%M'),
+                "hora_fim": horario.hora_fim.strftime('%H:%M')
+            }
+            for horario in horarios
+        ]
+        return jsonify({"horarios": horarios_list}), 200
+
+    except Exception as e:
+        return jsonify({"message": f"Erro ao listar horários: {str(e)}"}), 500

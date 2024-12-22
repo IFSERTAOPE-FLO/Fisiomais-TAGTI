@@ -14,7 +14,7 @@ const VisualizarAgendamentos = () => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [selectedDate, setSelectedDate] = useState(null);
   const [showDateFilterModal, setShowDateFilterModal] = useState(false); // Para controlar o novo modal de filtro de data
-
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     const fetchAgendamentos = async () => {
       try {
@@ -56,6 +56,7 @@ const VisualizarAgendamentos = () => {
 
   const handleDeleteAgendamento = async (id) => {
     try {
+      setLoading(true);
       await axios.delete(`http://localhost:5000/agendamentos/deletar_agendamento/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
@@ -65,10 +66,12 @@ const VisualizarAgendamentos = () => {
       console.error('Erro ao deletar agendamento:', error);
       setErro('Erro ao deletar agendamento. Tente novamente.');
     }
+    setLoading(false);
   };
 
   const handleNotifyAdmin = async () => {
     try {
+      setLoading(true);
       await axios.post(
         'http://localhost:5000/api/notificar_admin',
         { agendamento_id: selectedAgendamento.id },
@@ -82,6 +85,7 @@ const VisualizarAgendamentos = () => {
       console.error('Erro ao notificar admin:', error);
       alert('Erro ao notificar admin.');
     }
+    setLoading(false);
   };
 
   const handleSort = (key) => {
@@ -142,6 +146,27 @@ const VisualizarAgendamentos = () => {
     return filteredAgendamentos;
   }, [agendamentos, sortConfig, selectedDate]);
 
+  const handleConfirmarNegar = async (agendamentoId, novoStatus) => {
+    try {
+      setLoading(true);
+      await axios.put(
+        `http://localhost:5000/agendamentos/confirmar_negativo_agendamento/${agendamentoId}`,
+        { status: novoStatus },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        }
+      );
+      // Atualiza a lista de agendamentos após a confirmação ou negação
+      setAgendamentos(agendamentos.map((ag) =>
+        ag.id === agendamentoId ? { ...ag, status: novoStatus } : ag
+      ));
+    } catch (error) {
+      console.error('Erro ao confirmar ou negar agendamento:', error);
+      setErro('Erro ao confirmar ou negar agendamento. Tente novamente.');
+    }
+    setLoading(false);
+  };
+
   return (
     <div className="container col-md-8 my-5">
       <div className="card shadow">
@@ -186,6 +211,7 @@ const VisualizarAgendamentos = () => {
                 <th>Serviço</th>
                 <th>Valor (R$)</th>
                 <th>Colaborador</th>
+                <th>Status</th> {/* Coluna para exibir o status */}
                 <th>Detalhes</th>
               </tr>
             </thead>
@@ -199,30 +225,31 @@ const VisualizarAgendamentos = () => {
                     <td>{agendamento.hora || 'Hora não informada'}</td>
                     <td>{agendamento.nome_servico || 'Serviço não encontrado'}</td>
                     <td>
-                      {agendamento.plano_pagamento.length > 0 ? (
-                        <ul className="list-unstyled">
-                          {agendamento.plano_pagamento.map((plano, index) => (
-                            <li key={index}>
-                              {plano.Nome_plano} -{' '}
-                              {new Intl.NumberFormat('pt-BR', {
-                                style: 'currency',
-                                currency: 'BRL',
-                              }).format(plano.Valor)}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : agendamento.valor_servico ? (
-                        <span>
-                          {new Intl.NumberFormat('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL',
-                          }).format(agendamento.valor_servico)}
-                        </span>
+                      {agendamento.nome_plano && agendamento.valor_plano ? (
+                        <div>
+                          <strong>{agendamento.nome_plano}:</strong> {' '}
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.valor_plano)}
+                        </div>
                       ) : (
-                        'Valor não disponível'
+                        <span>
+                          {agendamento.valor_servico
+                            ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.valor_servico)
+                            : 'Valor não disponível'}
+                        </span>
                       )}
                     </td>
-                    <td>{agendamento.nome_colaborador || 'Colaborador não encontrado'}</td> {/* Exibe o colaborador */}
+                    <td>{agendamento.nome_colaborador || 'Colaborador não encontrado'}</td>
+                    <td>
+                      <span
+                        className={`badge 
+              ${agendamento.status === 'confirmado' ? 'badge-success' :
+                            agendamento.status === 'negado' ? 'badge-danger' : 'badge-warning'} 
+              text-${agendamento.status === 'pendente' ? 'dark' : 'dark'}`}
+                      >
+                        {agendamento.status === 'confirmado' ? 'Confirmado' :
+                          agendamento.status === 'negado' ? 'Negado' : 'Pendente'}
+                      </span>
+                    </td>
                     <td>
                       <button
                         className="btn btn-outline-info btn-sm"
@@ -235,12 +262,13 @@ const VisualizarAgendamentos = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="text-center">
+                  <td colSpan="9" className="text-center">
                     Nenhum agendamento encontrado
                   </td>
                 </tr>
               )}
             </tbody>
+
 
           </table>
 
@@ -249,7 +277,7 @@ const VisualizarAgendamentos = () => {
             <Modal.Header closeButton>
               <Modal.Title>Filtro de Datas</Modal.Title>
             </Modal.Header>
-            <Modal.Body>
+            <Modal.Body className="d-flex justify-content-center align-items-center">
               <Calendar value={selectedDate} onChange={handleDateFilter} />
             </Modal.Body>
             <Modal.Footer>
@@ -265,65 +293,97 @@ const VisualizarAgendamentos = () => {
               <Modal.Header closeButton>
                 <Modal.Title>Detalhes do Agendamento</Modal.Title>
               </Modal.Header>
-              <Modal.Body >
-                <p>
-                  <strong>Nome do Cliente:</strong> {selectedAgendamento.nome_cliente}
-                </p>
-                <p>
-                  <strong>Data:</strong> {new Date(selectedAgendamento.data).toLocaleDateString()}
-                </p>
-                <p>
-                  <strong>Hora:</strong> {selectedAgendamento.hora}
-                </p>
-                <p>
-                  <strong>Serviço:</strong> {selectedAgendamento.nome_servico || 'Não informado'}
-                </p>
-                <p>
-                  <strong>Colaborador:</strong> {selectedAgendamento.nome_colaborador || 'Não informado'}
-                </p>
-                <p>
-                  <strong>Valor:</strong>
-                  {selectedAgendamento.plano_pagamento && selectedAgendamento.plano_pagamento.length > 0 ? (
-                    <ul className="list-unstyled">
-                      {selectedAgendamento.plano_pagamento.map((plano, index) => (
-                        <li key={index}>
-                          {plano.Nome_plano} -{' '}
-                          {new Intl.NumberFormat('pt-BR', {
-                            style: 'currency',
-                            currency: 'BRL',
-                          }).format(plano.Valor)}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : selectedAgendamento.valor_servico ? (
-                    <span>
-                      {new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL',
-                      }).format(selectedAgendamento.valor_servico)}
-                    </span>
-                  ) : (
-                    'Valor não disponível'
-                  )}
+              <Modal.Body>
+                <p><strong>Cliente:</strong> {selectedAgendamento.nome_cliente}</p>
+                <p><strong>Data:</strong> {new Date(selectedAgendamento.data).toLocaleDateString()}</p>
+                <p><strong>Hora:</strong> {selectedAgendamento.hora}</p>
+                <p><strong>Serviço:</strong> {selectedAgendamento.nome_servico}</p>
+
+                {selectedAgendamento.nome_plano && selectedAgendamento.valor_plano ? (
+                  <>
+                    <p><strong>Plano:</strong> {selectedAgendamento.nome_plano}</p>
+                    <p><strong>Valor do Plano:</strong> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAgendamento.valor_plano)}</p>
+                  </>
+                ) : (
+                  <p><strong>Valor do Serviço:</strong> {selectedAgendamento.valor_servico ?
+                    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAgendamento.valor_servico)
+                    : 'Não disponível'}</p>
+                )}
+
+
+                <p><strong>Colaborador:</strong> {selectedAgendamento.nome_colaborador}</p>
+                <p><strong>Status:</strong>{' '}
+                  <span className={` ${selectedAgendamento.status === 'confirmado' ? 'text-dark' : 'text-dark'}`}>
+                    {selectedAgendamento.status === 'confirmado' ? 'Confirmado' : 'Pendente'}</span>
+
                 </p>
               </Modal.Body>
 
+
+
               <Modal.Footer>
-                <Button variant="btn btn-secondary" onClick={handleCloseModal}>
-                  Fechar
-                </Button>
-                {role === 'admin' ? (
-                  <Button variant="btn btn-danger" onClick={() => handleDeleteAgendamento(selectedAgendamento.id)}>
-                    Apagar Agendamento
-                  </Button>
-                ) : (
-                  <Button variant="btn btn-primary" onClick={handleNotifyAdmin}>
-                    Pedir cancelamento
+                {role === 'admin' && (
+                  <>
+                    <Button
+                      variant="btn btn-danger"
+                      onClick={() => handleDeleteAgendamento(selectedAgendamento.id)}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <i className="bi bi-arrow-repeat spinner"></i> Carregando...
+                        </>
+                      ) : (
+                        'Deletar Agendamento'
+                      )}
+                    </Button>
+
+                    <Button
+                      variant="btn btn-success"
+                      onClick={() => handleConfirmarNegar(selectedAgendamento.id, 'confirmado')}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <i className="bi bi-arrow-repeat spinner"></i> Carregando...
+                        </>
+                      ) : (
+                        'Confirmar'
+                      )}
+                    </Button>
+
+                    <Button
+                      variant="btn btn-danger"
+                      onClick={() => handleConfirmarNegar(selectedAgendamento.id, 'negado')}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <i className="bi bi-arrow-repeat spinner"></i> Carregando...
+                        </>
+                      ) : (
+                        'Negar'
+                      )}
+                    </Button>
+                  </>
+                )}
+                {role !== 'admin' && (
+                  <Button variant="btn btn-warning" onClick={() => handleNotifyAdmin()} disabled={loading}>
+                    {loading ? (
+                      <i className="bi bi-arrow-repeat spinner"></i>
+                    ) : (
+                      'Solicitar Cancelamento'
+                    )}
+                    {loading ? ' Carregando...' : ''}
                   </Button>
                 )}
 
+                <Button variant="btn btn-secondary" onClick={handleCloseModal}>
+                  Fechar
+                </Button>
               </Modal.Footer>
             </Modal>
+
           )}
         </div>
       </div>

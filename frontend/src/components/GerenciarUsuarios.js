@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import EditarUsuario from "./EditarUsuario";
+import EditarHorarios from "./EditarHorarios";
 import { Link, } from "react-router-dom";
 
 const GerenciarUsuarios = () => {
@@ -9,6 +10,7 @@ const GerenciarUsuarios = () => {
     const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
     const [tipoAlternado, setTipoAlternado] = useState(true);
     const [pesquisaNome, setPesquisaNome] = useState(""); // Estado para armazenar o filtro de nome
+    const [horariosEditando, setHorariosEditando] = useState(null);  // Adicionar estado para editar horários
 
     // Função para buscar usuários
     const buscarUsuarios = async () => {
@@ -38,6 +40,9 @@ const GerenciarUsuarios = () => {
             setErro("Erro ao buscar usuários.");
         }
     };
+    const toggleTipo = () => {
+        setTipoAlternado(!tipoAlternado);  // Alterna o valor do estado tipoAlternado
+    };
 
     // Função para deletar usuário
     const deletarUsuario = async (tipo, id) => {
@@ -66,23 +71,30 @@ const GerenciarUsuarios = () => {
     };
 
     const handleEditarUsuario = (usuario) => {
-        console.log("Editando usuário:", usuario);
         setUsuarioEditando(usuario);
     };
 
+    const handleEditarHorarios = (usuario) => {
+        setHorariosEditando(usuario);  // Passando o ID correto do colaborador
+    };
+
+
     const handleCloseModal = () => {
-        setUsuarioEditando(null); // Fechar o modal
+        setUsuarioEditando(null);
+        setHorariosEditando(null);  // Fechar modal de horários
     };
 
     const handleSave = () => {
-        buscarUsuarios(); // Atualizar a lista de usuários após edição ou exclusão
-        setUsuarioEditando(null); // Fechar o modal
+        buscarUsuarios(); // Atualizar a lista de usuários/horários
+        setUsuarioEditando(null);
+        setHorariosEditando(null);  // Fechar modal
     };
 
-    // Função para alternar entre "Colaborador" e "Cliente"
-    const toggleTipo = () => {
-        setTipoAlternado(!tipoAlternado);
-    };
+    useEffect(() => {
+        buscarUsuarios(); // Carregar usuários inicialmente
+    }, []);
+
+
 
     // Função para ordenar os usuários
     const handleSort = (key) => {
@@ -147,14 +159,14 @@ const GerenciarUsuarios = () => {
                         </div>
                     </div>
 
-                    
+
                     <div className="col-auto">
                         <Link className="btn btn-login " to="/addcliente">
                             <i className="bi bi-person-plus"></i> Cliente
                         </Link>
                     </div>
 
-                    
+
                     <div className="col-auto">
                         <Link className="btn btn-login " to="/addcolaborador">
                             <i className="bi bi-person-workspace"></i> Colaborador
@@ -208,6 +220,15 @@ const GerenciarUsuarios = () => {
                                 >
                                     <i className="bi bi-trash"></i> Excluir
                                 </button>
+                                {usuario.role === "colaborador" && (
+                                    <button
+                                        className="btn btn-info btn-sm me-2"
+                                        onClick={() => handleEditarHorarios(usuario.ID)}  // Chamar a edição de horários
+                                    >
+                                        <i className="bi bi-clock"></i> Editar Horários
+                                    </button>
+                                )}
+
 
 
 
@@ -226,6 +247,16 @@ const GerenciarUsuarios = () => {
                     onSave={handleSave}
                 />
             )}
+            {horariosEditando && (
+                <EditarHorarios
+                    colaboradorId={horariosEditando}  // Passando o ID para o modal
+
+                    onClose={handleCloseModal}
+                    onSave={handleSave}
+                />
+            )}
+
+
         </div>
     );
 };
