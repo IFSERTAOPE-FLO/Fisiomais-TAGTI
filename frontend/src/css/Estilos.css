@@ -110,3 +110,39 @@ footer {
   
   box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1); /* Sombra suave */
 }
+
+/* Estilização personalizada para o calendário */
+.react-calendar {
+  font-family: 'Arial', sans-serif;
+  background-color: #ccdedb;
+}
+
+.react-calendar__navigation button {
+  color: black !important; /* Cor dos botões de navegação */
+  background-color: #36ab9c !important; /* Fundo verde */
+}
+
+.react-calendar__month-view__days__day {
+  color: black !important; /* Cor dos dias */
+}
+
+.react-calendar__tile--active {
+  background-color: #3bd0bc !important; /* Fundo verde ativo */
+  color: black !important; /* Cor do texto */
+}
+
+.react-calendar__tile--active:enabled:hover,
+.react-calendar__tile--active:enabled:focus {
+  background-color: #38beaa !important; /* Fundo verde mais claro ao hover/focus */
+}
+
+.react-calendar__month-view__weekdays__weekday {
+  color: black !important; /* Cor dos dias da semana */
+}
+
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus {
+  background-color: #bc155b !important; /* Fundo rosa ao hover/focus */
+  color: white !important; /* Cor do texto ao hover/focus */
+}
+

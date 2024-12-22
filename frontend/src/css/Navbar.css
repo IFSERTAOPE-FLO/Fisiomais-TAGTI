@@ -1,4 +1,5 @@
   .custom-navbar {
+    z-index:1;
     background-color: #ffffff;
     padding: 0px 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -11,6 +12,7 @@
   }
 
   .navbar-nav {
+    z-index:1;
     justify-content: center; 
     
   }
@@ -167,6 +169,7 @@
 
   /* Estilização do botão do usuário logado */
   .btn-user {
+    z-index:1;
     background-color: white; /* Fundo transparente */
     font-size: 0.85rem;
     border-radius: 20px;
@@ -184,6 +187,7 @@
 
   /* Assegura que a navbar-toggler aparece apenas em telas pequenas */
 .navbar-toggler {
+  z-index:1;
   border: none;
   background-color: transparent;
 }
@@ -194,12 +198,14 @@
 }
 
 .dropdown-menu {
+  z-index:1;
   right: 0; /* Alinha o menu dropdown à direita */
   left: auto; /* Remove alinhamento automático à esquerda */
 }
 
   /* Menu dropdown do usuário */
   .dropdown-menu {
+    z-index:1;
     border-radius: 10px; /* Bordas arredondadas */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra leve */
   }
@@ -232,21 +238,27 @@
     border-radius: 50%;
     margin-right: 10px;
     object-fit: cover; /* Evita distorção da imagem */
+    
   }
 
 
   /* Cor do fundo e botão de login */
   .modal-content {
-    background-color: #36ab9c;
-    color: white;
+    background-color: #ffffff;
+    color: #000000;
   }
 
   .modal-header {
     border-bottom: 1px solid #f1f1f1;
+    background-color: #36ab9c;
   }
 
   .modal-title {
-    color: white;
+    color: rgb(255, 255, 255);
+  }
+  .modal-footer {
+    color: rgb(255, 255, 255);
+    background-color: #36ab9c;
   }
 
   .form-label {

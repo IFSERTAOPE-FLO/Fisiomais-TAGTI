@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import '../css/CriarAgendamento.css'; // Importar o arquivo CSS para estilos
-import '../css/Estilos.css'; // Importar o arquivo CSS para estilos
-import Calendar from 'react-calendar'; // Biblioteca React-Calendar
-import 'react-calendar/dist/Calendar.css'; // Estilos do React-Calendar
+import '../css/CriarAgendamento.css';
+import '../css/Estilos.css';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 
-
-function Agendamento() {
+function AgendarTeste() {
   const [data, setData] = useState('');
   const [hora, setHora] = useState('');
   const [servico, setServico] = useState('');
@@ -17,10 +16,10 @@ function Agendamento() {
   const [role, setRole] = useState('');
   const [planos, setPlanos] = useState([]);
   const [tipoServico, setTipoServico] = useState('');
-  const [valorServico, setValorServico] = useState(0)
+  const [valorServico, setValorServico] = useState(0);
   const [horariosDisponiveis, setHorariosDisponiveis] = useState([]);
   const [planoSelecionado, setPlanoSelecionado] = useState('');
-  const [loading, setLoading] = useState(false); // Estado para o carregamento
+  const [loading, setLoading] = useState(false);
   const [diasPermitidos, setDiasPermitidos] = useState([]);
   const [feriados, setFeriados] = useState([]);
 
@@ -31,17 +30,17 @@ function Agendamento() {
     if (savedRole === 'cliente') {
       const userId = localStorage.getItem('userId');
       setCliente(userId);
-      console.log('ID do cliente logado:', userId);
     }
 
     if (savedRole === 'colaborador') {
       const userId = localStorage.getItem('userId');
-      setColaborador(userId); // Define automaticamente o colaborador logado
-      fetchHorariosColaborador(userId); // Carrega os horários do colaborador logado
+      setColaborador(userId);
+      fetchHorariosDisponiveis(userId);
     }
 
     fetchServicos();
     fetchClientes();
+    fetchFeriados();
   }, []);
 
   const fetchServicos = async () => {
@@ -50,8 +49,6 @@ function Agendamento() {
       if (response.ok) {
         const servicosData = await response.json();
         setServicos(servicosData);
-      } else {
-        console.error('Erro ao buscar serviços');
       }
     } catch (error) {
       console.error('Erro ao buscar serviços:', error);
@@ -59,18 +56,15 @@ function Agendamento() {
   };
 
   const fetchFeriados = () => {
-    // Exemplo de feriados nacionais
     setFeriados([
-      '2024-01-01', // Ano Novo
-      '2024-04-21', // Tiradentes
-      '2024-05-01', // Dia do Trabalho
-      '2024-09-07', // Independência do Brasil
-      '2024-12-25', // Natal
+      '2025-01-01',
+      '2024-04-21',
+      '2024-05-01',
+      '2024-09-07',
+      '2024-12-25',
+      '2024-25-12',
     ]);
   };
-
-
-
 
   const fetchColaboradores = useCallback(async () => {
     if (servico) {
@@ -78,8 +72,6 @@ function Agendamento() {
         const response = await fetch(`http://localhost:5000/colaboradores?servico_id=${servico}`);
         if (response.ok) {
           setColaboradores(await response.json());
-        } else {
-          console.error('Erro ao buscar colaboradores');
         }
       } catch (error) {
         console.error('Erro ao buscar colaboradores:', error);
@@ -95,40 +87,40 @@ function Agendamento() {
         if (servicoSelecionado.Tipo === 'pilates') {
           setTipoServico('pilates');
           setPlanos(servicoSelecionado.Planos || []);
-          setValorServico(0); // Zera o valor para serviços de pilates
+          setValorServico(0);
         } else if (servicoSelecionado.Tipo === 'fisioterapia') {
           setTipoServico('fisioterapia');
-          setValorServico(servicoSelecionado.Valor || 0); // Configura o valor do serviço
-          setPlanos([]); // Zera os planos
-        } else {
-          setTipoServico('');
+          setValorServico(servicoSelecionado.Valor || 0);
           setPlanos([]);
-          setValorServico(0);
         }
       }
     }
   }, [servico, fetchColaboradores, servicos]);
 
-
   useEffect(() => {
     if (colaborador) {
-      fetchHorariosColaborador(colaborador);
+      fetchHorariosDisponiveis(colaborador);
     }
   }, [colaborador]);
 
-  const fetchHorariosColaborador = async (colaboradorId) => {
+
+  const fetchHorariosDisponiveis = async (colaboradorId, dataSelecionada) => {
+    if (!dataSelecionada) return;
     try {
-      const response = await fetch(`http://localhost:5000/agendamentos/horarios-colaborador/${colaboradorId}`);
+      const response = await fetch(
+        `http://localhost:5000/agendamentos/horarios-disponiveis/${colaboradorId}?data=${dataSelecionada}`
+      );
       if (response.ok) {
         const horarios = await response.json();
-        setHorariosDisponiveis(horarios);
-
-        // Extrair dias da semana permitidos (segunda = 1, terça = 2, etc.)
-        const dias = horarios.map((h) => h.dia_semana);
-        setDiasPermitidos(dias);
+        console.log('Horários Disponíveis:', horarios); // Verifique o formato da resposta
+        if (Array.isArray(horarios.horarios_disponiveis)) {
+          setHorariosDisponiveis(horarios.horarios_disponiveis);
+        } else {
+          setHorariosDisponiveis([]); // Se não for um array, defina como array vazio
+        }
       }
     } catch (error) {
-      console.error('Erro ao buscar horários do colaborador:', error);
+      console.error('Erro ao buscar horários disponíveis:', error);
     }
   };
 
@@ -144,12 +136,10 @@ function Agendamento() {
     }
   };
 
-
   const handleSubmit = async (e) => {
     setLoading(true);
     e.preventDefault();
     const dataEscolhida = new Date(data);
-    dataEscolhida.setDate(dataEscolhida.getDate() + 1);
     const dataFormatada = dataEscolhida.toISOString().split('T')[0];
     const dataHora = `${dataFormatada} ${hora}:00`;
 
@@ -158,7 +148,7 @@ function Agendamento() {
       colaborador_id: colaborador,
       data: dataHora,
       cliente_id: cliente,
-      plano_id: planoSelecionado // Adiciona o plano selecionado
+      plano_id: tipoServico === 'fisioterapia' ? null : planoSelecionado,  // Send null if it's fisioterapia
     };
 
     const token = localStorage.getItem('token');
@@ -185,28 +175,53 @@ function Agendamento() {
         alert(errorData.message || 'Erro ao agendar a sessão.');
       }
     } catch (error) {
-      alert('Erro ao enviar agendamento.');
       console.error('Erro no agendamento:', error);
     }
     setLoading(false);
   };
 
+
+
   const isDateDisabled = (date) => {
-    const diaSemana = date.getDay(); // 0 = Domingo, 1 = Segunda, etc.
+    const diaSemana = date.getDay();
     const dataFormatada = date.toISOString().split('T')[0];
 
-    // Verifica se a data é um feriado ou não está nos dias permitidos
     return !diasPermitidos.includes(diaSemana) || feriados.includes(dataFormatada);
   };
 
   const handleDateChange = (value) => {
-    setData(value.toISOString().split('T')[0]);
+    const dataEscolhida = value.toISOString().split('T')[0];
+    setData(dataEscolhida);
+    if (colaborador) {
+      fetchHorariosDisponiveis(colaborador, dataEscolhida);
+    }
   };
+  useEffect(() => {
+    const fetchDiasPermitidos = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/agendamentos/dias-permitidos/${colaborador}`);
+        if (response.ok) {
+          const data = await response.json();
+          setDiasPermitidos(data.dias_permitidos);
+        } else {
+          console.error('Erro ao buscar dias permitidos');
+        }
+      } catch (error) {
+        console.error('Erro ao buscar dias permitidos:', error);
+      }
+    };
+
+    if (colaborador) {
+      fetchDiasPermitidos();
+    }
+  }, [colaborador]);
 
   return (
     <div className="container py-5 background-gif">
-      <div className="row align-items-center">
-        <div className="col-md-5 agendamentoback " >
+
+      <div className="row align-items-center  agendamentoback">
+
+        <div className="col-md-6 " >
           <div className="card shadow-lg border-0 ">
             <div className="card-header text-center  rounded-top">
               <h3 className="fw-bold  text-primary ">Agendar atendimento</h3>
@@ -286,19 +301,9 @@ function Agendamento() {
                   </div>
                 )}
 
-                <div className="row">
-                  <div className="col-md-6 mb-3">
-                    <input
-                      id="data"
-                      type="date"
-                      className="form-control"
-                      value={data}
-                      onChange={(e) => setData(e.target.value)}
-                      min={new Date().toISOString().split('T')[0]}
-                      required
-                    />
-                  </div>
-                  <div className="mb-3">
+                <div className="row ">
+                  {/* Calendário */}
+                  <div className="col-md-8 mb-3">
                     <label htmlFor="data" className="form-label">Data</label>
                     <Calendar
                       onChange={handleDateChange}
@@ -306,29 +311,25 @@ function Agendamento() {
                       minDate={new Date()} // Desabilita datas anteriores ao dia atual
                     />
                   </div>
-                  <div className="col-md-6 mb-3 gap-2">
-                    {horariosDisponiveis.map((horario, index) => (
-                      <div
-                        key={index}
-                        className={`d-flex justify-content-between align-items-center p-3 border btn-plano rounded ${hora === `${horario.hora_inicio} - ${horario.hora_fim}` ? 'active' : ''
-                          }`}
-                        onClick={() => setHora(`${horario.hora_inicio} - ${horario.hora_fim}`)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <div className="flex-grow-1">
-                          <strong>{horario.dia_semana}</strong>
-                        </div>
-                        <div className="text-end">
-                          <span>
-                            {horario.hora_inicio} - {horario.hora_fim}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
 
+                  {/* Horário */}
+                  <div className="col-md-4 mb-3">
+                    <label htmlFor="hora" className="form-label">Horário</label>
+                    <select
+                      id="hora"
+                      className="form-select"
+                      value={hora}
+                      onChange={(e) => setHora(e.target.value)}
+                      required
+                    >
+                      <option value="">Escolha o horário</option>
+                      {Array.isArray(horariosDisponiveis) && horariosDisponiveis.map((horario, index) => (
+                        <option key={index} value={horario}>
+                          {horario}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-
-
                 </div>
 
                 <div className="mb-3">
@@ -357,79 +358,61 @@ function Agendamento() {
 
                 </div>
 
-                <button type="submit" className="btn btn-signup w-100 text-uppercase fw-bold">
+                <button
+                  type="submit"
+                  className="btn btn-signup w-100 text-uppercase fw-bold"
+                  disabled={loading}
+                >
                   {loading ? (
                     <i className="bi bi-arrow-repeat spinner"></i>
                   ) : (
                     <i className="bi bi-calendar-check"></i>
-                  )}{' '}
+                  )}
+                  {' '}
                   {loading ? 'Carregando...' : 'Agendar sessão'}
                 </button>
+
               </form>
             </div>
           </div>
         </div>
-      </div>
-      <div>
-        <div className="container" style={{ position: 'relative' }}>
-          {/* Imagem Logo 1 */}
-          <img
-            src="/images/logo.png"
-            alt="Logo 1"
-            className="pulsar .img-fluid"
-            style={{ width: '750px', height: 'auto', position: 'absolute', top: '-570px', left: '-170px', zIndex: -2 }}
-          />
 
-          {/* Imagem Logo 2 */}
-          <img
-            src="/images/logo1.png"
-            alt="Logo 2"
-            className="animate-subir-descer2"
-            style={{ width: '75px', height: 'auto', position: 'absolute', top: '-125px', left: '880px' }}
-          />
+        <div className="col-md-6">
+          <div className="row">
+            <div className="col-md-2 d-flex justify-content-start">
+              {/* Imagem Logo 2 */}
+              <img
+                src="/images/logo1.png"
+                alt="Logo 2"
+                className="animate-subir-descer2 me-5 img-fluid"
+              />
 
-          {/* Imagem Logo 3 */}
-          <img
-            src="/images/logo2.png"
-            alt="Logo 3"
-            className="animate-subir-descer3 "
-            style={{ width: '75px', height: 'auto', position: 'absolute', top: '-245px', left: '880px' }}
-          />
+              {/* Imagem Logo 3 */}
+              <img
+                src="/images/logo2.png"
+                alt="Logo 3"
+                className="animate-subir-descer3 me-5 img-fluid "
+              />
+            </div>
+          </div>
 
-          {/* Imagem Logo 4 */}
-          <img
-            src="/images/logo3.png"
-            alt="Logo 4"
-            className="animate-subir-descer4"
-            style={{ width: '75px', height: 'auto', position: 'absolute', top: '-380px', left: '880px' }}
-          />
-
-          {/* Imagem Logo 5 */}
-          <img
-            src="/images/logo4.png"
-            alt="Logo 5"
-            className="girar"
-            style={{ width: '90px', height: 'auto', position: 'absolute', top: '-80px', left: '1400px' }}
-          />
-
-          {/* Imagem Smart */}
           <img
             src="/images/smart.png"
             alt="Smart"
-            style={{ width: '700px', height: 'auto', position: 'absolute', top: '-540px', left: '820px' }}
+            className="img-fluid"  // Adicionando a classe img-fluid para responsividade
           />
 
-          {/* Imagem Client */}
-          <img
-            src="/images/client.gif"
-            alt="Client"
-            style={{ width: '500px', height: 'auto', position: 'absolute', top: '-364px', left: '960px' }}
-          />
+        </div>
+
+
+        <div>
+
         </div>
 
       </div>
+
     </div>
   );
 }
 
-export default Agendamento;
+export default AgendarTeste;

@@ -67,7 +67,7 @@ const GerenciarServicos = () => {
   }, []);
 
   const salvarServico = async () => {
-    if (!novoServico.nome_servico || !novoServico.descricao || !novoServico.valor || !novoServico.tipo_servico) {
+    if (!novoServico.nome_servico || !novoServico.descricao || !novoServico.tipo_servico) {
       setErro("Preencha todos os campos obrigatórios do serviço.");
       return;
     }

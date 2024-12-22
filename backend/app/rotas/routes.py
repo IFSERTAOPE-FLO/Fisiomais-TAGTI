@@ -68,6 +68,10 @@ def logout():
     db.session.commit()  # Commit das mudanças no banco
 
     return jsonify(message="Logout realizado com sucesso"), 200
+@main.route('/', methods=['OPTIONS'])
+def handle_options():
+    return '', 200
+
 
 @main.route('/api/horarios-disponiveis', methods=['GET'])
 def get_horarios_disponiveis():

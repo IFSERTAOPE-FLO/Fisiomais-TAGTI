@@ -1,139 +1,510 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, send_from_directory, request, jsonify
 from app.models import Colaboradores, Agendamentos, Clientes, Servicos, Horarios, db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_mail import Message
 from flask import current_app
 from app import mail
-from datetime import datetime
+from datetime import datetime, timedelta
+from pytz import timezone
 
 
 agendamentos= Blueprint('agendamentos', __name__)
+BRASILIA = timezone('America/Sao_Paulo')
 
 import traceback
 
-@agendamentos.route('/', methods=[ 'POST'])
+@agendamentos.route('/', methods=['OPTIONS'])
 @jwt_required()
-def agendamento():    
+def handle_options():
+    return '', 200  # Responde com status 200 OK
+
+@agendamentos.route('/', methods=['POST'])
+@jwt_required()
+def agendamento():
     try:
         data = request.get_json()
-        print(f"Received data: {data}")  # Print the received data
+        print(f"Received data: {data}")  # Exibe os dados recebidos para debugging
 
-        # Validate if the user is a client or collaborator
+        # Verificar se o usuário é um cliente ou colaborador
         usuario_email = get_jwt_identity()
-        print(f"User email: {usuario_email}")  # Print the email of the user
+        print(f"User email: {usuario_email}")  # Exibe o email do usuário para debugging
         
         cliente = Clientes.query.filter_by(email=usuario_email).first()
         colaborador = Colaboradores.query.filter_by(email=usuario_email).first()
 
         if not cliente and not colaborador:
-            print("User not found")  # Debug message when user is not found
+            print("User not found")  # Mensagem de erro se o usuário não for encontrado
             return jsonify({'message': 'Usuário não encontrado'}), 404
 
-        # Check if the collaborator exists and if the client is provided for the collaborator
+        # Se for colaborador e cliente_id for fornecido, verificamos se o cliente existe
         if colaborador and 'cliente_id' in data and data['cliente_id']:
             cliente = Clientes.query.get(data['cliente_id'])
             if not cliente:
-                print("Cliente not found")  # Debug message for client not found
+                print("Cliente not found")  # Mensagem de erro se o cliente não for encontrado
                 return jsonify({'message': 'Cliente não encontrado'}), 404
         elif not colaborador and not cliente:
-            print("Client not found")  # Debug message for when no client is found
+            print("Cliente não encontrado")  # Mensagem de erro se não for cliente
             return jsonify({'message': 'Cliente não encontrado'}), 404
 
-        # Validate collaborator, service, and plan
+        # Verificar a existência do colaborador
         colaborador = Colaboradores.query.get(data['colaborador_id'])
         if not colaborador:
-            print("Colaborador not found")  # Debug message for collaborator not found
+            print("Colaborador not found")  # Mensagem de erro se o colaborador não for encontrado
             return jsonify({'message': 'Colaborador não encontrado'}), 404
         
+        # Verificar a existência do serviço
         servico = Servicos.query.get(data['servico_id'])
         if not servico:
-            print("Servico not found")  # Debug message for service not found
+            print("Servico not found")  # Mensagem de erro se o serviço não for encontrado
             return jsonify({'message': 'Serviço não encontrado'}), 404
 
         plano_id = data.get('plano_id')
-        if servico.tipo_servico != 'fisioterapia' and plano_id is None:
-            print("Plano not provided")  # Debug message for when plan is missing
-            return jsonify({'message': 'Plano não fornecido'}), 400
 
-        if servico.tipo_servico != 'fisioterapia' and not servico.planos:
-            print("Servico doesn't have planos")  # Debug message when service has no plans
-            return jsonify({'message': 'O serviço selecionado não possui planos'}), 400
+        # Validar se o serviço exige plano
+        if servico.tipo_servico != 'fisioterapia':
+            if plano_id is None:
+                print("Plano not provided")  # Mensagem de erro se o plano não for fornecido
+                return jsonify({'message': 'Plano não fornecido'}), 400
 
-        plano_selecionado = next((p for p in servico.planos if p['ID_Plano'] == plano_id), None)
-        if not plano_selecionado:
-            print("Plano not found")  # Debug message when plan is not found
-            return jsonify({'message': 'Plano não encontrado'}), 404
+            if not servico.planos or not isinstance(servico.planos, list):
+                print("Serviço não possui planos válidos")  # Mensagem de erro se o serviço não possuir planos válidos
+                return jsonify({'message': 'O serviço selecionado não possui planos válidos'}), 400
 
-        # Check if the time is available for the collaborator
+            plano_selecionado = None
+            for plano in servico.planos:
+                if plano['ID_Plano'] == plano_id:
+                    plano_selecionado = plano
+                    break
+
+            if not plano_selecionado:
+                print("Plano not found")  # Mensagem de erro se o plano não for encontrado
+                return jsonify({'message': 'Plano não encontrado'}), 404
+        else:
+            plano_selecionado = None
+        # Verificar se já existe agendamento para o colaborador no horário escolhido
         data_e_hora = datetime.fromisoformat(data['data']).astimezone(BRASILIA)
-        horario = Horarios.query.filter_by(
-            ID_Colaborador=colaborador.ID_Colaborador,
-            dia_semana=data_e_hora.strftime('%A').lower()
+        agendamento_existente = Agendamentos.query.filter(
+            Agendamentos.ID_Colaborador == colaborador.ID_Colaborador,
+            Agendamentos.data_e_hora == data_e_hora
         ).first()
 
-        if not horario or not (horario.hora_inicio <= data_e_hora.time() <= horario.hora_fim):
-            print("Horario indisponível")  # Debug message for unavailable time slot
-            return jsonify({'message': 'Horário indisponível para este colaborador'}), 400
+        if agendamento_existente:
+            return jsonify({'message': 'Já existe um agendamento para esse colaborador neste horário.'}), 400
 
-        if not horario_disponivel(data_e_hora, colaborador.ID_Colaborador):
-            print("Horario já reservado")  # Debug message for already booked time
-            return jsonify({'message': 'Horário já reservado'}), 400
+        # Criar o agendamento
+        data_e_hora = datetime.fromisoformat(data['data']).astimezone(BRASILIA)
 
-        # Create the appointment
         novo_agendamento = Agendamentos(
             data_e_hora=data_e_hora,
             ID_Cliente=cliente.ID_Cliente,
             ID_Colaborador=colaborador.ID_Colaborador,
             ID_Servico=servico.ID_Servico,
-            ID_Plano=plano_id,
+            ID_Plano=plano_id if servico.tipo_servico != 'fisioterapia' else None,
             status="pendente"  # Status inicial
         )
-        print(f"Created appointment: {novo_agendamento}")  # Print the new appointment details
+        print(f"Created appointment: {novo_agendamento}")  
         
         db.session.add(novo_agendamento)
         db.session.commit()
+        enviar_email_agendamento(novo_agendamento.ID_Agendamento)
 
         return jsonify({'message': 'Agendamento criado com status pendente'}), 201
     
     except Exception as e:
-        error_details = traceback.format_exc()  # Capture the full traceback
-        print(f"Error: {e}")  # Print the error message for debugging
-        print(f"Error details: {error_details}")  # Print the full traceback for more insights
+        error_details = traceback.format_exc()  # Captura o traceback completo do erro
+        print(f"Error: {e}")  # Exibe a mensagem do erro
+        print(f"Error details: {error_details}")  # Exibe o traceback completo para análise
         db.session.rollback()
         return jsonify({'message': f'Erro ao criar agendamento: {str(e)}', 'error_details': error_details}), 500
-    
 
 
 
-
-
-    
-def horario_disponivel(data_e_hora, colaborador_id):
-    """Verifica se o horário está disponível para o colaborador"""
-    agendamento_existente = Agendamentos.query.filter_by(
-        ID_Colaborador=colaborador_id,
-        data_e_hora=data_e_hora
-    ).first()
-    
-    return agendamento_existente is None
-
-
-@agendamentos.route('confirmar_agendamento/<int:agendamento_id>', methods=['PUT'])
-@jwt_required()
-def confirmar_agendamento(agendamento_id):
+@agendamentos.route('/dias-permitidos/<int:colaborador_id>', methods=['GET'])
+def dias_permitidos(colaborador_id):
     try:
+        # Buscar todos os dias da semana em que o colaborador tem horários
+        dias_disponiveis = db.session.query(Horarios.dia_semana).filter_by(ID_Colaborador=colaborador_id).distinct().all()
+        dias = [dia[0].strip().lower() for dia in dias_disponiveis]  # Padroniza para minúsculas e remove espaços
+        
+        # Mapeamento dos dias da semana para valores numéricos de 0 (Domingo) a 6 (Sábado)
+        dias_map = {
+            "domingo": 0,
+            "segunda-feira": 1,
+            "terca-feira": 2,
+            "quarta-feira": 3,
+            "quinta-feira": 4,
+            "sexta-feira": 5,
+            "sabado": 6
+        }
+
+        # Converter os dias encontrados no banco para seus valores numéricos
+        dias_convertidos = [dias_map[dia] for dia in dias if dia in dias_map]
+        
+        return jsonify({"dias_permitidos": dias_convertidos}), 200
+    except Exception as e:
+        return jsonify({"message": f"Erro ao buscar dias permitidos: {str(e)}"}), 500
+
+
+
+def obter_horarios_disponiveis(colaborador_id, data_obj):
+    # Converte a data para o dia da semana (ex: Segunda-feira)
+    dia_semana = data_obj.strftime("%A")  # Usa o nome completo do dia da semana (ex: "Monday")
+    dia_semana_mapeado = {
+        "Monday": "Segunda-feira",
+        "Tuesday": "Terça-feira",
+        "Wednesday": "Quarta-feira",
+        "Thursday": "Quinta-feira",
+        "Friday": "Sexta-feira",
+        "Saturday": "Sábado",
+        "Sunday": "Domingo"
+    }[dia_semana]
+    print(f"Dia da semana (nome mapeado): {dia_semana_mapeado}")  # Log para verificar o dia da semana nome mapeado
+
+    # Obtém os horários do colaborador para o dia da semana específico
+    horarios_colaborador = Horarios.query.filter_by(ID_Colaborador=colaborador_id, dia_semana=dia_semana_mapeado).all()
+    print(f"Horários do colaborador: {horarios_colaborador}")  # Log para verificar os horários obtidos
+
+    # Obtém os agendamentos existentes para o colaborador na data específica
+    agendamentos = Agendamentos.query.filter(
+        Agendamentos.ID_Colaborador == colaborador_id,
+        Agendamentos.data_e_hora >= data_obj,
+        Agendamentos.data_e_hora < (data_obj + timedelta(days=1))
+    ).all()
+    print(f"Agendamentos existentes: {agendamentos}")  # Log para verificar os agendamentos encontrados
+
+    # Coleta os horários já agendados (convertidos para objetos 'time' com data incluída)
+    agendamentos_horarios = {agendamento.data_e_hora.replace(second=0, microsecond=0) for agendamento in agendamentos}
+    print(f"Horários agendados: {agendamentos_horarios}")  # Log para verificar horários agendados
+
+    horarios_disponiveis = []
+
+    for horario in horarios_colaborador:
+        # Combina a data com a hora de início para garantir que estamos no dia certo
+        hora_atual = datetime.combine(data_obj, horario.hora_inicio)
+        hora_fim = datetime.combine(data_obj, horario.hora_fim)
+
+        # Use timedelta para incrementar em intervalos de 1 hora
+        while hora_atual < hora_fim:
+            # Adiciona o horário ao resultado se não estiver agendado
+            if hora_atual.replace(second=0, microsecond=0) not in agendamentos_horarios:
+                horarios_disponiveis.append(hora_atual)
+            hora_atual += timedelta(hours=1)  # Ajuste para 1 hora
+
+    print(f"Horários disponíveis: {horarios_disponiveis}")  # Log para verificar os horários disponíveis
+
+    return horarios_disponiveis
+
+
+
+@agendamentos.route('/horarios-disponiveis/<int:colaborador_id>/', methods=['GET'])
+def horarios_disponiveis(colaborador_id):
+    data = request.args.get('data')  # Recebe a data no formato "YYYY-MM-DD"
+    if not data:
+        return jsonify({"error": "O parâmetro 'data' é obrigatório"}), 400
+
+    try:
+        data = data.split('T')[0]  # Pega apenas a parte da data (YYYY-MM-DD)
+        data_obj = datetime.strptime(data, "%Y-%m-%d")
+        print(f"Data escolhida: {data_obj}")  # Log para verificar a data escolhida
+
+        horarios = obter_horarios_disponiveis(colaborador_id, data_obj)
+        if horarios:
+            return jsonify({"horarios_disponiveis": [hora.strftime("%H:%M") for hora in horarios]}), 200
+        else:
+            return jsonify({"message": "Nenhum horário disponível."}), 200
+    except Exception as e:
+        return jsonify({"message": f"Erro ao buscar horários disponíveis: {str(e)}"}), 500
+
+
+@agendamentos.route('/listar_agendamentos', methods=['GET'])
+@jwt_required()
+def listar_agendamentos():
+    try:
+        # Obtém o email do usuário a partir do token JWT
+        usuario_email = get_jwt_identity()
+        print(f"Usuário autenticado: {usuario_email}")
+
+        # Tenta encontrar o colaborador com o email
+        colaborador = Colaboradores.query.filter_by(email=usuario_email).first()
+        print(f"Colaborador encontrado: {colaborador}")
+
+        # Tenta encontrar o admin com o email
+        admin = Colaboradores.query.filter_by(is_admin=True, email=usuario_email).first()
+        print(f"Admin encontrado: {admin}")
+
+        # Tenta encontrar o cliente com o email
+        cliente = Clientes.query.filter_by(email=usuario_email).first()
+        print(f"Cliente encontrado: {cliente}")
+
+        # Verifica se o usuário é autorizado
+        if not colaborador and not admin and not cliente:
+            return jsonify({'message': 'Usuário não autorizado'}), 403
+
+        # Se for admin, pode ver todos os agendamentos
+        if admin:
+            agendamentos = Agendamentos.query.all()
+            print(f"Agendamentos encontrados para admin: {len(agendamentos)}")
+        elif colaborador:
+            # Se for colaborador, filtra os agendamentos para aquele colaborador
+            agendamentos = Agendamentos.query.filter_by(ID_Colaborador=colaborador.ID_Colaborador).all()
+            print(f"Agendamentos encontrados para o colaborador: {len(agendamentos)}")
+        else:
+            # Se for cliente, filtra os agendamentos para aquele cliente
+            agendamentos = Agendamentos.query.filter_by(ID_Cliente=cliente.ID_Cliente).all()
+            print(f"Agendamentos encontrados para o cliente: {len(agendamentos)}")
+
+        # Monta a lista com os dados dos agendamentos
+        agendamentos_data = []
+        for agendamento in agendamentos:
+            # Para cada agendamento, busca os dados relacionados
+            cliente = Clientes.query.get(agendamento.ID_Cliente)
+            colaborador = Colaboradores.query.get(agendamento.ID_Colaborador)
+            servico = Servicos.query.get(agendamento.ID_Servico)
+
+            # Variáveis para plano, inicializadas como None
+            nome_plano = None
+            valor_plano = None
+
+            # Verificando se o serviço possui planos
+            print(f"Serviço encontrado: {servico.Nome_servico}, Tipo de serviço: {servico.tipo_servico}")
+            if servico and servico.tipo_servico == 'pilates' and servico.planos:
+                print(f"Planos disponíveis para o serviço {servico.Nome_servico}: {servico.planos}")
+                
+                planos = servico.planos
+                plano_especifico = next((plano for plano in planos if plano['ID_Plano'] == agendamento.ID_Plano), None)
+                
+                if plano_especifico:
+                    nome_plano = plano_especifico.get('Nome_plano')
+                    valor_plano = plano_especifico.get('Valor')
+                    print(f"Plano encontrado: {nome_plano}, Valor: {valor_plano}")
+                else:
+                    print("Nenhum plano específico encontrado para este agendamento.")
+            else:
+                print("Serviço não é de pilates ou não tem planos.")
+
+            # Adiciona os dados do agendamento
+            agendamentos_data.append({
+                'id': agendamento.ID_Agendamento,
+                'nome_cliente': cliente.nome,
+                'data': agendamento.data_e_hora.isoformat(),
+                'hora': agendamento.data_e_hora.strftime("%H:%M"),
+                'nome_servico': servico.Nome_servico,
+                'valor_servico': servico.Valor,
+                'nome_colaborador': colaborador.nome,
+                'status': agendamento.status,
+                'nome_plano': nome_plano,
+                'valor_plano': valor_plano
+            })
+
+        print(f"Total de agendamentos a serem retornados: {len(agendamentos_data)}")
+        return jsonify(agendamentos_data), 200
+
+    except Exception as e:
+        print(f"Erro ao listar agendamentos: {str(e)}")
+        return jsonify({'message': f'Erro ao listar agendamentos: {str(e)}'}), 500
+
+
+
+
+
+
+@agendamentos.route('/confirmar_negativo_agendamento/<int:agendamento_id>', methods=['PUT'])
+@jwt_required()
+def confirmar_negativo_agendamento(agendamento_id):
+    try:
+        usuario_email = get_jwt_identity()
+        print(f"Usuário logado: {usuario_email}")  # Print para verificar o email do usuário logado
+        
+        # Verifica o colaborador e se é admin
+        colaborador = Colaboradores.query.filter_by(email=usuario_email).first()
+        if colaborador and colaborador.is_admin:
+            admin = colaborador  # Se for admin, o próprio colaborador é considerado admin
+        else:
+            admin = None  # Caso contrário, admin será None
+
+        print(f"Colaborador: {colaborador}, Admin: {admin}")  # Verifica as variáveis de colaborador e admin
+
         agendamento = Agendamentos.query.get(agendamento_id)
+        
+        if not agendamento:
+            print(f"Agendamento com ID {agendamento_id} não encontrado.")  # Print se não encontrar o agendamento
+            return jsonify({'message': 'Agendamento não encontrado'}), 404
+        
+        # Verifica se o colaborador tem permissão para modificar esse agendamento
+        if not admin and agendamento.ID_Colaborador != colaborador.ID_Colaborador:
+            print(f"Colaborador {colaborador.ID_Colaborador} não tem permissão para alterar o agendamento {agendamento_id}.")  # Print de permissão negada
+            return jsonify({'message': 'Você não tem permissão para alterar esse agendamento'}), 403
+
+        # Alterar o status do agendamento
+        novo_status = request.json.get('status')
+        print(f"Novo status recebido: {novo_status}")  # Print para verificar o status recebido
+        
+        if novo_status not in ['confirmado', 'negado']:
+            print(f"Status inválido: {novo_status}")  # Print para verificar o status inválido
+            return jsonify({'message': 'Status inválido'}), 400
+
+        agendamento.status = novo_status
+        db.session.commit()
+        print(f"Status do agendamento {agendamento_id} alterado para {novo_status}.")  # Print para confirmar que a alteração ocorreu com sucesso
+        enviar_email_status_agendamento(agendamento, novo_status)
+        return jsonify({'message': f'Agendamento {novo_status} com sucesso'}), 200
+    except Exception as e:
+        print(f"Erro ao atualizar status do agendamento: {str(e)}")  # Print de erro no processamento
+        db.session.rollback()
+        return jsonify({'message': f'Erro ao atualizar status do agendamento: {str(e)}'}), 500
+    
+def enviar_email_status_agendamento(agendamento, status):
+    try:
+        # Obter informações do cliente, colaborador e serviço
+        cliente = Clientes.query.get(agendamento.ID_Cliente)
+        colaborador = Colaboradores.query.get(agendamento.ID_Colaborador)
+        servico = Servicos.query.get(agendamento.ID_Servico)
+
+        if not cliente or not colaborador or not servico:
+            print("Dados do agendamento incompletos")
+            return
+
+        # Preparar o e-mail para o cliente
+        if status == 'confirmado':
+            subject_cliente = "Seu agendamento foi confirmado!"
+            body_cliente = (
+                f"Olá {cliente.nome},\n\n"
+                f"Seu atendimento para o serviço '{servico.Nome_servico}' foi confirmado para "
+                f"{agendamento.data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\n"
+                f"Atenciosamente,\nEquipe FisioMais"
+            )
+        elif status == 'negado':
+            subject_cliente = "Seu agendamento foi cancelado"
+            body_cliente = (
+                f"Olá {cliente.nome},\n\n"
+                f"Infelizmente, seu atendimento para o serviço '{servico.Nome_servico}' foi cancelado. "
+                f"Por favor, entre em contato para mais informações.\n\n"
+                f"Atenciosamente,\nEquipe FisioMais"
+            )
+
+        msg_cliente = Message(
+            subject=subject_cliente,
+            recipients=[cliente.email],
+            body=body_cliente
+        )
+
+        # Preparar o e-mail para o colaborador
+        if status == 'confirmado':
+            subject_colaborador = "Agendamento confirmado!"
+            body_colaborador = (
+                f"Olá {colaborador.nome},\n\n"
+                f"O agendamento com o cliente {cliente.nome} foi confirmado para o serviço "
+                f"'{servico.Nome_servico}' em {agendamento.data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\n"
+                f"Atenciosamente,\nEquipe FisioMais"
+            )
+        elif status == 'negado':
+            subject_colaborador = "Agendamento cancelado"
+            body_colaborador = (
+                f"Olá {colaborador.nome},\n\n"
+                f"Infelizmente, o agendamento com o cliente {cliente.nome} foi cancelado. "
+                f"Por favor, entre em contato para mais informações.\n\n"
+                f"Atenciosamente,\nEquipe FisioMais"
+            )
+
+        msg_colaborador = Message(
+            subject=subject_colaborador,
+            recipients=[colaborador.email],
+            body=body_colaborador
+        )
+
+        # Enviar os e-mails
+        mail.send(msg_cliente)
+        mail.send(msg_colaborador)
+        print(f"E-mails enviados para cliente {cliente.nome} e colaborador {colaborador.nome}.")
+    
+    except Exception as e:
+        print(f"Erro ao enviar e-mails: {str(e)}")
+
+
+@agendamentos.route('/deletar_agendamento/<int:agendamento_id>', methods=['DELETE'])
+@jwt_required()
+def deletar_agendamento(agendamento_id):
+    try:
+        print(f"Iniciando a exclusão do agendamento com ID: {agendamento_id}")  # Log de início da operação
+        
+        usuario_email = get_jwt_identity()
+        print(f"Email do usuário autenticado: {usuario_email}")  # Log do e-mail do usuário
+
+        # Verifica se o colaborador é um admin ou se tem permissão para deletar o agendamento
+        colaborador = Colaboradores.query.filter_by(email=usuario_email).first()
+        if not colaborador:
+            print("Colaborador não encontrado.")  # Log de colaborador não encontrado
+            return jsonify({'message': 'Colaborador não encontrado'}), 404
+        
+        # Verifica se o colaborador é um admin
+        if not colaborador.is_admin:  
+            print(f"Verificando se o colaborador {colaborador.nome} é admin.")  # Log de verificação admin
+
+        agendamento = Agendamentos.query.get(agendamento_id)
+        print(f"Agendamento encontrado: {agendamento}")  # Log do agendamento encontrado
 
         if not agendamento:
             return jsonify({'message': 'Agendamento não encontrado'}), 404
 
-        agendamento.status = "confirmado"
-        db.session.commit()
+        # Verifica se o colaborador tem permissão para deletar o agendamento
+        if not colaborador.is_admin and agendamento.ID_Colaborador != colaborador.ID_Colaborador:
+            print("Permissão negada para deletar agendamento.")  # Log de permissão negada
+            return jsonify({'message': 'Você não tem permissão para deletar este agendamento'}), 403
 
-        return jsonify({'message': 'Agendamento confirmado com sucesso'}), 200
+        # Dados do cliente e colaborador para enviar os e-mails
+        cliente = Clientes.query.get(agendamento.ID_Cliente)
+        colaborador = Colaboradores.query.get(agendamento.ID_Colaborador)
+        servico = Servicos.query.get(agendamento.ID_Servico)
+
+        if not cliente or not colaborador or not servico:
+            print("Dados incompletos do agendamento.")  # Log de dados incompletos
+            return jsonify({'message': 'Dados do agendamento incompletos'}), 404
+
+        # Enviar e-mail para o cliente informando o cancelamento
+        subject_cliente = "Aviso: Seu agendamento foi cancelado"
+        body_cliente = (
+            f"Olá {cliente.nome},\n\n"
+            f"Infelizmente, o seu agendamento para o serviço '{servico.Nome_servico}' foi cancelado.\n\n"
+            f"Se você tiver dúvidas, entre em contato conosco.\n\n"
+            f"Atenciosamente,\nEquipe FisioMais"
+        )
+        msg_cliente = Message(
+            subject=subject_cliente,
+            recipients=[cliente.email],
+            body=body_cliente
+        )
+
+        # Enviar e-mail para o colaborador informando o cancelamento
+        subject_colaborador = "Aviso: Agendamento cancelado"
+        body_colaborador = (
+            f"Olá {colaborador.nome},\n\n"
+            f"O agendamento para o serviço '{servico.Nome_servico}' com o cliente {cliente.nome} foi cancelado.\n\n"
+            f"Se você tiver dúvidas, entre em contato conosco.\n\n"
+            f"Atenciosamente,\nEquipe FisioMais"
+        )
+        msg_colaborador = Message(
+            subject=subject_colaborador,
+            recipients=[colaborador.email],
+            body=body_colaborador
+        )
+
+        # Enviar os e-mails
+        mail.send(msg_cliente)
+        mail.send(msg_colaborador)
+        print("E-mails enviados com sucesso.")  # Log de e-mails enviados
+
+        # Deleta o agendamento
+        db.session.delete(agendamento)
+        db.session.commit()
+        print(f"Agendamento {agendamento_id} deletado com sucesso.")  # Log de sucesso na exclusão
+
+        return jsonify({'message': 'Agendamento deletado e e-mails enviados com sucesso'}), 200
+
     except Exception as e:
         db.session.rollback()
-        return jsonify({'message': f'Erro ao confirmar agendamento: {str(e)}'}), 500
+        print(f"Erro ao deletar agendamento: {str(e)}")  # Log do erro
+        return jsonify({'message': f'Erro ao deletar agendamento: {str(e)}'}), 500
+
 
 
     
@@ -160,6 +531,7 @@ def enviar_email_agendamento(agendamento_id):
             f"Olá {cliente.nome},\n\n"
             f"Seu atendimento para o serviço '{servico.Nome_servico}' foi agendado para "
             f"{agendamento.data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\n"
+            f"Status: Pendente. Por favor, aguarde a confirmação do colaborador.\n\n"
             f"Atenciosamente,\nEquipe FisioMais"
         )
         msg_cliente = Message(
@@ -169,11 +541,12 @@ def enviar_email_agendamento(agendamento_id):
         )
 
         # Dados do e-mail para o colaborador
-        subject_colaborador = "Novo agendamento"
+        subject_colaborador = "Novo agendamento - Aguardando confirmação"
         body_colaborador = (
             f"Olá {colaborador.nome},\n\n"
             f"Você tem um atendimento agendado com o cliente {cliente.nome} "
             f"para o serviço '{servico.Nome_servico}' em {agendamento.data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\n"
+            f"Status: Pendente. Por favor, confirme se você pode realizar esse atendimento.\n\n"
             f"Atenciosamente,\nEquipe FisioMais"
         )
         msg_colaborador = Message(
@@ -183,13 +556,14 @@ def enviar_email_agendamento(agendamento_id):
         )
 
         # Dados do e-mail para o administrador
-        subject_admin = "Novo agendamento registrado"
+        subject_admin = "Novo agendamento registrado - Aguardando confirmação"
         body_admin = (
-            f"Um novo agendamento foi registrado:\n\n"
+            f"Um novo agendamento foi registrado e está aguardando confirmação:\n\n"
             f"Cliente: {cliente.nome}\n"
             f"Colaborador: {colaborador.nome}\n"
             f"Serviço: {servico.Nome_servico}\n"
             f"Data e Hora: {agendamento.data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\n"
+            f"Status: Pendente. Aguardando confirmação do colaborador e cliente.\n\n"
             f"Atenciosamente,\nEquipe FisioMais"
         )
         msg_admin = Message(
@@ -208,62 +582,6 @@ def enviar_email_agendamento(agendamento_id):
     except Exception as e:
         return jsonify({'message': f'Erro ao enviar e-mails: {str(e)}'}), 500
 
-# --- Rota para obter horários disponíveis ---
-@agendamentos.route('/horarios-disponiveis', methods=['GET'])
-def get_horarios_disponiveis():
-    data = request.args.get('data')
-    servico_id = request.args.get('servico_id')
 
-    try:
-        data_formatada = datetime.strptime(data, '%Y-%m-%d')
-    except ValueError:
-        return jsonify({"error": "Formato de data inválido"}), 400
 
-    # Filtrar colaboradores que atendem ao serviço solicitado
-    colaboradores = Colaboradores.query.filter(
-        Colaboradores.servicos.any(ID_Servico=servico_id)).all()
 
-    if not colaboradores:
-        return jsonify({"error": "Nenhum colaborador encontrado para o serviço solicitado"}), 404
-
-    horarios_status = []  # Lista para armazenar os horários com status
-
-    # Obter horários disponíveis dos colaboradores
-    for colaborador in colaboradores:
-        for horario in colaborador.horarios:
-            # Combinar data e hora para verificar disponibilidade
-            data_e_hora = datetime.combine(data_formatada, datetime.strptime(horario.hora_inicio, "%H:%M").time())
-            
-            # Verificar se o horário já foi agendado
-            ocupado = not horario_disponivel(data_e_hora, colaborador.ID_Colaborador)
-            
-            horarios_status.append({
-                "colaborador": colaborador.nome,
-                "horario": f"{horario.dia_semana} {horario.hora_inicio}-{horario.hora_fim}",
-                "ocupado": ocupado
-            })
-
-    # Ordenar por horário
-    horarios_status = sorted(horarios_status, key=lambda x: x["horario"])
-
-    return jsonify(horarios_status)
-
-@agendamentos.route('/horarios-colaborador/<int:colaborador_id>', methods=['GET'])
-def get_horarios_colaborador(colaborador_id):
-    try:
-        horarios = Horarios.query.filter_by(ID_Colaborador=colaborador_id).all()
-        if not horarios:
-            return jsonify({"error": "Nenhum horário encontrado para este colaborador"}), 404
-
-        horarios_dict = [
-            {
-                "dia_semana": horario.dia_semana,
-                "hora_inicio": horario.hora_inicio.strftime('%H:%M'),
-                "hora_fim": horario.hora_fim.strftime('%H:%M'),
-            }
-            for horario in horarios
-        ]
-        return jsonify(horarios_dict), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500

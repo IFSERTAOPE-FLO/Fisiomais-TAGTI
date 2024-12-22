@@ -19,6 +19,7 @@ import Perfil from "./pages/Perfil";
 import VisualizarAgendamentos from "./pages/VisualizarAgendamentos";
 import AdminPage from "./pages/AdminPage"; 
 import Especialidades from "./pages/Especialidades"; 
+import AgendarTeste from "./pages/AgendarTeste"; 
 
 
 
@@ -39,6 +40,7 @@ function App() {
           <Route path="/perfil" element={<Perfil />} />     
           <Route path="/visualizaragendamentos" element={<VisualizarAgendamentos />} />           
           <Route path="/adminPage" element={<AdminPage />} /> 
+          <Route path="/agendarteste" element={<AgendarTeste />} /> 
           
         </Routes>
         <Footer />

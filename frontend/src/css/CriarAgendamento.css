@@ -1,27 +1,82 @@
+/* Definição da animação de pulsar */
 @keyframes pulsar {
     0% {
-        transform: scale(1); /* Tamanho original */
+        transform: scale(1.2);
+        /* Tamanho original */
     }
+
     50% {
-        transform: scale(1.1); /* Aumenta um pouco o tamanho */
+        transform: scale(1.3);
+        /* Aumenta um pouco o tamanho */
     }
+
     100% {
-        transform: scale(1); /* Retorna ao tamanho original */
+        transform: scale(1.2);
+        /* Retorna ao tamanho original */
     }
 }
 
-/* Aplica a animação de pulsar */
-.pulsar {
-    animation: pulsar 7s ease-in-out infinite; /* Duração de 1.5s, com suavização e repetição infinita */
+.agendamentoback {
+    position: relative;
+    z-index: 0;
 }
+
+.agendamentoback::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 94%;
+    background-image: url('../../public/images/logo.png');
+    background-position: left top;
+    background-size: contain;  /* Ajusta a imagem para caber no container sem distorção */
+    background-repeat: no-repeat;
+    background-attachment: scroll;  /* Garante que a imagem se mova com a rolagem da página */
+    z-index: -1100;
+    animation: pulsar 7s ease-in-out infinite;  /* Aplica a animação de pulsar */
+}
+
+/* Estilo adicional para melhorar a responsividade */
+@media (max-width: 768px) {
+    .agendamentoback::before {
+        background-size: 300%;  /* Ajusta o tamanho da imagem para telas menores */
+    }
+}
+
+@media (max-width: 480px) {
+    .agendamentoback::before {
+        background-size: 150%;  /* Ajusta o tamanho da imagem para telas ainda menores */
+    }
+}
+
+
+/* Estilo adicional para melhorar a responsividade */
+@media (max-width: 768px) {
+    .agendamentoback {
+        background-size: 300%;  /* Ajusta o tamanho da imagem para telas menores */
+    }
+}
+
+@media (max-width: 480px) {
+    .agendamentoback {
+        background-size: 150%;  /* Ajusta o tamanho da imagem para telas ainda menores */
+    }
+}
+
+
+
+
 
 @keyframes subirDescer2 {
     0% {
         transform: translateY(0);
     }
+
     50% {
         transform: translateY(-30px);
     }
+
     100% {
         transform: translateY(0);
     }
@@ -31,9 +86,11 @@
     0% {
         transform: translateY(0);
     }
+
     50% {
         transform: translateY(-40px);
     }
+
     100% {
         transform: translateY(0);
     }
@@ -43,9 +100,11 @@
     0% {
         transform: translateY(0);
     }
+
     50% {
         transform: translateY(-25px);
     }
+
     100% {
         transform: translateY(0);
     }
@@ -55,9 +114,11 @@
     0% {
         transform: translateY(0);
     }
+
     50% {
         transform: translateY(-15px);
     }
+
     100% {
         transform: translateY(0);
     }
@@ -74,24 +135,34 @@
 .animate-subir-descer4 {
     animation: subirDescer4 4.5s ease-in-out infinite;
 }
+
 .animate-subir-descer5 {
     animation: subirDescer4 4.9s ease-in-out infinite;
 }
+
 @keyframes girar {
     0% {
-        transform: rotate(0deg); /* Início da rotação */
+        transform: rotate(0deg);
+        /* Início da rotação */
     }
+
     100% {
-        transform: rotate(360deg); /* Completa uma volta */
+        transform: rotate(360deg);
+        /* Completa uma volta */
     }
 }
 
 /* Classe para o elemento girando */
 .girar {
-    animation: girar 2s linear infinite; /* 2 segundos, rotação constante, repetição infinita */
-    position: fixed; /* Ou `absolute`, dependendo do layout desejado */
-    top: 100px; /* Ajuste conforme necessário */
-    left: 100px; /* Ajuste conforme necessário */
-    width: 90px; /* Tamanho do elemento */
+    animation: girar 2s linear infinite;
+    /* 2 segundos, rotação constante, repetição infinita */
+    position: fixed;
+    /* Ou `absolute`, dependendo do layout desejado */
+    top: 100px;
+    /* Ajuste conforme necessário */
+    left: 100px;
+    /* Ajuste conforme necessário */
+    width: 90px;
+    /* Tamanho do elemento */
     height: auto;
 }
