@@ -30,23 +30,28 @@
     height: 94%;
     background-image: url('../../public/images/logo.png');
     background-position: left top;
-    background-size: contain;  /* Ajusta a imagem para caber no container sem distorção */
+    background-size: contain;
+    /* Ajusta a imagem para caber no container sem distorção */
     background-repeat: no-repeat;
-    background-attachment: scroll;  /* Garante que a imagem se mova com a rolagem da página */
+    background-attachment: scroll;
+    /* Garante que a imagem se mova com a rolagem da página */
     z-index: -1100;
-    animation: pulsar 7s ease-in-out infinite;  /* Aplica a animação de pulsar */
+    animation: pulsar 7s ease-in-out infinite;
+    /* Aplica a animação de pulsar */
 }
 
 /* Estilo adicional para melhorar a responsividade */
 @media (max-width: 768px) {
     .agendamentoback::before {
-        background-size: 300%;  /* Ajusta o tamanho da imagem para telas menores */
+        background-size: 300%;
+        /* Ajusta o tamanho da imagem para telas menores */
     }
 }
 
 @media (max-width: 480px) {
     .agendamentoback::before {
-        background-size: 150%;  /* Ajusta o tamanho da imagem para telas ainda menores */
+        background-size: 150%;
+        /* Ajusta o tamanho da imagem para telas ainda menores */
     }
 }
 
@@ -54,13 +59,15 @@
 /* Estilo adicional para melhorar a responsividade */
 @media (max-width: 768px) {
     .agendamentoback {
-        background-size: 300%;  /* Ajusta o tamanho da imagem para telas menores */
+        background-size: 300%;
+        /* Ajusta o tamanho da imagem para telas menores */
     }
 }
 
 @media (max-width: 480px) {
     .agendamentoback {
-        background-size: 150%;  /* Ajusta o tamanho da imagem para telas ainda menores */
+        background-size: 150%;
+        /* Ajusta o tamanho da imagem para telas ainda menores */
     }
 }
 
@@ -74,7 +81,7 @@
     }
 
     50% {
-        transform: translateY(-30px);
+        transform: translateY(-10px);
     }
 
     100% {
@@ -88,7 +95,7 @@
     }
 
     50% {
-        transform: translateY(-40px);
+        transform: translateY(12px);
     }
 
     100% {
@@ -102,7 +109,7 @@
     }
 
     50% {
-        transform: translateY(-25px);
+        transform: translateY(25px);
     }
 
     100% {
@@ -166,9 +173,23 @@
     height: auto;
 }
 
-@media (max-width: 800.98px) {
-    .girar, 
+@media (max-width: 768px) {
+
+    .girar,
     .row .col-md-1 img {
         display: none;
+    }
+}
+
+/* Definindo o tamanho máximo para as imagens */
+.max-size {
+    max-width: 90px;
+    /* Tamanho máximo padrão */
+}
+
+@media (max-width: 768px) {
+    .max-size {
+        max-width: 75px;
+        /* Tamanho máximo para telas pequenas */
     }
 }

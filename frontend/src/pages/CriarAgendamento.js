@@ -417,18 +417,24 @@ function CriarAgendamento() {
         <div className="col-md-6">
           <div className="row">
             <div className="col-md-2 d-flex justify-content-start">
+            < br/>< br/>
               
 
               {/* Imagem Logo 3 */}
               <img
                 src="/images/logo2.png"
                 alt="Logo 3"
-                className="animate-subir-descer3 me-5 img-fluid "
+                className="animate-subir-descer3 me-5 img-fluid max-size "
               />
               <img
                 src="/images/logo3.png"
                 alt="Logo 3"
-                className="animate-subir-descer4 me-5 img-fluid "
+                className="animate-subir-descer4 me-5 img-fluid max-size "
+              />
+              <img
+                src="/images/logo1.png"
+                alt="Logo 3"
+                className="animate-subir-descer2 me-5 img-fluid max-size "
               />
             </div>
             
@@ -437,14 +443,9 @@ function CriarAgendamento() {
           < br/>
           < br/>
           <div className="row">
-      <div className="col-md-1 d-flex justify-content-start">
-  {/* Imagem Logo 2 */}
-  <img
-    src="/images/logo1.png"
-    alt="Logo 2"
-    className="animate-subir-descer2 me-5 img-fluid "
-  />
-</div>
+      
+
+
 <div className="col-md-1 d-flex justify-content-start">
   {/* Imagem Logo 2 */}
   <img
@@ -455,7 +456,7 @@ function CriarAgendamento() {
 </div>
 
   </div>
-
+  
           <img
             src="/images/smart.png"
             alt="Smart"
