@@ -35,7 +35,11 @@ function AgendarTeste() {
     if (savedRole === 'colaborador') {
       const userId = localStorage.getItem('userId');
       setColaborador(userId);
-      fetchHorariosDisponiveis(userId);
+      if (userId) {
+        fetchHorariosDisponiveis(userId, data);
+        fetchDiasPermitidos(userId); // Chama a função de horários disponíveis com o ID do colaborador
+        
+      }
     }
 
     fetchServicos();
@@ -43,17 +47,27 @@ function AgendarTeste() {
     fetchFeriados();
   }, []);
 
+
   const fetchServicos = async () => {
     try {
-      const response = await fetch('http://localhost:5000/servicos/listar_servicos');
+      const token = localStorage.getItem('token');  // Supondo que o token JWT esteja armazenado no localStorage
+      const response = await fetch('http://localhost:5000/servicos/listar_servicos', {
+        headers: {
+          'Authorization': `Bearer ${token}`  // Envia o token JWT no cabeçalho
+        }
+      });
+
       if (response.ok) {
         const servicosData = await response.json();
         setServicos(servicosData);
+      } else {
+        console.error('Erro ao buscar serviços: ', response.status);
       }
     } catch (error) {
       console.error('Erro ao buscar serviços:', error);
     }
   };
+
 
   const fetchFeriados = () => {
     setFeriados([
@@ -100,12 +114,13 @@ function AgendarTeste() {
   useEffect(() => {
     if (colaborador) {
       fetchHorariosDisponiveis(colaborador);
+      
     }
   }, [colaborador]);
 
 
   const fetchHorariosDisponiveis = async (colaboradorId, dataSelecionada) => {
-    if (!dataSelecionada) return;
+    if (!colaboradorId || !dataSelecionada) return; // Garante que o ID do colaborador e a data sejam válidos
     try {
       const response = await fetch(
         `http://localhost:5000/agendamentos/horarios-disponiveis/${colaboradorId}?data=${dataSelecionada}`
@@ -123,6 +138,8 @@ function AgendarTeste() {
       console.error('Erro ao buscar horários disponíveis:', error);
     }
   };
+
+
 
 
   const fetchClientes = async () => {
@@ -196,25 +213,38 @@ function AgendarTeste() {
       fetchHorariosDisponiveis(colaborador, dataEscolhida);
     }
   };
-  useEffect(() => {
-    const fetchDiasPermitidos = async () => {
-      try {
-        const response = await fetch(`http://localhost:5000/agendamentos/dias-permitidos/${colaborador}`);
-        if (response.ok) {
-          const data = await response.json();
-          setDiasPermitidos(data.dias_permitidos);
-        } else {
-          console.error('Erro ao buscar dias permitidos');
-        }
-      } catch (error) {
-        console.error('Erro ao buscar dias permitidos:', error);
-      }
-    };
-
-    if (colaborador) {
-      fetchDiasPermitidos();
+  const fetchDiasPermitidos = async (colaboradorId) => {
+    if (!colaboradorId) {
+      console.error('Colaborador não definido. Abortando chamada à API.');
+      return;
     }
-  }, [colaborador]);
+    try {
+      const response = await fetch(`http://localhost:5000/agendamentos/dias-permitidos/${colaboradorId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setDiasPermitidos(data.dias_permitidos);
+      } else {
+        console.error('Erro ao buscar dias permitidos:', response.status);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar dias permitidos:', error);
+    }
+  };
+
+
+  useEffect(() => {
+    const savedUserId = localStorage.getItem('userId'); // Obtém o ID do usuário do localStorage
+
+    if (role === 'colaborador' && savedUserId) {
+      fetchDiasPermitidos(savedUserId); // Use o userId salvo
+    } else if (colaborador) {
+      fetchDiasPermitidos(colaborador);
+    }
+  }, [role, colaborador]);
+
+
+
+
 
   return (
     <div className="container py-5 background-gif">
@@ -281,25 +311,29 @@ function AgendarTeste() {
                 )}
 
                 {/* Collaborator Selection */}
-                {role !== 'colaborador' && (
-                  <div className="mb-3">
+                <div className="mb-3">
+                  {role !== 'colaborador' && ( // Exibe a label apenas se o usuário não for colaborador
                     <label htmlFor="colaborador" className="form-label">Colaborador</label>
-                    <select
-                      id="colaborador"
-                      className="form-select"
-                      value={colaborador}
-                      onChange={(e) => setColaborador(e.target.value)}
-                      required
-                    >
-                      <option value="">Selecione um colaborador</option>
-                      {colaboradores.map((colab) => (
-                        <option key={colab.ID_Colaborador} value={colab.ID_Colaborador}>
-                          {colab.Nome}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                  )}
+                  <select
+                    id="colaborador"
+                    className="form-select"
+                    value={colaborador}
+                    onChange={(e) => setColaborador(e.target.value)}
+                    required
+                     
+                    hidden={role === 'colaborador' && role !== 'admin'} // Esconde para colaboradores não administradores
+                  >
+                    <option value="">Selecione um colaborador</option>
+                    {colaboradores.map((colab) => (
+                      <option key={colab.ID_Colaborador} value={colab.ID_Colaborador}>
+                        {colab.Nome}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+
 
                 <div className="row ">
                   {/* Calendário */}

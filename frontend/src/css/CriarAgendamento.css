@@ -157,12 +157,18 @@
     animation: girar 2s linear infinite;
     /* 2 segundos, rotação constante, repetição infinita */
     position: fixed;
-    /* Ou `absolute`, dependendo do layout desejado */
-    top: 100px;
+    bottom: 15%;
     /* Ajuste conforme necessário */
-    left: 100px;
+    left: 5%;
     /* Ajuste conforme necessário */
     width: 90px;
     /* Tamanho do elemento */
     height: auto;
+}
+
+@media (max-width: 800.98px) {
+    .girar, 
+    .row .col-md-1 img {
+        display: none;
+    }
 }

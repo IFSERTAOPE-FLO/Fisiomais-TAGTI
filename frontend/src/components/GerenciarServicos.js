@@ -24,19 +24,26 @@ const GerenciarServicos = () => {
   const [tipoAlternado, setTipoAlternado] = useState(true);
   const [pesquisaNome, setPesquisaNome] = useState(""); 
 
-  const buscarServicos = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/servicos/listar_servicos");
-      const data = await response.json();
-      if (Array.isArray(data)) {
-        setServicos(data);
-      } else {
-        setErro("A resposta da API não é um array.");
+  const buscarServicos = async () => {    
+      try {
+        const token = localStorage.getItem('token');  // Supondo que o token JWT esteja armazenado no localStorage
+        const response = await fetch('http://localhost:5000/servicos/listar_servicos', {
+          headers: {
+            'Authorization': `Bearer ${token}`  // Envia o token JWT no cabeçalho
+          }
+        });
+        
+        if (response.ok) {
+          const servicosData = await response.json();
+          setServicos(servicosData);
+        } else {
+          console.error('Erro ao buscar serviços: ', response.status);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar serviços:', error);
       }
-    } catch (err) {
-      setErro("Erro ao buscar serviços.");
-    }
-  };
+    };
+    
 
   const buscarUsuarios = async () => {
     try {

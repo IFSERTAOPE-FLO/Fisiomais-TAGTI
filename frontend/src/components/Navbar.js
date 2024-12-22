@@ -20,49 +20,50 @@ function Navbar() {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post("http://localhost:5000/login", {
-        email,
-        senha,
-      });
-  
-      const { access_token, name, role, userId, photo } = response.data;
-  
-      setIsLoggedIn(true);
-      setUserName(name);
-      setRole(role);
-      setUserId(userId);
-      setUserPhoto(photo);
-      localStorage.setItem("token", access_token);
-      localStorage.setItem("userName", name);
-      localStorage.setItem("role", role);
-      localStorage.setItem("userId", userId);
-      localStorage.setItem("userPhoto", photo);
-  
-      // Fechar o modal
-      const modalElement = document.getElementById("loginModal");
-      const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
-      if (modalInstance) {
-        modalInstance.hide();
-      }
-  
-      document.querySelectorAll(".modal-backdrop").forEach((backdrop) => backdrop.remove());
-  
-      console.log("Usuário logado:", name);
-  
-      // Redirecionar com base no papel do usuário
-      setTimeout(() => {
-        if (role === "admin") {
-          navigate("/adminpage");
-        } else {
-          navigate("/");
+        const response = await axios.post("http://localhost:5000/login", {
+            email,
+            senha,
+        });
+
+        const { access_token, name, role, userId, photo } = response.data;
+
+        setIsLoggedIn(true);
+        setUserName(name);
+        setRole(role);
+        setUserId(userId);
+        setUserPhoto(photo);
+        localStorage.setItem("token", access_token);
+        localStorage.setItem("userName", name);
+        localStorage.setItem("role", role);
+        localStorage.setItem("userId", userId); // Salva o ID
+        localStorage.setItem("userPhoto", photo);
+
+        // Fechar o modal
+        const modalElement = document.getElementById("loginModal");
+        const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
+        if (modalInstance) {
+            modalInstance.hide();
         }
-        window.location.reload();
-      }, 300); // Reduzido o tempo para 300ms
+
+        document.querySelectorAll(".modal-backdrop").forEach((backdrop) => backdrop.remove());
+
+        console.log("Usuário logado:", name);
+
+        // Redirecionar com base no papel do usuário
+        setTimeout(() => {
+            if (role === "admin") {
+                navigate("/adminpage");
+            } else {
+                navigate("/");
+            }
+            window.location.reload();
+        }, 300); // Reduzido o tempo para 300ms
     } catch (error) {
-      console.error("Erro no login:", error);
-      alert("Erro ao fazer login. Verifique suas credenciais.");
+        console.error("Erro no login:", error);
+        alert("Erro ao fazer login. Verifique suas credenciais.");
     }
-  };
+};
+
 
   const handleLogout = async () => {
     try {

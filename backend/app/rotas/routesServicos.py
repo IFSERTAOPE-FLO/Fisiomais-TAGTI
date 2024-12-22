@@ -1,19 +1,34 @@
 from flask import Blueprint, jsonify, request
 from app.models import Colaboradores, Servicos, ColaboradoresServicos, db  # ColaboradoresServicos importado
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 
 servicos= Blueprint('servicos', __name__)
+
 @servicos.route('/listar_servicos', methods=['GET'])
+@jwt_required()
 def get_list_servicos():
     try:
-        servicos = Servicos.query.all()
+        email = get_jwt_identity()  # Recupera o email do usuário autenticado
+        colaborador = Colaboradores.query.filter_by(email=email).first()  # Busca o colaborador logado
+        
+        if colaborador:
+            if colaborador.is_admin == False:  # Verifica se o colaborador é admin
+                # Se não for admin, buscar serviços relacionados ao colaborador logado
+                servicos = Servicos.query.filter(Servicos.colaboradores.any(ID_Colaborador=colaborador.ID_Colaborador)).all()
+            else:
+                # Se for admin, retorna todos os serviços
+                servicos = Servicos.query.all()
+        else:
+            # Se não for um colaborador, retorna todos os serviços
+            servicos = Servicos.query.all()
+
         if not servicos:
             return jsonify({"message": "Nenhum serviço encontrado"}), 404
 
         servicos_list = []
         for s in servicos:
-            colaboradores = [colaborador.nome for colaborador in s.colaboradores]  # Supondo que o nome seja um atributo de Colaboradores
+            colaboradores = [colaborador.nome for colaborador in s.colaboradores]
             servico_data = {
                 "ID_Servico": s.ID_Servico,
                 "Nome_servico": s.Nome_servico,
@@ -21,13 +36,14 @@ def get_list_servicos():
                 "Valor": str(s.Valor) if s.tipo_servico == 'fisioterapia' else None,
                 "Planos": s.planos if s.tipo_servico == 'pilates' else None,
                 "Tipo": s.tipo_servico,
-                "Colaboradores": colaboradores  # Adicionando os colaboradores
+                "Colaboradores": colaboradores
             }
             servicos_list.append(servico_data)
 
         return jsonify(servicos_list), 200
     except Exception as e:
         return jsonify({"message": f"Erro ao listar serviços: {str(e)}"}), 500
+
 
 @servicos.route('/deletar_servico/<int:id>', methods=['DELETE'])
 @jwt_required()
