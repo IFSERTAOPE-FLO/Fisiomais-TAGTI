@@ -186,7 +186,7 @@ function CriarAgendamento() {
       });
 
       if (response.ok) {
-        alert('Agendamento realizado com sucesso!');
+        alert('Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail');
       } else {
         const errorData = await response.json();
         alert(errorData.message || 'Erro ao agendar a sessão.');

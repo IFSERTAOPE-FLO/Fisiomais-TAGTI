@@ -66,6 +66,7 @@ const VisualizarAgendamentos = () => {
       console.error('Erro ao deletar agendamento:', error);
       setErro('Erro ao deletar agendamento. Tente novamente.');
     }
+    setLoading(false);
   };
 
   const handleNotifyAdmin = async () => {
@@ -323,15 +324,46 @@ const VisualizarAgendamentos = () => {
               <Modal.Footer>
                 {role === 'admin' && (
                   <>
-                    <Button variant="btn btn-danger" onClick={() => handleDeleteAgendamento(selectedAgendamento.id)}>
-                      Deletar Agendamento
+                    <Button
+                      variant="btn btn-danger"
+                      onClick={() => handleDeleteAgendamento(selectedAgendamento.id)}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <i className="bi bi-arrow-repeat spinner"></i> Carregando...
+                        </>
+                      ) : (
+                        'Deletar Agendamento'
+                      )}
                     </Button>
-                    {/* Botões para confirmar ou negar o agendamento */}
-                    <Button variant="btn btn-success" onClick={() => handleConfirmarNegar(selectedAgendamento.id, 'confirmado')}>
-                      Confirmar
+
+                    <Button
+                      variant="btn btn-success"
+                      onClick={() => handleConfirmarNegar(selectedAgendamento.id, 'confirmado')}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <i className="bi bi-arrow-repeat spinner"></i> Carregando...
+                        </>
+                      ) : (
+                        'Confirmar'
+                      )}
                     </Button>
-                    <Button variant="btn btn-danger" onClick={() => handleConfirmarNegar(selectedAgendamento.id, 'negado')}>
-                      Negar
+
+                    <Button
+                      variant="btn btn-danger"
+                      onClick={() => handleConfirmarNegar(selectedAgendamento.id, 'negado')}
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <>
+                          <i className="bi bi-arrow-repeat spinner"></i> Carregando...
+                        </>
+                      ) : (
+                        'Negar'
+                      )}
                     </Button>
                   </>
                 )}
