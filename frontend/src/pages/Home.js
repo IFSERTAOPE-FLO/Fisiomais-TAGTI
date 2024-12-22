@@ -19,6 +19,7 @@ function Home() {
 
     <div className="container mt-4 ">
       
+      
       <h1 className="text-center fw-bold text-primary mb-3">Bem-vindo à nossa clínica de Fisioterapia e Pilates!</h1>
       <p className="text-center  text-primary mb-3">Na <strong className="cor-pink"> FISIOMAIS</strong>, cuidamos de você com profissionalismo e dedicação.
         < br/>Nossa missão é promover a sua saúde, reabilitação e qualidade de vida por meio de tratamentos personalizados, unindo as melhores prátcias de  <strong className="cor-pink">Fisioterapia</strong> e os benefícios do <strong className="cor-pink">Pilates</strong>.</p>

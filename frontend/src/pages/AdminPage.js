@@ -14,7 +14,15 @@ const AdminPage = () => {
   return (
     <div className="container mt-5 text-center p-4 bg-light rounded shadow">
       <h1 className="text-center mb-4 text-primary">Painel do Administrador</h1>
-
+ {/* Imagem Logo 0 */}
+ <div className="col-md-1 d-flex justify-content-start">
+              
+              <img
+                src="/images/logo4.png"
+                alt="Logo 2"
+                className="girar me-5 img-fluid "
+              />
+            </div>
       {/* Escolha de Opção */}
       <div className="row mb-4">
         <div className="col-12 text-center">
@@ -31,7 +39,7 @@ const AdminPage = () => {
             Gerenciar Serviços
           </button>
           <Link
-            className="btn btn-primary mx-2"  to="/agendarteste"          
+            className="btn btn-login mx-2"  to="/criaragendamento"          
           >
             Adicionar agendamento
           </Link>

@@ -164,13 +164,14 @@
     animation: girar 2s linear infinite;
     /* 2 segundos, rotação constante, repetição infinita */
     position: fixed;
-    bottom: 15%;
+    bottom: 7%;
     /* Ajuste conforme necessário */
-    left: 5%;
+    left: 1%;
     /* Ajuste conforme necessário */
     width: 90px;
     /* Tamanho do elemento */
     height: auto;
+    
 }
 
 @media (max-width: 768px) {

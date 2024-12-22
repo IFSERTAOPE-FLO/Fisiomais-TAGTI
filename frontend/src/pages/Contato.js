@@ -24,14 +24,14 @@ function Contato() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     try {
       const response = await fetch('http://localhost:5000/api/contato', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-  
+
       if (response.ok) {
         setSuccessMessage('Mensagem enviada com sucesso!');
         setErrorMessage('');
@@ -48,39 +48,39 @@ function Contato() {
 
   return (
     <div className="container my-5">
-      
+
       <div className="row align-items-center ">
         {/* Bloco de Informações de Contato */}
-        
+
         <div className="col-md-4">
-        <div className="card shadow rounded">
-        <div className="card-header agendamento rounded  info ">
-          <h3 className="mb-4 agendamento-titulo fw-bold  text-center ">Nossas clinicas</h3>
-          
-          <div className="info-box border-bottom border-top mb-3 ">
-            
-            <i className="bi bi-geo-alt-fill  cor-pink "></i>
-            <div>
-            <br></br>
-              <p className="mb-1 fw-bold agendamento-titulo ">Floresta</p>
-              <p>Rua 123, 372 - Centro, Floresta - PE</p>
-              <p>Segunda a Sexta: 07:00–19:00 </p>
-                <p>Sábado e Domingo: Fechado</p>
-              <br />
+          <div className="card shadow rounded">
+            <div className="card-header agendamento rounded  info ">
+              <h3 className="mb-4 agendamento-titulo fw-bold  text-center ">Nossas clinicas</h3>
+
+              <div className="info-box border-bottom border-top mb-3 ">
+
+                <i className="bi bi-geo-alt-fill  cor-pink "></i>
+                <div>
+                  <br></br>
+                  <p className="mb-1 fw-bold agendamento-titulo ">Floresta</p>
+                  <p>Rua 123, 372 - Centro, Floresta - PE</p>
+                  <p>Segunda a Sexta: 07:00–19:00 </p>
+                  <p>Sábado e Domingo: Fechado</p>
+                  <br />
+                </div>
+              </div>
+              <div className="info-box mb-3 border-bottom ">
+                <i className="bi bi-geo-alt-fill   cor-pink "></i>
+                <div>
+                  <p className="mb-1 fw-bold">Serra Talhada</p>
+                  <p>Rua 123, 372 - Centro, Serra Talhada - PE</p>
+                  <p>Segunda a Sexta: 07:00–19:00</p>
+                  <p>Sábado e Domingo: Fechado</p>
+                  <br />
+                </div>
+              </div>
             </div>
           </div>
-          <div className="info-box mb-3 border-bottom ">
-            <i className="bi bi-geo-alt-fill   cor-pink "></i>
-            <div>
-              <p className="mb-1 fw-bold">Serra Talhada</p>
-              <p>Rua 123, 372 - Centro, Serra Talhada - PE</p>
-              <p>Segunda a Sexta: 07:00–19:00</p>
-              <p>Sábado e Domingo: Fechado</p>
-              <br />
-            </div>
-          </div>
-        </div>
-        </div>
         </div>
 
         {/* Formulário de Contato */}
@@ -146,60 +146,31 @@ function Contato() {
             </div>
           </div>
           <div className="container" style={{ position: 'relative' }}>
-          {/* Imagem Logo 0 */}
-    <img 
-        src="/images/fisiomaisboneco.png" 
-        alt="Logo 0" 
-        className="animate-subir-descer5"
-        style={{ width: '100px', height: 'auto', position: 'absolute', top: '-585px', left: '-530px', zIndex: -2  }}
-    />
+            {/* Imagem Logo 0 */}
+            <div className="col-md-1 d-flex justify-content-start">
+              
+              <img
+                src="/images/logo4.png"
+                alt="Logo 2"
+                className="girar me-5 img-fluid "
+              />
+            </div>
+            <img
+              src="/images/contat.png"
+              alt="5"
+              style={{ width: '1320px', height: 'auto', position: 'absolute', top: '-630px', left: '-130px', zIndex: -2 }}
 
-    {/* Imagem Logo 1 */}
-    <img 
-        src="/images/fisiomaisboneco.png" 
-        alt="Logo 1" 
-        className="animate-subir-descer3"
-        style={{ width: '70px', height: 'auto', position: 'absolute', top: '-55px', left: '-130px', zIndex: -2  }}
-    />
+            />
+            
+            <img
+              src="/images/5.png"
+              alt="5"
+              className="girar"
+              style={{ width: '350px', height: 'auto', position: 'absolute', top: '-280px', left: '700px', zIndex: -2 }}
 
-    {/* Imagem Logo 2 */}
-    <img 
-        src="/images/fisiomaisboneco.png" 
-        alt="Logo 2" 
-        className="animate-subir-descer4"
-        style={{ width: '70px', height: 'auto', position: 'absolute', top: '-80px', left: '-510px', zIndex: -2  }}
-    />
-
-    {/* Imagem logo 3 */}
-    <img 
-        src="/images/fisiomaisboneco.png" 
-        alt="3"
-        className="animate-subir-descer2"
-        style={{ width: '70px', height: 'auto', position: 'absolute', top: '-590px', left: '-130px', zIndex: -2  }}
-    />
-     <img 
-        src="/images/contat.png" 
-        alt="5"
-        style={{ width: '1320px', height: 'auto', position: 'absolute', top: '-630px', left: '-130px', zIndex: -2 }}
-        
-    />
-        {/* Imagem logo 4 */}
-        <img 
-        src="/images/4.png" 
-        alt="4"
-        className="girar"
-        style={{ width: '350px', height: 'auto', position: 'absolute', top: '-100px', left: '860px', zIndex: -2  }}
-        
-    />
-     <img 
-        src="/images/5.png" 
-        alt="5"
-        className="girar"
-        style={{ width: '350px', height: 'auto', position: 'absolute', top: '-280px', left: '700px',zIndex: -2  }}
-        
-    />
-      </div>
-      </div>
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

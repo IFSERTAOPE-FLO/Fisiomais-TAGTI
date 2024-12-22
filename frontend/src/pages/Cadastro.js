@@ -177,13 +177,14 @@ function Cadastro() {
                 />
               </div>
               <div className="col-12 col-md-2">
-                <label htmlFor="telefone" className="form-label text-secondary">Telefone</label>
+                <label htmlFor="telefone" className="form-label text-secondary">Telefone*</label>
                 <input
                   type="tel"
                   className="form-control"
                   id="telefone"
                   value={telefone}
                   onChange={(e) => setTelefone(e.target.value)}
+                  required
                 />
               </div>
               <div className="col-12 col-md-3">
