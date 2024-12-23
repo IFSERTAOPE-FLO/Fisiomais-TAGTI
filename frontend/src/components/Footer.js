@@ -48,7 +48,7 @@ function Footer() {
               <img
                 src="/images/logo4.png"
                 alt="Logo 2"
-                className="girar me-5 img-fluid "
+                className="girar me-5 img-fluid footerimg"
               />
             
           <a

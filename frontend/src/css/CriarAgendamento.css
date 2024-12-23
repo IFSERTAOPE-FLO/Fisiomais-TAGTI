@@ -49,6 +49,8 @@
     }
 }
 
+
+
 @media (max-width: 480px) {
     .agendamentoback::before {
         background-size: 150%;
@@ -179,7 +181,7 @@
     
 
     .girar,
-    .row .col-md-1 img {
+    .footerimg {
         position: absolute;
     bottom: 39%;
     /* Ajuste conforme necessário */
@@ -193,6 +195,7 @@
 /* Definindo o tamanho máximo para as imagens */
 .max-size {
     max-width: 90px;
+    min-width: 75px;
     /* Tamanho máximo padrão */
 }
 
@@ -202,3 +205,18 @@
         /* Tamanho máximo para telas pequenas */
     }
 }
+@media (min-width: 992px) { /* Aplica a partir de telas grandes (lg) */
+    .animate-subir-descer3,
+    .animate-subir-descer4,
+    .animate-subir-descer2 {
+      margin-bottom: 90px; /* Ajuste o valor conforme necessário */
+    }
+}
+
+
+  
+    
+  @media (max-width: 767px) { /* Para telas menores */
+    .imagens-container {
+      display:none;
+    }}  
