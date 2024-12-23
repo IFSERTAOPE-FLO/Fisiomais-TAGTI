@@ -73,12 +73,24 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
   
 
   const adicionarPlano = () => {
+    // Determina o próximo ID com base no maior ID existente
+    const novoID = formData.Planos.length > 0
+      ? Math.max(...formData.Planos.map((plano) => plano.ID_Plano)) + 1
+      : 1;
+  
+    // Adiciona o novo plano com o ID gerado
     setFormData((prev) => ({
       ...prev,
-      Planos: [...prev.Planos, { Nome_plano: novoPlano.nome, Valor: parseFloat(novoPlano.valor) }],
+      Planos: [
+        ...prev.Planos,
+        { ID_Plano: novoID, Nome_plano: novoPlano.nome, Valor: parseFloat(novoPlano.valor) },
+      ],
     }));
-    setNovoPlano({ nome: "", valor: "" }); // Reset the new plan input fields
+    
+    // Reseta os campos do novo plano
+    setNovoPlano({ nome: "", valor: "" });
   };
+  
 
   const handleSave = async () => {
     // Valida o campo Valor antes de enviar
