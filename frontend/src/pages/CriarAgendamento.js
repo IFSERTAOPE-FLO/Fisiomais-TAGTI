@@ -38,7 +38,7 @@ function CriarAgendamento() {
       if (userId) {
         fetchHorariosDisponiveis(userId, data);
         fetchDiasPermitidos(userId); // Chama a função de horários disponíveis com o ID do colaborador
-        
+
       }
     }
 
@@ -114,7 +114,7 @@ function CriarAgendamento() {
   useEffect(() => {
     if (colaborador) {
       fetchHorariosDisponiveis(colaborador);
-      
+
     }
   }, [colaborador]);
 
@@ -247,14 +247,14 @@ function CriarAgendamento() {
 
 
   return (
-    
-    <div className="container py-5 background-gif">
-      
 
-  <div className="row align-items-center agendamentoback">
-    
-    <div className="col-md-6">
-        
+    <div className="container py-5 background-gif">
+
+
+      <div className="row align-items-center agendamentoback">
+
+        <div className="col-md-6">
+
           <div className="card shadow-lg border-0 ">
             <div className="card-header text-center  rounded-top">
               <h3 className="fw-bold  text-primary ">Agendar atendimento</h3>
@@ -324,7 +324,7 @@ function CriarAgendamento() {
                     value={colaborador}
                     onChange={(e) => setColaborador(e.target.value)}
                     required
-                     
+
                     hidden={role === 'colaborador' && role !== 'admin'} // Esconde para colaboradores não administradores
                   >
                     <option value="">Selecione um colaborador</option>
@@ -417,8 +417,8 @@ function CriarAgendamento() {
         <div className="col-md-6">
           <div className="row">
             <div className="col-md-2 d-flex justify-content-start">
-            < br/>< br/>
-              
+              < br />< br />
+
 
               {/* Imagem Logo 3 */}
               <img
@@ -437,28 +437,15 @@ function CriarAgendamento() {
                 className="animate-subir-descer2 me-5 img-fluid max-size "
               />
             </div>
-            
-            
+
+
           </div>
-          < br/>
-          < br/>
-          <div className="row">
-      
+          < br />
+          < br />
+          
 
-
-<div className="col-md-1 d-flex justify-content-start">
-  {/* Imagem Logo 2 */}
-  <img
-    src="/images/logo4.png"
-    alt="Logo 2"
-    className="girar me-5 img-fluid "
-  />
-</div>
-
-  </div>
-  
           <img
-            src="/images/smart.png"
+            src="/images/smart.gif"
             alt="Smart"
             className="img-fluid"  // Adicionando a classe img-fluid para responsividade
           />

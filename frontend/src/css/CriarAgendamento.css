@@ -38,12 +38,13 @@
     z-index: -1100;
     animation: pulsar 7s ease-in-out infinite;
     /* Aplica a animação de pulsar */
+    z-index: 0;
 }
 
 /* Estilo adicional para melhorar a responsividade */
 @media (max-width: 768px) {
     .agendamentoback::before {
-        background-size: 300%;
+        display:none;
         /* Ajusta o tamanho da imagem para telas menores */
     }
 }
@@ -163,22 +164,29 @@
 .girar {
     animation: girar 2s linear infinite;
     /* 2 segundos, rotação constante, repetição infinita */
-    position: fixed;
-    bottom: 7%;
+    position: absolute;
+    bottom: 25%;
     /* Ajuste conforme necessário */
-    left: 1%;
+    left: 2%;
     /* Ajuste conforme necessário */
-    width: 90px;
+    width: 70px;
     /* Tamanho do elemento */
     height: auto;
     
 }
 
 @media (max-width: 768px) {
+    
 
     .girar,
     .row .col-md-1 img {
-        display: none;
+        position: absolute;
+    bottom: 39%;
+    /* Ajuste conforme necessário */
+    left: 2%;
+    /* Ajuste conforme necessário */
+    
+        width: 50px;
     }
 }
 
