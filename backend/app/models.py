@@ -106,7 +106,13 @@ class Servicos(db.Model):
     planos = db.Column(db.JSON, nullable=True)  # Planos para serviços de Pilates (armazenados como JSON)
 
     # Relacionamentos
-    colaboradores = db.relationship('Colaboradores', secondary='colaboradores_servicos', back_populates='servicos')
+    # Relacionamento ajustado no modelo Servicos
+    colaboradores = db.relationship(
+        'Colaboradores',
+        secondary='colaboradores_servicos',
+        back_populates='servicos',
+        overlaps="servicos"
+    )
 
     def __repr__(self):
         return f'<Servico {self.Nome_servico} - {self.tipo_servico}>'
