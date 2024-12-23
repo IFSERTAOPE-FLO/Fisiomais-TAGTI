@@ -61,7 +61,7 @@ def agendamento():
         plano_id = data.get('plano_id')
 
         # Validar se o serviço exige plano
-        if servico.tipo_servico != 'fisioterapia':
+        if 'fisioterapia' not in [tipo.tipo for tipo in servico.tipo_servicos]:
             if plano_id is None:
                 print("Plano not provided")  # Mensagem de erro se o plano não for fornecido
                 return jsonify({'message': 'Plano não fornecido'}), 400
@@ -72,7 +72,7 @@ def agendamento():
 
             plano_selecionado = None
             for plano in servico.planos:
-                if plano['ID_Plano'] == plano_id:
+                if plano.id_plano == plano_id:
                     plano_selecionado = plano
                     break
 
@@ -81,10 +81,17 @@ def agendamento():
                 return jsonify({'message': 'Plano não encontrado'}), 404
         else:
             plano_selecionado = None
+        
+        # Verificar a existência da clínica associada ao colaborador
+        clinica = Clinicas.query.filter_by(id_clinica=colaborador.id_clinica).first()
+        if not clinica:
+            print("Clinica not found")  # Mensagem de erro se a clínica não for encontrada
+            return jsonify({'message': 'Clínica não encontrada'}), 404
+
         # Verificar se já existe agendamento para o colaborador no horário escolhido
         data_e_hora = datetime.fromisoformat(data['data']).astimezone(BRASILIA)
         agendamento_existente = Agendamentos.query.filter(
-            Agendamentos.ID_Colaborador == colaborador.ID_Colaborador,
+            Agendamentos.id_colaborador == colaborador.id_colaborador,
             Agendamentos.data_e_hora == data_e_hora
         ).first()
 
@@ -92,21 +99,22 @@ def agendamento():
             return jsonify({'message': 'Já existe um agendamento para esse colaborador neste horário.'}), 400
 
         # Criar o agendamento
-        data_e_hora = datetime.fromisoformat(data['data']).astimezone(BRASILIA)
-
         novo_agendamento = Agendamentos(
             data_e_hora=data_e_hora,
-            ID_Cliente=cliente.ID_Cliente,
-            ID_Colaborador=colaborador.ID_Colaborador,
-            ID_Servico=servico.ID_Servico,
-            ID_Plano=plano_id if servico.tipo_servico != 'fisioterapia' else None,
-            status="pendente"  # Status inicial
+            id_cliente=cliente.id_cliente,
+            id_colaborador=colaborador.id_colaborador,
+            id_servico=servico.id_servico,
+            status="pendente",  # Status inicial
+            id_clinica=clinica.id_clinica  # Adicionando a clínica ao agendamento
         )
+        if plano_selecionado:
+            novo_agendamento.id_plano = plano_selecionado.id_plano
+
         print(f"Created appointment: {novo_agendamento}")  
         
         db.session.add(novo_agendamento)
         db.session.commit()
-        enviar_email_agendamento(novo_agendamento.ID_Agendamento)
+        enviar_email_agendamento(novo_agendamento.id_agendamento)
 
         return jsonify({'message': 'Agendamento criado com status pendente'}), 201
     
@@ -116,6 +124,7 @@ def agendamento():
         print(f"Error details: {error_details}")  # Exibe o traceback completo para análise
         db.session.rollback()
         return jsonify({'message': f'Erro ao criar agendamento: {str(e)}', 'error_details': error_details}), 500
+
 
 
 
@@ -581,7 +590,3 @@ def enviar_email_agendamento(agendamento_id):
 
     except Exception as e:
         return jsonify({'message': f'Erro ao enviar e-mails: {str(e)}'}), 500
-
-
-
-
