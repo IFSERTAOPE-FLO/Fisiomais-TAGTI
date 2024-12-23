@@ -414,9 +414,10 @@ function CriarAgendamento() {
           </div>
         </div>
 
-        <div className="col-md-6">
-          <div className="row">
-            <div className="col-md-2 d-flex justify-content-start">
+        <div className="col-md-6  ">
+        <div className="row d-flex justify-content-center align-items-center ">
+    
+            <div className="col-md-2 d-flex justify-content-start text-align ">
               < br />< br />
 
 
@@ -436,6 +437,7 @@ function CriarAgendamento() {
                 alt="Logo 3"
                 className="animate-subir-descer2 me-5 img-fluid max-size "
               />
+             
             </div>
 
 
