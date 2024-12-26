@@ -9,6 +9,7 @@ clinicas = Blueprint('clinicas', __name__)
 @clinicas.route('/', methods=['GET'])
 def get_clinicas():
     clinicas = Clinicas.query.all()
+    
     clinicas_list = [
         {
             "ID_Clinica": clinica.id_clinica,

@@ -294,7 +294,7 @@ function CriarAgendamento() {
                     <option value="">Selecione uma clínica</option>
                     {clinicas.map((clin) => (
                       <option key={clin.ID_Clinica} value={clin.ID_Clinica}>
-                        {clin.Nome_clinica}
+                        {clin.Nome}
                       </option>
                     ))}
                   </select>

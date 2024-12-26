@@ -224,33 +224,60 @@ def populate_database():
                 is_admin=True,
                 admin_nivel='geral'
             )
-            admin.set_password('12345')  # Certifique-se de que o método de criptografia funciona corretamente
+            admin.set_password('12345')
             db.session.add(admin)
 
+    # Endereços para clínicas
     enderecos = [
-    {"rua": "Rua A", "numero": "123", "bairro": "Centro", "cidade": "Cidade A", "estado": "SP"},
-    {"rua": "Rua B", "numero": "456", "bairro": "Bairro B", "cidade": "Cidade B", "estado": "RJ"}
-]
+        {"rua": "Rua A", "numero": "123", "bairro": "Centro", "cidade": "São Paulo", "estado": "SP"},
+        {"rua": "Rua B", "numero": "456", "bairro": "Bairro Novo", "cidade": "Rio de Janeiro", "estado": "RJ"},
+        {"rua": "Rua C", "numero": "789", "bairro": "Centro", "cidade": "Belo Horizonte", "estado": "MG"}
+    ]
 
-    # Adicionar endereços e clínicas ao banco de dados
-    for endereco in enderecos:
-        endereco_existente = Enderecos.query.filter_by(rua=endereco["rua"]).first()
-        if not endereco_existente:
-            novo_endereco = Enderecos(**endereco)
-            db.session.add(novo_endereco)
-            db.session.commit()
-            endereco_existente = novo_endereco
+    clinicas = [
+        {"cnpj": "11.111.111/0001-11", "nome": "Clínica Saúde SP", "telefone": "111111111"},
+        {"cnpj": "22.222.222/0001-22", "nome": "Clínica Rio", "telefone": "222222222"},
+        {"cnpj": "33.333.333/0001-33", "nome": "Clínica BH", "telefone": "333333333"}
+    ]
 
-        # Verificar se a clínica já existe pelo CNPJ
-        clinica_existente = Clinicas.query.filter_by(cnpj="12.345.678/0001-90").first()
-        if not clinica_existente:
+    # Criar clínicas e seus endereços
+    clinica_instances = []
+
+    for i, endereco in enumerate(enderecos):
+        # Verificar se o endereço já existe
+        endereco_obj = Enderecos.query.filter_by(
+            rua=endereco["rua"], 
+            numero=endereco["numero"], 
+            bairro=endereco["bairro"], 
+            cidade=endereco["cidade"], 
+            estado=endereco["estado"]
+        ).first()
+        
+        if not endereco_obj: 
+            endereco_obj = Enderecos(**endereco)
+            db.session.add(endereco_obj)
+            db.session.commit()  # Commit após garantir que o endereço foi criado
+        
+        # Associar endereço a uma clínica
+        clinica_data = clinicas[i]
+        clinica = Clinicas.query.filter_by(cnpj=clinica_data["cnpj"]).first()
+        
+        if not clinica:
             clinica = Clinicas(
-                nome=f"Clínica {endereco['bairro']}",
-                cnpj="12.345.678/0001-90",
-                endereco_id=endereco_existente.id_endereco                
+                cnpj=clinica_data["cnpj"],
+                nome=clinica_data["nome"],
+                telefone=clinica_data["telefone"],
+                endereco_id=endereco_obj.id_endereco
             )
             db.session.add(clinica)
-            db.session.commit()
+            db.session.commit()  # Commit após garantir que a clínica foi criada
+        
+        clinica_instances.append(clinica)
+
+    # Verificar se alguma clínica foi criada
+    if not clinica_instances:
+        raise ValueError("Nenhuma clínica foi criada. Verifique os dados de entrada e a lógica de criação de clínicas.")
+
 
 
    # Definir os serviços
@@ -322,32 +349,9 @@ def populate_database():
 
     db.session.commit()
 
-    # Criar colaboradores
-    colaboradores = [
-        {"nome": "João Victor Ramos de Souza", "email": "joao.ramos.souza@gmail.com", "telefone": "999988888", "cargo": "Fisioterapeuta", "cpf": "11111111111", "admin_nivel": "geral"},
-        {"nome": "Lucas Alves", "email": "lucas@teste.com", "telefone": "999977677", "cargo": "Fisioterapeuta", "cpf": "22222222222", "admin_nivel": "restrito"},
-        {"nome": "Eveline Almeida", "email": "lucas@teste.com", "telefone": "999970777", "cargo": "Fisioterapeuta", "cpf": "32222222222", "admin_nivel": "restrito"},
-        {"nome": "Aline Rayane", "email": "Aline@teste.com", "telefone": "999977747", "cargo": "Fisioterapeuta", "cpf": "42222222222", "admin_nivel": "restrito"},
-        {"nome": "Manases", "email": "Manases@teste.com", "telefone": "999977777", "cargo": "Fisioterapeuta", "cpf": "52222222222", "admin_nivel": "restrito"},
-        
-    ]
+    
 
-    for colaborador in colaboradores:
-        exists = Colaboradores.query.filter_by(email=colaborador["email"]).first()
-        if not exists:
-            novo_colaborador = Colaboradores(
-                nome=colaborador["nome"],
-                email=colaborador["email"],
-                telefone=colaborador["telefone"],
-                cargo=colaborador["cargo"],
-                cpf=colaborador["cpf"],
-                admin_nivel=colaborador["admin_nivel"]
-            )
-            novo_colaborador.set_password("123")  # Criptografando a senha
-            db.session.add(novo_colaborador)
-
-    # Salvar colaboradores no banco de dados
-    db.session.commit()
+    
 
     # Associar colaboradores aos serviços
     for colaborador in Colaboradores.query.all():

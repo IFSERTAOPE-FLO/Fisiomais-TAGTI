@@ -81,7 +81,7 @@ def get_colaboradores():
         return jsonify({"error": "Servico ID é necessário"}), 400
     
     query = Colaboradores.query.filter(
-        Colaboradores.servicos.any(ID_Servico=servico_id),
+        Colaboradores.servicos.any(id_servico=servico_id),
         Colaboradores.is_admin == False
     )
     
@@ -94,7 +94,7 @@ def get_colaboradores():
     if not colaboradores:
         return jsonify({"message": "Nenhum colaborador encontrado para o serviço solicitado"}), 404
     
-    colaboradores_list = [{"ID_Colaborador": c.ID_Colaborador, "Nome": c.nome} for c in colaboradores]
+    colaboradores_list = [{"ID_Colaborador": c.id_dolaborador, "Nome": c.nome} for c in colaboradores]
     return jsonify(colaboradores_list)
 
 
@@ -106,19 +106,19 @@ def get_colaboradoresdisponiveis():
     
     # Buscar colaboradores que já estão alocados nesse serviço
     colaboradores_alocados = Colaboradores.query.filter(
-        Colaboradores.servicos.any(ID_Servico=servico_id),
+        Colaboradores.servicos.any(id_servico=servico_id),
         Colaboradores.is_admin == False
     ).all()
     
     # Buscar colaboradores disponíveis (aqueles que não estão alocados nesse serviço)
     colaboradores_disponiveis = Colaboradores.query.filter(
-        ~Colaboradores.servicos.any(ID_Servico=servico_id),
+        ~Colaboradores.servicos.any(id_servico=servico_id),
         Colaboradores.is_admin == False
     ).all()
 
     # Formatar as respostas para as listas de colaboradores alocados e disponíveis
-    colaboradores_alocados_list = [{"ID_Colaborador": c.ID_Colaborador, "Nome": c.nome} for c in colaboradores_alocados]
-    colaboradores_disponiveis_list = [{"ID_Colaborador": c.ID_Colaborador, "Nome": c.nome} for c in colaboradores_disponiveis]
+    colaboradores_alocados_list = [{"ID_Colaborador": c.id_colaborador, "Nome": c.nome} for c in colaboradores_alocados]
+    colaboradores_disponiveis_list = [{"ID_Colaborador": c.id_colaborador, "Nome": c.nome} for c in colaboradores_disponiveis]
 
     return jsonify({
         "alocados": colaboradores_alocados_list,

@@ -40,7 +40,7 @@ def create_app():
         from app.rotas.routesAgendamentos import agendamentos       
         from app.rotas.routesUsers import usuarios
         from app.rotas.routesServicos import servicos
-        from app.rotas.routesClinica import clinicas
+        from app.rotas.routesClinicas import clinicas
 
         app.register_blueprint(main, url_prefix='/')
         app.register_blueprint(usuarios, url_prefix='/usuarios')
