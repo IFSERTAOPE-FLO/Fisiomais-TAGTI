@@ -215,21 +215,30 @@ function CriarAgendamento() {
   };
   const fetchDiasPermitidos = async (colaboradorId) => {
     if (!colaboradorId) {
-      console.error('Colaborador não definido. Abortando chamada à API.');
-      return;
+      console.error('Colaborador não definido');
+      return; // Prevent the API call if colaborador is not defined
     }
+  
     try {
       const response = await fetch(`http://localhost:5000/agendamentos/dias-permitidos/${colaboradorId}`);
       if (response.ok) {
         const data = await response.json();
         setDiasPermitidos(data.dias_permitidos);
       } else {
-        console.error('Erro ao buscar dias permitidos:', response.status);
+        console.error('Erro ao buscar dias permitidos');
       }
     } catch (error) {
       console.error('Erro ao buscar dias permitidos:', error);
     }
   };
+  
+  // Chamada da função no useEffect
+  useEffect(() => {
+    if (colaborador) {
+      fetchDiasPermitidos(colaborador);
+    }
+  }, [colaborador]);
+  
 
 
   useEffect(() => {
