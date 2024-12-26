@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 
+const estados = [
+    "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
+];
+
 const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
     const [nome, setNome] = useState(usuario.nome);
     const [email, setEmail] = useState(usuario.email);
@@ -12,17 +16,31 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
     const [estado, setEstado] = useState(usuario.endereco?.estado || '');
     const [cpf, setCpf] = useState(usuario.cpf);
     const [cargo, setCargo] = useState(usuario.cargo || '');
+    const [cidades, setCidades] = useState([]);
+    const [erro, setErro] = useState('');
 
+    // Fetch cities based on the selected state
     useEffect(() => {
-        // Se o endereço mudar, atualize os campos do estado
-        if (usuario.endereco) {
-            setRua(usuario.endereco.rua || '');
-            setNumero(usuario.endereco.numero || '');
-            setBairro(usuario.endereco.bairro || '');
-            setCidade(usuario.endereco.cidade || '');
-            setEstado(usuario.endereco.estado || '');
+        if (estado) {
+            const buscarCidades = async (estado) => {
+                try {
+                    const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estado}/distritos`);
+                    if (response.ok) {
+                        const cidades = await response.json();
+                        const cidadesOrdenadas = cidades
+                            .map((cidade) => cidade.nome)
+                            .sort((a, b) => a.localeCompare(b));
+                        setCidades(cidadesOrdenadas);
+                    } else {
+                        throw new Error("Erro ao carregar cidades.");
+                    }
+                } catch (err) {
+                    setErro(err.message);
+                }
+            };
+            buscarCidades(estado);
         }
-    }, [usuario]);
+    }, [estado]);
 
     const handleSave = async () => {
         const dadosAtualizados = {
@@ -135,19 +153,33 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
                     <Form.Group controlId="formCidade">
                         <Form.Label>Cidade</Form.Label>
                         <Form.Control
-                            type="text"
+                            as="select"
                             value={cidade}
                             onChange={(e) => setCidade(e.target.value)}
-                        />
+                        >
+                            <option value="">Selecione a cidade</option>
+                            {cidades.map((cidade, index) => (
+                                <option key={index} value={cidade}>
+                                    {cidade}
+                                </option>
+                            ))}
+                        </Form.Control>
                     </Form.Group>
 
                     <Form.Group controlId="formEstado">
                         <Form.Label>Estado</Form.Label>
                         <Form.Control
-                            type="text"
+                            as="select"
                             value={estado}
                             onChange={(e) => setEstado(e.target.value)}
-                        />
+                        >
+                            <option value="">Selecione o estado</option>
+                            {estados.map((estado) => (
+                                <option key={estado} value={estado}>
+                                    {estado}
+                                </option>
+                            ))}
+                        </Form.Control>
                     </Form.Group>
 
                     <Form.Group controlId="formCpf">
