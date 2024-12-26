@@ -173,7 +173,7 @@ const Perfil = () => {
                     />
                   ) : dadosUsuario.photo ? (
                     <img
-                      src={`http://localhost:5000/uploads/${dadosUsuario.photo}?t=${new Date().getTime()}`}
+                      src={`http://localhost:5000/usuarios/uploads/${dadosUsuario.photo}?t=${new Date().getTime()}`}
                       alt="Foto do Usuário"
                       className="img-fluid rounded-circle mb-3"
                       style={{ width: "200px", height: "160px" }}
