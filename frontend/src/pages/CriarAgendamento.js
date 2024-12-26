@@ -10,9 +10,11 @@ function CriarAgendamento() {
   const [servico, setServico] = useState('');
   const [colaborador, setColaborador] = useState('');
   const [cliente, setCliente] = useState('');
+  const [clinica, setClinica] = useState('');  // Estado para armazenar a clínica selecionada
   const [servicos, setServicos] = useState([]);
   const [colaboradores, setColaboradores] = useState([]);
   const [clientes, setClientes] = useState([]);
+  const [clinicas, setClinicas] = useState([]);  // Estado para armazenar as clínicas
   const [role, setRole] = useState('');
   const [planos, setPlanos] = useState([]);
   const [tipoServico, setTipoServico] = useState('');
@@ -41,7 +43,7 @@ function CriarAgendamento() {
 
       }
     }
-
+    fetchClinicas();  
     fetchServicos();
     fetchClientes();
     fetchFeriados();
@@ -80,10 +82,27 @@ function CriarAgendamento() {
     ]);
   };
 
+  useEffect(() => {
+    if (servico && clinica) {
+      fetchColaboradores();
+    }
+  }, [servico, clinica]);
+
+  const fetchClinicas = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/clinicas');
+      if (response.ok) {
+        setClinicas(await response.json());
+      }
+    } catch (error) {
+      console.error('Erro ao buscar clínicas:', error);
+    }
+  };
+
   const fetchColaboradores = useCallback(async () => {
-    if (servico) {
+    if (servico && clinica) {
       try {
-        const response = await fetch(`http://localhost:5000/colaboradores?servico_id=${servico}`);
+        const response = await fetch(`http://localhost:5000/colaboradores?servico_id=${servico}&clinica_id=${clinica}`);
         if (response.ok) {
           setColaboradores(await response.json());
         }
@@ -91,7 +110,8 @@ function CriarAgendamento() {
         console.error('Erro ao buscar colaboradores:', error);
       }
     }
-  }, [servico]);
+  }, [servico, clinica]);
+
 
   useEffect(() => {
     if (servico) {
@@ -261,6 +281,24 @@ function CriarAgendamento() {
             </div>
             <div className="card-body p-4">
               <form onSubmit={handleSubmit}>
+                {/* Campo para selecionar a clínica */}
+                <div className="mb-3">
+                  <label htmlFor="clinica" className="form-label">Clínica</label>
+                  <select
+                    id="clinica"
+                    className="form-select"
+                    value={clinica}
+                    onChange={(e) => setClinica(e.target.value)}
+                    required
+                  >
+                    <option value="">Selecione uma clínica</option>
+                    {clinicas.map((clin) => (
+                      <option key={clin.ID_Clinica} value={clin.ID_Clinica}>
+                        {clin.Nome_clinica}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div className="mb-3">
                   <label htmlFor="servico" className="form-label">Serviço</label>
                   <select
@@ -447,7 +485,6 @@ function CriarAgendamento() {
           </div>
           < br />
           < br />
-
 
 
 

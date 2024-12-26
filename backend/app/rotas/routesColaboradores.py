@@ -76,19 +76,27 @@ def register_colaborador():
 @colaboradores.route('/', methods=['GET'])
 def get_colaboradores():
     servico_id = request.args.get('servico_id')
+    clinica_id = request.args.get('clinica_id')  # Novo parâmetro para filtrar pela clínica
     if not servico_id:
         return jsonify({"error": "Servico ID é necessário"}), 400
     
-    colaboradores = Colaboradores.query.filter(
+    query = Colaboradores.query.filter(
         Colaboradores.servicos.any(ID_Servico=servico_id),
         Colaboradores.is_admin == False
-    ).all()
+    )
+    
+    # Se uma clínica foi fornecida, filtra também pelos colaboradores dessa clínica
+    if clinica_id:
+        query = query.filter(Colaboradores.clinica_id == clinica_id)
+    
+    colaboradores = query.all()
     
     if not colaboradores:
         return jsonify({"message": "Nenhum colaborador encontrado para o serviço solicitado"}), 404
     
     colaboradores_list = [{"ID_Colaborador": c.ID_Colaborador, "Nome": c.nome} for c in colaboradores]
     return jsonify(colaboradores_list)
+
 
 @colaboradores.route('/colaboradoresdisponiveis', methods=['GET'])
 def get_colaboradoresdisponiveis():

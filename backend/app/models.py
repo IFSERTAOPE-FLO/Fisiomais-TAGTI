@@ -27,6 +27,7 @@ class Clinicas(db.Model):
     cnpj = db.Column(db.String(18), unique=True, nullable=False)
     nome = db.Column(db.String(255), nullable=False)
     endereco_id = db.Column(db.Integer, db.ForeignKey('enderecos.id_endereco'), nullable=False)
+    telefone = db.Column(db.String(20), unique=True)
 
     # Relacionamentos
     endereco = db.relationship('Enderecos', back_populates='clinicas')
@@ -246,7 +247,7 @@ def populate_database():
             clinica = Clinicas(
                 nome=f"Clínica {endereco['bairro']}",
                 cnpj="12.345.678/0001-90",
-                endereco_id=endereco_existente.id_endereco
+                endereco_id=endereco_existente.id_endereco                
             )
             db.session.add(clinica)
             db.session.commit()
