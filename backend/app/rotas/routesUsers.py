@@ -1,31 +1,76 @@
 from flask import Blueprint, current_app, send_from_directory, request, jsonify
 import os
-from app.models import Colaboradores, Clientes, db
+from app.models import Colaboradores, Clientes, Enderecos, db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 
 usuarios = Blueprint('usuarios', __name__)
+
 @usuarios.route('/editar_usuario/<role>/<int:user_id>', methods=['PUT'])
 @jwt_required()
 def editar_usuario(role, user_id):
     data = request.get_json()
+
+    # Buscar o usuário dependendo do papel (cliente ou colaborador)
     if role == 'cliente':
-        user = Clientes.query.filter_by(ID_Cliente=user_id).first()
+        user = Clientes.query.filter_by(id_cliente=user_id).first()
     elif role == 'colaborador':
-        user = Colaboradores.query.filter_by(ID_Colaborador=user_id).first()
+        user = Colaboradores.query.filter_by(id_colaborador=user_id).first()
     else:
         return jsonify({'message': 'Role inválido.'}), 400
 
     if not user:
         return jsonify({'message': 'Usuário não encontrado.'}), 404
 
-    # Atualizar os dados
+    # Atualizar os dados gerais do usuário
     for key, value in data.items():
         if hasattr(user, key):
             setattr(user, key, value)
 
     db.session.commit()
-    return jsonify({'message': 'Dados atualizados com sucesso.'}), 200
+    return jsonify({'message': 'Dados do usuário atualizados com sucesso.'}), 200
+
+@usuarios.route('/editar_endereco/<role>/<int:user_id>', methods=['PUT'])
+@jwt_required()
+def editar_endereco(role, user_id):
+    data = request.get_json()
+    endereco_data = data.get("endereco")
+
+    # Verificar se os dados de endereço estão presentes
+    if not endereco_data:
+        return jsonify({'message': 'Dados de endereço não fornecidos.'}), 400
+
+    # Buscar o usuário dependendo do papel (cliente ou colaborador)
+    if role == 'cliente':
+        user = Clientes.query.filter_by(id_cliente=user_id).first()
+    elif role == 'colaborador':
+        user = Colaboradores.query.filter_by(id_colaborador=user_id).first()
+    else:
+        return jsonify({'message': 'Role inválido.'}), 400
+
+    if not user:
+        return jsonify({'message': 'Usuário não encontrado.'}), 404
+
+    # Atualizar ou criar o endereço relacionado
+    endereco = Enderecos.query.filter_by(id_endereco=user.endereco_id).first()
+
+    if endereco:
+        # Caso o endereço já exista, apenas atualize os campos
+        for key, value in endereco_data.items():
+            if hasattr(endereco, key):
+                setattr(endereco, key, value)
+    else:
+        # Caso o endereço não exista, crie um novo
+        endereco = Enderecos(**endereco_data)
+        user.endereco = endereco  # Relacionar o endereço ao usuário
+
+    db.session.commit()
+    return jsonify({'message': 'Endereço atualizado com sucesso.'}), 200
+
+
+
+
+
 
 @usuarios.route('/alterar_senha/<role>/<int:user_id>', methods=['PUT'])
 @jwt_required()
@@ -64,50 +109,55 @@ def alterar_senha(role, user_id):
 @usuarios.route('/listar_usuarios', methods=['GET'])
 @jwt_required()
 def listar_usuarios():
-    # Consulta os dados de clientes e colaboradores
     clientes = Clientes.query.order_by(Clientes.nome).all()
     colaboradores = Colaboradores.query.order_by(Colaboradores.nome).all()
 
-    # Formata os dados para incluir todos os campos relevantes, exceto `photo`
     usuarios = [
         {
-            "ID": cliente.ID_Cliente,
+            "id": cliente.id_cliente,
             "nome": cliente.nome,
             "email": cliente.email,
             "telefone": cliente.telefone,
-            "endereco": cliente.endereco,
-            "bairro": cliente.bairro,
-            "cidade": cliente.cidade,
             "cpf": cliente.cpf,
-            "estado": cliente.estado,            
-            "referencias": cliente.referencias,
-            "dt_nasc": cliente.dt_nasc.isoformat() if cliente.dt_nasc else None,
+            "endereco": {
+                "rua": cliente.endereco.rua if cliente.endereco else None,
+                "numero": cliente.endereco.numero if cliente.endereco else None,
+                "bairro": cliente.endereco.bairro if cliente.endereco else None,
+                "cidade": cliente.endereco.cidade if cliente.endereco else None,
+                "estado": cliente.endereco.estado if cliente.endereco else None,
+            },
             "role": "cliente"
         }
         for cliente in clientes
     ] + [
         {
-            "ID": colaborador.ID_Colaborador,
+            "id": colaborador.id_colaborador,
             "nome": colaborador.nome,
             "email": colaborador.email,
             "telefone": colaborador.telefone,
-            "endereco": colaborador.endereco,
-            "bairro": colaborador.bairro,
-            "cidade": colaborador.cidade,
             "cpf": colaborador.cpf,
-            "estado": colaborador.estado,            
-            "referencias": colaborador.referencias,
             "cargo": colaborador.cargo,
             "is_admin": colaborador.is_admin,
+            "clinica": {
+                "id": colaborador.clinica.id_clinica if colaborador.clinica else None,
+                "nome": colaborador.clinica.nome if colaborador.clinica else None
+            },
+            "endereco": {
+                "rua": colaborador.endereco.rua if colaborador.endereco else None,
+                "numero": colaborador.endereco.numero if colaborador.endereco else None,
+                "bairro": colaborador.endereco.bairro if colaborador.endereco else None,
+                "cidade": colaborador.endereco.cidade if colaborador.endereco else None,
+                "estado": colaborador.endereco.estado if colaborador.endereco else None,
+            },
             "role": "colaborador"
         }
         for colaborador in colaboradores
     ]
 
+    return jsonify(usuarios), 200
     
 
-    # Retorna os dados como JSON
-    return jsonify(usuarios), 200
+ 
 
 
 
@@ -139,38 +189,47 @@ def deletar_usuario(tipo, id):
 @usuarios.route('/perfil', methods=['GET'])
 @jwt_required()
 def get_perfil():
-    email = get_jwt_identity()  # Recupera o email do usuário autenticado
-    
-    # Verifica se o usuário é um cliente ou colaborador
+    email = get_jwt_identity()
+
     cliente = Clientes.query.filter_by(email=email).first()
     colaborador = Colaboradores.query.filter_by(email=email).first()
 
     if cliente:
         return jsonify({
-            'ID': cliente.ID_Cliente,
+            'id': cliente.id_cliente,
             'nome': cliente.nome,
             'email': cliente.email,
             'telefone': cliente.telefone,
             'cpf': cliente.cpf,
-            'endereco': cliente.endereco,
-            'bairro': cliente.bairro,
-            'cidade': cliente.cidade,
-            'photo': cliente.photo,
+            'endereco': {
+                "rua": cliente.endereco.rua if cliente.endereco else None,
+                "numero": cliente.endereco.numero if cliente.endereco else None,
+                "bairro": cliente.endereco.bairro if cliente.endereco else None,
+                "cidade": cliente.endereco.cidade if cliente.endereco else None,
+                "estado": cliente.endereco.estado if cliente.endereco else None,
+            },
             'role': 'cliente'
         })
 
     elif colaborador:
         return jsonify({
-            'ID': colaborador.ID_Colaborador,
+            'id': colaborador.id_colaborador,
             'nome': colaborador.nome,
             'email': colaborador.email,
             'telefone': colaborador.telefone,
             'cpf': colaborador.cpf,
-            'endereco': colaborador.endereco,
-            'bairro': colaborador.bairro,
-            'cidade': colaborador.cidade,
             'cargo': colaborador.cargo,
-            'photo': colaborador.photo,
+            'clinica': {
+                "id": colaborador.clinica.id_clinica if colaborador.clinica else None,
+                "nome": colaborador.clinica.nome if colaborador.clinica else None
+            },
+            'endereco': {
+                "rua": colaborador.endereco.rua if colaborador.endereco else None,
+                "numero": colaborador.endereco.numero if colaborador.endereco else None,
+                "bairro": colaborador.endereco.bairro if colaborador.endereco else None,
+                "cidade": colaborador.endereco.cidade if colaborador.endereco else None,
+                "estado": colaborador.endereco.estado if colaborador.endereco else None,
+            },
             'role': 'colaborador'
         })
 
@@ -212,6 +271,7 @@ def atualizar_usuario(role, id):
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
+
 
 @usuarios.route('/upload_photo', methods=['POST'])
 @jwt_required()

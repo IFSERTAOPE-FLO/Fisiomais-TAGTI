@@ -7,17 +7,18 @@ from flask import url_for
 class Enderecos(db.Model):
     __tablename__ = 'enderecos'
     id_endereco = db.Column(db.Integer, primary_key=True)  # Padronizado
-    rua = db.Column(db.String(255), nullable=False)
-    numero = db.Column(db.String(20), nullable=False)
+    rua = db.Column(db.String(255), nullable=True)  # Tornado opcional
+    numero = db.Column(db.String(20), nullable=True)  # Tornado opcional
     complemento = db.Column(db.String(255), nullable=True)
-    bairro = db.Column(db.String(100), nullable=False)
-    cidade = db.Column(db.String(100), nullable=False)
-    estado = db.Column(db.String(50), nullable=False)
+    bairro = db.Column(db.String(100), nullable=True)  # Tornado opcional
+    cidade = db.Column(db.String(100), nullable=True)  # Tornado opcional
+    estado = db.Column(db.String(50), nullable=True)  # Tornado opcional
 
     # Relacionamentos
     clientes = db.relationship('Clientes', back_populates='endereco')
     colaboradores = db.relationship('Colaboradores', back_populates='endereco')
     clinicas = db.relationship('Clinicas', back_populates='endereco')
+
 
 # Modelo: Clínicas
 class Clinicas(db.Model):
@@ -29,6 +30,8 @@ class Clinicas(db.Model):
 
     # Relacionamentos
     endereco = db.relationship('Enderecos', back_populates='clinicas')
+    colaboradores = db.relationship('Colaboradores', back_populates='clinica')  # Relacionamento com Colaboradores
+
 
 # Modelo: Colaboradores
 class Colaboradores(db.Model):
@@ -45,9 +48,11 @@ class Colaboradores(db.Model):
     cpf = db.Column(db.String(11), unique=True, nullable=False)
     photo = db.Column(db.String(255), nullable=True)
     endereco_id = db.Column(db.Integer, db.ForeignKey('enderecos.id_endereco'), nullable=True)
+    clinica_id = db.Column(db.Integer, db.ForeignKey('clinicas.id_clinica'), nullable=True)  # Relacionamento com Clínica
 
     # Relacionamentos
     endereco = db.relationship('Enderecos', back_populates='colaboradores')
+    clinica = db.relationship('Clinicas', back_populates='colaboradores')  # Relacionamento com Clínica
     servicos = db.relationship('Servicos', secondary='colaboradores_servicos', back_populates='colaboradores')
     horarios = db.relationship('Horarios', back_populates='colaborador')
 
@@ -69,7 +74,7 @@ class Colaboradores(db.Model):
 
     def to_dict(self):
         return {
-            'id_Colaborador': self.id_Colaborador,
+            'id_colaborador': self.id_colaborador,
             'nome': self.nome,
             'cargo': self.cargo
         }
@@ -88,6 +93,10 @@ class Clientes(db.Model):
     photo = db.Column(db.String(255), nullable=True)
     endereco_id = db.Column(db.Integer, db.ForeignKey('enderecos.id_endereco'), nullable=True)
 
+    # Novos campos para verificação de email
+    email_confirmado = db.Column(db.Boolean, default=False, nullable=False)
+    token_confirmacao = db.Column(db.String(128), nullable=True)
+
     # Relacionamentos
     endereco = db.relationship('Enderecos', back_populates='clientes')
 
@@ -102,6 +111,7 @@ class Clientes(db.Model):
         if self.photo:
             return url_for('main.serve_photo', filename=self.photo, _external=True)
         return None
+
 
 # Modelo: Serviços
 class Servicos(db.Model):

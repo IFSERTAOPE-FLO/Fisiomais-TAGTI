@@ -1,38 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 
 const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
     const [nome, setNome] = useState(usuario.nome);
     const [email, setEmail] = useState(usuario.email);
     const [telefone, setTelefone] = useState(usuario.telefone);
-    const [endereco, setEndereco] = useState(usuario.endereco);
-    const [bairro, setBairro] = useState(usuario.bairro);
-    const [cidade, setCidade] = useState(usuario.cidade);
+    const [rua, setRua] = useState(usuario.endereco?.rua || '');
+    const [numero, setNumero] = useState(usuario.endereco?.numero || '');
+    const [bairro, setBairro] = useState(usuario.endereco?.bairro || '');
+    const [cidade, setCidade] = useState(usuario.endereco?.cidade || '');
+    const [estado, setEstado] = useState(usuario.endereco?.estado || '');
     const [cpf, setCpf] = useState(usuario.cpf);
     const [cargo, setCargo] = useState(usuario.cargo || '');
-  
+
+    useEffect(() => {
+        // Se o endereço mudar, atualize os campos do estado
+        if (usuario.endereco) {
+            setRua(usuario.endereco.rua || '');
+            setNumero(usuario.endereco.numero || '');
+            setBairro(usuario.endereco.bairro || '');
+            setCidade(usuario.endereco.cidade || '');
+            setEstado(usuario.endereco.estado || '');
+        }
+    }, [usuario]);
+
     const handleSave = async () => {
-        console.log("Usuário Editando:", usuario);  
-        
         const dadosAtualizados = {
             nome,
             email,
             telefone,
-            endereco,
-            bairro,
-            cidade,
+            endereco: {
+                rua,
+                numero,
+                bairro,
+                cidade,
+                estado,
+            },
             cpf,
             cargo: role === 'colaborador' ? cargo : undefined,
         };
-        
+
         const idUsuario = usuario.ID;
-        
-               
+
         if (!idUsuario) {
             alert("ID do usuário inválido.");
             return;
         }
-        
+
         try {
             const token = localStorage.getItem('token');
             const response = await fetch(`http://localhost:5000/editar_usuario/${role}/${idUsuario}`, {
@@ -43,7 +57,7 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
                 },
                 body: JSON.stringify(dadosAtualizados),
             });
-    
+
             const data = await response.json();
             if (response.ok) {
                 alert('Usuário atualizado com sucesso');
@@ -58,98 +72,115 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
     };
 
     return (
-      <Modal show onHide={onClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Editar Usuário</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Form.Group controlId="formNome">
-              <Form.Label>Nome</Form.Label>
-              <Form.Control
-                type="text"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-              />
-            </Form.Group>
-  
-            <Form.Group controlId="formEmail">
-              <Form.Label>Email</Form.Label>
-              <Form.Control
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </Form.Group>
-  
-            <Form.Group controlId="formTelefone">
-              <Form.Label>Telefone</Form.Label>
-              <Form.Control
-                type="text"
-                value={telefone}
-                onChange={(e) => setTelefone(e.target.value)}
-              />
-            </Form.Group>
-  
-            <Form.Group controlId="formEndereco">
-              <Form.Label>Endereço</Form.Label>
-              <Form.Control
-                type="text"
-                value={endereco}
-                onChange={(e) => setEndereco(e.target.value)}
-              />
-            </Form.Group>
-  
-            <Form.Group controlId="formBairro">
-              <Form.Label>Bairro</Form.Label>
-              <Form.Control
-                type="text"
-                value={bairro}
-                onChange={(e) => setBairro(e.target.value)}
-              />
-            </Form.Group>
-  
-            <Form.Group controlId="formCidade">
-              <Form.Label>Cidade</Form.Label>
-              <Form.Control
-                type="text"
-                value={cidade}
-                onChange={(e) => setCidade(e.target.value)}
-              />
-            </Form.Group>
-  
-            <Form.Group controlId="formCpf">
-              <Form.Label>CPF</Form.Label>
-              <Form.Control
-                type="text"
-                value={cpf}
-                onChange={(e) => setCpf(e.target.value)}
-              />
-            </Form.Group>
-  
-            {role === 'colaborador' && (
-              <Form.Group controlId="formCargo">
-                <Form.Label>Cargo</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={cargo}
-                  onChange={(e) => setCargo(e.target.value)}
-                />
-              </Form.Group>
-            )}
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={onClose}>
-            Fechar
-          </Button>
-          <Button variant="primary" onClick={handleSave}>
-            Salvar alterações
-          </Button>
-        </Modal.Footer>
-      </Modal>
+        <Modal show onHide={onClose}>
+            <Modal.Header closeButton>
+                <Modal.Title>Editar Usuário</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <Form>
+                    <Form.Group controlId="formNome">
+                        <Form.Label>Nome</Form.Label>
+                        <Form.Control
+                            type="text"
+                            value={nome}
+                            onChange={(e) => setNome(e.target.value)}
+                        />
+                    </Form.Group>
+
+                    <Form.Group controlId="formEmail">
+                        <Form.Label>Email</Form.Label>
+                        <Form.Control
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                    </Form.Group>
+
+                    <Form.Group controlId="formTelefone">
+                        <Form.Label>Telefone</Form.Label>
+                        <Form.Control
+                            type="text"
+                            value={telefone}
+                            onChange={(e) => setTelefone(e.target.value)}
+                        />
+                    </Form.Group>
+
+                    <Form.Group controlId="formRua">
+                        <Form.Label>Rua</Form.Label>
+                        <Form.Control
+                            type="text"
+                            value={rua}
+                            onChange={(e) => setRua(e.target.value)}
+                        />
+                    </Form.Group>
+
+                    <Form.Group controlId="formNumero">
+                        <Form.Label>Número</Form.Label>
+                        <Form.Control
+                            type="text"
+                            value={numero}
+                            onChange={(e) => setNumero(e.target.value)}
+                        />
+                    </Form.Group>
+
+                    <Form.Group controlId="formBairro">
+                        <Form.Label>Bairro</Form.Label>
+                        <Form.Control
+                            type="text"
+                            value={bairro}
+                            onChange={(e) => setBairro(e.target.value)}
+                        />
+                    </Form.Group>
+
+                    <Form.Group controlId="formCidade">
+                        <Form.Label>Cidade</Form.Label>
+                        <Form.Control
+                            type="text"
+                            value={cidade}
+                            onChange={(e) => setCidade(e.target.value)}
+                        />
+                    </Form.Group>
+
+                    <Form.Group controlId="formEstado">
+                        <Form.Label>Estado</Form.Label>
+                        <Form.Control
+                            type="text"
+                            value={estado}
+                            onChange={(e) => setEstado(e.target.value)}
+                        />
+                    </Form.Group>
+
+                    <Form.Group controlId="formCpf">
+                        <Form.Label>CPF</Form.Label>
+                        <Form.Control
+                            type="text"
+                            value={cpf}
+                            onChange={(e) => setCpf(e.target.value)}
+                        />
+                    </Form.Group>
+
+                    {role === 'colaborador' && (
+                        <Form.Group controlId="formCargo">
+                            <Form.Label>Cargo</Form.Label>
+                            <Form.Control
+                                type="text"
+                                value={cargo}
+                                onChange={(e) => setCargo(e.target.value)}
+                            />
+                        </Form.Group>
+                    )}
+                </Form>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={onClose}>
+                    Fechar
+                </Button>
+                <Button variant="primary" onClick={handleSave}>
+                    Salvar alterações
+                </Button>
+            </Modal.Footer>
+        </Modal>
     );
-  };
-  
+};
 
 export default EditarUsuario;

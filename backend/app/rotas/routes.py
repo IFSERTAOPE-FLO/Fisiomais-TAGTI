@@ -28,10 +28,11 @@ def login():
         access_token = create_access_token(identity=email)
         response = {
             "access_token": access_token,
-            "userId": colaborador.ID_Colaborador,  # Inclui o ID
+            "userId": colaborador.id_colaborador,  # Corrigido para o nome correto
             "name": colaborador.nome,
             "photo": colaborador.photo if colaborador.photo else "",  # Retorna vazio se não houver foto
-            "role": "admin" if colaborador.is_admin else "colaborador"
+            "role": "admin" if colaborador.is_admin else "colaborador",
+            "admin_nivel": colaborador.admin_nivel if colaborador.is_admin else None  # Inclui nível do admin, se aplicável
         }
         return jsonify(response), 200
 
@@ -41,7 +42,7 @@ def login():
         access_token = create_access_token(identity=email)
         return jsonify(
             access_token=access_token,
-            userId=cliente.ID_Cliente,  # Inclui o ID
+            userId=cliente.id_cliente,  # Corrigido para o nome correto
             name=cliente.nome,
             role="cliente",
             photo=cliente.photo if cliente.photo else ""  # Retorna vazio se não houver foto
@@ -49,6 +50,7 @@ def login():
 
     # Se o email ou senha estiverem incorretos
     return jsonify(message="Credenciais inválidas"), 401
+
 
 
 
@@ -75,55 +77,6 @@ def logout():
 def handle_options():
     return '', 200
 
-
-@main.route('/api/horarios-disponiveis', methods=['GET'])
-def get_horarios_disponiveis():
-    data = request.args.get('data')
-    servico_id = request.args.get('servico_id')
-
-    try:
-        data_formatada = datetime.strptime(data, '%Y-%m-%d')
-    except ValueError:
-        return jsonify({"error": "Formato de data inválido"}), 400
-
-    # Filtrar colaboradores que atendem ao serviço solicitado
-    colaboradores = Colaboradores.query.filter(
-        Colaboradores.servicos.any(ID_Servico=servico_id)).all()
-
-    if not colaboradores:
-        return jsonify({"error": "Nenhum colaborador encontrado para o serviço solicitado"}), 404
-
-    horarios_status = []  # Lista para armazenar os horários com status
-
-    # Obter horários disponíveis dos colaboradores
-    for colaborador in colaboradores:
-        for horario in colaborador.horarios:
-            # Combinar data e hora para verificar disponibilidade
-            data_e_hora = datetime.combine(data_formatada, datetime.strptime(horario.inicio, "%H:%M").time())
-            
-            # Verificar se o horário já foi agendado
-            ocupado = not horario_disponivel(data_e_hora, colaborador.ID_Colaborador)
-            
-            horarios_status.append({
-                "colaborador": colaborador.nome,
-                "horario": f"{horario.dia} {horario.inicio}-{horario.fim}",
-                "ocupado": ocupado
-            })
-
-    # Remover duplicados e ordenar por horário
-    horarios_status = sorted(horarios_status, key=lambda x: x["horario"])
-
-    return jsonify(horarios_status)
-
-
-def horario_disponivel(data_e_hora, colaborador_id):
-    """Verifica se o horário está disponível para o colaborador"""
-    agendamento_existente = Agendamentos.query.filter_by(
-        ID_Colaborador=colaborador_id,
-        data_e_hora=data_e_hora
-    ).first()
-    
-    return agendamento_existente is None
 
 
 @main.route('/api/notificar_admin', methods=['POST'])

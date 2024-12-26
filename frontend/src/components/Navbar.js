@@ -210,7 +210,7 @@ function Navbar() {
                   >
                     {userPhoto && userPhoto.trim() !== "" ? (
                       <img
-                        src={`http://localhost:5000/uploads/${userPhoto}?t=${new Date().getTime()}`}
+                        src={`http://localhost:5000/usuarios/uploads/${userPhoto}?t=${new Date().getTime()}`}
                         alt="Foto de perfil"
                         className="user-photo"
                       />

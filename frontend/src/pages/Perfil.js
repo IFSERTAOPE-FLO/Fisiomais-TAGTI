@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/Profile.css";
-
+const estados = [
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
+];
 const Perfil = () => {
   const [dadosUsuario, setDadosUsuario] = useState({});
   const [erro, setErro] = useState("");
@@ -12,10 +14,42 @@ const Perfil = () => {
   const [senhaAtual, setSenhaAtual] = useState("");
   const [novaSenha, setNovaSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
-  
+  const [cidades, setCidades] = useState([]); // Move a declaração aqui
+
 
   const token = localStorage.getItem("token");
   const apiBaseUrl = "http://localhost:5000/usuarios";
+
+  const buscarCidades = async (estado) => {
+    try {
+      const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estado}/distritos`);
+      if (response.ok) {
+        const cidades = await response.json();
+        const cidadesOrdenadas = cidades
+          .map((cidade) => cidade.nome)
+          .sort((a, b) => a.localeCompare(b));  // Ordenação alfabética
+        setCidades(cidadesOrdenadas);
+      } else {
+        throw new Error("Erro ao carregar cidades.");
+      }
+    } catch (err) {
+      setErro(err.message);
+    }
+  };
+
+  const handleEstadoChange = (e) => {
+    const estadoSelecionado = e.target.value;
+    setDadosEdicao((prev) => {
+      return { ...prev, endereco: { ...prev.endereco, estado: estadoSelecionado, cidade: "" } };
+    });
+    if (estadoSelecionado) {
+      buscarCidades(estadoSelecionado);
+    } else {
+      setCidades([]);
+    }
+  };
+
+
 
   const buscarDadosUsuario = useCallback(async () => {
     try {
@@ -25,25 +59,38 @@ const Perfil = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-  
+
       if (response.ok) {
         const data = await response.json();
         setDadosUsuario(data);
         setDadosEdicao(data);
         setPapelUsuario(data.role);
-        
+
+        // Verificar se o ID foi retornado e armazená-lo no estado
+        if (data.ID) {
+          setDadosUsuario((prev) => ({ ...prev, ID: data.ID }));
+          setDadosEdicao((prev) => ({ ...prev, ID: data.ID }));
+        }
       } else {
         throw new Error("Erro ao buscar dados do usuário.");
       }
     } catch (err) {
       setErro(err.message);
     }
-  }, [token]); 
+  }, [token]);
+
 
   const atualizarUsuario = async () => {
+    const userId = localStorage.getItem("userId");
+
+    if (!userId) {
+      setErro("ID do usuário não encontrado.");
+      return;
+    }
+
     try {
       const response = await fetch(
-        `${apiBaseUrl}/editar_usuario/${papelUsuario}/${dadosUsuario.ID}`,
+        `${apiBaseUrl}/editar_usuario/${papelUsuario}/${userId}`,
         {
           method: "PUT",
           headers: {
@@ -60,19 +107,55 @@ const Perfil = () => {
         setSucesso(data.message);
         buscarDadosUsuario();
       } else {
-        throw new Error(data.message || "Erro ao atualizar usuário.");
+        throw new Error(data.message || "Erro ao atualizar dados do usuário.");
       }
     } catch (err) {
       setErro(err.message);
     }
   };
 
+  const atualizarEndereco = async () => {
+    const userId = localStorage.getItem("userId");
+
+    if (!userId) {
+      setErro("ID do usuário não encontrado.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${apiBaseUrl}/editar_endereco/${papelUsuario}/${userId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ endereco: dadosEdicao.endereco }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSucesso(data.message);
+        buscarDadosUsuario();
+      } else {
+        throw new Error(data.message || "Erro ao atualizar endereço.");
+      }
+    } catch (err) {
+      setErro(err.message);
+    }
+  };
+
+
+
   const atualizarSenha = async () => {
     if (novaSenha !== confirmarSenha) {
       setErro("As senhas não coincidem.");
       return;
     }
-  
+
     try {
       const response = await fetch(`${apiBaseUrl}/alterar_senha/${papelUsuario}/${dadosUsuario.ID}`, {
         method: "PUT",
@@ -81,14 +164,14 @@ const Perfil = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          senhaAtual,  // Senha atual fornecida pelo usuário
-          novaSenha,   // Nova senha fornecida pelo usuário
-          role: papelUsuario,  // A role do usuário ('cliente' ou 'colaborador')
+          senhaAtual,
+          novaSenha,
+          role: papelUsuario,
         }),
       });
-  
+
       const data = await response.json();
-  
+
       if (response.ok) {
         setSucesso(data.message);
         setSenhaAtual("");
@@ -101,7 +184,6 @@ const Perfil = () => {
       setErro(err.message);
     }
   };
-  
 
   const fazerUploadFoto = async () => {
     if (!arquivoSelecionado) {
@@ -125,9 +207,9 @@ const Perfil = () => {
 
       if (response.ok) {
         setSucesso(data.message);
-        setDadosUsuario((prev) => ({ ...prev, photo: data.photo })); // Atualiza a foto no perfil
-        localStorage.setItem("userPhoto", data.photo); // Atualiza a foto no localStorage
-        window.location.reload(); // Força o recarregamento da página
+        setDadosUsuario((prev) => ({ ...prev, photo: data.photo }));
+        localStorage.setItem("userPhoto", data.photo);
+        window.location.reload();
       } else {
         throw new Error(data.message || "Erro ao enviar foto.");
       }
@@ -137,16 +219,29 @@ const Perfil = () => {
   };
 
   useEffect(() => {
-    // Verificar se a foto está armazenada no localStorage
     const fotoNoLocalStorage = localStorage.getItem("userPhoto");
     if (fotoNoLocalStorage) {
       setDadosUsuario((prev) => ({ ...prev, photo: fotoNoLocalStorage }));
     }
     buscarDadosUsuario();
-  }, [buscarDadosUsuario]); // Use the memoized function
+  }, [buscarDadosUsuario]);
+
+  useEffect(() => {
+    // Verificar se existe um estado já definido para buscar as cidades correspondentes
+    if (dadosEdicao.endereco?.estado) {
+      buscarCidades(dadosEdicao.endereco.estado);
+    }
+  }, [dadosEdicao.endereco?.estado]);  // Executa sempre que o estado do endereço mudar
 
   const handleChange = (e) => {
-    setDadosEdicao({ ...dadosEdicao, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setDadosEdicao((prev) => {
+      if (name.includes("endereco")) {
+        const endereco = { ...prev.endereco, [name.split(".")[1]]: value };
+        return { ...prev, endereco };
+      }
+      return { ...prev, [name]: value };
+    });
   };
 
   return (
@@ -155,25 +250,25 @@ const Perfil = () => {
         <div className="card-header ">
           <h1 className="text-center text-primary ">Perfil do Usuário</h1>
         </div>
-  
+
         <div className="card-body ">
           {erro && <p className="alert alert-danger">{erro}</p>}
           {sucesso && <p className="alert alert-success">{sucesso}</p>}
-  
+
           <div className="row justify-content-center">
             <div className="col-md-12">
               <div className="row">
                 <div className="col-12 col-md-4 text-center">
                   {arquivoSelecionado ? (
                     <img
-                      src={URL.createObjectURL(arquivoSelecionado)} // Exibe a imagem selecionada localmente
+                      src={URL.createObjectURL(arquivoSelecionado)}
                       alt="Foto Selecionada"
                       className="img-fluid rounded-circle mb-3"
                       style={{ width: "150px", height: "150px" }}
                     />
                   ) : dadosUsuario.photo ? (
                     <img
-                      src={`http://localhost:5000/uploads/${dadosUsuario.photo}?t=${new Date().getTime()}`}
+                      src={`http://localhost:5000/usuarios/uploads/${dadosUsuario.photo}?t=${new Date().getTime()}`}
                       alt="Foto do Usuário"
                       className="img-fluid rounded-circle mb-3"
                       style={{ width: "200px", height: "160px" }}
@@ -181,7 +276,7 @@ const Perfil = () => {
                   ) : (
                     <i className="bi bi-person-circle" style={{ fontSize: "150px" }}></i>
                   )}
-  
+
                   <input
                     type="file"
                     onChange={(e) => setArquivoSelecionado(e.target.files[0])}
@@ -219,7 +314,7 @@ const Perfil = () => {
                         />
                       </div>
                     </div>
-  
+
                     <div className="row mb-3">
                       <div className="col-12 col-md-6">
                         <label htmlFor="cpf" className="form-label">CPF</label>
@@ -246,7 +341,7 @@ const Perfil = () => {
                         />
                       </div>
                     </div>
-  
+
                     {/* Campos para alterar a senha */}
                     <div className="row mb-3">
                       <div className="col-12 col-md-6">
@@ -259,11 +354,10 @@ const Perfil = () => {
                           onChange={(e) => setSenhaAtual(e.target.value)}
                         />
                       </div>
-                      
                     </div>
-                    
+
                     <div className="row mb-3">
-                    <div className="col-12 col-md-6">
+                      <div className="col-12 col-md-6">
                         <label htmlFor="novaSenha" className="form-label">Nova Senha</label>
                         <input
                           type="password"
@@ -284,7 +378,7 @@ const Perfil = () => {
                         />
                       </div>
                     </div>
-  
+
                     <button
                       type="button"
                       className="btn btn btn-outline-warning mb-3"
@@ -292,69 +386,129 @@ const Perfil = () => {
                     >
                       Alterar Senha
                     </button>
-  
+
                     <div className="row mb-3">
-                      <div className="col-12 col-md-4">
-                        <label htmlFor="endereco" className="form-label">Endereço</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="endereco"
-                          name="endereco"
-                          value={dadosEdicao.endereco || ''}
-                          onChange={handleChange}
-                          required
-                        />
+                      <div className="col-md-12">
+                        <form>
+                          <div className="row mb-3">
+                            <div className="col-12 col-md-4">
+                              <label htmlFor="endereco.rua" className="form-label">Logradouro</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                id="endereco.rua"
+                                name="endereco.rua"
+                                value={dadosEdicao.endereco?.rua || ""}
+                                onChange={handleChange}
+                              />
+                            </div>
+                            <div className="col-12 col-md-4">
+                              <label htmlFor="endereco.numero" className="form-label">Número</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                id="endereco.numero"
+                                name="endereco.numero"
+                                value={dadosEdicao.endereco?.numero || ""}
+                                onChange={handleChange}
+                              />
+                            </div>
+                            <div className="col-12 col-md-4">
+                              <label htmlFor="endereco.complemento" className="form-label">Complemento</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                id="endereco.complemento"
+                                name="endereco.complemento"
+                                value={dadosEdicao.endereco?.complemento || ""}
+                                onChange={handleChange}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="row mb-3">
+                            <div className="col-12 col-md-4">
+                              <label htmlFor="endereco.bairro" className="form-label">Bairro</label>
+                              <input
+                                type="text"
+                                className="form-control"
+                                id="endereco.bairro"
+                                name="endereco.bairro"
+                                value={dadosEdicao.endereco?.bairro || ""}
+                                onChange={handleChange}
+                              />
+                            </div>
+                            <div className="col-12 col-md-4">
+                              <label htmlFor="endereco.estado" className="form-label">Estado</label>
+                              <select
+                                className="form-control"
+                                id="endereco.estado"
+                                name="endereco.estado"
+                                value={dadosEdicao.endereco?.estado || ""}
+                                onChange={handleEstadoChange}
+                              >
+                                <option value="">Selecione o Estado</option>
+                                {estados.map((estado) => (
+                                  <option key={estado} value={estado}>
+                                    {estado}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="col-12 col-md-4">
+                              <label htmlFor="endereco.cidade" className="form-label">Cidade</label>
+                              <select
+                                className="form-control"
+                                id="endereco.cidade"
+                                name="endereco.cidade"
+                                value={dadosEdicao.endereco?.cidade || ""}
+                                onChange={handleChange}
+                              >
+                                <option value="">Selecione a Cidade</option>
+                                {cidades.map((cidade, index) => (
+                                  <option key={index} value={cidade}>
+                                    {cidade}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+
+                        </form>
                       </div>
-                      <div className="col-12 col-md-4">
-                        <label htmlFor="bairro" className="form-label">Bairro</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="bairro"
-                          name="bairro"
-                          value={dadosEdicao.bairro || ''}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                      <div className="col-12 col-md-4">
-                        <label htmlFor="cidade" className="form-label">Cidade</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          id="cidade"
-                          name="cidade"
-                          value={dadosEdicao.cidade || ''}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                    </div>
-  
-                    {papelUsuario === 'colaborador' && (
-                      <div className="row mb-3">
-                        <div className="col-12 col-md-6">
-                          <label htmlFor="cargo" className="form-label">Cargo</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            id="cargo"
-                            name="cargo"
-                            value={dadosEdicao.cargo || ''}
-                            onChange={handleChange}
-                          />
+
+                      {papelUsuario === 'colaborador' && (
+                        <div className="row mb-3">
+                          <div className="col-12 col-md-6">
+                            <label htmlFor="cargo" className="form-label">Cargo</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              id="cargo"
+                              name="cargo"
+                              value={dadosEdicao.cargo || ''}
+                              onChange={handleChange}
+                            />
+                          </div>
                         </div>
-                      </div>
-                    )}
-  
+                      )}
+                    </div>
                     <button
                       type="button"
                       className="btn btn-outline-success"
                       onClick={atualizarUsuario}
                     >
-                      Salvar Alterações
+                      Salvar Dados Gerais
                     </button>
+
+                    <button
+                      type="button"
+                      className="btn btn-outline-success"
+                      onClick={atualizarEndereco}
+                    >
+                      Salvar Endereço
+                    </button>
+
                   </form>
                 </div>
               </div>

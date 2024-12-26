@@ -38,7 +38,7 @@ function CriarAgendamento() {
       if (userId) {
         fetchHorariosDisponiveis(userId, data);
         fetchDiasPermitidos(userId); // Chama a função de horários disponíveis com o ID do colaborador
-        
+
       }
     }
 
@@ -114,7 +114,7 @@ function CriarAgendamento() {
   useEffect(() => {
     if (colaborador) {
       fetchHorariosDisponiveis(colaborador);
-      
+
     }
   }, [colaborador]);
 
@@ -247,14 +247,14 @@ function CriarAgendamento() {
 
 
   return (
-    
-    <div className="container py-5 background-gif">
-      
 
-  <div className="row align-items-center agendamentoback">
-    
-    <div className="col-md-6">
-        
+    <div className="container py-5 background-gif">
+
+
+      <div className="row align-items-center agendamentoback">
+
+        <div className="col-md-6">
+
           <div className="card shadow-lg border-0 ">
             <div className="card-header text-center  rounded-top">
               <h3 className="fw-bold  text-primary ">Agendar atendimento</h3>
@@ -324,7 +324,7 @@ function CriarAgendamento() {
                     value={colaborador}
                     onChange={(e) => setColaborador(e.target.value)}
                     required
-                     
+
                     hidden={role === 'colaborador' && role !== 'admin'} // Esconde para colaboradores não administradores
                   >
                     <option value="">Selecione um colaborador</option>
@@ -414,54 +414,42 @@ function CriarAgendamento() {
           </div>
         </div>
 
-        <div className="col-md-6">
-          <div className="row">
-            <div className="col-md-2 d-flex justify-content-start">
-            < br/>< br/>
-              
+        <div className="col-md-6   ">
+          <div className="row  justify-content-start ">
 
+            <div className="col-md-1 d-flex flex-column flex-md-column flex-sm-row ">
               {/* Imagem Logo 3 */}
               <img
                 src="/images/logo2.png"
                 alt="Logo 3"
-                className="animate-subir-descer3 me-5 img-fluid max-size "
+                className="animate-subir-descer3 me-2 img-fluid max-size imagens-container"
               />
               <img
                 src="/images/logo3.png"
                 alt="Logo 3"
-                className="animate-subir-descer4 me-5 img-fluid max-size "
+                className="animate-subir-descer4 me-2 img-fluid max-size imagens-container"
               />
               <img
                 src="/images/logo1.png"
                 alt="Logo 3"
-                className="animate-subir-descer2 me-5 img-fluid max-size "
+                className="animate-subir-descer2 me-2 img-fluid max-size imagens-container"
               />
             </div>
-            
-            
+
+            <div className="col-md-11  justify-content-start text-align ">
+              <img
+                src="/images/smart.gif"
+                alt="Smart"
+                className="img-fluid"  // Adicionando a classe img-fluid para responsividade
+              />
+            </div>
+
           </div>
-          < br/>
-          < br/>
-          <div className="row">
-      
+          < br />
+          < br />
 
 
-<div className="col-md-1 d-flex justify-content-start">
-  {/* Imagem Logo 2 */}
-  <img
-    src="/images/logo4.png"
-    alt="Logo 2"
-    className="girar me-5 img-fluid "
-  />
-</div>
 
-  </div>
-  
-          <img
-            src="/images/smart.png"
-            alt="Smart"
-            className="img-fluid"  // Adicionando a classe img-fluid para responsividade
-          />
 
         </div>
 

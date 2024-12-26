@@ -47,12 +47,12 @@ function Contato() {
   };
 
   return (
-    <div className="container my-5">
+    <div className="container-fluid my-5 w-100">
 
-      <div className="row align-items-center ">
+<div className="row d-flex justify-content-center align-items-center">
         {/* Bloco de Informações de Contato */}
 
-        <div className="col-md-4">
+        <div className="col-md-3 ">
           <div className="card shadow rounded">
             <div className="card-header agendamento rounded  info ">
               <h3 className="mb-4 agendamento-titulo fw-bold  text-center ">Nossas clinicas</h3>
@@ -84,7 +84,7 @@ function Contato() {
         </div>
 
         {/* Formulário de Contato */}
-        <div className="col-md-7">
+        <div className="col-md-4">
           <div className="card shadow ">
             <div className="card-header ">
               <h2 className="text-center text-primary">Fale Conosco</h2>
@@ -144,33 +144,28 @@ function Contato() {
                 <button type="submit" className="btn btn-signup w-100">Enviar</button>
               </form>
             </div>
+            
           </div>
-          <div className="container" style={{ position: 'relative' }}>
-            {/* Imagem Logo 0 */}
-            <div className="col-md-1 d-flex justify-content-start">
-              
+          
+        </div>
+        
+         {/*  Eu utilizaria como backgrund da div container essa imagem <div className="col-md-5" >
+             Imagem Logo 0 
               <img
-                src="/images/logo4.png"
-                alt="Logo 2"
-                className="girar me-5 img-fluid "
-              />
-            </div>
-            <img
               src="/images/contat.png"
               alt="5"
-              style={{ width: '1320px', height: 'auto', position: 'absolute', top: '-630px', left: '-130px', zIndex: -2 }}
+              className='img-fluid'
 
             />
             
             <img
               src="/images/5.png"
               alt="5"
-              className="girar"
-              style={{ width: '350px', height: 'auto', position: 'absolute', top: '-280px', left: '700px', zIndex: -2 }}
+              
+              
 
             />
-          </div>
-        </div>
+          </div> */}
       </div>
     </div>
   );
