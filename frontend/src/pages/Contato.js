@@ -13,6 +13,7 @@ function Contato() {
 
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -24,6 +25,7 @@ function Contato() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
 
     try {
       const response = await fetch('http://localhost:5000/api/contato', {
@@ -43,17 +45,20 @@ function Contato() {
     } catch (error) {
       setErrorMessage('Erro de conexão com o servidor.');
       console.error('Erro ao enviar formulário:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
+
 
   return (
     <div className="container-fluid my-5 w-100">
 
-<div className="row d-flex justify-content-center align-items-center">
+<div className="row d-flex justify-content-center  align-items-center">
         {/* Bloco de Informações de Contato */}
 
         <div className="col-md-3 ">
-          <div className="card shadow rounded">
+          <div className="card shadow rounded ">
             <div className="card-header agendamento rounded  info ">
               <h3 className="mb-4 agendamento-titulo fw-bold  text-center ">Nossas clinicas</h3>
 
@@ -141,7 +146,13 @@ function Contato() {
                     required
                   ></textarea>
                 </div>
-                <button type="submit" className="btn btn-signup w-100">Enviar</button>
+                <button
+                  type="submit"
+                  className="btn btn-signup w-100"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Enviando...' : 'Enviar'}
+                </button> 
               </form>
             </div>
             
@@ -149,23 +160,16 @@ function Contato() {
           
         </div>
         
-         {/*  Eu utilizaria como backgrund da div container essa imagem <div className="col-md-5" >
-             Imagem Logo 0 
-              <img
-              src="/images/contat.png"
-              alt="5"
-              className='img-fluid'
-
-            />
-            
+        
+          <div className="col-md-3">
             <img
-              src="/images/5.png"
+              src="/images/Atendimento.gif"
               alt="5"
-              
-              
-
+              className="img-fluid"
             />
-          </div> */}
+          </div>
+        
+
       </div>
     </div>
   );

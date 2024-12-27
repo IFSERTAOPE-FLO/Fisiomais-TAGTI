@@ -466,7 +466,7 @@ function CriarAgendamento() {
           </div>
         </div>
 
-        <div className="col-md-6   ">
+        <div className="col-md-6  ">
           <div className="row  justify-content-start ">
 
             <div className="col-md-1 d-flex flex-column flex-md-column flex-sm-row ">
