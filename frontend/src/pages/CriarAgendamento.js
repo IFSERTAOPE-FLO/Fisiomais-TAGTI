@@ -196,7 +196,7 @@ function CriarAgendamento() {
       colaborador_id: colaborador,
       data: dataHora,
       cliente_id: cliente,
-      plano_id: tipoServico === 'fisioterapia' ? null : planoSelecionado,  // Send null if it's fisioterapia
+      plano_id: tipoServico === 'pilates' ? planoSelecionado || null : null, // Pilates precisa de plano, Fisioterapia não.
     };
 
     const token = localStorage.getItem('token');

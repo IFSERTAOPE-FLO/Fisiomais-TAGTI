@@ -6,6 +6,7 @@ from flask import current_app
 from app import mail
 from datetime import datetime, timedelta
 from pytz import timezone
+from sqlalchemy.orm import joinedload
 
 
 agendamentos= Blueprint('agendamentos', __name__)
@@ -60,30 +61,26 @@ def agendamento():
 
         plano_id = data.get('plano_id')
 
-        # Validar se o serviço exige plano
-        if 'fisioterapia' not in [tipo.tipo for tipo in servico.tipo_servicos]:
-            if plano_id is None:
-                print("Plano not provided")  # Mensagem de erro se o plano não for fornecido
-                return jsonify({'message': 'Plano não fornecido'}), 400
-
-            if not servico.planos or not isinstance(servico.planos, list):
-                print("Serviço não possui planos válidos")  # Mensagem de erro se o serviço não possuir planos válidos
-                return jsonify({'message': 'O serviço selecionado não possui planos válidos'}), 400
+        # Verificar se o serviço exige plano (somente Pilates)
+        if 'pilates' in [tipo.tipo for tipo in servico.tipo_servicos]:
+            if not plano_id:
+                print("Plano não fornecido para Pilates.")  # Mensagem de erro
+                return jsonify({'message': 'Plano não fornecido para Pilates.'}), 400
 
             plano_selecionado = None
-            for plano in servico.planos:
+            for plano in servico.planos or []:
                 if plano.id_plano == plano_id:
                     plano_selecionado = plano
                     break
 
             if not plano_selecionado:
-                print("Plano not found")  # Mensagem de erro se o plano não for encontrado
-                return jsonify({'message': 'Plano não encontrado'}), 404
+                print("Plano não encontrado para Pilates.")  # Mensagem de erro
+                return jsonify({'message': 'Plano não encontrado para Pilates.'}), 404
         else:
-            plano_selecionado = None
-        
+            plano_selecionado = None  # Fisioterapia não exige plano.
+
         # Verificar a existência da clínica associada ao colaborador
-        clinica = Clinicas.query.filter_by(id_clinica=colaborador.id_clinica).first()
+        clinica = Clinicas.query.filter_by(id_clinica=colaborador.clinica_id).first()
         if not clinica:
             print("Clinica not found")  # Mensagem de erro se a clínica não for encontrada
             return jsonify({'message': 'Clínica não encontrada'}), 404
@@ -243,92 +240,43 @@ def horarios_disponiveis(colaborador_id):
 @jwt_required()
 def listar_agendamentos():
     try:
-        # Obtém o email do usuário a partir do token JWT
-        usuario_email = get_jwt_identity()
-        print(f"Usuário autenticado: {usuario_email}")
+        user_id = get_jwt_identity()
+        role = request.args.get('role', default='cliente', type=str)
 
-        # Tenta encontrar o colaborador com o email
-        colaborador = Colaboradores.query.filter_by(email=usuario_email).first()
-        print(f"Colaborador encontrado: {colaborador}")
+        query = db.session.query(Agendamentos).options(
+            joinedload(Agendamentos.servico),
+            joinedload(Agendamentos.colaborador).joinedload(Colaboradores.clinica),
+            joinedload(Agendamentos.cliente)
+        )
 
-        # Tenta encontrar o admin com o email
-        admin = Colaboradores.query.filter_by(is_admin=True, email=usuario_email).first()
-        print(f"Admin encontrado: {admin}")
+        if role == 'cliente':
+            query = query.filter(Agendamentos.cliente_id == user_id)
+        elif role == 'colaborador':
+            query = query.filter(Agendamentos.colaborador_id == user_id)
 
-        # Tenta encontrar o cliente com o email
-        cliente = Clientes.query.filter_by(email=usuario_email).first()
-        print(f"Cliente encontrado: {cliente}")
+        agendamentos = query.all()
 
-        # Verifica se o usuário é autorizado
-        if not colaborador and not admin and not cliente:
-            return jsonify({'message': 'Usuário não autorizado'}), 403
-
-        # Se for admin, pode ver todos os agendamentos
-        if admin:
-            agendamentos = Agendamentos.query.all()
-            print(f"Agendamentos encontrados para admin: {len(agendamentos)}")
-        elif colaborador:
-            # Se for colaborador, filtra os agendamentos para aquele colaborador
-            agendamentos = Agendamentos.query.filter_by(id_colaborador=colaborador.id_colaborador).all()
-            print(f"Agendamentos encontrados para o colaborador: {len(agendamentos)}")
-        else:
-            # Se for cliente, filtra os agendamentos para aquele cliente
-            agendamentos = Agendamentos.query.filter_by(id_cliente=cliente.id.cliente).all()
-            print(f"Agendamentos encontrados para o cliente: {len(agendamentos)}")
-
-        # Monta a lista com os dados dos agendamentos
-        agendamentos_data = []
+        resultado = []
         for agendamento in agendamentos:
-            # Para cada agendamento, busca os dados relacionados
-            cliente = Clientes.query.get(agendamento.id_cliente)
-            colaborador = Colaboradores.query.get(agendamento.id_dolaborador)
-            servico = Servicos.query.get(agendamento.id_servico)
-
-            # Variáveis para plano, inicializadas como None
-            nome_plano = None
-            valor_plano = None
-
-            # Verificando se o serviço possui planos
-            print(f"Serviço encontrado: {servico.Nome_servico}, Tipo de serviço: {servico.tipo_servico}")
-            if servico and servico.tipo_servico == 'pilates' and servico.planos:
-                print(f"Planos disponíveis para o serviço {servico.Nome_servico}: {servico.planos}")
-                
-                planos = servico.planos
-                plano_especifico = next((plano for plano in planos if plano['ID_Plano'] == agendamento.ID_Plano), None)
-                
-                if plano_especifico:
-                    nome_plano = plano_especifico.get('Nome_plano')
-                    valor_plano = plano_especifico.get('Valor')
-                    print(f"Plano encontrado: {nome_plano}, Valor: {valor_plano}")
-                else:
-                    print("Nenhum plano específico encontrado para este agendamento.")
-            else:
-                print("Serviço não é de pilates ou não tem planos.")
-
-            # Adiciona os dados do agendamento
-            agendamentos_data.append({
-                'id': agendamento.ID_Agendamento,
-                'nome_cliente': cliente.nome,
-                'data': agendamento.data_e_hora.isoformat(),
-                'hora': agendamento.data_e_hora.strftime("%H:%M"),
-                'nome_servico': servico.Nome_servico,
-                'valor_servico': servico.Valor,
-                'nome_colaborador': colaborador.nome,
+            clinica = agendamento.colaborador.clinica if agendamento.colaborador else None
+            resultado.append({
+                'id': agendamento.id,
+                'data': agendamento.data.strftime('%Y-%m-%d'),
+                'hora': agendamento.hora.strftime('%H:%M'),
                 'status': agendamento.status,
-                'nome_plano': nome_plano,
-                'valor_plano': valor_plano
+                'servico': agendamento.servico.nome if agendamento.servico else None,
+                'colaborador': agendamento.colaborador.nome if agendamento.colaborador else None,
+                'cliente': agendamento.cliente.nome if agendamento.cliente else None,
+                'clinica': {
+                    'nome': clinica.nome if clinica else None,
+                    'endereco': clinica.endereco if clinica else None
+                }
             })
 
-        print(f"Total de agendamentos a serem retornados: {len(agendamentos_data)}")
-        return jsonify(agendamentos_data), 200
+        return jsonify(resultado), 200
 
     except Exception as e:
-        print(f"Erro ao listar agendamentos: {str(e)}")
-        return jsonify({'message': f'Erro ao listar agendamentos: {str(e)}'}), 500
-
-
-
-
+        return jsonify({'error': str(e)}), 500
 
 
 @agendamentos.route('/confirmar_negativo_agendamento/<int:agendamento_id>', methods=['PUT'])

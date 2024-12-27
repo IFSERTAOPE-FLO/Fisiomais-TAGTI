@@ -210,8 +210,6 @@ class BlacklistedToken(db.Model):
     def __repr__(self):
         return f'<BlacklistedToken {self.jti}>'
 
-<<<<<<< Updated upstream
-=======
 
 def populate_database():
     # Criar o administrador se não existir
@@ -485,4 +483,3 @@ def populate_database():
     # Salvar todas as alterações no banco de dados
     db.session.commit()
     print("Banco de dados populado com sucesso!")
->>>>>>> Stashed changes
