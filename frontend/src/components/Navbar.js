@@ -230,16 +230,16 @@ function Navbar() {
                         {role === "admin" && (
                           <>
                             <li>
-                              <Link className="dropdown-item" to="/addcolaborador">Adicionar Colaborador</Link>
-                            </li>
-                            <li>
-                              <Link className="dropdown-item" to="/addcliente">Adicionar Cliente</Link>
-                            </li>
-                            <li>
                               <Link className="dropdown-item" to="/adminPage">Pagina Administrador</Link>
                             </li>
                           </>
                         )}
+                        {role === "colaborador" &&  (
+                           <li>
+                           <Link className="dropdown-item" to="/adminPage">Controle de usários</Link>
+                         </li>
+                        )
+                        }
                       
                     
                     <li>

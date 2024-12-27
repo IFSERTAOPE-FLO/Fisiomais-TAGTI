@@ -1,5 +1,5 @@
 from flask import Blueprint, current_app, send_from_directory, request, jsonify
-from app.models import Colaboradores, Agendamentos, Clientes, Servicos, Horarios, db
+from app.models import Colaboradores, Agendamentos, Clientes, Servicos, Horarios, Clinicas, db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_mail import Message
 from flask import current_app
@@ -131,8 +131,16 @@ def agendamento():
 @agendamentos.route('/dias-permitidos/<int:colaborador_id>', methods=['GET'])
 def dias_permitidos(colaborador_id):
     try:
+        # Verifica se o colaborador existe (caso seja necessário)
+        colaborador = Colaboradores.query.get(colaborador_id)
+        if not colaborador:
+            return jsonify({"message": "Colaborador não encontrado"}), 404
+
         # Buscar todos os dias da semana em que o colaborador tem horários
-        dias_disponiveis = db.session.query(Horarios.dia_semana).filter_by(ID_Colaborador=colaborador_id).distinct().all()
+        dias_disponiveis = db.session.query(Horarios.dia_semana).filter_by(id_colaborador=colaborador_id).distinct().all()
+        if not dias_disponiveis:
+            return jsonify({"message": "Nenhum dia disponível encontrado para o colaborador."}), 404
+
         dias = [dia[0].strip().lower() for dia in dias_disponiveis]  # Padroniza para minúsculas e remove espaços
         
         # Mapeamento dos dias da semana para valores numéricos de 0 (Domingo) a 6 (Sábado)
@@ -151,7 +159,9 @@ def dias_permitidos(colaborador_id):
         
         return jsonify({"dias_permitidos": dias_convertidos}), 200
     except Exception as e:
+        # Captura mais detalhes do erro
         return jsonify({"message": f"Erro ao buscar dias permitidos: {str(e)}"}), 500
+
 
 
 
@@ -170,12 +180,12 @@ def obter_horarios_disponiveis(colaborador_id, data_obj):
     print(f"Dia da semana (nome mapeado): {dia_semana_mapeado}")  # Log para verificar o dia da semana nome mapeado
 
     # Obtém os horários do colaborador para o dia da semana específico
-    horarios_colaborador = Horarios.query.filter_by(ID_Colaborador=colaborador_id, dia_semana=dia_semana_mapeado).all()
+    horarios_colaborador = Horarios.query.filter_by(id_colaborador=colaborador_id, dia_semana=dia_semana_mapeado.lower()).all()
     print(f"Horários do colaborador: {horarios_colaborador}")  # Log para verificar os horários obtidos
 
     # Obtém os agendamentos existentes para o colaborador na data específica
     agendamentos = Agendamentos.query.filter(
-        Agendamentos.ID_Colaborador == colaborador_id,
+        Agendamentos.id_colaborador == colaborador_id,
         Agendamentos.data_e_hora >= data_obj,
         Agendamentos.data_e_hora < (data_obj + timedelta(days=1))
     ).all()
@@ -187,7 +197,10 @@ def obter_horarios_disponiveis(colaborador_id, data_obj):
 
     horarios_disponiveis = []
 
-    for horario in horarios_colaborador:
+    # Elimina duplicatas na lista de horários do colaborador (considera horários únicos)
+    horarios_colaborador_unicos = list({(horario.hora_inicio, horario.hora_fim): horario for horario in horarios_colaborador}.values())
+
+    for horario in horarios_colaborador_unicos:
         # Combina a data com a hora de início para garantir que estamos no dia certo
         hora_atual = datetime.combine(data_obj, horario.hora_inicio)
         hora_fim = datetime.combine(data_obj, horario.hora_fim)
@@ -202,6 +215,7 @@ def obter_horarios_disponiveis(colaborador_id, data_obj):
     print(f"Horários disponíveis: {horarios_disponiveis}")  # Log para verificar os horários disponíveis
 
     return horarios_disponiveis
+
 
 
 
@@ -255,20 +269,20 @@ def listar_agendamentos():
             print(f"Agendamentos encontrados para admin: {len(agendamentos)}")
         elif colaborador:
             # Se for colaborador, filtra os agendamentos para aquele colaborador
-            agendamentos = Agendamentos.query.filter_by(ID_Colaborador=colaborador.ID_Colaborador).all()
+            agendamentos = Agendamentos.query.filter_by(id_colaborador=colaborador.id_colaborador).all()
             print(f"Agendamentos encontrados para o colaborador: {len(agendamentos)}")
         else:
             # Se for cliente, filtra os agendamentos para aquele cliente
-            agendamentos = Agendamentos.query.filter_by(ID_Cliente=cliente.ID_Cliente).all()
+            agendamentos = Agendamentos.query.filter_by(id_cliente=cliente.id.cliente).all()
             print(f"Agendamentos encontrados para o cliente: {len(agendamentos)}")
 
         # Monta a lista com os dados dos agendamentos
         agendamentos_data = []
         for agendamento in agendamentos:
             # Para cada agendamento, busca os dados relacionados
-            cliente = Clientes.query.get(agendamento.ID_Cliente)
-            colaborador = Colaboradores.query.get(agendamento.ID_Colaborador)
-            servico = Servicos.query.get(agendamento.ID_Servico)
+            cliente = Clientes.query.get(agendamento.id_cliente)
+            colaborador = Colaboradores.query.get(agendamento.id_dolaborador)
+            servico = Servicos.query.get(agendamento.id_servico)
 
             # Variáveis para plano, inicializadas como None
             nome_plano = None
@@ -340,8 +354,8 @@ def confirmar_negativo_agendamento(agendamento_id):
             return jsonify({'message': 'Agendamento não encontrado'}), 404
         
         # Verifica se o colaborador tem permissão para modificar esse agendamento
-        if not admin and agendamento.ID_Colaborador != colaborador.ID_Colaborador:
-            print(f"Colaborador {colaborador.ID_Colaborador} não tem permissão para alterar o agendamento {agendamento_id}.")  # Print de permissão negada
+        if not admin and agendamento.id_colaborador != colaborador.id_colaborador:
+            print(f"Colaborador {colaborador.id_colaborador} não tem permissão para alterar o agendamento {agendamento_id}.")  # Print de permissão negada
             return jsonify({'message': 'Você não tem permissão para alterar esse agendamento'}), 403
 
         # Alterar o status do agendamento
@@ -365,9 +379,9 @@ def confirmar_negativo_agendamento(agendamento_id):
 def enviar_email_status_agendamento(agendamento, status):
     try:
         # Obter informações do cliente, colaborador e serviço
-        cliente = Clientes.query.get(agendamento.ID_Cliente)
-        colaborador = Colaboradores.query.get(agendamento.ID_Colaborador)
-        servico = Servicos.query.get(agendamento.ID_Servico)
+        cliente = Clientes.query.get(agendamento.id_cliente)
+        colaborador = Colaboradores.query.get(agendamento.id_colaborador)
+        servico = Servicos.query.get(agendamento.id_servico)
 
         if not cliente or not colaborador or not servico:
             print("Dados do agendamento incompletos")
@@ -456,14 +470,14 @@ def deletar_agendamento(agendamento_id):
             return jsonify({'message': 'Agendamento não encontrado'}), 404
 
         # Verifica se o colaborador tem permissão para deletar o agendamento
-        if not colaborador.is_admin and agendamento.ID_Colaborador != colaborador.ID_Colaborador:
+        if not colaborador.is_admin and agendamento.id_colaborador != colaborador.id_colaborador:
             print("Permissão negada para deletar agendamento.")  # Log de permissão negada
             return jsonify({'message': 'Você não tem permissão para deletar este agendamento'}), 403
 
         # Dados do cliente e colaborador para enviar os e-mails
-        cliente = Clientes.query.get(agendamento.ID_Cliente)
-        colaborador = Colaboradores.query.get(agendamento.ID_Colaborador)
-        servico = Servicos.query.get(agendamento.ID_Servico)
+        cliente = Clientes.query.get(agendamento.id_cliente)
+        colaborador = Colaboradores.query.get(agendamento.id_colaborador)
+        servico = Servicos.query.get(agendamento.id_servico)
 
         if not cliente or not colaborador or not servico:
             print("Dados incompletos do agendamento.")  # Log de dados incompletos
@@ -527,9 +541,9 @@ def enviar_email_agendamento(agendamento_id):
             return jsonify({'message': 'Agendamento não encontrado'}), 404
 
         # Obter informações do cliente, colaborador e serviço
-        cliente = Clientes.query.get(agendamento.ID_Cliente)
-        colaborador = Colaboradores.query.get(agendamento.ID_Colaborador)
-        servico = Servicos.query.get(agendamento.ID_Servico)
+        cliente = Clientes.query.get(agendamento.id_cliente)
+        colaborador = Colaboradores.query.get(agendamento.id_colaborador)
+        servico = Servicos.query.get(agendamento.id_servico)
 
         if not cliente or not colaborador or not servico:
             return jsonify({'message': 'Dados do agendamento incompletos'}), 404

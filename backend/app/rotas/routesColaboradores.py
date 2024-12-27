@@ -73,7 +73,7 @@ def register_colaborador():
         return jsonify({"message": f"Erro ao registrar colaborador: {str(e)}"}), 500
 
 
-@colaboradores.route('/', methods=['GET'])
+@colaboradores.route('/listar', methods=['GET'])
 def get_colaboradores():
     servico_id = request.args.get('servico_id')
     clinica_id = request.args.get('clinica_id')  # Novo parâmetro para filtrar pela clínica
@@ -94,7 +94,7 @@ def get_colaboradores():
     if not colaboradores:
         return jsonify({"message": "Nenhum colaborador encontrado para o serviço solicitado"}), 404
     
-    colaboradores_list = [{"ID_Colaborador": c.id_dolaborador, "Nome": c.nome} for c in colaboradores]
+    colaboradores_list = [{"ID_Colaborador": c.id_colaborador, "Nome": c.nome} for c in colaboradores]
     return jsonify(colaboradores_list)
 
 

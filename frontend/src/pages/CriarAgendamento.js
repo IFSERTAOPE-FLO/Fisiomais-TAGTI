@@ -43,7 +43,7 @@ function CriarAgendamento() {
 
       }
     }
-    fetchClinicas();  
+    fetchClinicas();
     fetchServicos();
     fetchClientes();
     fetchFeriados();
@@ -69,7 +69,10 @@ function CriarAgendamento() {
       console.error('Erro ao buscar serviços:', error);
     }
   };
-
+  const handleClinicaChange = (e) => {
+    setClinica(e.target.value);
+    setColaborador('');  // Resetando o colaborador ao mudar a clínica
+  };
 
   const fetchFeriados = () => {
     setFeriados([
@@ -84,9 +87,10 @@ function CriarAgendamento() {
 
   useEffect(() => {
     if (servico && clinica) {
-      fetchColaboradores();
+      fetchColaboradores(); // Chama a função para buscar colaboradores
     }
-  }, [servico, clinica]);
+  }, [servico, clinica]); // Apenas quando "servico" ou "clinica" mudarem
+
 
   const fetchClinicas = async () => {
     try {
@@ -99,18 +103,24 @@ function CriarAgendamento() {
     }
   };
 
+
   const fetchColaboradores = useCallback(async () => {
-    if (servico && clinica) {
-      try {
-        const response = await fetch(`http://localhost:5000/colaboradores?servico_id=${servico}&clinica_id=${clinica}`);
-        if (response.ok) {
-          setColaboradores(await response.json());
-        }
-      } catch (error) {
-        console.error('Erro ao buscar colaboradores:', error);
+    if (!servico || !clinica) return;
+
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/colaboradores/listar?servico_id=${servico}&clinica_id=${clinica}`
+      );
+      if (response.ok) {
+        const colaboradoresData = await response.json();
+        setColaboradores(colaboradoresData);
       }
+    } catch (error) {
+      console.error('Erro ao buscar colaboradores:', error);
     }
-  }, [servico, clinica]);
+  }, [servico, clinica]); // Apenas quando "servico" ou "clinica" mudarem
+
 
 
   useEffect(() => {
@@ -118,15 +128,16 @@ function CriarAgendamento() {
       fetchColaboradores();
       const servicoSelecionado = servicos.find((s) => s.ID_Servico === parseInt(servico));
       if (servicoSelecionado) {
-        if (servicoSelecionado.Tipo === 'pilates') {
+        if (servicoSelecionado.Tipos.includes('pilates')) {
           setTipoServico('pilates');
           setPlanos(servicoSelecionado.Planos || []);
-          setValorServico(0);
-        } else if (servicoSelecionado.Tipo === 'fisioterapia') {
+          setValorServico(0); // Valor 0, pois Pilates não tem valor fixo
+        } else if (servicoSelecionado.Tipos.includes('fisioterapia')) {
           setTipoServico('fisioterapia');
           setValorServico(servicoSelecionado.Valor || 0);
-          setPlanos([]);
+          setPlanos([]); // Fisioterapia não tem planos
         }
+        
       }
     }
   }, [servico, fetchColaboradores, servicos]);
@@ -288,7 +299,7 @@ function CriarAgendamento() {
                     id="clinica"
                     className="form-select"
                     value={clinica}
-                    onChange={(e) => setClinica(e.target.value)}
+                    onChange={handleClinicaChange}  // Alterando a função para o novo manipulador
                     required
                   >
                     <option value="">Selecione uma clínica</option>
@@ -298,6 +309,7 @@ function CriarAgendamento() {
                       </option>
                     ))}
                   </select>
+
                 </div>
                 <div className="mb-3">
                   <label htmlFor="servico" className="form-label">Serviço</label>
@@ -317,21 +329,22 @@ function CriarAgendamento() {
                   </select>
                 </div>
 
-                {tipoServico === "fisioterapia" && valorServico && (
+                {tipoServico === "fisioterapia" && valorServico > 0 && (
                   <div className="mb-3">
-                    <label htmlFor="valor" className="form-label ">Valor do Serviço</label>
-                    <div className=" flex-column  gap-2">
-                      <span className="fw-bold btn-plano  mb-2  align-items-center p-2 border btn-plano rounded">{`R$ ${valorServico}`}</span>
+                    <label htmlFor="valor" className="form-label">Valor do Serviço</label>
+                    <div className="flex-column gap-2">
+                      <span className="fw-bold btn-plano mb-2 align-items-center p-2 border btn-plano rounded">
+                        {`R$ ${valorServico}`}
+                      </span>
                     </div>
-
-
                   </div>
                 )}
+
 
                 {tipoServico === 'pilates' && (
                   <div className="mb-3">
                     <label className="form-label">Plano de Pilates</label>
-                    <div className="d-flex flex-column  gap-2">
+                    <div className="d-flex flex-column gap-2">
                       {planos.map((plano) => (
                         <div
                           key={plano.ID_Plano}
@@ -343,13 +356,14 @@ function CriarAgendamento() {
                             <strong>{plano.Nome_plano}</strong>
                           </div>
                           <div className="text-end">
-                            <span className="fw-bold  ">R$ {plano.Valor}</span>
+                            <span className="fw-bold">R$ {plano.Valor}</span>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
+
 
                 {/* Collaborator Selection */}
                 <div className="mb-3">

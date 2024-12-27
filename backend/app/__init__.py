@@ -33,7 +33,7 @@ def create_app():
 
     with app.app_context():
         # Importar modelos e rotas aqui dentro para evitar importação circular
-        from app.models import  populate_database
+        from app.services import populate_database
         from app.rotas.routes import main
         from app.rotas.routesClientes import clientes
         from app.rotas.routesColaboradores import colaboradores
@@ -61,12 +61,5 @@ def create_app():
 
     return app
 
-# Função para agendar a notificação
-def agendar_notificacao(app):  # Agora recebe o app como argumento
-    from backend.app.rotas.routes import notificar_atendimentos  # Importar a função diretamente aqui
-
-    # Usando o contexto da aplicação para garantir que o acesso ao banco de dados seja feito corretamente
-    with app.app_context():
-        notificar_atendimentos()  # Chama a função que envia notificações
 
 

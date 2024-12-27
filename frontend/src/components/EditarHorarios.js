@@ -122,12 +122,12 @@ const EditarHorarios = ({ colaboradorId, onClose, onSave }) => {
             >
               <option value="">Selecione o dia</option>
               <option value="Segunda-feira">Segunda-feira</option>
-              <option value="Terça-feira">Terça-feira</option>
+              <option value="Terca-feira">Terça-feira</option>
               <option value="Quarta-feira">Quarta-feira</option>
               <option value="Quinta-feira">Quinta-feira</option>
               <option value="Sexta-feira">Sexta-feira</option>
-              <option value="Sábado-feira">Sábado</option>
-              <option value="Domingo-feira">Domingo</option>
+              <option value="Sabado">Sábado</option>
+              <option value="Domingo">Domingo</option>
             </Form.Control>
           </Form.Group>
 

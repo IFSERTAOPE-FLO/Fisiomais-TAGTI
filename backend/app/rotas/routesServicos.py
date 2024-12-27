@@ -1,24 +1,29 @@
 from flask import Blueprint, jsonify, request
 from app.models import Colaboradores, Servicos, ColaboradoresServicos, db  # ColaboradoresServicos importado
 from flask_jwt_extended import jwt_required, get_jwt_identity
-
+from sqlalchemy.orm import joinedload
 
 servicos= Blueprint('servicos', __name__)
+
+
 
 @servicos.route('/listar_servicos', methods=['GET'])
 @jwt_required()
 def get_list_servicos():
     try:
-        email = get_jwt_identity()  # Recupera o email do usuário autenticado
-        colaborador = Colaboradores.query.filter_by(email=email).first()  # Busca o colaborador logado
-        
+        email = get_jwt_identity()
+        colaborador = Colaboradores.query.filter_by(email=email).first()
+
+        # Carregar os serviços com planos e tipos de serviço
         if colaborador:
-            if colaborador.is_admin == False:  # Verifica se o colaborador é admin
-                servicos = Servicos.query.filter(Servicos.colaboradores.any(Colaboradores.id_colaborador == colaborador.id_colaborador)).all()
+            if not colaborador.is_admin:
+                servicos = Servicos.query.filter(
+                    Servicos.colaboradores.any(Colaboradores.id_colaborador == colaborador.id_colaborador)
+                ).options(joinedload(Servicos.planos), joinedload(Servicos.tipo_servicos)).all()
             else:
-                servicos = Servicos.query.all()
+                servicos = Servicos.query.options(joinedload(Servicos.planos), joinedload(Servicos.tipo_servicos)).all()
         else:
-            servicos = Servicos.query.all()
+            servicos = Servicos.query.options(joinedload(Servicos.planos), joinedload(Servicos.tipo_servicos)).all()
 
         if not servicos:
             return jsonify({"message": "Nenhum serviço encontrado"}), 404
@@ -27,21 +32,23 @@ def get_list_servicos():
         for s in servicos:
             colaboradores = [colaborador.nome for colaborador in s.colaboradores]
             planos = []
-            if s.tipo_servicos:
-                for plano in s.planos:
-                    planos.append({
-                        "ID_Plano": plano.id_plano,
-                        "Nome_plano": plano.nome,
-                        "Descricao": plano.descricao,
-                        "Valor": str(plano.valor)
-                    })
+            for tipo in s.tipo_servicos:
+                if tipo.tipo == 'pilates':
+                    for plano in s.planos:
+                        planos.append({
+                            "ID_Plano": plano.id_plano,
+                            "Nome_plano": plano.nome,
+                            "Descricao": plano.descricao,
+                            "Valor": str(plano.valor)
+                        })
+            
             servico_data = {
                 "ID_Servico": s.id_servico,
                 "Nome_servico": s.nome,
                 "Descricao": s.descricao,
-                "Valor": str(s.valor) if s.tipo_servicos and s.tipo_servicos.tipo == 'fisioterapia' else None,
-                "Planos": planos if s.tipo_servicos and s.tipo_servicos.tipo == 'pilates' else None,
-                "Tipo": s.tipo_servicos.tipo if s.tipo_servicos else None,
+                "Valor": str(s.valor) if any(tipo.tipo == 'fisioterapia' for tipo in s.tipo_servicos) else None,
+                "Planos": planos if any(tipo.tipo == 'pilates' for tipo in s.tipo_servicos) else None,
+                "Tipos": [tipo.tipo for tipo in s.tipo_servicos],
                 "Colaboradores": colaboradores
             }
             servicos_list.append(servico_data)
@@ -49,6 +56,9 @@ def get_list_servicos():
         return jsonify(servicos_list), 200
     except Exception as e:
         return jsonify({"message": f"Erro ao listar serviços: {str(e)}"}), 500
+
+
+
 
 
 
