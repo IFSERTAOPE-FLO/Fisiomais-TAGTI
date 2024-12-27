@@ -236,7 +236,7 @@ function Navbar() {
                         )}
                         {role === "colaborador" &&  (
                            <li>
-                           <Link className="dropdown-item" to="/adminPage">Controle de usários</Link>
+                           <Link className="dropdown-item" to="/adminPage">Painel do administrador</Link>
                          </li>
                         )
                         }

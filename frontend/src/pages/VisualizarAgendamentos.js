@@ -169,108 +169,120 @@ const VisualizarAgendamentos = () => {
 
   return (
     <div className="container col-md-8 my-5">
-      <div className="card shadow">
-        <div className="card-header ">
-          <h2 className="text-center text-primary fw-bold">Visualizar Agendamentos</h2>
-        </div>
+  <div className="card shadow">
+    <div className="card-header ">
+      <h2 className="text-center text-primary fw-bold">Visualizar Agendamentos</h2>
+    </div>
 
-        <div className="card-body">
-          {erro && agendamentos.length > 0 && <div className="alert alert-danger">{erro}</div>}
+    <div className="card-body">
+      {erro && agendamentos.length > 0 && <div className="alert alert-danger">{erro}</div>}
 
-          <table className="table table-striped table-bordered mt-4 agendamento-header">
-            <thead className="agendamento-header">
-              <tr>
-                <th>#</th>
-                <th
-                  onClick={() => handleSort('nome_cliente')}
-                  style={{ cursor: 'pointer' }}
-                >
-                  Nome Cliente{' '}
-                  {sortConfig.key === 'nome_cliente' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-                </th>
+      <table className="table table-striped table-bordered mt-4 agendamento-header">
+        <thead className="agendamento-header">
+          <tr>
+            <th>#</th>
+            <th
+              onClick={() => handleSort('nome_cliente')}
+              style={{ cursor: 'pointer' }}
+            >
+              Nome Cliente{' '}
+              {sortConfig.key === 'nome_cliente' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+            </th>
 
-                <th
-                  onClick={() => handleSort('data')}
-                  style={{ cursor: 'pointer', verticalAlign: 'middle' }}
-                >
-                  Data{' '}
-                  {sortConfig.key === 'data' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-                  <Button
-                    variant="btn-danger"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowDateFilterModal(true);
-                    }}
-                    className="ms-2 align-top p-0 text-white"
-                    style={{ lineHeight: 1, height: 'auto' }}
+            <th
+              onClick={() => handleSort('data')}
+              style={{ cursor: 'pointer', verticalAlign: 'middle' }}
+            >
+              Data{' '}
+              {sortConfig.key === 'data' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+              <Button
+                variant="btn-danger"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDateFilterModal(true);
+                }}
+                className="ms-2 align-top p-0 text-white"
+                style={{ lineHeight: 1, height: 'auto' }}
+              >
+                <FaCalendarAlt />
+              </Button>
+            </th>
+            <th>Hora</th>
+            <th>Serviço</th>
+            <th>Valor (R$)</th>
+            <th>Colaborador</th>
+            <th>Status</th> {/* Coluna para exibir o status */}
+            <th>Endereço da Clínica</th> {/* Nova coluna para exibir o endereço da clínica */}
+            <th>Detalhes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sortedAgendamentos.length > 0 ? (
+            sortedAgendamentos.map((agendamento, index) => (
+              <tr key={agendamento.id}>
+                <td>{index + 1}</td>
+                <td>{agendamento.nome_cliente || 'Cliente não informado'}</td>
+                <td>{new Date(agendamento.data).toLocaleDateString()}</td>
+                <td>{agendamento.hora || 'Hora não informada'}</td>
+                <td>{agendamento.nome_servico || 'Serviço não encontrado'}</td>
+                <td>
+                  {agendamento.nome_plano && agendamento.valor_plano ? (
+                    <div>
+                      <strong>{agendamento.nome_plano}:</strong> {' '}
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.valor_plano)}
+                    </div>
+                  ) : (
+                    <span>
+                      {agendamento.valor_servico
+                        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.valor_servico)
+                        : 'Valor não disponível'}
+                    </span>
+                  )}
+                </td>
+                <td>{agendamento.nome_colaborador || 'Colaborador não encontrado'}</td>
+                <td>
+                  <span
+                    className={`badge 
+                    ${agendamento.status === 'confirmado' ? 'badge-success' :
+                      agendamento.status === 'negado' ? 'badge-danger' : 'badge-warning'} 
+                    text-${agendamento.status === 'pendente' ? 'dark' : 'dark'}`}
                   >
-                    <FaCalendarAlt />
-                  </Button>
-                </th>
-                <th>Hora</th>
-                <th>Serviço</th>
-                <th>Valor (R$)</th>
-                <th>Colaborador</th>
-                <th>Status</th> {/* Coluna para exibir o status */}
-                <th>Detalhes</th>
+                    {agendamento.status === 'confirmado' ? 'Confirmado' :
+                      agendamento.status === 'negado' ? 'Negado' : 'Pendente'}
+                  </span>
+                </td>
+                <td>
+                  <div>
+                    {agendamento.clinica && agendamento.clinica.endereco ? (
+                      <div>
+                        <strong>{agendamento.clinica.nome}:</strong><br />
+                        {agendamento.clinica.endereco.rua}, {agendamento.clinica.endereco.numero}, {agendamento.clinica.endereco.bairro}<br />
+                        {agendamento.clinica.endereco.cidade} - {agendamento.clinica.endereco.estado}
+                      </div>
+                    ) : 'Endereço não disponível'}
+                  </div>
+                </td>
+                <td>
+                  <button
+                    className="btn btn-outline-info btn-sm"
+                    onClick={() => handleShowDetails(agendamento)}
+                  >
+                    Ver Detalhes
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {sortedAgendamentos.length > 0 ? (
-                sortedAgendamentos.map((agendamento, index) => (
-                  <tr key={agendamento.id}>
-                    <td>{index + 1}</td>
-                    <td>{agendamento.nome_cliente || 'Cliente não informado'}</td>
-                    <td>{new Date(agendamento.data).toLocaleDateString()}</td>
-                    <td>{agendamento.hora || 'Hora não informada'}</td>
-                    <td>{agendamento.nome_servico || 'Serviço não encontrado'}</td>
-                    <td>
-                      {agendamento.nome_plano && agendamento.valor_plano ? (
-                        <div>
-                          <strong>{agendamento.nome_plano}:</strong> {' '}
-                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.valor_plano)}
-                        </div>
-                      ) : (
-                        <span>
-                          {agendamento.valor_servico
-                            ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.valor_servico)
-                            : 'Valor não disponível'}
-                        </span>
-                      )}
-                    </td>
-                    <td>{agendamento.nome_colaborador || 'Colaborador não encontrado'}</td>
-                    <td>
-                      <span
-                        className={`badge 
-              ${agendamento.status === 'confirmado' ? 'badge-success' :
-                            agendamento.status === 'negado' ? 'badge-danger' : 'badge-warning'} 
-              text-${agendamento.status === 'pendente' ? 'dark' : 'dark'}`}
-                      >
-                        {agendamento.status === 'confirmado' ? 'Confirmado' :
-                          agendamento.status === 'negado' ? 'Negado' : 'Pendente'}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        className="btn btn-outline-info btn-sm"
-                        onClick={() => handleShowDetails(agendamento)}
-                      >
-                        Ver Detalhes
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="9" className="text-center">
-                    Nenhum agendamento encontrado
-                  </td>
-                </tr>
-              )}
-            </tbody>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="10" className="text-center">
+                Nenhum agendamento encontrado
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    
 
-
-          </table>
 
           {/* Modal de filtro de data */}
           <Modal show={showDateFilterModal} onHide={() => setShowDateFilterModal(false)}>

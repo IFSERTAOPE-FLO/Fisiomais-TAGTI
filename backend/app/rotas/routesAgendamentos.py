@@ -122,7 +122,59 @@ def agendamento():
         db.session.rollback()
         return jsonify({'message': f'Erro ao criar agendamento: {str(e)}', 'error_details': error_details}), 500
 
+@agendamentos.route('/listar_agendamentos', methods=['GET'])
+@jwt_required()
+def listar_agendamentos():
+    try:
+        user_id = get_jwt_identity()
+        role = request.args.get('role', default='cliente', type=str)
 
+        query = db.session.query(Agendamentos).options(
+            joinedload(Agendamentos.servico),
+            joinedload(Agendamentos.colaborador).joinedload(Colaboradores.clinica),
+            joinedload(Agendamentos.cliente),
+            joinedload(Agendamentos.clinica).joinedload(Clinicas.endereco)  # Carregar endereço da clínica
+        )
+
+        if role == 'cliente':
+            query = query.filter(Agendamentos.id_cliente == user_id)
+        elif role == 'colaborador':
+            query = query.filter(Agendamentos.id_colaborador == user_id)
+
+        agendamentos = query.all()
+
+        resultado = []
+        for agendamento in agendamentos:
+            clinica = agendamento.clinica
+            endereco_clinica = clinica.endereco if clinica else None
+
+            resultado.append({
+                'id': agendamento.id_agendamento,
+                'data': agendamento.data_e_hora.strftime('%Y-%m-%d'),
+                'hora': agendamento.data_e_hora.strftime('%H:%M'),
+                'status': agendamento.status,
+                'servico': agendamento.servico.nome if agendamento.servico else None,
+                'colaborador': agendamento.colaborador.nome if agendamento.colaborador else None,
+                'cliente': agendamento.cliente.nome if agendamento.cliente else None,
+                'clinica': {
+                    'nome': clinica.nome if clinica else None,
+                    'cnpj': clinica.cnpj if clinica else None,
+                    'telefone': clinica.telefone if clinica else None,
+                    'endereco': {
+                        'rua': endereco_clinica.rua if endereco_clinica else None,
+                        'numero': endereco_clinica.numero if endereco_clinica else None,
+                        'complemento': endereco_clinica.complemento if endereco_clinica else None,
+                        'bairro': endereco_clinica.bairro if endereco_clinica else None,
+                        'cidade': endereco_clinica.cidade if endereco_clinica else None,
+                        'estado': endereco_clinica.estado if endereco_clinica else None
+                    } if endereco_clinica else None
+                }
+            })
+
+        return jsonify(resultado), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @agendamentos.route('/dias-permitidos/<int:colaborador_id>', methods=['GET'])
@@ -236,47 +288,7 @@ def horarios_disponiveis(colaborador_id):
         return jsonify({"message": f"Erro ao buscar horários disponíveis: {str(e)}"}), 500
 
 
-@agendamentos.route('/listar_agendamentos', methods=['GET'])
-@jwt_required()
-def listar_agendamentos():
-    try:
-        user_id = get_jwt_identity()
-        role = request.args.get('role', default='cliente', type=str)
 
-        query = db.session.query(Agendamentos).options(
-            joinedload(Agendamentos.servico),
-            joinedload(Agendamentos.colaborador).joinedload(Colaboradores.clinica),
-            joinedload(Agendamentos.cliente)
-        )
-
-        if role == 'cliente':
-            query = query.filter(Agendamentos.cliente_id == user_id)
-        elif role == 'colaborador':
-            query = query.filter(Agendamentos.colaborador_id == user_id)
-
-        agendamentos = query.all()
-
-        resultado = []
-        for agendamento in agendamentos:
-            clinica = agendamento.colaborador.clinica if agendamento.colaborador else None
-            resultado.append({
-                'id': agendamento.id,
-                'data': agendamento.data.strftime('%Y-%m-%d'),
-                'hora': agendamento.hora.strftime('%H:%M'),
-                'status': agendamento.status,
-                'servico': agendamento.servico.nome if agendamento.servico else None,
-                'colaborador': agendamento.colaborador.nome if agendamento.colaborador else None,
-                'cliente': agendamento.cliente.nome if agendamento.cliente else None,
-                'clinica': {
-                    'nome': clinica.nome if clinica else None,
-                    'endereco': clinica.endereco if clinica else None
-                }
-            })
-
-        return jsonify(resultado), 200
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 
 @agendamentos.route('/confirmar_negativo_agendamento/<int:agendamento_id>', methods=['PUT'])

@@ -71,8 +71,12 @@ function CriarAgendamento() {
   };
   const handleClinicaChange = (e) => {
     setClinica(e.target.value);
-    setColaborador('');  // Resetando o colaborador ao mudar a clínica
+    setColaborador(''); // Resetando o colaborador selecionado
+    setColaboradores([]); // Limpando a lista de colaboradores
   };
+  
+  
+  
 
   const fetchFeriados = () => {
     setFeriados([
@@ -87,9 +91,11 @@ function CriarAgendamento() {
 
   useEffect(() => {
     if (servico && clinica) {
-      fetchColaboradores(); // Chama a função para buscar colaboradores
+      setColaboradores([]); // Limpando a lista antes de buscar novos dados
+      fetchColaboradores(); // Buscando colaboradores
     }
-  }, [servico, clinica]); // Apenas quando "servico" ou "clinica" mudarem
+  }, [servico, clinica]);
+  
 
 
   const fetchClinicas = async () => {
@@ -137,7 +143,6 @@ function CriarAgendamento() {
           setValorServico(servicoSelecionado.Valor || 0);
           setPlanos([]); // Fisioterapia não tem planos
         }
-        
       }
     }
   }, [servico, fetchColaboradores, servicos]);
