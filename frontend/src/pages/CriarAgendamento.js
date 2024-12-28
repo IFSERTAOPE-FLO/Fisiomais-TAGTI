@@ -74,9 +74,9 @@ function CriarAgendamento() {
     setColaborador(''); // Resetando o colaborador selecionado
     setColaboradores([]); // Limpando a lista de colaboradores
   };
-  
-  
-  
+
+
+
 
   const fetchFeriados = () => {
     setFeriados([
@@ -95,7 +95,7 @@ function CriarAgendamento() {
       fetchColaboradores(); // Buscando colaboradores
     }
   }, [servico, clinica]);
-  
+
 
 
   const fetchClinicas = async () => {
@@ -192,16 +192,21 @@ function CriarAgendamento() {
   const handleSubmit = async (e) => {
     setLoading(true);
     e.preventDefault();
+
+    // Verifica se o colaborador está definido
+    const colaboradorId = role === 'colaborador' ? localStorage.getItem('userId') : colaborador;
+
     const dataEscolhida = new Date(data);
+    dataEscolhida.setDate(dataEscolhida.getDate() + 1);
     const dataFormatada = dataEscolhida.toISOString().split('T')[0];
     const dataHora = `${dataFormatada} ${hora}:00`;
 
     const agendamentoData = {
       servico_id: servico,
-      colaborador_id: colaborador,
+      colaborador_id: colaboradorId,  // Usar o ID correto do colaborador
       data: dataHora,
       cliente_id: cliente,
-      plano_id: tipoServico === 'pilates' ? planoSelecionado || null : null, // Pilates precisa de plano, Fisioterapia não.
+      plano_id: tipoServico === 'pilates' ? planoSelecionado || null : null,
     };
 
     const token = localStorage.getItem('token');
@@ -242,11 +247,19 @@ function CriarAgendamento() {
     return !diasPermitidos.includes(diaSemana) || feriados.includes(dataFormatada);
   };
 
+  // Handle the date change
   const handleDateChange = (value) => {
     const dataEscolhida = value.toISOString().split('T')[0];
     setData(dataEscolhida);
-    if (colaborador) {
-      fetchHorariosDisponiveis(colaborador, dataEscolhida);
+
+    // Se for um colaborador logado, buscar os horários disponíveis para a data escolhida
+    if (role === 'colaborador') {
+      const savedUserId = localStorage.getItem('userId'); // Obtém o ID do colaborador logado
+      if (savedUserId) {
+        fetchHorariosDisponiveis(savedUserId, dataEscolhida); // Passa o ID do colaborador logado
+      }
+    } else if (colaborador) {
+      fetchHorariosDisponiveis(colaborador, dataEscolhida); // Caso o colaborador seja selecionado
     }
   };
   const fetchDiasPermitidos = async (colaboradorId) => {
@@ -273,6 +286,7 @@ function CriarAgendamento() {
 
     if (role === 'colaborador' && savedUserId) {
       fetchDiasPermitidos(savedUserId); // Use o userId salvo
+
     } else if (colaborador) {
       fetchDiasPermitidos(colaborador);
     }
@@ -375,6 +389,8 @@ function CriarAgendamento() {
                   {role !== 'colaborador' && ( // Exibe a label apenas se o usuário não for colaborador
                     <label htmlFor="colaborador" className="form-label">Colaborador</label>
                   )}
+
+
                   <select
                     id="colaborador"
                     className="form-select"
@@ -392,6 +408,15 @@ function CriarAgendamento() {
                     ))}
                   </select>
                 </div>
+                {role === 'colaborador' && (
+                  <input
+                    type="text"
+                    id="colaborador"
+                    value={localStorage.getItem('userId')}
+                    style={{ display: 'none' }}
+                  />
+                )}
+
 
 
 
@@ -409,21 +434,28 @@ function CriarAgendamento() {
                   {/* Horário */}
                   <div className="col-md-4 mb-3">
                     <label htmlFor="hora" className="form-label">Horário</label>
-                    <select
-                      id="hora"
-                      className="form-select"
-                      value={hora}
-                      onChange={(e) => setHora(e.target.value)}
-                      required
-                    >
-                      <option value="">Escolha o horário</option>
-                      {Array.isArray(horariosDisponiveis) && horariosDisponiveis.map((horario, index) => (
-                        <option key={index} value={horario}>
-                          {horario}
-                        </option>
-                      ))}
-                    </select>
+                    {Array.isArray(horariosDisponiveis) && horariosDisponiveis.length > 0 ? (
+                      <select
+                        id="hora"
+                        className="form-select"
+                        value={hora}
+                        onChange={(e) => setHora(e.target.value)}
+                        required
+                      >
+                        <option value="">Escolha o horário</option>
+                        {horariosDisponiveis.map((horario, index) => (
+                          <option key={index} value={horario}>
+                            {horario}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="alert alert-warning" role="alert">
+                        Nenhum horário disponível!
+                      </div>
+                    )}
                   </div>
+
                 </div>
 
                 <div className="mb-3">

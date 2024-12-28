@@ -1,5 +1,5 @@
 from flask import Blueprint, current_app, send_from_directory, request, jsonify
-from app.models import Colaboradores, Agendamentos, Clientes, Servicos, Horarios, Clinicas, db
+from app.models import Colaboradores, Agendamentos, Clientes, Servicos, Horarios, Clinicas,Planos, db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_mail import Message
 from flask import current_app
@@ -111,9 +111,10 @@ def agendamento():
         
         db.session.add(novo_agendamento)
         db.session.commit()
-        enviar_email_agendamento(novo_agendamento.id_agendamento)
+        #enviar_email_agendamento(novo_agendamento.id_agendamento)     #apagar o jogo da velha para enviar emails   
 
         return jsonify({'message': 'Agendamento criado com status pendente'}), 201
+        
     
     except Exception as e:
         error_details = traceback.format_exc()  # Captura o traceback completo do erro
@@ -126,34 +127,75 @@ def agendamento():
 @jwt_required()
 def listar_agendamentos():
     try:
-        user_id = get_jwt_identity()
-        role = request.args.get('role', default='cliente', type=str)
+        # Obtém o email do usuário a partir do token JWT
+        usuario_email = get_jwt_identity()
+        print(f"Usuário autenticado: {usuario_email}")
 
+        # Tenta encontrar o colaborador com o email
+        colaborador = Colaboradores.query.filter_by(email=usuario_email).first()
+        print(f"Colaborador encontrado: {colaborador}")
+
+        # Tenta encontrar o admin com o email
+        admin = Colaboradores.query.filter_by(is_admin=True, email=usuario_email).first()
+        print(f"Admin encontrado: {admin}")
+
+        # Tenta encontrar o cliente com o email
+        cliente = Clientes.query.filter_by(email=usuario_email).first()
+        print(f"Cliente encontrado: {cliente}")
+
+        # Verifica se o usuário é autorizado
+        if not colaborador and not admin and not cliente:
+            return jsonify({'message': 'Usuário não autorizado'}), 403
+
+        # Monta a consulta para obter os agendamentos
         query = db.session.query(Agendamentos).options(
-            joinedload(Agendamentos.servico),
-            joinedload(Agendamentos.colaborador).joinedload(Colaboradores.clinica),
-            joinedload(Agendamentos.cliente),
-            joinedload(Agendamentos.clinica).joinedload(Clinicas.endereco)  # Carregar endereço da clínica
+            joinedload(Agendamentos.servico),  # Carrega o serviço
+            joinedload(Agendamentos.colaborador),  # Carrega o colaborador
+            joinedload(Agendamentos.cliente),  # Carrega o cliente
+            joinedload(Agendamentos.clinica).joinedload(Clinicas.endereco)  # Carrega a clínica e seu endereço
         )
 
-        if role == 'cliente':
-            query = query.filter(Agendamentos.id_cliente == user_id)
-        elif role == 'colaborador':
-            query = query.filter(Agendamentos.id_colaborador == user_id)
+        if admin:
+            # Se for admin, pode ver todos os agendamentos
+            agendamentos = query.all()
+            print(f"Agendamentos encontrados para admin: {len(agendamentos)}")
+        elif colaborador:
+            # Se for colaborador, filtra os agendamentos para aquele colaborador
+            agendamentos = query.filter(Agendamentos.id_colaborador == colaborador.id_colaborador).all()
+            print(f"Agendamentos encontrados para o colaborador: {len(agendamentos)}")
+        elif cliente:
+            # Se for cliente, filtra os agendamentos para aquele cliente
+            agendamentos = query.filter(Agendamentos.id_cliente == cliente.id_cliente).all()
+            print(f"Agendamentos encontrados para o cliente: {len(agendamentos)}")
 
-        agendamentos = query.all()
-
+        # Monta a lista com os dados dos agendamentos
         resultado = []
         for agendamento in agendamentos:
             clinica = agendamento.clinica
             endereco_clinica = clinica.endereco if clinica else None
+            cliente = agendamento.cliente
+            colaborador = agendamento.colaborador
+            servico = agendamento.servico
 
+            # Se o serviço for Pilates, busca o plano associado
+            plano_servico = None
+            if servico and servico.valor is None:
+                # Busca o plano associado ao serviço de Pilates, se existir
+                plano_servico = Planos.query.filter_by(servico_id=servico.id_servico).first()
+
+            # Inclui o valor ou plano
             resultado.append({
                 'id': agendamento.id_agendamento,
                 'data': agendamento.data_e_hora.strftime('%Y-%m-%d'),
                 'hora': agendamento.data_e_hora.strftime('%H:%M'),
                 'status': agendamento.status,
-                'servico': agendamento.servico.nome if agendamento.servico else None,
+                'servico': agendamento.servico.nome if agendamento.servico else None,  # Inclui o nome do serviço
+                'valor': servico.valor if servico.valor else (plano_servico.valor if plano_servico else None),  # Valor do serviço ou do plano
+                'plano': {
+                    'nome': plano_servico.nome if plano_servico else None,
+                    'descricao': plano_servico.descricao if plano_servico else None,
+                    'valor': plano_servico.valor if plano_servico else None
+                } if plano_servico else None,  # Retorna os dados do plano se houver
                 'colaborador': agendamento.colaborador.nome if agendamento.colaborador else None,
                 'cliente': agendamento.cliente.nome if agendamento.cliente else None,
                 'clinica': {
@@ -173,8 +215,10 @@ def listar_agendamentos():
 
         return jsonify(resultado), 200
 
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 
 @agendamentos.route('/dias-permitidos/<int:colaborador_id>', methods=['GET'])

@@ -193,6 +193,20 @@ def populate_database():
             colaborador.servicos.append(servico)
 
     db.session.commit()
+    
+    # Criar os tipos de serviços
+    tipos_servicos = [
+        {"tipo": "fisioterapia"},
+        {"tipo": "pilates"}
+    ]
+
+    for tipo in tipos_servicos:
+        exists = TipoServico.query.filter_by(tipo=tipo["tipo"]).first()
+        if not exists:
+            novo_tipo = TipoServico(tipo=tipo["tipo"])
+            db.session.add(novo_tipo)
+
+    db.session.commit()
     # Criar clientes
     clientes = [
         {"nome": "Cliente 1", "email": "cliente1@teste.com", "telefone": "888877777", "cpf": "66666666666"},

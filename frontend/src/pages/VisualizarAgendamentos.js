@@ -4,6 +4,7 @@ import { Modal, Button } from 'react-bootstrap';
 import { FaCalendarAlt } from 'react-icons/fa'; // Ícone de calendário
 import '../css/Estilos.css';
 import Calendar from 'react-calendar'; // Para exibir o calendário
+import Paginator from '../components/Paginator';
 
 const VisualizarAgendamentos = () => {
   const [agendamentos, setAgendamentos] = useState([]);
@@ -15,6 +16,8 @@ const VisualizarAgendamentos = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const [showDateFilterModal, setShowDateFilterModal] = useState(false); // Para controlar o novo modal de filtro de data
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 2;
   useEffect(() => {
     const fetchAgendamentos = async () => {
       try {
@@ -167,121 +170,127 @@ const VisualizarAgendamentos = () => {
     setLoading(false);
   };
 
+  // Paginação
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentAgendamentos = sortedAgendamentos.slice(indexOfFirstItem, indexOfLastItem);
+
   return (
     <div className="container col-md-8 my-5">
-  <div className="card shadow">
-    <div className="card-header ">
-      <h2 className="text-center text-primary fw-bold">Visualizar Agendamentos</h2>
-    </div>
+      <div className="card shadow">
+        <div className="card-header ">
+          <h2 className="text-center text-primary fw-bold">Visualizar Agendamentos</h2>
+        </div>
 
-    <div className="card-body">
-      {erro && agendamentos.length > 0 && <div className="alert alert-danger">{erro}</div>}
+        <div className="card-body">
+          {erro && agendamentos.length > 0 && <div className="alert alert-danger">{erro}</div>}
 
-      <table className="table table-striped table-bordered mt-4 agendamento-header">
-        <thead className="agendamento-header">
-          <tr>
-            <th>#</th>
-            <th
-              onClick={() => handleSort('nome_cliente')}
-              style={{ cursor: 'pointer' }}
-            >
-              Nome Cliente{' '}
-              {sortConfig.key === 'nome_cliente' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-            </th>
+          <table className="table table-striped table-bordered mt-4 agendamento-header">
+            <thead className="agendamento-header">
+              <tr>
+                <th>#</th>
+                <th
+                  onClick={() => handleSort('nome_cliente')}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Nome Cliente{' '}
+                  {sortConfig.key === 'nome_cliente' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                </th>
 
-            <th
-              onClick={() => handleSort('data')}
-              style={{ cursor: 'pointer', verticalAlign: 'middle' }}
-            >
-              Data{' '}
-              {sortConfig.key === 'data' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-              <Button
-                variant="btn-danger"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowDateFilterModal(true);
-                }}
-                className="ms-2 align-top p-0 text-white"
-                style={{ lineHeight: 1, height: 'auto' }}
-              >
-                <FaCalendarAlt />
-              </Button>
-            </th>
-            <th>Hora</th>
-            <th>Serviço</th>
-            <th>Valor (R$)</th>
-            <th>Colaborador</th>
-            <th>Status</th> {/* Coluna para exibir o status */}
-            <th>Endereço da Clínica</th> {/* Nova coluna para exibir o endereço da clínica */}
-            <th>Detalhes</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sortedAgendamentos.length > 0 ? (
-            sortedAgendamentos.map((agendamento, index) => (
-              <tr key={agendamento.id}>
-                <td>{index + 1}</td>
-                <td>{agendamento.nome_cliente || 'Cliente não informado'}</td>
-                <td>{new Date(agendamento.data).toLocaleDateString()}</td>
-                <td>{agendamento.hora || 'Hora não informada'}</td>
-                <td>{agendamento.nome_servico || 'Serviço não encontrado'}</td>
-                <td>
-                  {agendamento.nome_plano && agendamento.valor_plano ? (
-                    <div>
-                      <strong>{agendamento.nome_plano}:</strong> {' '}
-                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.valor_plano)}
-                    </div>
-                  ) : (
-                    <span>
-                      {agendamento.valor_servico
-                        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.valor_servico)
-                        : 'Valor não disponível'}
-                    </span>
-                  )}
-                </td>
-                <td>{agendamento.nome_colaborador || 'Colaborador não encontrado'}</td>
-                <td>
-                  <span
-                    className={`badge 
-                    ${agendamento.status === 'confirmado' ? 'badge-success' :
-                      agendamento.status === 'negado' ? 'badge-danger' : 'badge-warning'} 
-                    text-${agendamento.status === 'pendente' ? 'dark' : 'dark'}`}
+                <th
+                  onClick={() => handleSort('data')}
+                  style={{ cursor: 'pointer', verticalAlign: 'middle' }}
+                >
+                  Data{' '}
+                  {sortConfig.key === 'data' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  <Button
+                    variant="btn-danger"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDateFilterModal(true);
+                    }}
+                    className="ms-2 align-top p-0 text-white"
+                    style={{ lineHeight: 1, height: 'auto' }}
                   >
-                    {agendamento.status === 'confirmado' ? 'Confirmado' :
-                      agendamento.status === 'negado' ? 'Negado' : 'Pendente'}
-                  </span>
-                </td>
-                <td>
-                  <div>
-                    {agendamento.clinica && agendamento.clinica.endereco ? (
-                      <div>
-                        <strong>{agendamento.clinica.nome}:</strong><br />
-                        {agendamento.clinica.endereco.rua}, {agendamento.clinica.endereco.numero}, {agendamento.clinica.endereco.bairro}<br />
-                        {agendamento.clinica.endereco.cidade} - {agendamento.clinica.endereco.estado}
-                      </div>
-                    ) : 'Endereço não disponível'}
-                  </div>
-                </td>
-                <td>
-                  <button
-                    className="btn btn-outline-info btn-sm"
-                    onClick={() => handleShowDetails(agendamento)}
-                  >
-                    Ver Detalhes
-                  </button>
-                </td>
+                    <FaCalendarAlt />
+                  </Button>
+                </th>
+                <th>Hora</th>
+                <th>Serviço</th>
+                <th>Valor (R$)</th>
+                <th>Colaborador</th>
+                <th>Status</th> {/* Coluna para exibir o status */}
+                <th>Endereço da Clínica</th> {/* Nova coluna para exibir o endereço da clínica */}
+                <th>Detalhes</th>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="10" className="text-center">
-                Nenhum agendamento encontrado
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    
+            </thead>
+            <tbody>
+              {sortedAgendamentos.length > 0 ? (
+                currentAgendamentos.map((agendamento, index) => (
+                  <tr key={agendamento.id}>
+                    <td>{index + 1}</td>
+                    <td>{agendamento.cliente || 'Cliente não informado'}</td>
+                    <td>{new Date(agendamento.data).toLocaleDateString()}</td>
+                    <td>{agendamento.hora || 'Hora não informada'}</td>
+                    <td>{agendamento.servico || 'Serviço não encontrado'}</td>
+                    <td>
+                      {agendamento.plano?.nome && agendamento.plano?.valor ? (
+                        <div>
+                          <strong>{agendamento.plano.nome}:</strong> {' '}
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.plano.valor)}
+                        </div>
+                      ) : (
+                        <span>
+                          {agendamento.valor
+                            ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.valor)
+                            : 'Valor não disponível'}
+                        </span>
+                      )}
+                    </td>
+                    <td>{agendamento.colaborador || 'Colaborador não encontrado'}</td>
+                    <td>
+                      <span
+                        className={`badge 
+            ${agendamento.status === 'confirmado' ? 'badge-success' :
+                            agendamento.status === 'negado' ? 'badge-danger' : 'badge-warning'} 
+            text-${agendamento.status === 'pendente' ? 'dark' : 'dark'}`}
+                      >
+                        {agendamento.status === 'confirmado' ? 'Confirmado' :
+                          agendamento.status === 'negado' ? 'Negado' : 'Pendente'}
+                      </span>
+                    </td>
+                    <td>
+                      <div>
+                        {agendamento.clinica && agendamento.clinica.endereco ? (
+                          <div>
+                            <strong>{agendamento.clinica.nome}:</strong><br />
+                            {agendamento.clinica.endereco.rua}, {agendamento.clinica.endereco.numero}, {agendamento.clinica.endereco.bairro}<br />
+                            {agendamento.clinica.endereco.cidade} - {agendamento.clinica.endereco.estado}
+                          </div>
+                        ) : 'Endereço não disponível'}
+                      </div>
+                    </td>
+                    <td>
+                      <button
+                        className="btn btn-outline-info btn-sm"
+                        onClick={() => handleShowDetails(agendamento)}
+                      >
+                        Ver Detalhes
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="10" className="text-center">
+                    Nenhum agendamento encontrado
+                  </td>
+                </tr>
+              )}
+            </tbody>
+
+          </table>
+
 
 
           {/* Modal de filtro de data */}
@@ -306,54 +315,49 @@ const VisualizarAgendamentos = () => {
                 <Modal.Title>Detalhes do Agendamento</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                <p><strong>Cliente:</strong> {selectedAgendamento.nome_cliente}</p>
+                <p><strong>Cliente:</strong> {selectedAgendamento.cliente || 'Cliente não informado'}</p>
                 <p><strong>Data:</strong> {new Date(selectedAgendamento.data).toLocaleDateString()}</p>
-                <p><strong>Hora:</strong> {selectedAgendamento.hora}</p>
-                <p><strong>Serviço:</strong> {selectedAgendamento.nome_servico}</p>
+                <p><strong>Hora:</strong> {selectedAgendamento.hora || 'Hora não informada'}</p>
+                <p><strong>Serviço:</strong> {selectedAgendamento.servico || 'Serviço não encontrado'}</p>
 
-                {selectedAgendamento.nome_plano && selectedAgendamento.valor_plano ? (
+                {selectedAgendamento.plano?.nome && selectedAgendamento.plano?.valor ? (
                   <>
-                    <p><strong>Plano:</strong> {selectedAgendamento.nome_plano}</p>
-                    <p><strong>Valor do Plano:</strong> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAgendamento.valor_plano)}</p>
+                    <p><strong>Plano:</strong> {selectedAgendamento.plano.nome}</p>
+                    <p><strong>Valor do Plano:</strong> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAgendamento.plano.valor)}</p>
                   </>
                 ) : (
-                  <p><strong>Valor do Serviço:</strong> {selectedAgendamento.valor_servico ?
-                    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAgendamento.valor_servico)
-                    : 'Não disponível'}</p>
+                  <p><strong>Valor do Serviço:</strong> {selectedAgendamento.valor ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAgendamento.valor) : 'Não disponível'}</p>
                 )}
 
+                <p><strong>Colaborador:</strong> {selectedAgendamento.colaborador || 'Colaborador não encontrado'}</p>
 
-                <p><strong>Colaborador:</strong> {selectedAgendamento.nome_colaborador}</p>
-                <p><strong>Status:</strong>{' '}
-                  <span className={` ${selectedAgendamento.status === 'confirmado' ? 'text-dark' : 'text-dark'}`}>
-                    {selectedAgendamento.status === 'confirmado' ? 'Confirmado' : 'Pendente'}</span>
-
+                <p><strong>Status:</strong>
+                  <span
+                    className={` ${selectedAgendamento.status === 'confirmado' ? 'badge-success' : selectedAgendamento.status === ' negado' ? 'badge-danger' : 'badge-warning'}`}
+                    style={{ color: selectedAgendamento.status ? 'black' : 'inherit' }}
+                  >
+                    {selectedAgendamento.status === 'confirmado' ? ' Confirmado' : selectedAgendamento.status === 'negado' ? 'Negado' : ' Pendente'}
+                  </span>
                 </p>
+
+                <p><strong>Clínica:</strong> {selectedAgendamento.clinica?.nome || 'Clínica não informada'}</p>
+
+                {selectedAgendamento.clinica?.endereco ? (
+                  <div>
+                    <p><strong>Endereço da Clínica:</strong></p>
+                    <p>{selectedAgendamento.clinica.endereco.rua}, {selectedAgendamento.clinica.endereco.numero}, {selectedAgendamento.clinica.endereco.bairro}</p>
+                    <p>{selectedAgendamento.clinica.endereco.cidade} - {selectedAgendamento.clinica.endereco.estado}</p>
+                  </div>
+                ) : 'Endereço não disponível'}
               </Modal.Body>
 
-
-
               <Modal.Footer>
-                {role === 'admin' && (
+                {(role === 'colaborador' || role === 'admin') && (
                   <>
-                    <Button
-                      variant="btn btn-danger"
-                      onClick={() => handleDeleteAgendamento(selectedAgendamento.id)}
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <>
-                          <i className="bi bi-arrow-repeat spinner"></i> Carregando...
-                        </>
-                      ) : (
-                        'Deletar Agendamento'
-                      )}
-                    </Button>
-
                     <Button
                       variant="btn btn-success"
                       onClick={() => handleConfirmarNegar(selectedAgendamento.id, 'confirmado')}
-                      disabled={loading}
+                      disabled={loading || selectedAgendamento.status === 'confirmado'}
                     >
                       {loading ? (
                         <>
@@ -367,7 +371,7 @@ const VisualizarAgendamentos = () => {
                     <Button
                       variant="btn btn-danger"
                       onClick={() => handleConfirmarNegar(selectedAgendamento.id, 'negado')}
-                      disabled={loading}
+                      disabled={loading || selectedAgendamento.status === 'negado'}
                     >
                       {loading ? (
                         <>
@@ -379,6 +383,25 @@ const VisualizarAgendamentos = () => {
                     </Button>
                   </>
                 )}
+
+                {role === 'admin' && (
+                  <Button
+                    variant="btn btn-danger"
+                    onClick={() => handleDeleteAgendamento(selectedAgendamento.id)}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <i className="bi bi-arrow-repeat spinner"></i> Carregando...
+                      </>
+                    ) : (
+                      <i className="bi bi-trash"></i>  // Ícone da lixeira do Bootstrap
+                    )}
+                  </Button>
+                )}
+
+
+
                 {role !== 'admin' && (
                   <Button variant="btn btn-warning" onClick={() => handleNotifyAdmin()} disabled={loading}>
                     {loading ? (
@@ -399,6 +422,13 @@ const VisualizarAgendamentos = () => {
           )}
         </div>
       </div>
+      {/* Paginador */}
+      <Paginator
+        totalItems={sortedAgendamentos.length}
+        itemsPerPage={itemsPerPage}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+      />
     </div>
   );
 };
