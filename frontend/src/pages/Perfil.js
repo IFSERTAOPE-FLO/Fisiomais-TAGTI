@@ -19,6 +19,7 @@ const Perfil = () => {
 
   const token = localStorage.getItem("token");
   const apiBaseUrl = "http://localhost:5000/usuarios";
+  
 
   const buscarCidades = async (estado) => {
     try {
@@ -219,8 +220,9 @@ const Perfil = () => {
   };
 
   useEffect(() => {
+    // Verifica se a foto já foi carregada no localStorage antes de sobrescrever
     const fotoNoLocalStorage = localStorage.getItem("userPhoto");
-    if (fotoNoLocalStorage) {
+    if (fotoNoLocalStorage && !dadosUsuario.photo) {  // Evitar sobrescrever foto se já estiver definida
       setDadosUsuario((prev) => ({ ...prev, photo: fotoNoLocalStorage }));
     }
     buscarDadosUsuario();
@@ -259,23 +261,27 @@ const Perfil = () => {
             <div className="col-md-12">
               <div className="row">
                 <div className="col-12 col-md-4 text-center">
-                  {arquivoSelecionado ? (
-                    <img
-                      src={URL.createObjectURL(arquivoSelecionado)}
-                      alt="Foto Selecionada"
-                      className="img-fluid rounded-circle mb-3"
-                      style={{ width: "150px", height: "150px" }}
-                    />
-                  ) : dadosUsuario.photo ? (
-                    <img
-                      src={`http://localhost:5000/usuarios/uploads/${dadosUsuario.photo}?t=${new Date().getTime()}`}
-                      alt="Foto do Usuário"
-                      className="img-fluid rounded-circle mb-3"
-                      style={{ width: "200px", height: "160px" }}
-                    />
-                  ) : (
-                    <i className="bi bi-person-circle" style={{ fontSize: "150px" }}></i>
-                  )}
+                  {
+                    arquivoSelecionado ? (
+                      <img
+                        src={URL.createObjectURL(arquivoSelecionado)}
+                        alt="Foto Selecionada"
+                        className="img-fluid rounded-circle mb-3"
+                        style={{ width: "150px", height: "150px" }}
+                      />
+                    ) : dadosUsuario.photo && dadosUsuario.photo.trim() !== "" ? (
+                      <img
+                        src={`http://localhost:5000/usuarios/uploads/${dadosUsuario.photo}`}
+                        alt="Foto do Usuário"
+                        className="img-fluid rounded-circle mb-3"
+                        style={{ width: "200px", height: "160px" }}
+                      />
+                    ) : (
+                      <i className="bi bi-person-circle" style={{ fontSize: "150px" }}></i> // Exibe o ícone se não houver foto
+                    )
+                  }
+
+
 
                   <input
                     type="file"

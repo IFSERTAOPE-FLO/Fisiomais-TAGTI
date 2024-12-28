@@ -79,6 +79,14 @@ def handle_options():
 
 
 
+@main.route('/refresh-token', methods=['POST'])
+@jwt_required()
+def refresh_token():
+    current_user = get_jwt_identity()
+    access_token = create_access_token(identity=current_user)
+    return jsonify(access_token=access_token), 200
+
+
 @main.route('/api/notificar_admin', methods=['POST'])
 @jwt_required()
 def notificar_admin():

@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.models import Colaboradores, Servicos, ColaboradoresServicos, db  # ColaboradoresServicos importado
+from app.models import Colaboradores, Servicos, ColaboradoresServicos, Planos, db,TipoServico,  ServicosTipoServico  
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.orm import joinedload
 
@@ -57,6 +57,51 @@ def get_list_servicos():
     except Exception as e:
         return jsonify({"message": f"Erro ao listar serviços: {str(e)}"}), 500
 
+@servicos.route('/listar_todos_servicos', methods=['GET'])
+@jwt_required()
+def listar_todos_servicos():
+    try:
+        email = get_jwt_identity()
+        colaborador = Colaboradores.query.filter_by(email=email).first()
+
+        # Verifica se o usuário é um colaborador
+        if not colaborador:
+            return jsonify({"message": "Usuário não autorizado"}), 403
+
+        # Carregar todos os serviços com planos e tipos de serviço
+        servicos = Servicos.query.options(joinedload(Servicos.planos), joinedload(Servicos.tipo_servicos)).all()
+
+        if not servicos:
+            return jsonify({"message": "Nenhum serviço encontrado"}), 404
+
+        servicos_list = []
+        for s in servicos:
+            colaboradores = [colaborador.nome for colaborador in s.colaboradores]
+            planos = []
+            for tipo in s.tipo_servicos:
+                if tipo.tipo == 'pilates':
+                    for plano in s.planos:
+                        planos.append({
+                            "ID_Plano": plano.id_plano,
+                            "Nome_plano": plano.nome,
+                            "Descricao": plano.descricao,
+                            "Valor": str(plano.valor)
+                        })
+
+            servico_data = {
+                "ID_Servico": s.id_servico,
+                "Nome_servico": s.nome,
+                "Descricao": s.descricao,
+                "Valor": str(s.valor) if any(tipo.tipo == 'fisioterapia' for tipo in s.tipo_servicos) else None,
+                "Planos": planos if any(tipo.tipo == 'pilates' for tipo in s.tipo_servicos) else None,
+                "Tipos": [tipo.tipo for tipo in s.tipo_servicos],
+                "Colaboradores": colaboradores
+            }
+            servicos_list.append(servico_data)
+
+        return jsonify(servicos_list), 200
+    except Exception as e:
+        return jsonify({"message": f"Erro ao listar serviços: {str(e)}"}), 500
 
 
 
@@ -75,7 +120,7 @@ def deletar_servico(id):
         if servico.colaboradores:
             for colaborador in servico.colaboradores:
                 # Deletar a entrada na tabela de junção 'colaboradores_servicos'
-                colaborador_servico = ColaboradoresServicos.query.filter_by(ID_Colaborador=colaborador.ID_Colaborador, ID_Servico=servico.ID_Servico).first()
+                colaborador_servico = ColaboradoresServicos.query.filter_by(ID_Colaborador=colaborador.id_colaborador, ID_Servico=servico.ID_Servico).first()
                 if colaborador_servico:
                     db.session.delete(colaborador_servico)
 
@@ -112,6 +157,19 @@ def add_servico():
             valor=valor if tipo_servico == 'fisioterapia' else None,
         )
 
+        # Adicionar o serviço à sessão
+        db.session.add(novo_servico)
+        db.session.commit()  # Commit para gerar o id_servico
+
+        # Buscar o tipo de serviço
+        tipo_servico_obj = TipoServico.query.filter_by(tipo=tipo_servico).first()
+        if not tipo_servico_obj:
+            return jsonify({"error": f"Tipo de serviço '{tipo_servico}' não encontrado."}), 404
+
+        # Associar o tipo de serviço ao novo serviço
+        servico_tipo = ServicosTipoServico(servico_id=novo_servico.id_servico, tipo_servico_id=tipo_servico_obj.id_tipo_servico)
+        db.session.add(servico_tipo)
+
         # Se o serviço for do tipo 'pilates', associar planos
         if tipo_servico == 'pilates' and planos:
             for plano_data in planos:
@@ -119,7 +177,7 @@ def add_servico():
                     nome=plano_data.get('nome_plano'),
                     descricao=plano_data.get('descricao', ''),
                     valor=plano_data.get('valor'),
-                    servico=novo_servico
+                    servico=novo_servico  # Associando o plano ao serviço
                 )
                 db.session.add(novo_plano)
 
@@ -130,7 +188,6 @@ def add_servico():
                 return jsonify({"error": "Um ou mais colaboradores não encontrados."}), 404
             novo_servico.colaboradores = colaboradores
 
-        db.session.add(novo_servico)
         db.session.commit()
 
         return jsonify({"message": "Serviço adicionado com sucesso!", "servico": novo_servico.id_servico}), 201
@@ -141,17 +198,16 @@ def add_servico():
 
 
 
+
+
+
    
     
-@servicos.route('/editar_servico/<tipo>/<int:id>', methods=['PUT'])
+@servicos.route('/editar_servico/<int:id>', methods=['PUT'])
 @jwt_required()
-def editar_servico(tipo, id):
+def editar_servico(id):
     try:
         data = request.get_json()
-        
-        # Verifica se o tipo de serviço é válido
-        if tipo not in ['fisioterapia', 'pilates']:
-            return jsonify({"error": "Tipo de serviço inválido"}), 400
         
         # Busca o serviço no banco de dados
         servico = Servicos.query.get(id)
@@ -161,16 +217,25 @@ def editar_servico(tipo, id):
         # Atualiza os campos básicos do serviço
         servico.nome = data.get('nome_servico', servico.nome)
         servico.descricao = data.get('descricao', servico.descricao)
-
-        # Se o tipo for fisioterapia, atualiza o valor
-        if tipo == 'fisioterapia':
+        
+        # Atualiza o valor do serviço para 'fisioterapia' ou 'pilates' conforme o tipo
+        tipo_servico = data.get('tipo_servico')
+        if tipo_servico:
+            tipo_servico_obj = TipoServico.query.filter_by(tipo=tipo_servico).first()
+            if not tipo_servico_obj:
+                return jsonify({"error": f"Tipo de serviço '{tipo_servico}' não encontrado."}), 404
+            
+            # Limpa os tipos de serviço anteriores e associa o novo tipo
+            servico.tipo_servicos.clear()
+            servico_tipo = ServicosTipoServico(servico_id=servico.id_servico, tipo_servico_id=tipo_servico_obj.id_tipo_servico)
+            db.session.add(servico_tipo)
+        
+        # Atualiza o valor para 'fisioterapia' ou define planos para 'pilates'
+        if tipo_servico == 'fisioterapia':
             servico.valor = data.get('valor', servico.valor)
             servico.planos = None  # Fisioterapia não tem planos
-        else:
-            # Se o tipo for Pilates, associar ou atualizar planos
+        elif tipo_servico == 'pilates':
             planos = data.get('planos', [])
-            servico.valor = None  # Pilates não tem valor fixo, o valor vem dos planos
-
             if planos:
                 # Limpa os planos atuais e adiciona os novos
                 servico.planos = []
@@ -198,6 +263,7 @@ def editar_servico(tipo, id):
         db.session.rollback()
         return jsonify({"error": f"Erro ao atualizar serviço: {str(e)}"}), 500
 
+
     
 @servicos.route('/adicionar_colaboradores', methods=['POST'])
 def adicionar_colaboradores():
@@ -214,7 +280,7 @@ def adicionar_colaboradores():
         return jsonify({"error": "Serviço não encontrado"}), 404
 
     # Buscar os colaboradores pelo ID
-    colaboradores = Colaboradores.query.filter(Colaboradores.ID_Colaborador.in_(colaboradores_ids)).all()
+    colaboradores = Colaboradores.query.filter(Colaboradores.id_colaborador.in_(colaboradores_ids)).all()
     if len(colaboradores) != len(colaboradores_ids):
         return jsonify({"error": "Alguns colaboradores não foram encontrados"}), 404
 
@@ -246,7 +312,7 @@ def remover_colaboradores():
         return jsonify({"error": "Serviço não encontrado"}), 404
 
     # Buscar os colaboradores pelo ID
-    colaboradores = Colaboradores.query.filter(Colaboradores.ID_Colaborador.in_(colaboradores_ids)).all()
+    colaboradores = Colaboradores.query.filter(Colaboradores.id_colaborador.in_(colaboradores_ids)).all()
     if len(colaboradores) != len(colaboradores_ids):
         return jsonify({"error": "Alguns colaboradores não foram encontrados"}), 404
 

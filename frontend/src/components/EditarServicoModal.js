@@ -70,7 +70,6 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
       Planos: value === "pilates" ? prev.Planos : [], // Limpa os planos apenas se o tipo não for Pilates
     }));
   };
-  
 
   const adicionarPlano = () => {
     // Determina o próximo ID com base no maior ID existente
@@ -81,16 +80,12 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
     // Adiciona o novo plano com o ID gerado
     setFormData((prev) => ({
       ...prev,
-      Planos: [...prev.Planos, { Nome_plano: novoPlano.nome, Valor: parseFloat(novoPlano.valor) }],
       Planos: [
         ...prev.Planos,
         { ID_Plano: novoID, Nome_plano: novoPlano.nome, Valor: parseFloat(novoPlano.valor) },
       ],
     }));
     setNovoPlano({ nome: "", valor: "" }); // Reset the new plan input fields
-    
-    // Reseta os campos do novo plano
-    setNovoPlano({ nome: "", valor: "" });
   };
 
   const handleSave = async () => {
@@ -113,7 +108,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:5000/servicos/editar_servico/${formData.Tipo}/${servico.ID_Servico}`,
+        `http://localhost:5000/servicos/editar_servico/${servico.ID_Servico}`,
         {
           method: "PUT",
           headers: {
@@ -134,8 +129,6 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
       setErro(err.message);
     }
   };
-  
-  
 
   return (
     <div
@@ -256,7 +249,6 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
                 )}
               </>
             )}
-            
 
           </div>
           <div className="modal-footer">

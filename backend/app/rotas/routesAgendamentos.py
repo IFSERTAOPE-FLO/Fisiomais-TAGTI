@@ -258,6 +258,8 @@ def dias_permitidos(colaborador_id):
 
 
 
+from datetime import datetime, timedelta
+
 def obter_horarios_disponiveis(colaborador_id, data_obj):
     # Converte a data para o dia da semana (ex: Segunda-feira)
     dia_semana = data_obj.strftime("%A")  # Usa o nome completo do dia da semana (ex: "Monday")
@@ -293,10 +295,18 @@ def obter_horarios_disponiveis(colaborador_id, data_obj):
     # Elimina duplicatas na lista de horários do colaborador (considera horários únicos)
     horarios_colaborador_unicos = list({(horario.hora_inicio, horario.hora_fim): horario for horario in horarios_colaborador}.values())
 
+    agora = datetime.now()  # Hora atual
+
     for horario in horarios_colaborador_unicos:
         # Combina a data com a hora de início para garantir que estamos no dia certo
         hora_atual = datetime.combine(data_obj, horario.hora_inicio)
         hora_fim = datetime.combine(data_obj, horario.hora_fim)
+
+        # Verifica se o dia é hoje e aplica a lógica de excluir horários com menos de 2h de distância
+        if data_obj.date() == agora.date():
+            hora_atual += timedelta(hours=2)  # Incrementa 2 horas a partir da hora atual
+            if hora_atual < agora:
+                hora_atual = agora + timedelta(hours=2)  # Ajusta para não considerar horários passados
 
         # Use timedelta para incrementar em intervalos de 1 hora
         while hora_atual < hora_fim:
@@ -308,6 +318,7 @@ def obter_horarios_disponiveis(colaborador_id, data_obj):
     print(f"Horários disponíveis: {horarios_disponiveis}")  # Log para verificar os horários disponíveis
 
     return horarios_disponiveis
+
 
 
 

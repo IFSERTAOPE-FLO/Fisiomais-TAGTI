@@ -26,25 +26,23 @@ function Navbar() {
         });
 
         const { access_token, name, role, userId, photo } = response.data;
-
         setIsLoggedIn(true);
         setUserName(name);
         setRole(role);
         setUserId(userId);
         setUserPhoto(photo);
+
         localStorage.setItem("token", access_token);
         localStorage.setItem("userName", name);
         localStorage.setItem("role", role);
-        localStorage.setItem("userId", userId); // Salva o ID
+        localStorage.setItem("userId", userId);
         localStorage.setItem("userPhoto", photo);
 
-        // Fechar o modal
         const modalElement = document.getElementById("loginModal");
         const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
         if (modalInstance) {
             modalInstance.hide();
         }
-
         document.querySelectorAll(".modal-backdrop").forEach((backdrop) => backdrop.remove());
 
         console.log("Usuário logado:", name);
@@ -56,55 +54,76 @@ function Navbar() {
             } else {
                 navigate("/");
             }
-            window.location.reload();
-        }, 300); // Reduzido o tempo para 300ms
+            
+        }, 300);
+
+        // Iniciar renovação automática do token
+        autoRefreshToken();
     } catch (error) {
         console.error("Erro no login:", error);
         alert("Erro ao fazer login. Verifique suas credenciais.");
     }
 };
 
+const autoRefreshToken = () => {
+    const refreshInterval = 5 * 60 * 1000;  // A cada 5 minutos
+    const logoutWarningTime = 25 * 60 * 1000; // Avisar 5 minutos antes de expirar
+    const sessionEndTime = 30 * 60 * 1000;   // Tempo total de 30 minutos
 
-  const handleLogout = async () => {
-    try {
-      const savedToken = localStorage.getItem("token");
-      if (!savedToken) {
-        alert("Token de autenticação não encontrado.");
-        return;
-      }
+    let timeoutWarning, timeoutLogout;
 
-      const response = await axios.post(
-        "http://localhost:5000/logout",
-        {}, // Corpo vazio
-        {
-          headers: {
-            Authorization: `Bearer ${savedToken}`,
-          },
+    // Função para atualizar o token
+    const refreshToken = async () => {
+        try {
+            const savedToken = localStorage.getItem("token");
+            const response = await axios.post(
+                "http://localhost:5000/refresh-token", 
+                {}, 
+                { headers: { Authorization: `Bearer ${savedToken}` } }
+            );
+
+            if (response.data.access_token) {
+                localStorage.setItem("token", response.data.access_token);
+            }
+        } catch (error) {
+            console.error("Erro ao atualizar o token:", error);
+            alert("Sessão expirada. Faça login novamente.");
+            handleLogout();
         }
-      );
+    };
 
-      if (response.status === 200) {
-        setIsLoggedIn(false);
-        setUserName("Usuário");
-        setRole("");
-        setUserId(null);
-        setUserPhoto(""); // Limpa a foto do usuário
-        localStorage.removeItem("token");
-        localStorage.removeItem("userName");
-        localStorage.removeItem("role");
-        localStorage.removeItem("userId");
-        localStorage.removeItem("userPhoto"); // Limpa a foto do localStorage
+    // Renovar token a cada 5 minutos
+    timeoutWarning = setTimeout(() => {
+        alert("Sua sessão está prestes a expirar em 5 minutos. Você será deslogado em breve.");
+    }, logoutWarningTime);
 
-        navigate("/");
-        window.location.reload();
-      } else {
-        alert("Erro ao fazer logout. Tente novamente.");
-      }
-    } catch (error) {
-      console.error("Erro no logout:", error);
-      alert("Erro ao fazer logout.");
-    }
-  };
+    // Deslogar automaticamente após 30 minutos
+    timeoutLogout = setTimeout(() => {
+        alert("Sua sessão expirou. Você será deslogado.");
+        handleLogout();
+    }, sessionEndTime);
+
+    // Iniciar renovação do token periodicamente
+    setInterval(() => {
+        refreshToken();
+    }, refreshInterval);
+
+    };
+// Função de logout
+const handleLogout = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("userName");
+  localStorage.removeItem("role");
+  localStorage.removeItem("userId");
+  localStorage.removeItem("userPhoto");
+  setIsLoggedIn(false);
+  setUserName("Usuário");
+  setRole("");
+  setUserId(null);
+  setUserPhoto("");
+  window.location.reload();
+};
+
 
   useEffect(() => {
     const savedToken = localStorage.getItem("token");

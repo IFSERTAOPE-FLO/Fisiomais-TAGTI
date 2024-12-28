@@ -9,7 +9,8 @@ from app.models import (
     Planos,         # Importando a classe de planos
     Clientes,       # Importando a classe de clientes
     Horarios,       # Importando a classe de horários
-    TipoServico     # Importando a classe de relacionamento do tipo com servico
+    TipoServico,     # Importando a classe de relacionamento do tipo com servico
+    ServicosTipoServico
 )
 
 
@@ -110,9 +111,23 @@ def populate_database():
             print(f"Clínica com CNPJ {clinica['cnpj']} já existe. Ignorando inserção.")
 
     db.session.commit()
+    # Populando os tipos de serviços
+    tipos_servicos = [
+        {"tipo": "fisioterapia"},
+        {"tipo": "pilates"}
+    ]
 
-    
-    # Definir os serviços
+    # Inserir tipos de serviço no banco de dados se não existirem
+    for tipo in tipos_servicos:
+        exists = TipoServico.query.filter_by(tipo=tipo["tipo"]).first()
+        if not exists:
+            novo_tipo = TipoServico(tipo=tipo["tipo"])
+            db.session.add(novo_tipo)
+        
+    db.session.commit()
+
+
+    # Criar serviços e associar aos tipos
     servicos = [
         {
             "nome": "Fisioterapia Clássica",
@@ -140,7 +155,7 @@ def populate_database():
         },
     ]
 
-    # Inserir os serviços no banco de dados
+    # Inserir serviços no banco de dados e associar tipos
     for servico in servicos:
         exists = Servicos.query.filter_by(nome=servico["nome"]).first()
         if not exists:
@@ -152,10 +167,15 @@ def populate_database():
             )
             db.session.add(new_servico)
 
-            # Associa o tipo de serviço ao serviço
+            # Associa o tipo de serviço ao serviço diretamente na tabela associativa
             tipo_servico = TipoServico.query.filter_by(tipo=servico["tipo_servico"]).first()
             if tipo_servico:
-                new_servico.tipo_servicos.append(tipo_servico)
+                # Criar a associação na tabela associativa diretamente
+                associacao = ServicosTipoServico(
+                    servico_id=new_servico.id_servico,
+                    tipo_servico_id=tipo_servico.id_tipo_servico
+                )
+                db.session.add(associacao)
 
     db.session.commit()
 
@@ -170,8 +190,9 @@ def populate_database():
         {"nome": "3 dias por semana", "valor": 349.99, "servico_nome": "Pilates Tradicional"},
     ]
 
+    # Criar planos para os serviços de pilates
     for plano in planos_pilates:
-        exists = Planos.query.filter_by(nome=plano["nome"]).first()  # Corrigido para acessar 'plano', não 'planos_pilates'
+        exists = Planos.query.filter_by(nome=plano["nome"]).first()
         if not exists:
             servico = Servicos.query.filter_by(nome=plano["servico_nome"]).first()
             if servico:
@@ -191,20 +212,15 @@ def populate_database():
         servico = Servicos.query.filter_by(nome="Fisioterapia Clássica").first()
         if servico and servico not in colaborador.servicos:
             colaborador.servicos.append(servico)
+    # Associar colaboradores aos serviços
+    for colaborador in Colaboradores.query.all():
+        servico = Servicos.query.filter_by(nome="Pilates ClínicoPilates Clínico").first()
+        if servico and servico not in colaborador.servicos:
+            colaborador.servicos.append(servico)
 
     db.session.commit()
     
-    # Criar os tipos de serviços
-    tipos_servicos = [
-        {"tipo": "fisioterapia"},
-        {"tipo": "pilates"}
-    ]
-
-    for tipo in tipos_servicos:
-        exists = TipoServico.query.filter_by(tipo=tipo["tipo"]).first()
-        if not exists:
-            novo_tipo = TipoServico(tipo=tipo["tipo"])
-            db.session.add(novo_tipo)
+    
 
     db.session.commit()
     # Criar clientes
@@ -228,21 +244,6 @@ def populate_database():
             new_cliente.set_password("123")  # Criptografando a senha
             db.session.add(new_cliente)
 
-    # Criar horários para colaboradores
-    default_horarios = [
-        {"dia_semana": "segunda-feira", "hora_inicio": "08:00:00", "hora_fim": "12:00:00"},
-        {"dia_semana": "quarta-feira", "hora_inicio": "14:00:00", "hora_fim": "18:00:00"},
-    ]
-
-    # Associar horários aos colaboradores
-    for colaborador in Colaboradores.query.all():
-        for horario in default_horarios:
-            new_horario = Horarios(
-                id_colaborador=colaborador.id_colaborador,
-                dia_semana=horario["dia_semana"],
-                hora_inicio=datetime.strptime(horario["hora_inicio"], "%H:%M:%S").time(),
-                hora_fim=datetime.strptime(horario["hora_fim"], "%H:%M:%S").time()
-            )
-            db.session.add(new_horario)
-
+    
     db.session.commit()
+

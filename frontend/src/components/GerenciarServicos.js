@@ -22,28 +22,28 @@ const GerenciarServicos = () => {
   const [selectedServico, setSelectedServico] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [tipoAlternado, setTipoAlternado] = useState(true);
-  const [pesquisaNome, setPesquisaNome] = useState(""); 
+  const [pesquisaNome, setPesquisaNome] = useState("");
 
-  const buscarServicos = async () => {    
-      try {
-        const token = localStorage.getItem('token');  // Supondo que o token JWT esteja armazenado no localStorage
-        const response = await fetch('http://localhost:5000/servicos/listar_servicos', {
-          headers: {
-            'Authorization': `Bearer ${token}`  // Envia o token JWT no cabeçalho
-          }
-        });
-        
-        if (response.ok) {
-          const servicosData = await response.json();
-          setServicos(servicosData);
-        } else {
-          console.error('Erro ao buscar serviços: ', response.status);
+  const buscarServicos = async () => {
+    try {
+      const token = localStorage.getItem('token');  // Supondo que o token JWT esteja armazenado no localStorage
+      const response = await fetch('http://localhost:5000/servicos/listar_todos_servicos', {
+        headers: {
+          'Authorization': `Bearer ${token}`  // Envia o token JWT no cabeçalho
         }
-      } catch (error) {
-        console.error('Erro ao buscar serviços:', error);
+      });
+
+      if (response.ok) {
+        const servicosData = await response.json();
+        setServicos(servicosData);
+      } else {
+        console.error('Erro ao buscar serviços: ', response.status);
       }
-    };
-    
+    } catch (error) {
+      console.error('Erro ao buscar serviços:', error);
+    }
+  };
+
 
   const buscarUsuarios = async () => {
     try {
@@ -85,10 +85,26 @@ const GerenciarServicos = () => {
     }
 
     try {
+      // Adiciona um campo 'nome_plano' para cada plano antes de enviar para o backend
+      const planos = novoServico.planos.map(plano => ({
+        nome_plano: plano.Nome_plano,
+        valor: plano.Valor,
+      }));
+
+      // Preparando o objeto para envio
+      const servicoData = {
+        nome_servico: novoServico.nome_servico,
+        descricao: novoServico.descricao,
+        valor: novoServico.valor,  // Fisioterapia vai enviar um valor
+        tipo_servico: novoServico.tipo_servico,
+        colaboradores_ids: novoServico.colaboradores_ids,
+        planos: planos,  // Inclui os planos formatados
+      };
+
       const response = await fetch("http://localhost:5000/servicos/add_servico", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(novoServico),
+        body: JSON.stringify(servicoData),
       });
 
       const data = await response.json();
@@ -182,21 +198,21 @@ const GerenciarServicos = () => {
   const fecharModalColaboradores = () => {
     setModalColaboradoresVisible(false);
     setSelectedServico(null);
-    buscarServicos(); 
-    
+    buscarServicos();
+
   };
 
   const fecharModalEditarServico = () => {
     setModalServicoVisible(false);
     setSelectedServico(null);
-    buscarServicos(); 
-    
+    buscarServicos();
+
   };
 
   const toggleTipo = () => {
     setTipoAlternado(!tipoAlternado);
   };
-const sortedServicos = React.useMemo(() => {
+  const sortedServicos = React.useMemo(() => {
     let sorted = [...servicos];
     if (sortConfig.key && sortConfig.direction) {
       sorted.sort((a, b) => {
@@ -229,17 +245,21 @@ const sortedServicos = React.useMemo(() => {
   const servicosFiltrados = sortedServicos.filter((servico) => {
     return (
       servico.Nome_servico.toLowerCase().includes(pesquisaNome.toLowerCase()) &&
-      (tipoAlternado ? servico.Tipo === "fisioterapia" : servico.Tipo === "pilates")
+      (tipoAlternado
+        ? servico.Tipos.includes('fisioterapia')
+        : servico.Tipos.includes('pilates'))
     );
   });
- 
+  
+  
+
 
   return (
     <div className="container">
       <h2 className="mb-4 text-secondary">Gerenciar Serviços</h2>
       {erro && <div className="alert alert-danger">{erro}</div>}
       {mensagem && <div className="alert alert-success">{mensagem}</div>}
-      
+
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -263,7 +283,7 @@ const sortedServicos = React.useMemo(() => {
           required
           className="form-control mb-2"
         />
-        
+
         <select
           value={novoServico.tipo_servico}
           onChange={handleTipoServicoChange}
@@ -274,13 +294,13 @@ const sortedServicos = React.useMemo(() => {
           <option value="pilates">Pilates</option>
         </select>
         {novoServico.tipo_servico === "fisioterapia" && (
-        <input
-          type="number"
-          placeholder="Valor"
-          value={novoServico.valor}
-          onChange={(e) => setNovoServico({ ...novoServico, valor: e.target.value })}
-          className="form-control mb-2"
-        />
+          <input
+            type="number"
+            placeholder="Valor"
+            value={novoServico.valor}
+            onChange={(e) => setNovoServico({ ...novoServico, valor: e.target.value })}
+            className="form-control mb-2"
+          />
         )}
         {novoServico.tipo_servico === "pilates" && (
           <>
@@ -324,21 +344,21 @@ const sortedServicos = React.useMemo(() => {
 
       <h3 className="text-primary">Lista de Serviços</h3>
       <div className="input-group mb-3">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Pesquisar por nome do serviço"
-                  value={pesquisaNome}
-                  onChange={(e) => setPesquisaNome(e.target.value)}
-                />
-                <button className="btn btn-secondary" type="button" id="button-addon2">
-                  <i className="bi bi-search"></i>
-                </button>
-              </div>
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Pesquisar por nome do serviço"
+          value={pesquisaNome}
+          onChange={(e) => setPesquisaNome(e.target.value)}
+        />
+        <button className="btn btn-secondary" type="button" id="button-addon2">
+          <i className="bi bi-search"></i>
+        </button>
+      </div>
       <table className="table ">
         <thead>
           <tr>
-          <th
+            <th
               onClick={() => handleSort("Nome_servico")}
               style={{ cursor: "pointer" }}
             >
@@ -348,8 +368,8 @@ const sortedServicos = React.useMemo(() => {
             <th>Descrição</th>
             <th>Valor (R$)</th>
             <th onClick={toggleTipo} style={{ cursor: "pointer" }}>
-                            Tipo {tipoAlternado ? "*" : "*"}
-                        </th>
+              Tipo {tipoAlternado ? "*" : "*"}
+            </th>
             <th>Planos</th>
             <th>Colaboradores</th>
             <th>Ações</th>
@@ -360,20 +380,19 @@ const sortedServicos = React.useMemo(() => {
             <tr key={servico.ID_Servico}>
               <td>{servico.Nome_servico}</td>
               <td>{servico.Descricao}</td>
-              <td>{servico.Valor}</td>
-              <td>{servico.Tipo}</td>
+              <td>{servico.Valor ? `R$ ${parseFloat(servico.Valor).toFixed(2)}` : '-'}</td>
+              <td>{servico.Tipos.join(", ")}</td>
               <td className="text-center">
-                {servico.Tipo === "pilates" && servico.Planos && servico.Planos.length > 0 ? (
+                {servico.Tipos.includes("pilates") && servico.Planos && servico.Planos.length > 0 ? (
                   <ul className="list-unstyled">
                     {servico.Planos.map((plano, index) => (
                       <li key={index}>
-                        {plano.Nome_plano} - R${plano.Valor.toFixed(2)}                        
+                        {plano.Nome_plano} - R${parseFloat(plano.Valor).toFixed(2)}
                       </li>
-                      
                     ))}
                   </ul>
                 ) : (
-                  servico.Tipo === "pilates" ? "Nenhum plano adicionado" : <span className="d-block">-</span>
+                  servico.Tipos.includes("pilates") ? "Nenhum plano adicionado" : <span className="d-block">-</span>
                 )}
               </td>
               <td>
@@ -382,27 +401,23 @@ const sortedServicos = React.useMemo(() => {
                   : "Nenhum colaborador"}
               </td>
               <td className="d-flex justify-content-start align-items-center align-middle border-0">
-                
-
                 <button
                   className="btn btn-primary btn-sm ms "
                   onClick={() => abrirModalEditarServico(servico)}
                 >
                   <FaEdit className="fs-7" />
                 </button>
-
                 <button
                   className="btn btn-info btn-sm ms-2"
                   onClick={() => abrirModalColaboradores(servico)}
                 >
-                  <FaUserPlus className="fs-7"  />
+                  <FaUserPlus className="fs-7" />
                 </button>
                 <button
                   className="btn btn-danger btn-sm ms-2"
                   onClick={() => deletarServico(servico.ID_Servico)}
                 >
-                  <FaTrashAlt className="fs-7"  />
-                  
+                  <FaTrashAlt className="fs-7" />
                 </button>
               </td>
             </tr>
@@ -419,7 +434,7 @@ const sortedServicos = React.useMemo(() => {
             );
             fecharModalEditarServico();
           }}
-          
+
           onClose={fecharModalEditarServico}
         />
       )}
