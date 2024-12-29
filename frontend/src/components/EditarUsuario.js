@@ -17,6 +17,11 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
     const [cpf, setCpf] = useState(usuario.cpf);
     const [cargo, setCargo] = useState(usuario.cargo || '');
     const [cidades, setCidades] = useState([]);
+
+    const [clinica, setClinica] = useState('');
+    const [clinicas, setClinicas] = useState([]); // Inicialize como array vazio
+
+
     const [erro, setErro] = useState('');
 
     // Fetch cities based on the selected state
@@ -41,13 +46,32 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
             buscarCidades(estado);
         }
     }, [estado]);
-
+    useEffect(() => {
+        const buscarClinicas = async () => {
+            try {
+                const response = await fetch('http://localhost:5000/clinicas');
+                if (response.ok) {
+                    const data = await response.json();
+                    setClinicas(data); // Aqui, já espera-se que `data` seja um array
+                } else {
+                    throw new Error("Erro ao carregar clínicas.");
+                }
+            } catch (err) {
+                setErro(err.message);
+            }
+        };
+    
+        buscarClinicas();
+    }, []);
+    
+    
     const handleSave = async () => {
         const dadosAtualizados = {
             nome,
             email,
             telefone,
             endereco: {
+                id_endereco: usuario.endereco ? usuario.endereco.id_endereco : null,
                 rua,
                 numero,
                 bairro,
@@ -56,9 +80,11 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
             },
             cpf,
             cargo: role === 'colaborador' ? cargo : undefined,
+            clinica, 
         };
+        
 
-        const idUsuario = usuario.ID;
+        const idUsuario = usuario.id;
 
         if (!idUsuario) {
             alert("ID do usuário inválido.");
@@ -67,7 +93,7 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:5000/editar_usuario/${role}/${idUsuario}`, {
+            const response = await fetch(`http://localhost:5000/usuarios/editar_usuario_com_endereco/${role}/${idUsuario}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -78,7 +104,7 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
 
             const data = await response.json();
             if (response.ok) {
-                alert('Usuário atualizado com sucesso');
+                alert('Usuário e endereço atualizados com sucesso');
                 onSave();
                 onClose();
             } else {
@@ -88,130 +114,181 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
             alert('Erro ao atualizar o usuário');
         }
     };
+    
+
+
 
     return (
         <Modal show onHide={onClose}>
-            <Modal.Header closeButton>
-                <Modal.Title>Editar Usuário</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                <Form>
-                    <Form.Group controlId="formNome">
-                        <Form.Label>Nome</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={nome}
-                            onChange={(e) => setNome(e.target.value)}
-                        />
+        <Modal.Header closeButton>
+          <Modal.Title>Editar Usuário</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <div className="row">
+              <div className="col-md-6">
+                <Form.Group controlId="formNome">
+                  <Form.Label>Nome</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                  />
+                </Form.Group>
+              </div>
+              <div className="col-md-6">
+                <Form.Group controlId="formEmail">
+                  <Form.Label>Email</Form.Label>
+                  <Form.Control
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </Form.Group>
+              </div>
+            </div>
+      
+            <div className="row">
+              <div className="col-md-6">
+                <Form.Group controlId="formTelefone">
+                  <Form.Label>Telefone</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={telefone}
+                    onChange={(e) => setTelefone(e.target.value)}
+                  />
+                </Form.Group>
+              </div>
+              <div className="col-md-6">
+                <Form.Group controlId="formCpf">
+                  <Form.Label>CPF</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={cpf}
+                    onChange={(e) => setCpf(e.target.value)}
+                  />
+                </Form.Group>
+              </div>
+            </div>
+      
+            <div className="row">
+              <div className="col-md-6">
+                <Form.Group controlId="formRua">
+                  <Form.Label>Rua</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={rua}
+                    onChange={(e) => setRua(e.target.value)}
+                  />
+                </Form.Group>
+              </div>
+              <div className="col-md-6">
+                <Form.Group controlId="formNumero">
+                  <Form.Label>Número</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={numero}
+                    onChange={(e) => setNumero(e.target.value)}
+                  />
+                </Form.Group>
+              </div>
+            </div>
+      
+            <div className="row">
+              <div className="col-md-6">
+                <Form.Group controlId="formBairro">
+                  <Form.Label>Bairro</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={bairro}
+                    onChange={(e) => setBairro(e.target.value)}
+                  />
+                </Form.Group>
+              </div>
+              <div className="col-md-6">
+                <Form.Group controlId="formCidade">
+                  <Form.Label>Cidade</Form.Label>
+                  <Form.Control
+                    as="select"
+                    value={cidade}
+                    onChange={(e) => setCidade(e.target.value)}
+                  >
+                    <option value="">Selecione a cidade</option>
+                    {cidades.map((cidade, index) => (
+                      <option key={index} value={cidade}>
+                        {cidade}
+                      </option>
+                    ))}
+                  </Form.Control>
+                </Form.Group>
+              </div>
+            </div>
+      
+            <div className="row">
+              <div className="col-md-6">
+                <Form.Group controlId="formEstado">
+                  <Form.Label>Estado</Form.Label>
+                  <Form.Control
+                    as="select"
+                    value={estado}
+                    onChange={(e) => setEstado(e.target.value)}
+                  >
+                    <option value="">Selecione o estado</option>
+                    {estados.map((estado) => (
+                      <option key={estado} value={estado}>
+                        {estado}
+                      </option>
+                    ))}
+                  </Form.Control>
+                </Form.Group>
+              </div>
+            </div>
+      
+            {role === 'colaborador' && (
+              <>
+                <div className="row">
+                  <div className="col-md-6">
+                    <Form.Group controlId="formCargo">
+                      <Form.Label>Cargo</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={cargo}
+                        onChange={(e) => setCargo(e.target.value)}
+                      />
                     </Form.Group>
-
-                    <Form.Group controlId="formEmail">
-                        <Form.Label>Email</Form.Label>
-                        <Form.Control
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                        />
+                  </div>
+                  <div className="col-md-6">
+                    <Form.Group controlId="formClinica">
+                      <Form.Label>Clínica</Form.Label>
+                      <Form.Control
+                        as="select"
+                        value={clinica}
+                        onChange={(e) => setClinica(e.target.value)}
+                      >
+                        <option value="">Selecione a clínica</option>
+                        {clinicas.map((clinica) => (
+                          <option key={clinica.ID_Clinica} value={clinica.ID_Clinica}>
+                            {clinica.Nome}
+                          </option>
+                        ))}
+                      </Form.Control>
                     </Form.Group>
-
-                    <Form.Group controlId="formTelefone">
-                        <Form.Label>Telefone</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={telefone}
-                            onChange={(e) => setTelefone(e.target.value)}
-                        />
-                    </Form.Group>
-
-                    <Form.Group controlId="formRua">
-                        <Form.Label>Rua</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={rua}
-                            onChange={(e) => setRua(e.target.value)}
-                        />
-                    </Form.Group>
-
-                    <Form.Group controlId="formNumero">
-                        <Form.Label>Número</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={numero}
-                            onChange={(e) => setNumero(e.target.value)}
-                        />
-                    </Form.Group>
-
-                    <Form.Group controlId="formBairro">
-                        <Form.Label>Bairro</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={bairro}
-                            onChange={(e) => setBairro(e.target.value)}
-                        />
-                    </Form.Group>
-
-                    <Form.Group controlId="formCidade">
-                        <Form.Label>Cidade</Form.Label>
-                        <Form.Control
-                            as="select"
-                            value={cidade}
-                            onChange={(e) => setCidade(e.target.value)}
-                        >
-                            <option value="">Selecione a cidade</option>
-                            {cidades.map((cidade, index) => (
-                                <option key={index} value={cidade}>
-                                    {cidade}
-                                </option>
-                            ))}
-                        </Form.Control>
-                    </Form.Group>
-
-                    <Form.Group controlId="formEstado">
-                        <Form.Label>Estado</Form.Label>
-                        <Form.Control
-                            as="select"
-                            value={estado}
-                            onChange={(e) => setEstado(e.target.value)}
-                        >
-                            <option value="">Selecione o estado</option>
-                            {estados.map((estado) => (
-                                <option key={estado} value={estado}>
-                                    {estado}
-                                </option>
-                            ))}
-                        </Form.Control>
-                    </Form.Group>
-
-                    <Form.Group controlId="formCpf">
-                        <Form.Label>CPF</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={cpf}
-                            onChange={(e) => setCpf(e.target.value)}
-                        />
-                    </Form.Group>
-
-                    {role === 'colaborador' && (
-                        <Form.Group controlId="formCargo">
-                            <Form.Label>Cargo</Form.Label>
-                            <Form.Control
-                                type="text"
-                                value={cargo}
-                                onChange={(e) => setCargo(e.target.value)}
-                            />
-                        </Form.Group>
-                    )}
-                </Form>
-            </Modal.Body>
-            <Modal.Footer>
-                <Button variant="secondary" onClick={onClose}>
-                    Fechar
-                </Button>
-                <Button variant="primary" onClick={handleSave}>
-                    Salvar alterações
-                </Button>
-            </Modal.Footer>
-        </Modal>
+                  </div>
+                </div>
+              </>
+            )}
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={onClose}>
+            Fechar
+          </Button>
+          <Button variant="primary" onClick={handleSave}>
+            Salvar alterações
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      
     );
 };
 

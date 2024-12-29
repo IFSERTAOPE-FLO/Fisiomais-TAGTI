@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 
-const EditarHorarios = ({ colaboradorId, onClose, onSave }) => {
+const EditarHorarios = ({ colaboradorId, colaboradorNome, onClose, onSave }) => {
   const [horarios, setHorarios] = useState([]);
   const [novoHorario, setNovoHorario] = useState({
     dia_semana: '',
@@ -95,7 +95,7 @@ const EditarHorarios = ({ colaboradorId, onClose, onSave }) => {
   return (
     <Modal show onHide={onClose}>
       <Modal.Header closeButton>
-        <Modal.Title>Editar Horários</Modal.Title>
+        <Modal.Title>Editar Horários de {colaboradorNome}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <h5>Horários Atuais:</h5>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import EditarUsuario from "./EditarUsuario";
 import EditarHorarios from "./EditarHorarios";
 import { Link, } from "react-router-dom";
+import Paginator from "./Paginator"; // Importe o componente Paginator
 
 const GerenciarUsuarios = () => {
     const [usuarios, setUsuarios] = useState([]);
@@ -11,6 +12,14 @@ const GerenciarUsuarios = () => {
     const [tipoAlternado, setTipoAlternado] = useState(true);
     const [pesquisaNome, setPesquisaNome] = useState(""); // Estado para armazenar o filtro de nome
     const [horariosEditando, setHorariosEditando] = useState(null);  // Adicionar estado para editar horários
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 3; // Defina o número de itens por página
+
+    // Calcula os índices de início e fim para a página atual
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+
+    // Filtra os usuários a serem exibidos na página atual
 
     // Função para buscar usuários
     const buscarUsuarios = async () => {
@@ -72,11 +81,16 @@ const GerenciarUsuarios = () => {
 
     const handleEditarUsuario = (usuario) => {
         setUsuarioEditando(usuario);
+        setHorariosEditando(null); // Garantir que o modal de horários seja fechado ao editar o usuário
     };
 
-    const handleEditarHorarios = (usuario) => {
-        setHorariosEditando(usuario);  // Passando o ID correto do colaborador
+
+    // Função para editar horários
+    const handleEditarHorarios = (usuariohorario) => {
+        setHorariosEditando({ id: usuariohorario.id, nome: usuariohorario.nome });
+        setUsuarioEditando(null); // Garantir que o modal de edição de usuário seja fechado ao editar horários
     };
+
 
 
     const handleCloseModal = () => {
@@ -135,9 +149,13 @@ const GerenciarUsuarios = () => {
             (tipoAlternado ? usuario.role === "colaborador" : usuario.role === "cliente")
         );
     });
-
+    // Paginação
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const usuariosPaginados = usuariosFiltrados.slice(indexOfFirstItem, indexOfLastItem);
+    
     return (
-        <div>
+        <div className="container">
             <h2 className="mb-3 text-secondary">Gerenciar Usuários</h2>
 
             {erro && <p className="alert alert-danger">{erro}</p>}
@@ -174,7 +192,7 @@ const GerenciarUsuarios = () => {
                     </div>
                 </div>
             </div>
-
+            <div className="table-responsive">
             <table className="table table-striped table-bordered mt-4">
                 <thead>
                     <tr>
@@ -199,8 +217,8 @@ const GerenciarUsuarios = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {usuariosFiltrados.map((usuario) => (
-                        <tr key={usuario.ID}>
+                    {usuariosPaginados.map((usuario) => (
+                        <tr key={usuario.id}>
                             <td>{usuario.nome}</td>
                             <td>{usuario.email}</td>
                             <td>{usuario.role}</td>
@@ -216,14 +234,16 @@ const GerenciarUsuarios = () => {
 
                                 <button
                                     className="btn btn-danger btn-sm me-2"
-                                    onClick={() => deletarUsuario(usuario.role, usuario.ID)}
+                                    onClick={() => deletarUsuario(usuario.role, usuario.id)}
                                 >
                                     <i className="bi bi-trash"></i> Excluir
                                 </button>
                                 {usuario.role === "colaborador" && (
                                     <button
                                         className="btn btn-info btn-sm me-2"
-                                        onClick={() => handleEditarHorarios(usuario.ID)}  // Chamar a edição de horários
+                                        onClick={() => {
+                                            handleEditarHorarios(usuario);  // Chama a função de edição de horários
+                                        }}
                                     >
                                         <i className="bi bi-clock"></i> Editar Horários
                                     </button>
@@ -238,6 +258,14 @@ const GerenciarUsuarios = () => {
                     ))}
                 </tbody>
             </table>
+            </div>
+            <Paginator
+                totalItems={usuariosFiltrados.length}
+                itemsPerPage={itemsPerPage}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage} // Correctly pass the setCurrentPage function
+            />
+
 
             {usuarioEditando && (
                 <EditarUsuario
@@ -249,8 +277,8 @@ const GerenciarUsuarios = () => {
             )}
             {horariosEditando && (
                 <EditarHorarios
-                    colaboradorId={horariosEditando}  // Passando o ID para o modal
-
+                    colaboradorId={horariosEditando.id}  // Passando o ID para o modal
+                    colaboradorNome={horariosEditando.nome} // Passando o nome para o modal
                     onClose={handleCloseModal}
                     onSave={handleSave}
                 />

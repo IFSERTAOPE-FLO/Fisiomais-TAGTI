@@ -53,8 +53,9 @@ function Navbar() {
                 navigate("/adminpage");
             } else {
                 navigate("/");
+
             }
-            
+            window.location.reload();
         }, 300);
 
         // Iniciar renovação automática do token
@@ -66,49 +67,54 @@ function Navbar() {
 };
 
 const autoRefreshToken = () => {
-    const refreshInterval = 5 * 60 * 1000;  // A cada 5 minutos
-    const logoutWarningTime = 25 * 60 * 1000; // Avisar 5 minutos antes de expirar
-    const sessionEndTime = 30 * 60 * 1000;   // Tempo total de 30 minutos
+  const refreshInterval = 10 * 60 * 1000;  // Atualizar a cada 10 minutos
+  const sessionEndTime = 60 * 60 * 1000;  // Sessão de 1 hora
 
-    let timeoutWarning, timeoutLogout;
+  let logoutTimeout;
 
-    // Função para atualizar o token
-    const refreshToken = async () => {
-        try {
-            const savedToken = localStorage.getItem("token");
-            const response = await axios.post(
-                "http://localhost:5000/refresh-token", 
-                {}, 
-                { headers: { Authorization: `Bearer ${savedToken}` } }
-            );
+  const refreshToken = async () => {
+      try {
+          const savedToken = localStorage.getItem("token");
+          const response = await axios.post(
+              "http://localhost:5000/refresh-token", 
+              {}, 
+              { headers: { Authorization: `Bearer ${savedToken}` } }
+          );
 
-            if (response.data.access_token) {
-                localStorage.setItem("token", response.data.access_token);
-            }
-        } catch (error) {
-            console.error("Erro ao atualizar o token:", error);
-            alert("Sessão expirada. Faça login novamente.");
-            handleLogout();
-        }
-    };
+          if (response.data.access_token) {
+              localStorage.setItem("token", response.data.access_token);
+              console.log("Token atualizado com sucesso.");
+          }
+      } catch (error) {
+          console.error("Erro ao renovar o token:", error);
+          alert("Sua sessão expirou. Faça login novamente.");
+          handleLogout();
+      }
+  };
 
-    // Renovar token a cada 5 minutos
-    timeoutWarning = setTimeout(() => {
-        alert("Sua sessão está prestes a expirar em 5 minutos. Você será deslogado em breve.");
-    }, logoutWarningTime);
+  // Configurar a renovação periódica do token
+  const refreshIntervalId = setInterval(() => {
+      refreshToken();
+  }, refreshInterval);
 
-    // Deslogar automaticamente após 30 minutos
-    timeoutLogout = setTimeout(() => {
-        alert("Sua sessão expirou. Você será deslogado.");
-        handleLogout();
-    }, sessionEndTime);
+  // Configurar o logout após o fim da sessão
+  logoutTimeout = setTimeout(() => {
+      alert("Sua sessão expirou. Você será deslogado.");
+      handleLogout();
+  }, sessionEndTime);
 
-    // Iniciar renovação do token periodicamente
-    setInterval(() => {
-        refreshToken();
-    }, refreshInterval);
+  // Limpar os intervalos/tempos ao desmontar
+  return () => {
+      clearInterval(refreshIntervalId);
+      clearTimeout(logoutTimeout);
+  };
+};
 
-    };
+useEffect(() => {
+  const cleanup = autoRefreshToken();
+  return cleanup; // Limpa os temporizadores ao desmontar
+}, []);
+
 // Função de logout
 const handleLogout = () => {
   localStorage.removeItem("token");
@@ -141,7 +147,9 @@ const handleLogout = () => {
   
         if (isTokenExpired) {
           throw new Error("Token expirado");
+          
         }
+       
   
         setIsLoggedIn(true);
         setUserName(savedUserName);
@@ -149,12 +157,12 @@ const handleLogout = () => {
         setUserId(savedUserId); // Usa o setUserId correto
         setUserPhoto(savedUserPhoto || ""); // Usa uma string vazia caso a foto não exista
       } catch (error) {
+        alert('Faça login novamente')
         localStorage.removeItem("token");
         localStorage.removeItem("userName");
         localStorage.removeItem("role");
         localStorage.removeItem("userId");
-        localStorage.removeItem("userPhoto"); // Limpa a foto do localStorage
-        setIsLoggedIn(false);
+        localStorage.removeItem("userPhoto"); 
         setUserName("Usuário");
         setRole("");
         console.error("Erro ao verificar o token:", error);

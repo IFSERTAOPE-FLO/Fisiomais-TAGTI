@@ -19,7 +19,25 @@ const Perfil = () => {
 
   const token = localStorage.getItem("token");
   const apiBaseUrl = "http://localhost:5000/usuarios";
-  
+
+  // Supondo que você tenha uma função fetch para obter as clínicas
+  const [clinicas, setClinicas] = useState([]);
+  const [clinicaSelecionada, setClinicaSelecionada] = useState(dadosEdicao.clinica?.id || '');
+
+  useEffect(() => {
+    // Função para obter as clínicas
+    const fetchClinicas = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/clinicas');
+        const data = await response.json();
+        setClinicas(data); // Armazenar as clínicas no estado
+      } catch (error) {
+        console.error("Erro ao buscar clínicas", error);
+      }
+    };
+    fetchClinicas();
+  }, []);
+
 
   const buscarCidades = async (estado) => {
     try {
@@ -218,6 +236,10 @@ const Perfil = () => {
       setErro(err.message);
     }
   };
+  const handleClinicaChange = (event) => {
+    setClinicaSelecionada(event.target.value);
+    // Atualizar o valor de clinicaSelecionada em dadosEdicao, se necessário
+  };
 
   useEffect(() => {
     // Verifica se a foto já foi carregada no localStorage antes de sobrescrever
@@ -245,6 +267,48 @@ const Perfil = () => {
       return { ...prev, [name]: value };
     });
   };
+
+  // Função de atualização para a clínica
+  const atualizarClinica = async () => {
+    const userId = localStorage.getItem("userId");
+    const clinicaId = clinicaSelecionada;  // A clínica selecionada no select
+  
+    if (!userId) {
+      setErro("ID do usuário não encontrado.");
+      return;
+    }
+  
+    if (!clinicaId) {
+      setErro("Selecione uma clínica.");
+      return;
+    }
+  
+    try {
+      const response = await fetch('http://localhost:5000/colaboradores/alterar_clinica', {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          colaborador_id: userId,
+          clinica_id: clinicaId,  // Passando o ID da clínica selecionada
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        setSucesso(data.message);
+        buscarDadosUsuario();  // Função para buscar dados atualizados do usuário
+      } else {
+        throw new Error(data.message || "Erro ao atualizar clínica.");
+      }
+    } catch (err) {
+      setErro(err.message);
+    }
+  };
+  
 
   return (
     <div className="container col-md-8 my-5">
@@ -496,9 +560,39 @@ const Perfil = () => {
                               onChange={handleChange}
                             />
                           </div>
-                        </div>
+                          
+                            <div className="col-12 col-md-6">
+                              <label htmlFor="clinica" className="form-label">Clínica</label>
+                              <select
+                                className="form-control"
+                                id="clinica"
+                                name="clinica.id"
+                                value={clinicaSelecionada}
+                                onChange={handleClinicaChange}
+                              >
+                                <option value="">Selecione uma clínica</option>
+                                {clinicas.map((clinica) => (
+                                  <option key={clinica.ID_Clinica} value={clinica.ID_Clinica}>
+                                    {clinica.Nome}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                        
+
                       )}
                     </div>
+                    
+                    {/* Salvar a clínica */}
+                    <button
+                      type="button"
+                      className="btn btn-outline-success"
+                      onClick={atualizarClinica} // Função para atualizar a clínica
+                    >
+                      Alterar Clinica
+                    </button>
+
                     <button
                       type="button"
                       className="btn btn-outline-success"

@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from werkzeug.security import generate_password_hash
-from app.models import Horarios, Colaboradores, db
+from app.models import Horarios, Colaboradores,Clinicas, db
 from app.utils import is_cpf_valid  # Função de validação de CPF, que pode ser movida para utils
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
@@ -94,7 +94,7 @@ def get_colaboradores():
     if not colaboradores:
         return jsonify({"message": "Nenhum colaborador encontrado para o serviço solicitado"}), 404
     
-    colaboradores_list = [{"ID_Colaborador": c.id_colaborador, "Nome": c.nome} for c in colaboradores]
+    colaboradores_list = [{"id_colaborador": c.id_colaborador, "nome": c.nome} for c in colaboradores]
     return jsonify(colaboradores_list)
 
 
@@ -117,8 +117,8 @@ def get_colaboradoresdisponiveis():
     ).all()
 
     # Formatar as respostas para as listas de colaboradores alocados e disponíveis
-    colaboradores_alocados_list = [{"ID_Colaborador": c.id_colaborador, "Nome": c.nome} for c in colaboradores_alocados]
-    colaboradores_disponiveis_list = [{"ID_Colaborador": c.id_colaborador, "Nome": c.nome} for c in colaboradores_disponiveis]
+    colaboradores_alocados_list = [{"id_colaborador": c.id_colaborador, "Nome": c.nome} for c in colaboradores_alocados]
+    colaboradores_disponiveis_list = [{"id_colaborador": c.id_colaborador, "Nome": c.nome} for c in colaboradores_disponiveis]
 
     return jsonify({
         "alocados": colaboradores_alocados_list,
@@ -147,7 +147,7 @@ def configurar_horarios():
             hora_fim = datetime.strptime(hora_fim_str, '%H:%M').time()
 
             # Verificar se já existe um horário para o colaborador no mesmo dia
-            horarios_existentes = Horarios.query.filter_by(ID_Colaborador=colaborador_id, dia_semana=dia_semana).all()
+            horarios_existentes = Horarios.query.filter_by(id_colaborador=colaborador_id, dia_semana=dia_semana).all()
 
             for horario_existente in horarios_existentes:
                 # Verificar se há conflito de horários
@@ -157,7 +157,7 @@ def configurar_horarios():
 
             # Criar e salvar o novo horário
             novo_horario = Horarios(
-                ID_Colaborador=colaborador_id,
+                id_colaborador=colaborador_id,
                 dia_semana=dia_semana,
                 hora_inicio=hora_inicio,
                 hora_fim=hora_fim
@@ -179,7 +179,7 @@ def configurar_horarios():
 def listar_horarios(colaborador_id):
     try:
         # Buscar horários do colaborador
-        horarios = Horarios.query.filter_by(ID_Colaborador=colaborador_id).all()
+        horarios = Horarios.query.filter_by(id_colaborador=colaborador_id).all()
         if not horarios:
             return jsonify({"message": "Nenhum horário encontrado para o colaborador."}), 404
 
@@ -196,3 +196,38 @@ def listar_horarios(colaborador_id):
 
     except Exception as e:
         return jsonify({"message": f"Erro ao listar horários: {str(e)}"}), 500
+
+@colaboradores.route('/alterar_clinica', methods=['PUT'])
+@jwt_required()
+def alterar_clinica():
+    data = request.get_json()
+
+    colaborador_id = data.get('colaborador_id')
+    clinica_id = data.get('clinica_id')
+
+    # Verificar se os parâmetros necessários foram fornecidos
+    if not colaborador_id or not clinica_id:
+        return jsonify({"error": "Os parâmetros colaborador_id e clinica_id são necessários."}), 400
+
+    # Buscar o colaborador pelo ID
+    colaborador = Colaboradores.query.get(colaborador_id)
+
+    if not colaborador:
+        return jsonify({"error": "Colaborador não encontrado."}), 404
+
+    # Verificar se a clínica existe
+    clinica = Clinicas.query.get(clinica_id)
+
+    if not clinica:
+        return jsonify({"error": "Clínica não encontrada."}), 404
+
+    # Alterar a clínica do colaborador
+    colaborador.clinica_id = clinica_id
+
+    try:
+        # Commit as alterações no banco de dados
+        db.session.commit()
+        return jsonify({"message": "Clínica alterada com sucesso!"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Erro ao alterar clínica: {str(e)}"}), 500

@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.models import Clinicas, Enderecos, db
+from app.models import Clinicas, Enderecos, Colaboradores, db
 from app.utils import is_cnpj_valid
 from werkzeug.security import generate_password_hash
 
@@ -79,3 +79,57 @@ def register_clinica():
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Erro ao cadastrar a clínica: {str(e)}"}), 500
+    
+@clinicas.route('/adicionar_colaborador', methods=['POST'])
+def adicionar_colaborador():
+    """
+    Adiciona um colaborador a uma clínica existente.
+    """
+    dados = request.get_json()
+    colaborador_id = dados.get('colaborador_id')
+    clinica_id = dados.get('clinica_id')
+
+    # Verifica se o ID do colaborador e da clínica foram fornecidos
+    if not colaborador_id or not clinica_id:
+        return jsonify({'message': 'ID do colaborador e da clínica são obrigatórios.'}), 400
+
+    # Busca o colaborador pelo ID
+    colaborador = Colaboradores.query.get(colaborador_id)
+    if not colaborador:
+        return jsonify({'message': 'Colaborador não encontrado.'}), 404
+
+    # Busca a clínica pelo ID
+    clinica = Clinicas.query.get(clinica_id)
+    if not clinica:
+        return jsonify({'message': 'Clínica não encontrada.'}), 404
+
+    # Associa o colaborador à clínica
+    try:
+        colaborador.clinica = clinica
+        db.session.commit()
+        return jsonify({'message': 'Colaborador adicionado à clínica com sucesso.'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'Erro ao adicionar colaborador à clínica: {str(e)}'}), 500
+
+@clinicas.route('/remover_colaborador', methods=['DELETE'])
+def remover_colaborador():
+    dados = request.get_json()
+    colaborador_id = dados.get('colaborador_id')
+    clinica_id = dados.get('clinica_id')
+
+    if not colaborador_id or not clinica_id:
+        return jsonify({'message': 'ID do colaborador e da clínica são obrigatórios.'}), 400
+
+    colaborador = Colaboradores.query.get(colaborador_id)
+    if not colaborador or colaborador.clinica_id != clinica_id:
+        return jsonify({'message': 'Colaborador não encontrado na clínica.'}), 404
+
+    try:
+        colaborador.clinica_id = None
+        db.session.commit()
+        return jsonify({'message': 'Colaborador removido da clínica com sucesso.'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'Erro ao remover colaborador da clínica: {str(e)}'}), 500
+

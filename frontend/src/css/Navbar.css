@@ -74,17 +74,12 @@
   box-shadow: none; /* Remove a sombra */
 }
 
-.nav-link.active::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -5px; /* Espaço abaixo da linha */
-  height: 2px;
-  background-color: #2d9485;
-  transition: width 0.3s ease;
-}
 
+
+/* Remover a linha abaixo do link ativo */
+.nav-link.active::after {
+  content: none; /* Remove a linha */
+}
 
 .btn-login, .btn-signup {
   font-size: 0.85rem;

@@ -196,15 +196,13 @@ function CriarAgendamento() {
     // Verifica se o colaborador está definido
     const colaboradorId = role === 'colaborador' ? localStorage.getItem('userId') : colaborador;
 
-    const dataEscolhida = new Date(data);
-    dataEscolhida.setDate(dataEscolhida.getDate() + 1);
-    const dataFormatada = dataEscolhida.toISOString().split('T')[0];
-    const dataHora = `${dataFormatada} ${hora}:00`;
+    const dataEscolhida = new Date(data + 'T' + hora + ':00'); // Combina data e hora
+    const dataHoraISO = dataEscolhida.toISOString();
 
     const agendamentoData = {
       servico_id: servico,
-      colaborador_id: colaboradorId,  // Usar o ID correto do colaborador
-      data: dataHora,
+      colaborador_id: colaboradorId,
+      data: dataHoraISO,
       cliente_id: cliente,
       plano_id: tipoServico === 'pilates' ? planoSelecionado || null : null,
     };
@@ -237,6 +235,7 @@ function CriarAgendamento() {
     }
     setLoading(false);
   };
+
 
 
 
@@ -311,25 +310,37 @@ function CriarAgendamento() {
             </div>
             <div className="card-body p-4">
               <form onSubmit={handleSubmit}>
-                {/* Campo para selecionar a clínica */}
                 <div className="mb-3">
-                  <label htmlFor="clinica" className="form-label">Clínica</label>
-                  <select
-                    id="clinica"
-                    className="form-select"
-                    value={clinica}
-                    onChange={handleClinicaChange}  // Alterando a função para o novo manipulador
-                    required
-                  >
-                    <option value="">Selecione uma clínica</option>
-                    {clinicas.map((clin) => (
-                      <option key={clin.ID_Clinica} value={clin.ID_Clinica}>
-                        {clin.Nome}
-                      </option>
-                    ))}
-                  </select>
-
+                  {role === 'colaborador' && role !== 'admin' ? (
+                    <input
+                      type="hidden"
+                      id="clinica"
+                      value={localStorage.getItem('clinicaId')} // Assumindo que 'clinicaId' está armazenado no localStorage
+                      required
+                    />
+                  ) : (
+                    <>
+                      <label htmlFor="clinica" className="form-label">
+                        Clínica
+                      </label>
+                      <select
+                        id="clinica"
+                        className="form-select"
+                        value={clinica}
+                        onChange={handleClinicaChange} // Alterando a função para o novo manipulador
+                        required
+                      >
+                        <option value="">Selecione uma clínica</option>
+                        {clinicas.map((clin) => (
+                          <option key={clin.ID_Clinica} value={clin.ID_Clinica}>
+                            {clin.Nome}
+                          </option>
+                        ))}
+                      </select>
+                    </>
+                  )}
                 </div>
+
                 <div className="mb-3">
                   <label htmlFor="servico" className="form-label">Serviço</label>
                   <select
@@ -363,19 +374,20 @@ function CriarAgendamento() {
                 {tipoServico === 'pilates' && (
                   <div className="mb-3">
                     <label className="form-label">Plano de Pilates</label>
-                    <div className="d-flex flex-column gap-2">
+                    <div className="row">
                       {planos.map((plano) => (
-                        <div
-                          key={plano.ID_Plano}
-                          className={`d-flex justify-content-between align-items-center p-3 border btn-plano rounded ${planoSelecionado === plano.ID_Plano ? 'active' : ''}`}
-                          onClick={() => setPlanoSelecionado(plano.ID_Plano)}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          <div className="flex-grow-1">
-                            <strong>{plano.Nome_plano}</strong>
-                          </div>
-                          <div className="text-end">
-                            <span className="fw-bold">R$ {plano.Valor}</span>
+                        <div key={plano.ID_Plano} className="col-md-6 mb-6">
+                          <div
+                            className={`d-flex justify-content-between align-items-center p-3 border btn-plano rounded ${planoSelecionado === plano.ID_Plano ? 'active' : ''}`}
+                            onClick={() => setPlanoSelecionado(plano.ID_Plano)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <div className="flex-grow-1">
+                              <strong>{plano.Nome_plano}</strong>
+                            </div>
+                            <div className="text-end">
+                              <span className="fw-bold">R$ {plano.Valor}</span>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -390,36 +402,32 @@ function CriarAgendamento() {
                     <label htmlFor="colaborador" className="form-label">Colaborador</label>
                   )}
 
+                  {role === 'colaborador' && role !== 'admin' ? (
+                    <input
+                      type="hidden"
+                      id="colaborador"
+                      value={localStorage.getItem('userId')}
+                      required
+                    />
+                  ) : (
+                    <select
+                      id="colaborador"
+                      className="form-select"
+                      value={colaborador}
+                      onChange={(e) => setColaborador(e.target.value)}
+                      required
+                    >
+                      <option value="">Selecione um colaborador</option>
+                      {colaboradores.map((colab) => (
+                        <option key={colab.id_colaborador} value={colab.id_colaborador}>
+                          {colab.nome}
+                        </option>
+                      ))}
+                    </select>
+                  )}
 
-                  <select
-                    id="colaborador"
-                    className="form-select"
-                    value={colaborador}
-                    onChange={(e) => setColaborador(e.target.value)}
-                    required
 
-                    hidden={role === 'colaborador' && role !== 'admin'} // Esconde para colaboradores não administradores
-                  >
-                    <option value="">Selecione um colaborador</option>
-                    {colaboradores.map((colab) => (
-                      <option key={colab.ID_Colaborador} value={colab.ID_Colaborador}>
-                        {colab.Nome}
-                      </option>
-                    ))}
-                  </select>
                 </div>
-                {role === 'colaborador' && (
-                  <input
-                    type="text"
-                    id="colaborador"
-                    value={localStorage.getItem('userId')}
-                    style={{ display: 'none' }}
-                  />
-                )}
-
-
-
-
                 <div className="row ">
                   {/* Calendário */}
                   <div className="col-md-8 mb-3">

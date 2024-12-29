@@ -6,6 +6,7 @@ import '../css/Estilos.css';
 import Calendar from 'react-calendar'; // Para exibir o calendário
 import Paginator from '../components/Paginator';
 
+
 const VisualizarAgendamentos = () => {
   const [agendamentos, setAgendamentos] = useState([]);
   const [erro, setErro] = useState(null);
@@ -17,7 +18,17 @@ const VisualizarAgendamentos = () => {
   const [showDateFilterModal, setShowDateFilterModal] = useState(false); // Para controlar o novo modal de filtro de data
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 2;
+  const itemsPerPage = 15;
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [newStatus, setNewStatus] = useState('');
+
+  const [pesquisaTipo, setPesquisaTipo] = useState('cliente'); // Estado para o tipo de pesquisa
+  const [pesquisaValor, setPesquisaValor] = useState(''); // Estado para o valor da pesquisa
+
+
+
+  // A tabela agora vai exibir agendamentos filtrados
+
   useEffect(() => {
     const fetchAgendamentos = async () => {
       try {
@@ -169,20 +180,63 @@ const VisualizarAgendamentos = () => {
     }
     setLoading(false);
   };
+  // Função de filtragem
+  const agendamentosFiltrados = sortedAgendamentos.filter((agendamento) => {
+    switch (pesquisaTipo) {
+      case 'cliente':
+        return agendamento.cliente.toLowerCase().includes(pesquisaValor.toLowerCase());
+      case 'colaborador':
+        return agendamento.colaborador.toLowerCase().includes(pesquisaValor.toLowerCase());
+      case 'agendamento':
+        return agendamento.id.toString().includes(pesquisaValor);
+      case 'clinica':
+        return agendamento.clinica?.nome.toLowerCase().includes(pesquisaValor.toLowerCase());
+      default:
+        return true;
+    }
+  });
 
   // Paginação
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentAgendamentos = sortedAgendamentos.slice(indexOfFirstItem, indexOfLastItem);
+  const currentAgendamentos = agendamentosFiltrados.slice(indexOfFirstItem, indexOfLastItem);
+  // Filtragem dos usuários com base no nome
 
   return (
-    <div className="container col-md-8 my-5">
+    <div className="container col-md-9 my-5">
       <div className="card shadow">
         <div className="card-header ">
           <h2 className="text-center text-primary fw-bold">Visualizar Agendamentos</h2>
         </div>
 
+
         <div className="card-body">
+          <div className="col-md-2 col-lg-12 d-flex justify-content-center align-items-center">
+            <div className="input-group">
+              <select
+                className="form-select"
+                value={pesquisaTipo}
+                onChange={(e) => setPesquisaTipo(e.target.value)}
+              >
+                <option value="cliente">Cliente</option>
+                <option value="colaborador">Colaborador</option>
+                <option value="agendamento">ID Agendamento</option>
+                <option value="clinica">Clínica</option>
+              </select>
+              <input
+                type="text"
+                className="form-control"
+                placeholder={`Pesquisar por ${pesquisaTipo === 'agendamento' ? 'ID' : pesquisaTipo}`}
+                value={pesquisaValor}
+                onChange={(e) => setPesquisaValor(e.target.value)}
+              />
+              <button className="btn btn-secondary" type="button">
+                <i className="bi bi-search"></i>
+              </button>
+            </div>
+          </div>
+          <div className="table-responsive">
+
           {erro && agendamentos.length > 0 && <div className="alert alert-danger">{erro}</div>}
 
           <table className="table table-striped table-bordered mt-4 agendamento-header">
@@ -228,9 +282,9 @@ const VisualizarAgendamentos = () => {
               {sortedAgendamentos.length > 0 ? (
                 currentAgendamentos.map((agendamento, index) => (
                   <tr key={agendamento.id}>
-                    <td>{index + 1}</td>
+                    <td>{agendamento.id}</td>
                     <td>{agendamento.cliente || 'Cliente não informado'}</td>
-                    <td>{new Date(agendamento.data).toLocaleDateString()}</td>
+                    <td>{new Date(agendamento.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
                     <td>{agendamento.hora || 'Hora não informada'}</td>
                     <td>{agendamento.servico || 'Serviço não encontrado'}</td>
                     <td>
@@ -251,12 +305,15 @@ const VisualizarAgendamentos = () => {
                     <td>
                       <span
                         className={`badge 
-            ${agendamento.status === 'confirmado' ? 'badge-success' :
-                            agendamento.status === 'negado' ? 'badge-danger' : 'badge-warning'} 
-            text-${agendamento.status === 'pendente' ? 'dark' : 'dark'}`}
+                        ${agendamento.status === 'confirmado' ? 'badge-success' :
+                            agendamento.status === 'negado' ? 'badge-danger' :
+                              agendamento.status === 'cancelado' ? 'badge-secondary' :
+                                agendamento.status === 'remarcado' ? 'badge-info' :
+                                  agendamento.status === 'nao_compareceu' ? 'badge-dark' :
+                                    'badge-warning'} 
+                        text-dark`}
                       >
-                        {agendamento.status === 'confirmado' ? 'Confirmado' :
-                          agendamento.status === 'negado' ? 'Negado' : 'Pendente'}
+                        {agendamento.status.charAt(0).toUpperCase() + agendamento.status.slice(1)} {/* Primeira letra maiúscula */}
                       </span>
                     </td>
                     <td>
@@ -290,7 +347,7 @@ const VisualizarAgendamentos = () => {
             </tbody>
 
           </table>
-
+          </div>
 
 
           {/* Modal de filtro de data */}
@@ -302,6 +359,15 @@ const VisualizarAgendamentos = () => {
               <Calendar value={selectedDate} onChange={handleDateFilter} />
             </Modal.Body>
             <Modal.Footer>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  setSelectedDate(null); // Limpa a data selecionada
+                  setShowDateFilterModal(false); // Fecha o modal
+                }}
+              >
+                Remover Filtro
+              </Button>
               <Button variant="btn btn-secondary" onClick={() => setShowDateFilterModal(false)}>
                 Fechar
               </Button>
@@ -331,14 +397,22 @@ const VisualizarAgendamentos = () => {
 
                 <p><strong>Colaborador:</strong> {selectedAgendamento.colaborador || 'Colaborador não encontrado'}</p>
 
-                <p><strong>Status:</strong>
+                <p>
+                  <strong>Status:</strong>
                   <span
-                    className={` ${selectedAgendamento.status === 'confirmado' ? 'badge-success' : selectedAgendamento.status === ' negado' ? 'badge-danger' : 'badge-warning'}`}
-                    style={{ color: selectedAgendamento.status ? 'black' : 'inherit' }}
+                    className={`
+      ${selectedAgendamento.status === 'confirmado' ? 'badge-success' :
+                        selectedAgendamento.status === 'negado' ? 'badge-danger' :
+                          selectedAgendamento.status === 'cancelado' ? 'badge-secondary' :
+                            selectedAgendamento.status === 'remarcado' ? 'badge-info' :
+                              selectedAgendamento.status === 'nao_compareceu' ? 'badge-dark' :
+                                'badge-warning'} 
+      text-dark`}
                   >
-                    {selectedAgendamento.status === 'confirmado' ? ' Confirmado' : selectedAgendamento.status === 'negado' ? 'Negado' : ' Pendente'}
+                    {selectedAgendamento.status.charAt(0).toUpperCase() + selectedAgendamento.status.slice(1)}
                   </span>
                 </p>
+
 
                 <p><strong>Clínica:</strong> {selectedAgendamento.clinica?.nome || 'Clínica não informada'}</p>
 
@@ -356,10 +430,13 @@ const VisualizarAgendamentos = () => {
                   <>
                     <Button
                       variant="btn btn-success"
-                      onClick={() => handleConfirmarNegar(selectedAgendamento.id, 'confirmado')}
+                      onClick={async () => {
+                        await handleConfirmarNegar(selectedAgendamento.id, 'confirmado');
+                        handleCloseModal(); // Fecha o modal após confirmar
+                      }}
                       disabled={loading || selectedAgendamento.status === 'confirmado'}
                     >
-                      {loading ? (
+                      {loading && selectedAgendamento.status !== 'confirmado' ? (
                         <>
                           <i className="bi bi-arrow-repeat spinner"></i> Carregando...
                         </>
@@ -370,16 +447,29 @@ const VisualizarAgendamentos = () => {
 
                     <Button
                       variant="btn btn-danger"
-                      onClick={() => handleConfirmarNegar(selectedAgendamento.id, 'negado')}
+                      onClick={async () => {
+                        await handleConfirmarNegar(selectedAgendamento.id, 'negado');
+                        handleCloseModal(); // Fecha o modal após negar
+                      }}
                       disabled={loading || selectedAgendamento.status === 'negado'}
                     >
-                      {loading ? (
+                      {loading && selectedAgendamento.status !== 'negado' ? (
                         <>
                           <i className="bi bi-arrow-repeat spinner"></i> Carregando...
                         </>
                       ) : (
                         'Negar'
                       )}
+                    </Button>
+
+
+
+                    <Button
+                      variant="btn btn-warning"
+                      onClick={() => setShowStatusModal(true)} // Abre o modal para definir o novo status
+                      disabled={loading}
+                    >
+                      Atualizar Status
                     </Button>
                   </>
                 )}
@@ -420,6 +510,44 @@ const VisualizarAgendamentos = () => {
             </Modal>
 
           )}
+          <Modal show={showStatusModal} onHide={() => setShowStatusModal(false)}>
+            <Modal.Header closeButton>
+              <Modal.Title>Atualizar Status do Agendamento</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <p>Selecione o novo status:</p>
+              <select
+                className="form-select"
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value)}
+              >
+                <option value="">Selecione</option>
+                <option value="cancelado">Cancelado</option>
+                <option value="nao_compareceu">Não Compareceu</option>
+                <option value="remarcado">Remarcado</option>
+              </select>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button
+                variant="btn btn-primary"
+                onClick={() => handleConfirmarNegar(selectedAgendamento.id, newStatus)}
+                disabled={loading || !newStatus}
+              >
+                {loading ? (
+                  <>
+                    <i className="bi bi-arrow-repeat spinner"></i> Carregando...
+                  </>
+                ) : (
+                  'Confirmar'
+                )}
+              </Button>
+
+              <Button variant="btn btn-secondary" onClick={() => setShowStatusModal(false)}>
+                Fechar
+              </Button>
+            </Modal.Footer>
+          </Modal>
+
         </div>
       </div>
       {/* Paginador */}

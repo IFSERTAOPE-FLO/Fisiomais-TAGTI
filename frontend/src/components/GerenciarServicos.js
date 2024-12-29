@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import EditarServicoModal from "./EditarServicoModal";
 import AddColaboradoresServicos from "./AddColaboradoresServicos";
 import { FaUserPlus, FaEdit, FaTrashAlt } from "react-icons/fa";
+import Paginator from "./Paginator"; // Importe o componente Paginator
+
 
 const GerenciarServicos = () => {
   const [servicos, setServicos] = useState([]);
@@ -23,6 +25,8 @@ const GerenciarServicos = () => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [tipoAlternado, setTipoAlternado] = useState(true);
   const [pesquisaNome, setPesquisaNome] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);  // State for current page
+  const [itemsPerPage] = useState(10);  // Number of items per page
 
   const buscarServicos = async () => {
     try {
@@ -251,7 +255,13 @@ const GerenciarServicos = () => {
     );
   });
   
-  
+
+
+// Paginação dos usuários filtrados
+const servicosPaginados = servicosFiltrados.slice(
+  (currentPage - 1) * itemsPerPage,
+  currentPage * itemsPerPage
+);
 
 
   return (
@@ -318,28 +328,38 @@ const GerenciarServicos = () => {
               onChange={(e) => setNovoPlano({ ...novoPlano, valor: e.target.value })}
               className="form-control mb-2"
             />
-            <button type="button" onClick={adicionarPlano} className="btn btn-signup ">
-              Adicionar Plano
-            </button>
-
+            <div className="d-flex justify-content-center">
+              <button type="button" onClick={adicionarPlano} className="btn btn-signup ">
+                Adicionar Plano
+              </button>
+            </div>
             {novoServico.planos.length > 0 && (
-              <div>
-                <h5 className="text">Planos Adicionados:</h5>
-                <ul className="list-unstyled">
+              <div className="mb-3">
+                <label className="form-label">Planos Adicionados:</label>
+                <div className="row">
                   {novoServico.planos.map((plano, index) => (
-                    <li key={index}>
-                      {plano.Nome_plano} - R${plano.Valor.toFixed(2)}
-                    </li>
+                    <div key={index} className="col-md-4 mb-4">
+                      <div className="d-flex justify-content-between align-items-center p-3 border btn-plano rounded">
+                        <div className="flex-grow-1">
+                          <strong>{plano.Nome_plano}</strong>
+                        </div>
+                        <div className="text-end">
+                          <span className="fw-bold">R$ {plano.Valor.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
+
+
           </>
         )}
 
-        <button type="submit" className="btn btn-login">
-          Adicionar Serviço
-        </button>
+        <div className="d-flex justify-content-center">
+          <button type="submit" className="btn btn-login mt-3">Adicionar Serviço</button>
+        </div>
       </form>
 
       <h3 className="text-primary">Lista de Serviços</h3>
@@ -355,7 +375,8 @@ const GerenciarServicos = () => {
           <i className="bi bi-search"></i>
         </button>
       </div>
-      <table className="table ">
+      <div className="table-responsive">
+      <table className="table  table-striped table-bordered mt-4">
         <thead>
           <tr>
             <th
@@ -376,7 +397,7 @@ const GerenciarServicos = () => {
           </tr>
         </thead>
         <tbody>
-          {servicosFiltrados.map((servico) => (
+          {servicosPaginados.map((servico) => (
             <tr key={servico.ID_Servico}>
               <td>{servico.Nome_servico}</td>
               <td>{servico.Descricao}</td>
@@ -400,7 +421,8 @@ const GerenciarServicos = () => {
                   ? servico.Colaboradores.join(", ")
                   : "Nenhum colaborador"}
               </td>
-              <td className="d-flex justify-content-start align-items-center align-middle border-0">
+              <td >
+                <div className="d-flex justify-content-start align-items-center align-middle border-0 ">
                 <button
                   className="btn btn-primary btn-sm ms "
                   onClick={() => abrirModalEditarServico(servico)}
@@ -419,11 +441,21 @@ const GerenciarServicos = () => {
                 >
                   <FaTrashAlt className="fs-7" />
                 </button>
+                </div>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      </div>
+
+      {/* Pagination */}
+      <Paginator
+        totalItems={servicosFiltrados.length}
+        itemsPerPage={itemsPerPage}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+      />
 
       {modalServicoVisible && selectedServico && (
         <EditarServicoModal

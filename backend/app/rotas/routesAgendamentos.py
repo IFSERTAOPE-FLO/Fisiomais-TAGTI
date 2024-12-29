@@ -8,9 +8,8 @@ from datetime import datetime, timedelta
 from pytz import timezone
 from sqlalchemy.orm import joinedload
 
-
 agendamentos= Blueprint('agendamentos', __name__)
-BRASILIA = timezone('America/Sao_Paulo')
+
 
 import traceback
 
@@ -19,6 +18,15 @@ import traceback
 def handle_options():
     return '', 200  # Responde com status 200 OK
 
+# Define o fuso horário de Brasília
+BRASILIA = timezone('America/Sao_Paulo')
+
+from datetime import datetime, timedelta
+from pytz import timezone
+
+# Define o fuso horário de Brasília
+BRASILIA = timezone('America/Sao_Paulo')
+
 @agendamentos.route('/', methods=['POST'])
 @jwt_required()
 def agendamento():
@@ -26,10 +34,20 @@ def agendamento():
         data = request.get_json()
         print(f"Received data: {data}")  # Exibe os dados recebidos para debugging
 
-        # Verificar se o usuário é um cliente ou colaborador
         usuario_email = get_jwt_identity()
         print(f"User email: {usuario_email}")  # Exibe o email do usuário para debugging
+        data_str = data['data']
+        print(f"Data recebida do frontend: {data_str}")
         
+        try:
+            # Converte diretamente da string ISO, que agora contém o fuso horário
+            data_e_hora_utc = datetime.fromisoformat(data_str).astimezone(timezone('UTC'))
+            print(f"Data convertida para UTC: {data_e_hora_utc}")
+
+        except ValueError as e:
+            print(f"Erro ao converter data: {e}")
+            return jsonify({'message': f'Formato de data inválido: {e}'}), 400
+
         cliente = Clientes.query.filter_by(email=usuario_email).first()
         colaborador = Colaboradores.query.filter_by(email=usuario_email).first()
 
@@ -37,7 +55,6 @@ def agendamento():
             print("User not found")  # Mensagem de erro se o usuário não for encontrado
             return jsonify({'message': 'Usuário não encontrado'}), 404
 
-        # Se for colaborador e cliente_id for fornecido, verificamos se o cliente existe
         if colaborador and 'cliente_id' in data and data['cliente_id']:
             cliente = Clientes.query.get(data['cliente_id'])
             if not cliente:
@@ -47,21 +64,17 @@ def agendamento():
             print("Cliente não encontrado")  # Mensagem de erro se não for cliente
             return jsonify({'message': 'Cliente não encontrado'}), 404
 
-        # Verificar a existência do colaborador
         colaborador = Colaboradores.query.get(data['colaborador_id'])
         if not colaborador:
             print("Colaborador not found")  # Mensagem de erro se o colaborador não for encontrado
             return jsonify({'message': 'Colaborador não encontrado'}), 404
-        
-        # Verificar a existência do serviço
+
         servico = Servicos.query.get(data['servico_id'])
         if not servico:
             print("Servico not found")  # Mensagem de erro se o serviço não for encontrado
             return jsonify({'message': 'Serviço não encontrado'}), 404
 
         plano_id = data.get('plano_id')
-
-        # Verificar se o serviço exige plano (somente Pilates)
         if 'pilates' in [tipo.tipo for tipo in servico.tipo_servicos]:
             if not plano_id:
                 print("Plano não fornecido para Pilates.")  # Mensagem de erro
@@ -79,96 +92,95 @@ def agendamento():
         else:
             plano_selecionado = None  # Fisioterapia não exige plano.
 
-        # Verificar a existência da clínica associada ao colaborador
         clinica = Clinicas.query.filter_by(id_clinica=colaborador.clinica_id).first()
         if not clinica:
             print("Clinica not found")  # Mensagem de erro se a clínica não for encontrada
             return jsonify({'message': 'Clínica não encontrada'}), 404
 
-        # Verificar se já existe agendamento para o colaborador no horário escolhido
-        data_e_hora = datetime.fromisoformat(data['data']).astimezone(BRASILIA)
+        # Corrigir o problema da data
+        data_e_hora_utc = datetime.fromisoformat(data['data']).astimezone(timezone('UTC'))
+        data_e_hora_brasilia = data_e_hora_utc.astimezone(BRASILIA)
+
+        # Remover a parte do fuso horário depois de ajustar para o horário correto
+        data_e_hora_local = data_e_hora_brasilia.replace(tzinfo=None)
+
+        # Verifica se já existe um agendamento nesse horário
         agendamento_existente = Agendamentos.query.filter(
             Agendamentos.id_colaborador == colaborador.id_colaborador,
-            Agendamentos.data_e_hora == data_e_hora
+            Agendamentos.data_e_hora == data_e_hora_local
         ).first()
 
         if agendamento_existente:
             return jsonify({'message': 'Já existe um agendamento para esse colaborador neste horário.'}), 400
 
-        # Criar o agendamento
+        # Criação do novo agendamento
         novo_agendamento = Agendamentos(
-            data_e_hora=data_e_hora,
+            data_e_hora=data_e_hora_local,
             id_cliente=cliente.id_cliente,
             id_colaborador=colaborador.id_colaborador,
             id_servico=servico.id_servico,
-            status="pendente",  # Status inicial
-            id_clinica=clinica.id_clinica  # Adicionando a clínica ao agendamento
+            status="pendente",
+            id_clinica=clinica.id_clinica
         )
         if plano_selecionado:
             novo_agendamento.id_plano = plano_selecionado.id_plano
 
-        print(f"Created appointment: {novo_agendamento}")  
-        
+        print(f"Created appointment: {novo_agendamento}")
+
         db.session.add(novo_agendamento)
         db.session.commit()
-        #enviar_email_agendamento(novo_agendamento.id_agendamento)     #apagar o jogo da velha para enviar emails   
+
+        # Enviar e-mail de agendamento (opcional)
+        # enviar_email_agendamento(novo_agendamento.id_agendamento)
 
         return jsonify({'message': 'Agendamento criado com status pendente'}), 201
-        
-    
+
     except Exception as e:
-        error_details = traceback.format_exc()  # Captura o traceback completo do erro
-        print(f"Error: {e}")  # Exibe a mensagem do erro
-        print(f"Error details: {error_details}")  # Exibe o traceback completo para análise
+        error_details = traceback.format_exc()
+        print(f"Error: {e}")
+        print(f"Error details: {error_details}")
         db.session.rollback()
         return jsonify({'message': f'Erro ao criar agendamento: {str(e)}', 'error_details': error_details}), 500
+
+
+
 
 @agendamentos.route('/listar_agendamentos', methods=['GET'])
 @jwt_required()
 def listar_agendamentos():
     try:
-        # Obtém o email do usuário a partir do token JWT
         usuario_email = get_jwt_identity()
         print(f"Usuário autenticado: {usuario_email}")
 
-        # Tenta encontrar o colaborador com o email
         colaborador = Colaboradores.query.filter_by(email=usuario_email).first()
         print(f"Colaborador encontrado: {colaborador}")
 
-        # Tenta encontrar o admin com o email
         admin = Colaboradores.query.filter_by(is_admin=True, email=usuario_email).first()
         print(f"Admin encontrado: {admin}")
 
-        # Tenta encontrar o cliente com o email
         cliente = Clientes.query.filter_by(email=usuario_email).first()
         print(f"Cliente encontrado: {cliente}")
 
-        # Verifica se o usuário é autorizado
         if not colaborador and not admin and not cliente:
             return jsonify({'message': 'Usuário não autorizado'}), 403
 
-        # Monta a consulta para obter os agendamentos
         query = db.session.query(Agendamentos).options(
-            joinedload(Agendamentos.servico),  # Carrega o serviço
-            joinedload(Agendamentos.colaborador),  # Carrega o colaborador
-            joinedload(Agendamentos.cliente),  # Carrega o cliente
-            joinedload(Agendamentos.clinica).joinedload(Clinicas.endereco)  # Carrega a clínica e seu endereço
+            joinedload(Agendamentos.servico),
+            joinedload(Agendamentos.colaborador),
+            joinedload(Agendamentos.cliente),
+            joinedload(Agendamentos.clinica).joinedload(Clinicas.endereco)
         )
 
         if admin:
-            # Se for admin, pode ver todos os agendamentos
             agendamentos = query.all()
             print(f"Agendamentos encontrados para admin: {len(agendamentos)}")
         elif colaborador:
-            # Se for colaborador, filtra os agendamentos para aquele colaborador
             agendamentos = query.filter(Agendamentos.id_colaborador == colaborador.id_colaborador).all()
             print(f"Agendamentos encontrados para o colaborador: {len(agendamentos)}")
         elif cliente:
-            # Se for cliente, filtra os agendamentos para aquele cliente
             agendamentos = query.filter(Agendamentos.id_cliente == cliente.id_cliente).all()
             print(f"Agendamentos encontrados para o cliente: {len(agendamentos)}")
 
-        # Monta a lista com os dados dos agendamentos
         resultado = []
         for agendamento in agendamentos:
             clinica = agendamento.clinica
@@ -177,25 +189,25 @@ def listar_agendamentos():
             colaborador = agendamento.colaborador
             servico = agendamento.servico
 
-            # Se o serviço for Pilates, busca o plano associado
             plano_servico = None
             if servico and servico.valor is None:
-                # Busca o plano associado ao serviço de Pilates, se existir
                 plano_servico = Planos.query.filter_by(servico_id=servico.id_servico).first()
 
-            # Inclui o valor ou plano
+            # Convertendo a data e hora para o fuso horário de Brasília
+            data_e_hora_brasilia = agendamento.data_e_hora.astimezone(BRASILIA)
+
             resultado.append({
                 'id': agendamento.id_agendamento,
-                'data': agendamento.data_e_hora.strftime('%Y-%m-%d'),
-                'hora': agendamento.data_e_hora.strftime('%H:%M'),
+                'data': data_e_hora_brasilia.strftime('%Y-%m-%d'),
+                'hora': data_e_hora_brasilia.strftime('%H:%M'),
                 'status': agendamento.status,
-                'servico': agendamento.servico.nome if agendamento.servico else None,  # Inclui o nome do serviço
-                'valor': servico.valor if servico.valor else (plano_servico.valor if plano_servico else None),  # Valor do serviço ou do plano
+                'servico': agendamento.servico.nome if agendamento.servico else None,
+                'valor': servico.valor if servico.valor else (plano_servico.valor if plano_servico else None),
                 'plano': {
                     'nome': plano_servico.nome if plano_servico else None,
                     'descricao': plano_servico.descricao if plano_servico else None,
                     'valor': plano_servico.valor if plano_servico else None
-                } if plano_servico else None,  # Retorna os dados do plano se houver
+                } if plano_servico else None,
                 'colaborador': agendamento.colaborador.nome if agendamento.colaborador else None,
                 'cliente': agendamento.cliente.nome if agendamento.cliente else None,
                 'clinica': {
@@ -215,9 +227,9 @@ def listar_agendamentos():
 
         return jsonify(resultado), 200
 
-
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 
 
@@ -258,31 +270,33 @@ def dias_permitidos(colaborador_id):
 
 
 
-from datetime import datetime, timedelta
 
 def obter_horarios_disponiveis(colaborador_id, data_obj):
     # Converte a data para o dia da semana (ex: Segunda-feira)
     dia_semana = data_obj.strftime("%A")  # Usa o nome completo do dia da semana (ex: "Monday")
     dia_semana_mapeado = {
-        "Monday": "Segunda-feira",
-        "Tuesday": "Terça-feira",
-        "Wednesday": "Quarta-feira",
-        "Thursday": "Quinta-feira",
-        "Friday": "Sexta-feira",
-        "Saturday": "Sábado",
-        "Sunday": "Domingo"
+        "Monday": "segunda-feira",
+        "Tuesday": "terca-feira",
+        "Wednesday": "quarta-feira",
+        "Thursday": "quinta-feira",
+        "Friday": "sexta-feira",
+        "Saturday": "sabado",
+        "Sunday": "domingo"
     }[dia_semana]
     print(f"Dia da semana (nome mapeado): {dia_semana_mapeado}")  # Log para verificar o dia da semana nome mapeado
 
     # Obtém os horários do colaborador para o dia da semana específico
-    horarios_colaborador = Horarios.query.filter_by(id_colaborador=colaborador_id, dia_semana=dia_semana_mapeado.lower()).all()
+    horarios_colaborador = Horarios.query.filter_by(id_colaborador=colaborador_id, dia_semana=dia_semana_mapeado).all()
     print(f"Horários do colaborador: {horarios_colaborador}")  # Log para verificar os horários obtidos
 
-    # Obtém os agendamentos existentes para o colaborador na data específica
+    # Obtém os agendamentos existentes para o colaborador na data específica (início do dia a fim do dia)
+    data_inicio = data_obj.replace(hour=0, minute=0, second=0, microsecond=0)
+    data_fim = data_obj.replace(hour=23, minute=59, second=59, microsecond=999999)
+    
     agendamentos = Agendamentos.query.filter(
         Agendamentos.id_colaborador == colaborador_id,
-        Agendamentos.data_e_hora >= data_obj,
-        Agendamentos.data_e_hora < (data_obj + timedelta(days=1))
+        Agendamentos.data_e_hora >= data_inicio,
+        Agendamentos.data_e_hora <= data_fim
     ).all()
     print(f"Agendamentos existentes: {agendamentos}")  # Log para verificar os agendamentos encontrados
 
@@ -292,21 +306,10 @@ def obter_horarios_disponiveis(colaborador_id, data_obj):
 
     horarios_disponiveis = []
 
-    # Elimina duplicatas na lista de horários do colaborador (considera horários únicos)
-    horarios_colaborador_unicos = list({(horario.hora_inicio, horario.hora_fim): horario for horario in horarios_colaborador}.values())
-
-    agora = datetime.now()  # Hora atual
-
-    for horario in horarios_colaborador_unicos:
+    for horario in horarios_colaborador:
         # Combina a data com a hora de início para garantir que estamos no dia certo
         hora_atual = datetime.combine(data_obj, horario.hora_inicio)
         hora_fim = datetime.combine(data_obj, horario.hora_fim)
-
-        # Verifica se o dia é hoje e aplica a lógica de excluir horários com menos de 2h de distância
-        if data_obj.date() == agora.date():
-            hora_atual += timedelta(hours=2)  # Incrementa 2 horas a partir da hora atual
-            if hora_atual < agora:
-                hora_atual = agora + timedelta(hours=2)  # Ajusta para não considerar horários passados
 
         # Use timedelta para incrementar em intervalos de 1 hora
         while hora_atual < hora_fim:
@@ -320,6 +323,7 @@ def obter_horarios_disponiveis(colaborador_id, data_obj):
     return horarios_disponiveis
 
 
+   
 
 
 
@@ -330,17 +334,29 @@ def horarios_disponiveis(colaborador_id):
         return jsonify({"error": "O parâmetro 'data' é obrigatório"}), 400
 
     try:
+        # Ajusta para o formato de data correto
         data = data.split('T')[0]  # Pega apenas a parte da data (YYYY-MM-DD)
         data_obj = datetime.strptime(data, "%Y-%m-%d")
         print(f"Data escolhida: {data_obj}")  # Log para verificar a data escolhida
 
+        # Ajusta para o início do dia (00:00:00) e fim do dia (23:59:59)
+        data_inicio = data_obj.replace(hour=0, minute=0, second=0, microsecond=0)
+        data_fim = data_obj.replace(hour=23, minute=59, second=59, microsecond=999999)
+        print(f"Data início: {data_inicio}, Data fim: {data_fim}")  # Log para verificar os limites de data
+
+        # Obtém os horários disponíveis para o colaborador, considerando a data de início e fim
         horarios = obter_horarios_disponiveis(colaborador_id, data_obj)
+
+        # Filtra os horários disponíveis considerando os agendamentos
         if horarios:
+            # Retorna os horários no formato de hora:minuto
             return jsonify({"horarios_disponiveis": [hora.strftime("%H:%M") for hora in horarios]}), 200
         else:
             return jsonify({"message": "Nenhum horário disponível."}), 200
     except Exception as e:
         return jsonify({"message": f"Erro ao buscar horários disponíveis: {str(e)}"}), 500
+
+
 
 
 
@@ -377,9 +393,9 @@ def confirmar_negativo_agendamento(agendamento_id):
         novo_status = request.json.get('status')
         print(f"Novo status recebido: {novo_status}")  # Print para verificar o status recebido
         
-        if novo_status not in ['confirmado', 'negado']:
-            print(f"Status inválido: {novo_status}")  # Print para verificar o status inválido
+        if novo_status not in ['confirmado', 'negado', 'cancelado', 'nao_compareceu', 'remarcado']:
             return jsonify({'message': 'Status inválido'}), 400
+
 
         agendamento.status = novo_status
         db.session.commit()

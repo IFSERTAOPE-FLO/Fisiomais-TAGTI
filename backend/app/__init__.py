@@ -2,6 +2,7 @@
 #.\venv\Scripts\activate
 #pip install -r requirements.txt
 #fisiomaispilatesefisioterapia@gmail.com  12345
+
 #DBeaver baixar para trabalhar com o sqlite
 #flask db migrate -m "mensagem"
 #flask db upgrade

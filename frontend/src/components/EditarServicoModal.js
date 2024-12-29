@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import AddColaboradoresServicos from "./AddColaboradoresServicos";
 
 const EditarServicoModal = ({ servico, onSave, onClose }) => {
   const [formData, setFormData] = useState({
@@ -10,8 +9,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
     Planos: [],
     Colaboradores: [],
   });
-  const [colaboradoresDisponiveis, setColaboradoresDisponiveis] = useState([]);
-  const [colaboradoresServico, setColaboradoresServico] = useState([]);
+ 
   const [erro, setErro] = useState("");
   const [novoPlano, setNovoPlano] = useState({ nome: "", valor: "" });
 
@@ -25,25 +23,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
         Planos: servico.Planos || [],
         Colaboradores: servico.Colaboradores || [],
       });
-
-      const fetchColaboradores = async () => {
-        try {
-          const response = await fetch(
-            `http://localhost:5000/colaboradores/colaboradoresdisponiveis?servico_id=${servico.ID_Servico}`
-          );
-          const data = await response.json();
-          if (response.ok) {
-            setColaboradoresDisponiveis(data.disponiveis);
-            setColaboradoresServico(data.alocados);
-          } else {
-            throw new Error(data.message || "Erro ao buscar colaboradores.");
-          }
-        } catch (err) {
-          setErro(err.message);
-        }
-      };
-
-      fetchColaboradores();
+      
     }
   }, [servico]);
 
@@ -52,15 +32,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const toggleColaborador = (colaborador) => {
-    setFormData((prev) => {
-      const isSelected = prev.Colaboradores.includes(colaborador.ID_Colaborador);
-      const updatedColaboradores = isSelected
-        ? prev.Colaboradores.filter((id) => id !== colaborador.ID_Colaborador)
-        : [...prev.Colaboradores, colaborador.ID_Colaborador];
-      return { ...prev, Colaboradores: updatedColaboradores };
-    });
-  };
+  
 
   const handleTipoServicoChange = (e) => {
     const { value } = e.target;

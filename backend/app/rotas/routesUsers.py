@@ -67,6 +67,57 @@ def editar_endereco(role, user_id):
     db.session.commit()
     return jsonify({'message': 'Endereço atualizado com sucesso.'}), 200
 
+@usuarios.route('/editar_usuario_com_endereco/<role>/<int:user_id>', methods=['PUT'])
+@jwt_required()
+def editar_usuario_com_endereco(role, user_id):
+    try:
+        data = request.get_json()
+        user = None
+
+        # Verifica se o usuário é colaborador ou cliente
+        if role == 'colaborador':
+            user = Colaboradores.query.get(user_id)
+        elif role == 'cliente':
+            user = Clientes.query.get(user_id)
+
+        if not user:
+            return jsonify({"message": "Usuário não encontrado!"}), 404
+
+        # Atualizar os dados do usuário
+        for key, value in data.items():
+            if key == 'endereco':
+                endereco_data = value  # O valor de 'endereco' é um dicionário
+
+                # Verifica se o id_endereco foi passado
+                if endereco_data.get('id_endereco'): 
+                    # Caso o id_endereco exista, busca o endereço no banco de dados
+                    endereco = Enderecos.query.filter_by(id_endereco=endereco_data['id_endereco']).first()
+                    if not endereco:
+                        return jsonify({"message": "Endereço não encontrado!"}), 404
+                else:
+                    # Caso não exista id_endereco, cria um novo endereço
+                    endereco = Enderecos(**endereco_data)
+                    db.session.add(endereco)
+                    db.session.commit()
+
+                # Atribui a instância de endereco ao usuário (não só o ID)
+                user.endereco = endereco
+
+            else:
+                # Atualiza os outros campos diretamente no usuário
+                if hasattr(user, key):  # Verifica se o atributo existe no modelo
+                    setattr(user, key, value)
+
+        db.session.commit()
+        return jsonify({"message": f"Usuário {role} atualizado com sucesso!"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Erro ao atualizar usuário: {str(e)}"}), 500
+
+
+
+
 
 
 
