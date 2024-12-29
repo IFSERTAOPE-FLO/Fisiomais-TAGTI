@@ -8,127 +8,127 @@ import "../css/Navbar.css";
 function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("Usuário");
-  const [role, setRole] = useState(""); 
+  const [role, setRole] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false); 
+  const [rememberMe, setRememberMe] = useState(false);
   const [userId, setUserId] = useState(null);
-  const [userPhoto, setUserPhoto] = useState(""); 
-  const [mostrarSenha, setMostrarSenha] = useState(false); 
-  
+  const [userPhoto, setUserPhoto] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+
   const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
-        const response = await axios.post("http://localhost:5000/login", {
-            email,
-            senha,
-        });
+      const response = await axios.post("http://localhost:5000/login", {
+        email,
+        senha,
+      });
 
-        const { access_token, name, role, userId, photo } = response.data;
-        setIsLoggedIn(true);
-        setUserName(name);
-        setRole(role);
-        setUserId(userId);
-        setUserPhoto(photo);
+      const { access_token, name, role, userId, photo } = response.data;
+      setIsLoggedIn(true);
+      setUserName(name);
+      setRole(role);
+      setUserId(userId);
+      setUserPhoto(photo);
 
-        localStorage.setItem("token", access_token);
-        localStorage.setItem("userName", name);
-        localStorage.setItem("role", role);
-        localStorage.setItem("userId", userId);
-        localStorage.setItem("userPhoto", photo);
+      localStorage.setItem("token", access_token);
+      localStorage.setItem("userName", name);
+      localStorage.setItem("role", role);
+      localStorage.setItem("userId", userId);
+      localStorage.setItem("userPhoto", photo);
 
-        const modalElement = document.getElementById("loginModal");
-        const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
-        if (modalInstance) {
-            modalInstance.hide();
-        }
-        document.querySelectorAll(".modal-backdrop").forEach((backdrop) => backdrop.remove());
-
-        console.log("Usuário logado:", name);
-
-        // Redirecionar com base no papel do usuário
-        setTimeout(() => {
-            if (role === "admin") {
-                navigate("/adminpage");
-            } else {
-                navigate("/");
-
-            }
-            window.location.reload();
-        }, 300);
-
-        // Iniciar renovação automática do token
-        autoRefreshToken();
-    } catch (error) {
-        console.error("Erro no login:", error);
-        alert("Erro ao fazer login. Verifique suas credenciais.");
-    }
-};
-
-const autoRefreshToken = () => {
-  const refreshInterval = 10 * 60 * 1000;  // Atualizar a cada 10 minutos
-  const sessionEndTime = 60 * 60 * 1000;  // Sessão de 1 hora
-
-  let logoutTimeout;
-
-  const refreshToken = async () => {
-      try {
-          const savedToken = localStorage.getItem("token");
-          const response = await axios.post(
-              "http://localhost:5000/refresh-token", 
-              {}, 
-              { headers: { Authorization: `Bearer ${savedToken}` } }
-          );
-
-          if (response.data.access_token) {
-              localStorage.setItem("token", response.data.access_token);
-              console.log("Token atualizado com sucesso.");
-          }
-      } catch (error) {
-          console.error("Erro ao renovar o token:", error);
-          alert("Sua sessão expirou. Faça login novamente.");
-          handleLogout();
+      const modalElement = document.getElementById("loginModal");
+      const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
+      if (modalInstance) {
+        modalInstance.hide();
       }
+      document.querySelectorAll(".modal-backdrop").forEach((backdrop) => backdrop.remove());
+
+      console.log("Usuário logado:", name);
+
+      // Redirecionar com base no papel do usuário
+      setTimeout(() => {
+        if (role === "admin") {
+          navigate("/adminpage");
+        } else {
+          navigate("/");
+
+        }
+        window.location.reload();
+      }, 300);
+
+      // Iniciar renovação automática do token
+      autoRefreshToken();
+    } catch (error) {
+      console.error("Erro no login:", error);
+      alert("Erro ao fazer login. Verifique suas credenciais.");
+    }
   };
 
-  // Configurar a renovação periódica do token
-  const refreshIntervalId = setInterval(() => {
-      refreshToken();
-  }, refreshInterval);
+  const autoRefreshToken = () => {
+    const refreshInterval = 10 * 60 * 1000;  // Atualizar a cada 10 minutos
+    const sessionEndTime = 60 * 60 * 1000;  // Sessão de 1 hora
 
-  // Configurar o logout após o fim da sessão
-  logoutTimeout = setTimeout(() => {
+    let logoutTimeout;
+
+    const refreshToken = async () => {
+      try {
+        const savedToken = localStorage.getItem("token");
+        const response = await axios.post(
+          "http://localhost:5000/refresh-token",
+          {},
+          { headers: { Authorization: `Bearer ${savedToken}` } }
+        );
+
+        if (response.data.access_token) {
+          localStorage.setItem("token", response.data.access_token);
+          console.log("Token atualizado com sucesso.");
+        }
+      } catch (error) {
+        console.error("Erro ao renovar o token:", error);
+        alert("Sua sessão expirou. Faça login novamente.");
+        handleLogout();
+      }
+    };
+
+    // Configurar a renovação periódica do token
+    const refreshIntervalId = setInterval(() => {
+      refreshToken();
+    }, refreshInterval);
+
+    // Configurar o logout após o fim da sessão
+    logoutTimeout = setTimeout(() => {
       alert("Sua sessão expirou. Você será deslogado.");
       handleLogout();
-  }, sessionEndTime);
+    }, sessionEndTime);
 
-  // Limpar os intervalos/tempos ao desmontar
-  return () => {
+    // Limpar os intervalos/tempos ao desmontar
+    return () => {
       clearInterval(refreshIntervalId);
       clearTimeout(logoutTimeout);
+    };
   };
-};
 
-useEffect(() => {
-  const cleanup = autoRefreshToken();
-  return cleanup; // Limpa os temporizadores ao desmontar
-}, []);
+  useEffect(() => {
+    const cleanup = autoRefreshToken();
+    return cleanup; // Limpa os temporizadores ao desmontar
+  }, []);
 
-// Função de logout
-const handleLogout = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("userName");
-  localStorage.removeItem("role");
-  localStorage.removeItem("userId");
-  localStorage.removeItem("userPhoto");
-  setIsLoggedIn(false);
-  setUserName("Usuário");
-  setRole("");
-  setUserId(null);
-  setUserPhoto("");
-  window.location.reload();
-};
+  // Função de logout
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("role");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userPhoto");
+    setIsLoggedIn(false);
+    setUserName("Usuário");
+    setRole("");
+    setUserId(null);
+    setUserPhoto("");
+    window.location.reload();
+  };
 
 
   useEffect(() => {
@@ -137,20 +137,20 @@ const handleLogout = () => {
     const savedRole = localStorage.getItem("role");
     const savedUserId = localStorage.getItem("userId");
     const savedUserPhoto = localStorage.getItem("userPhoto"); // Recupera a foto salva no localStorage
-  
+
     console.log(savedUserPhoto); // Verifique se o valor de userPhoto é o esperado
-  
+
     if (savedToken && savedUserName && savedRole) {
       try {
         const decodedToken = JSON.parse(atob(savedToken.split(".")[1]));
         const isTokenExpired = decodedToken.exp * 1000 < Date.now();
-  
+
         if (isTokenExpired) {
           throw new Error("Token expirado");
-          
+
         }
-       
-  
+
+
         setIsLoggedIn(true);
         setUserName(savedUserName);
         setRole(savedRole);
@@ -162,40 +162,40 @@ const handleLogout = () => {
         localStorage.removeItem("userName");
         localStorage.removeItem("role");
         localStorage.removeItem("userId");
-        localStorage.removeItem("userPhoto"); 
+        localStorage.removeItem("userPhoto");
         setUserName("Usuário");
         setRole("");
         console.error("Erro ao verificar o token:", error);
       }
     }
   }, []);
- 
+
 
   return (
     <>
-    
-    <nav className="navbar navbar-expand-lg navbar-light bg-light">
-      <div className="container-fluid">
-        <Link className="navbar-brand" to="/">
-          <img src="/fisiomais.png" alt="Logo" className="navbar-logo" />
-        </Link>
-        <button
-          className="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-          aria-controls="navbarNav"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span className="navbar-toggler-icon"></span>
-        </button>
-        <div className="collapse navbar-collapse" id="navbarNav">
-          <ul className="navbar-nav mx-auto">
+
+      <nav className="navbar navbar-expand-lg navbar-light bg-light">
+        <div className="container-fluid">
+          <Link className="navbar-brand" to="/">
+            <img src="/fisiomais.png" alt="Logo" className="navbar-logo" />
+          </Link>
+          <button
+            className="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNav"
+            aria-controls="navbarNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span className="navbar-toggler-icon"></span>
+          </button>
+          <div className="collapse navbar-collapse" id="navbarNav">
+            <ul className="navbar-nav mx-auto">
               <li className="nav-item">
                 <Link className="nav-link" to="/">Início</Link>
               </li>
-              
+
               <li className="nav-item">
                 <Link className="nav-link" to="/sobrenos">Sobre Nós</Link>
               </li>
@@ -220,7 +220,7 @@ const handleLogout = () => {
                   </li>
                   <li className="nav-item">
                     <Link to="/cadastro" className="btn btn-signup  align-items-center gap-2">
-                    <i className="bi bi-person-plus"></i> Inscrever-se
+                      <i className="bi bi-person-plus"></i> Inscrever-se
                     </Link>
                   </li>
                 </>
@@ -232,7 +232,7 @@ const handleLogout = () => {
                     id="navbarDropdown"
                     role="button"
                     data-bs-toggle="dropdown"
-                    
+
                     aria-expanded="false"
                   >
                     {userPhoto && userPhoto.trim() !== "" ? (
@@ -253,34 +253,36 @@ const handleLogout = () => {
                     <li>
                       <Link className="dropdown-item" to="/criaragendamento">Agendar Atendimento</Link>
                     </li>
-                   
-                        {role === "admin" && (
-                          <>
-                            <li>
-                              <Link className="dropdown-item" to="/adminPage">Pagina Administrador</Link>
-                            </li>
-                          </>
-                        )}
-                        {role === "colaborador" &&  (
-                           <li>
-                           <Link className="dropdown-item" to="/adminPage">Painel do administrador</Link>
-                         </li>
-                        )
-                        }
-                      
-                    
+
+                    {role === "admin" && (
+                      <>
+                        <li>
+                          <Link className="dropdown-item" to="/adminPage">Pagina Administrador</Link>
+                        </li>
+                      </>
+                    )}
+                    {role === "colaborador" && (
+                      <li>
+                        <Link className="dropdown-item" to="/adminPage">Central de Controle</Link>
+                      </li>
+                    )
+                    }
+
+
                     <li>
-                      <Link className="dropdown-item" to="/visualizaragendamentos">Meus Agendamentos</Link>
+                      <Link className="dropdown-item" to="/visualizaragendamentos">Agendamentos</Link>
                     </li>
                     <li>
                       <button
                         className="dropdown-item"
                         onClick={handleLogout}
                         type="button"
+                        
                       >
                         Sair
                       </button>
                     </li>
+
                   </ul>
                 </li>
               )}
@@ -291,106 +293,106 @@ const handleLogout = () => {
 
       {/* Modal de Login */}
       <div
-  className="modal fade"
-  id="loginModal"
-  tabIndex="-1"
-  aria-labelledby="loginModalLabel"
-  aria-hidden="true"
->
-  <div className="modal-dialog">
-    <div className="modal-content">
-    <div className="modal-header justify-content-center">
-      <h5 className="modal-title d-flex align-items-center gap-2" id="loginModalLabel">
-        <i className="bi bi-person-circle"></i>
-        Login
-      </h5>
-        <button
-          type="button"
-          className="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
-      </div>
-      <div className="modal-body">
-        <form onSubmit={(e) => e.preventDefault()}>
-          <div className="mb-2">
-            <label htmlFor="email" className="form-label ">
-              <i className="bi bi-envelope"></i> Email
-            </label>
-            <input
-              type="email"
-              className="form-control"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="mb-2">
-            <label htmlFor="senha" className="form-label">
-              <i className="bi bi-lock"></i> Senha
-            </label>
-            <div className="input-group">
-              <input
-                type={mostrarSenha ? "text" : "password"}
-                className="form-control"
-                id="senha"
-                value={senha}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+        className="modal fade"
+        id="loginModal"
+        tabIndex="-1"
+        aria-labelledby="loginModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header justify-content-center">
+              <h5 className="modal-title d-flex align-items-center gap-2" id="loginModalLabel">
+                <i className="bi bi-person-circle"></i>
+                Login
+              </h5>
               <button
                 type="button"
-                className="btn btn-outline-secondary"
-                onClick={() => setMostrarSenha(!mostrarSenha)}
-              >
-                {mostrarSenha ? (
-                  <i className="bi bi-eye-slash"></i>
-                ) : (
-                  <i className="bi bi-eye"></i>
-                )}
-              </button>
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={(e) => e.preventDefault()}>
+                <div className="mb-2">
+                  <label htmlFor="email" className="form-label ">
+                    <i className="bi bi-envelope"></i> Email
+                  </label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="mb-2">
+                  <label htmlFor="senha" className="form-label">
+                    <i className="bi bi-lock"></i> Senha
+                  </label>
+                  <div className="input-group">
+                    <input
+                      type={mostrarSenha ? "text" : "password"}
+                      className="form-control"
+                      id="senha"
+                      value={senha}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={() => setMostrarSenha(!mostrarSenha)}
+                    >
+                      {mostrarSenha ? (
+                        <i className="bi bi-eye-slash"></i>
+                      ) : (
+                        <i className="bi bi-eye"></i>
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <div>
+                    <input
+                      type="checkbox"
+                      id="rememberMe"
+                      checked={rememberMe}
+                      onChange={() => setRememberMe(!rememberMe)}
+                    />
+                    <label htmlFor="rememberMe"> Lembre-me</label>
+                  </div>
+                  <a href="#" className="">
+                    <i className="bi bi-arrow-clockwise"></i> Esqueceu a senha?
+                  </a>
+                </div>
+                <button
+                  type="submit"
+                  className="btn btn btn-signup w-100"
+                  onClick={handleLogin}
+                >
+                  <i className="bi bi-box-arrow-in-right"></i> Entrar
+                </button>
+              </form>
+            </div>
+            <div className="modal-footer">
+              <p>
+                Não tem uma conta? <a href="/cadastro">Inscreva-se</a>
+              </p>
+              <div className="social-icons">
+                <button className="btn btn-outline-primary btn-social">
+                  <i className="bi bi-facebook"></i>
+                </button>
+                <button className="btn btn-outline-danger btn-social">
+                  <i className="bi bi-google"></i>
+                </button>
+              </div>
             </div>
           </div>
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <div>
-              <input
-                type="checkbox"
-                id="rememberMe"
-                checked={rememberMe}
-                onChange={() => setRememberMe(!rememberMe)}
-              />
-              <label htmlFor="rememberMe"> Lembre-me</label>
-            </div>
-            <a href="#" className="">
-              <i className="bi bi-arrow-clockwise"></i> Esqueceu a senha?
-            </a>
-          </div>
-          <button
-            type="submit"
-            className="btn btn btn-signup w-100"
-            onClick={handleLogin}
-          >
-            <i className="bi bi-box-arrow-in-right"></i> Entrar
-          </button>
-        </form>
-      </div>
-      <div className="modal-footer">
-        <p>
-          Não tem uma conta? <a href="/cadastro">Inscreva-se</a>
-        </p>
-        <div className="social-icons">
-          <button className="btn btn-outline-primary btn-social">
-            <i className="bi bi-facebook"></i>
-          </button>
-          <button className="btn btn-outline-danger btn-social">
-            <i className="bi bi-google"></i>
-          </button>
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
     </>
   );

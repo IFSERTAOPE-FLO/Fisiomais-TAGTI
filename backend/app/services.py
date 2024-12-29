@@ -67,9 +67,24 @@ def populate_database():
     # Criar endereços e clínicas
     for i, clinica in enumerate(clinicas):
         endereco_data = enderecos[i]
-        endereco = Enderecos(**endereco_data)
-        db.session.add(endereco)
-        db.session.flush()  # Garante que o ID do endereço é gerado
+
+        # Verificar se o endereço já existe
+        existing_endereco = Enderecos.query.filter_by(
+            rua=endereco_data["rua"],
+            numero=endereco_data["numero"],
+            bairro=endereco_data["bairro"],
+            cidade=endereco_data["cidade"],
+            estado=endereco_data["estado"]
+        ).first()
+
+        if not existing_endereco:
+            # Se o endereço não existir, crie um novo
+            endereco = Enderecos(**endereco_data)
+            db.session.add(endereco)
+            db.session.flush()  # Garante que o ID do endereço é gerado
+        else:
+            # Use o endereço existente
+            endereco = existing_endereco
 
         # Verificar se a clínica já existe pelo CNPJ
         existing_clinica = Clinicas.query.filter_by(cnpj=clinica["cnpj"]).first()

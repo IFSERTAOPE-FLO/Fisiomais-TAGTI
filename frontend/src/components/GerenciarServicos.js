@@ -266,7 +266,7 @@ const servicosPaginados = servicosFiltrados.slice(
 
   return (
     <div className="container">
-      <h2 className="mb-4 text-secondary">Gerenciar Serviços</h2>
+      <h2 className="mb-4 text-secondary text-center">Gerenciar Serviços</h2>
       {erro && <div className="alert alert-danger">{erro}</div>}
       {mensagem && <div className="alert alert-success">{mensagem}</div>}
 

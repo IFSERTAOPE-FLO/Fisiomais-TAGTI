@@ -4,7 +4,7 @@ import "../css/Profile.css";
 import AddClinica from "./AddClinica";
 import EditarClinica from "./EditarClinica";  // Modal de edição de clínica
 import Paginator from "./Paginator"; // Importe o componente Paginator
-
+import jwtDecode from "jwt-decode";
 
 
 const GerenciarClinicas = () => {
@@ -48,68 +48,35 @@ const GerenciarClinicas = () => {
         }
     };
 
-
-
-    // Função para associar clínica ao usuário
-    const associarClinica = async () => {
-        if (!novaClinica) {
-            setErro("Selecione uma clínica para associar.");
-            return;
-        }
-
-        try {
-            const response = await fetch(`${apiBaseUrl}clinicas/associar_clinica`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ clinicaId: novaClinica }),
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                setClinicasAssociadas((prev) => [...prev, data.clinica]);
-                setSucesso("Clínica associada com sucesso.");
-                setNovaClinica("");
-            } else {
-                throw new Error("Erro ao associar clínica.");
-            }
-        } catch (err) {
-            setErro(err.message);
-        }
-    };
-
-    // Função para remover clínica
-    const removerClinica = async (clinicaId) => {
-        try {
-            const response = await fetch(`${apiBaseUrl}clinicas/remover_clinica/${clinicaId}`, {
-                method: "DELETE",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (response.ok) {
-                setClinicasAssociadas((prev) => prev.filter((c) => c.id !== clinicaId));
-                setSucesso("Clínica removida com sucesso.");
-            } else {
-                throw new Error("Erro ao remover clínica.");
-            }
-        } catch (err) {
-            setErro(err.message);
-        }
-    };
-
+// Função para remover clínica
+const removerClinica = async (clinicaId) => {
+    try {
+      const savedRole = localStorage.getItem("role"); // Recupera o role do localStorage
+      const response = await fetch(`${apiBaseUrl}clinicas/remover_clinica/${clinicaId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Role: savedRole,  // Envia o role no cabeçalho da requisição
+        },
+      });
+  
+      if (response.ok) {
+        setClinicasAssociadas((prev) => prev.filter((c) => c.id !== clinicaId));
+        setSucesso("Clínica removida com sucesso.");
+        buscarClinicas();
+      } else {
+        throw new Error("Erro ao remover clínica.");
+      }
+    } catch (err) {
+      setErro(err.message);
+    }
+  };
+  
     useEffect(() => {
         buscarClinicas();
 
     }, []);
-    const handleAddColaboradorSubmit = () => {
-        setSucesso("Colaborador adicionado com sucesso.");
-        setErro("");  // Limpa erros após sucesso
-    };
-
+    
     // Função para ordenação das clínicas
     const handleSort = (key) => {
         let sorted = [...clinicas];
@@ -141,7 +108,7 @@ const GerenciarClinicas = () => {
 
     return (
         <div className="container">
-            <h2 className="mb-4 text-secondary">Gerenciar Clinicas</h2>
+            <h2 className="mb-4 text-secondary text-center">Gerenciar Clinicas</h2>
 
             <div className="card-body">
                 {erro && <p className="alert alert-danger">{erro}</p>}

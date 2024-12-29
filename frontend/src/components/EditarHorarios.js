@@ -8,7 +8,7 @@ const EditarHorarios = ({ colaboradorId, colaboradorNome, onClose, onSave }) => 
     hora_inicio: '',
     hora_fim: ''
   });
-  
+
   // Função para listar os horários existentes do colaborador
   const listarHorarios = async () => {
     try {
@@ -19,7 +19,7 @@ const EditarHorarios = ({ colaboradorId, colaboradorNome, onClose, onSave }) => 
           'Authorization': `Bearer ${token}`,
         },
       });
-      
+
       const data = await response.json();
       if (response.ok) {
         setHorarios(data.horarios || []);
@@ -30,7 +30,7 @@ const EditarHorarios = ({ colaboradorId, colaboradorNome, onClose, onSave }) => 
       alert('Erro ao listar os horários');
     }
   };
-  
+
   useEffect(() => {
     listarHorarios();
   }, [colaboradorId]);
@@ -53,12 +53,12 @@ const EditarHorarios = ({ colaboradorId, colaboradorNome, onClose, onSave }) => 
     }
 
     // Verificar duplicidade de horários
-    const horarioExistente = horarios.find(horario => 
+    const horarioExistente = horarios.find(horario =>
       horario.dia_semana === dia_semana &&
       horario.hora_inicio === hora_inicio &&
       horario.hora_fim === hora_fim
     );
-    
+
     if (horarioExistente) {
       alert("Este horário já está configurado.");
       return;
@@ -99,18 +99,21 @@ const EditarHorarios = ({ colaboradorId, colaboradorNome, onClose, onSave }) => 
       </Modal.Header>
       <Modal.Body>
         <h5>Horários Atuais:</h5>
-        {horarios.length > 0 ? (
-          <ul>
-            {horarios.map((horario, index) => (
-              <li key={index}>
-                {`${horario.dia_semana} - ${horario.hora_inicio} às ${horario.hora_fim}`}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>Nenhum horário configurado.</p>
-        )}
-        
+        {
+          horarios.length > 0 ? (
+            <ul className="list-group">
+              {horarios.map((horario, index) => (
+                <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
+                  <span>{`${horario.dia_semana} - ${horario.hora_inicio} às ${horario.hora_fim}`}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-muted">Nenhum horário configurado.</p>
+          )
+        }
+
+
         <Form>
           <Form.Group controlId="formDiaSemana">
             <Form.Label>Dia da Semana</Form.Label>

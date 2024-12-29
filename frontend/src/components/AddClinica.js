@@ -5,7 +5,7 @@ const estados = [
     "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
 ];
 
-const AddClinica = ({ onClinicaCriada }) => {
+const AddClinica = ({ onClinicaCriada, savedRole }) => {
     const [dadosClinica, setDadosClinica] = useState({
         nome: "",
         cnpj: "",
@@ -57,9 +57,14 @@ const AddClinica = ({ onClinicaCriada }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            const savedRole = localStorage.getItem("role"); // Recupera o role do localStorage
             const response = await fetch("http://localhost:5000/clinicas/register", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    "Role": savedRole,  // Envia o role no cabeçalho
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`  // Também envia o token JWT
+                },
                 body: JSON.stringify(dadosClinica),
             });
 

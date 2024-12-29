@@ -6,6 +6,8 @@ from werkzeug.utils import secure_filename
 
 usuarios = Blueprint('usuarios', __name__)
 
+
+
 @usuarios.route('/editar_usuario/<role>/<int:user_id>', methods=['PUT'])
 @jwt_required()
 def editar_usuario(role, user_id):
@@ -96,7 +98,13 @@ def editar_usuario_com_endereco(role, user_id):
                         return jsonify({"message": "Endereço não encontrado!"}), 404
                 else:
                     # Caso não exista id_endereco, cria um novo endereço
-                    endereco = Enderecos(**endereco_data)
+                    endereco = Enderecos(
+                        rua=endereco_data.get('rua'),
+                        numero=endereco_data.get('numero'),
+                        bairro=endereco_data.get('bairro'),
+                        cidade=endereco_data.get('cidade'),
+                        estado=endereco_data.get('estado')
+                    )
                     db.session.add(endereco)
                     db.session.commit()
 
@@ -117,12 +125,6 @@ def editar_usuario_com_endereco(role, user_id):
 
 
 
-
-
-
-
-
-
 @usuarios.route('/alterar_senha/<role>/<int:user_id>', methods=['PUT'])
 @jwt_required()
 def alterar_senha(role, user_id):
@@ -137,9 +139,9 @@ def alterar_senha(role, user_id):
     user = None
 
     if role == 'colaborador':
-        user = Colaboradores.query.filter_by(ID_Colaborador=user_id).first()
+        user = Colaboradores.query.filter_by(id_colaborador=user_id).first()
     elif role == 'cliente':
-        user = Clientes.query.filter_by(ID_Cliente=user_id).first()
+        user = Clientes.query.filter_by(id_cliente=user_id).first()
     else:
         return jsonify({'message': 'Role inválido.'}), 400
 
@@ -157,12 +159,63 @@ def alterar_senha(role, user_id):
     return jsonify({'message': 'Senha alterada com sucesso.'}), 200
 
 
+
+
 @usuarios.route('/listar_usuarios', methods=['GET'])
 @jwt_required()
 def listar_usuarios():
+    user_id = get_jwt_identity()  # Obtem o ID do usuário logado do token JWT
+
+    # Buscar os dados do usuário logado (cliente ou colaborador)
+    cliente_logado = Clientes.query.filter_by(id_cliente=user_id).first()
+    colaborador_logado = Colaboradores.query.filter_by(id_colaborador=user_id).first()
+
+    # Serializar os dados do usuário logado
+    usuario_logado = None
+    if cliente_logado:
+        usuario_logado = {
+            "id": cliente_logado.id_cliente,
+            "nome": cliente_logado.nome,
+            "email": cliente_logado.email,
+            "telefone": cliente_logado.telefone,
+            "cpf": cliente_logado.cpf,
+            "endereco": {
+                "rua": cliente_logado.endereco.rua if cliente_logado.endereco else None,
+                "numero": cliente_logado.endereco.numero if cliente_logado.endereco else None,
+                "bairro": cliente_logado.endereco.bairro if cliente_logado.endereco else None,
+                "cidade": cliente_logado.endereco.cidade if cliente_logado.endereco else None,
+                "estado": cliente_logado.endereco.estado if cliente_logado.endereco else None,
+            },
+            "role": "cliente"
+        }
+    elif colaborador_logado:
+        usuario_logado = {
+            "id": colaborador_logado.id_colaborador,
+            "nome": colaborador_logado.nome,
+            "email": colaborador_logado.email,
+            "telefone": colaborador_logado.telefone,
+            "cpf": colaborador_logado.cpf,
+            "cargo": colaborador_logado.cargo,
+            "is_admin": colaborador_logado.is_admin,
+            "clinica": {
+                "id": colaborador_logado.clinica.id_clinica if colaborador_logado.clinica else None,
+                "nome": colaborador_logado.clinica.nome if colaborador_logado.clinica else None,
+            },
+            "endereco": {
+                "rua": colaborador_logado.endereco.rua if colaborador_logado.endereco else None,
+                "numero": colaborador_logado.endereco.numero if colaborador_logado.endereco else None,
+                "bairro": colaborador_logado.endereco.bairro if colaborador_logado.endereco else None,
+                "cidade": colaborador_logado.endereco.cidade if colaborador_logado.endereco else None,
+                "estado": colaborador_logado.endereco.estado if colaborador_logado.endereco else None,
+            },
+            "role": "colaborador"
+        }
+
+    # Buscar todos os outros usuários
     clientes = Clientes.query.order_by(Clientes.nome).all()
     colaboradores = Colaboradores.query.order_by(Colaboradores.nome).all()
 
+    # Serializar os outros usuários
     usuarios = [
         {
             "id": cliente.id_cliente,
@@ -191,7 +244,7 @@ def listar_usuarios():
             "is_admin": colaborador.is_admin,
             "clinica": {
                 "id": colaborador.clinica.id_clinica if colaborador.clinica else None,
-                "nome": colaborador.clinica.nome if colaborador.clinica else None
+                "nome": colaborador.clinica.nome if colaborador.clinica else None,
             },
             "endereco": {
                 "rua": colaborador.endereco.rua if colaborador.endereco else None,
@@ -205,7 +258,12 @@ def listar_usuarios():
         for colaborador in colaboradores
     ]
 
+    # Adicionar os dados do usuário logado no início da lista, se encontrado
+    if usuario_logado:
+        usuarios.insert(0, usuario_logado)
+
     return jsonify(usuarios), 200
+
     
 
  

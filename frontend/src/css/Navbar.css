@@ -193,19 +193,20 @@
 }
 
 .dropdown-menu {
-  z-index:1;
+  z-index:10000;
   right: 0; /* Alinha o menu dropdown à direita */
   left: auto; /* Remove alinhamento automático à esquerda */
 }
 
   /* Menu dropdown do usuário */
   .dropdown-menu {
-    z-index:1;
+    z-index:10000;
     border-radius: 10px; /* Bordas arredondadas */
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra leve */
   }
 
   .dropdown-item {
+    z-index:198000;
     font-size: 0.9rem; /* Tamanho do texto do dropdown */
     color: #525252;
   }

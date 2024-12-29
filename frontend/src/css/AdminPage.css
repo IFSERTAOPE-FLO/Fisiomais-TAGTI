@@ -1,0 +1,31 @@
+/* Sub-navbar */
+.bg-subnavbar {
+  background-color: #2d9485; /* Cor de fundo diferenciada */
+  padding: 5px 0; /* Ajuste de padding para barra mais fina */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+}
+
+.navbar-nav {
+  justify-content: center;
+}
+
+.navbar-nav .nav-item {
+  margin: 0 15px; /* Espaço entre os itens */
+}
+
+.nav-link:not(.dropdown-toggle) {
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  background-color: #2d9485;
+  border-radius: 5px;
+  padding: 6px 12px; /* Padding ajustado para barra mais fina */
+  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.nav-link:not(.dropdown-toggle):hover {
+  background-color: #2fa18f; /* Cor de hover verde mais clara */
+  transform: scale(1.05); /* Leve aumento no hover */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave no hover */
+}
+

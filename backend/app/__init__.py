@@ -42,6 +42,7 @@ def create_app():
         from app.rotas.routesUsers import usuarios
         from app.rotas.routesServicos import servicos
         from app.rotas.routesClinicas import clinicas
+        from app.rotas.routesDashboards import dashboards
 
         app.register_blueprint(main, url_prefix='/')
         app.register_blueprint(usuarios, url_prefix='/usuarios')
@@ -50,6 +51,7 @@ def create_app():
         app.register_blueprint(servicos, url_prefix='/servicos')
         app.register_blueprint(agendamentos, url_prefix='/agendamentos')
         app.register_blueprint(clinicas, url_prefix='/clinicas')
+        app.register_blueprint(dashboards, url_prefix='/dashboards')
         
 
         # Garantir que a pasta de uploads exista
