@@ -4,7 +4,7 @@ import "../css/Profile.css";
 import AddClinica from "./AddClinica";
 import EditarClinica from "./EditarClinica";  // Modal de edição de clínica
 import Paginator from "./Paginator"; // Importe o componente Paginator
-import jwtDecode from "jwt-decode";
+
 
 
 const GerenciarClinicas = () => {
@@ -17,12 +17,21 @@ const GerenciarClinicas = () => {
     const [sucesso, setSucesso] = useState("");
     const [currentPage, setCurrentPage] = useState(1);  // State for current page
     const [itemsPerPage] = useState(10);  // Number of items per page
+    const savedRole = localStorage.getItem("role"); // Recupera o role do localStorage
+
 
 
     const token = localStorage.getItem("token");
     const apiBaseUrl = "http://localhost:5000/";
 
     const buscarClinicas = async () => {
+
+
+        if (savedRole !== 'admin' && savedRole !== 'colaborador') {
+            
+            return; // Encerra a execução se o usuário não for admin ou colaborador
+        }
+
         try {
             const response = await fetch(`${apiBaseUrl}clinicas/`, {
                 method: "GET",
@@ -48,35 +57,39 @@ const GerenciarClinicas = () => {
         }
     };
 
-// Função para remover clínica
-const removerClinica = async (clinicaId) => {
-    try {
-      const savedRole = localStorage.getItem("role"); // Recupera o role do localStorage
-      const response = await fetch(`${apiBaseUrl}clinicas/remover_clinica/${clinicaId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          Role: savedRole,  // Envia o role no cabeçalho da requisição
-        },
-      });
-  
-      if (response.ok) {
-        setClinicasAssociadas((prev) => prev.filter((c) => c.id !== clinicaId));
-        setSucesso("Clínica removida com sucesso.");
-        buscarClinicas();
-      } else {
-        throw new Error("Erro ao remover clínica.");
-      }
-    } catch (err) {
-      setErro(err.message);
-    }
-  };
-  
+    // Função para remover clínica
+    const removerClinica = async (clinicaId) => {
+        if (savedRole !== 'admin') {
+            alert('Apenas administradores podem remover clinicas')
+            return;
+        }
+        try {
+            const savedRole = localStorage.getItem("role"); // Recupera o role do localStorage
+            const response = await fetch(`${apiBaseUrl}clinicas/remover_clinica/${clinicaId}`, {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    Role: savedRole,  // Envia o role no cabeçalho da requisição
+                },
+            });
+
+            if (response.ok) {
+                setClinicasAssociadas((prev) => prev.filter((c) => c.id !== clinicaId));
+                setSucesso("Clínica removida com sucesso.");
+                buscarClinicas();
+            } else {
+                throw new Error("Erro ao remover clínica.");
+            }
+        } catch (err) {
+            setErro(err.message);
+        }
+    };
+
     useEffect(() => {
         buscarClinicas();
 
     }, []);
-    
+
     // Função para ordenação das clínicas
     const handleSort = (key) => {
         let sorted = [...clinicas];
@@ -189,35 +202,35 @@ const removerClinica = async (clinicaId) => {
 
                     </table>
                 </div>
-                </div>
-                <Paginator
-                    totalItems={clinicasFiltradas.length}
-                    itemsPerPage={itemsPerPage}
-                    currentPage={currentPage}
-                    setCurrentPage={setCurrentPage}
-                />
-
-                {/* Modal para adicionar colaborador */}
-
-
-
-                {/* Modal para editar clínica */}
-                {editarClinica && (
-                    <EditarClinica
-                        clinica={editarClinica}
-                        onClose={() => setEditarClinica(null)}
-                        onSave={(updatedClinica) => {
-                            setClinicas((prev) =>
-                                prev.map((clinica) =>
-                                    clinica.id === updatedClinica.id ? updatedClinica : clinica
-                                )
-                            );
-                            setEditarClinica(null);
-                        }}
-                    />
-                )}
             </div>
-            );
+            <Paginator
+                totalItems={clinicasFiltradas.length}
+                itemsPerPage={itemsPerPage}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+            />
+
+            {/* Modal para adicionar colaborador */}
+
+
+
+            {/* Modal para editar clínica */}
+            {editarClinica && (
+                <EditarClinica
+                    clinica={editarClinica}
+                    onClose={() => setEditarClinica(null)}
+                    onSave={(updatedClinica) => {
+                        setClinicas((prev) =>
+                            prev.map((clinica) =>
+                                clinica.id === updatedClinica.id ? updatedClinica : clinica
+                            )
+                        );
+                        setEditarClinica(null);
+                    }}
+                />
+            )}
+        </div>
+    );
 };
 
-            export default GerenciarClinicas;
+export default GerenciarClinicas;

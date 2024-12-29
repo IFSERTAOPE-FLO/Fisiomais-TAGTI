@@ -27,6 +27,7 @@ const GerenciarServicos = () => {
   const [pesquisaNome, setPesquisaNome] = useState("");
   const [currentPage, setCurrentPage] = useState(1);  // State for current page
   const [itemsPerPage] = useState(10);  // Number of items per page
+  
 
   const buscarServicos = async () => {
     try {

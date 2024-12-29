@@ -206,7 +206,7 @@ function Navbar() {
                 <Link className="nav-link" to="/contato">Fale conosco</Link>
               </li>
             </ul>
-            <ul className="navbar-nav ms-auto">
+            <ul className="navbar-nav z-top ms-auto">
               {!isLoggedIn ? (
                 <>
                   <li className="nav-item">

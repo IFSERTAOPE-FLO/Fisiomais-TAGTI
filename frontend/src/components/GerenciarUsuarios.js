@@ -17,43 +17,34 @@ const GerenciarUsuarios = () => {
     const savedRole = localStorage.getItem("role"); // Recupera o role do localStorage
     const [usuarioLogado, setUsuarioLogado] = useState(null);
 
+    const isRoleValid = savedRole === "admin" || savedRole === "colaborador";
 
 
+    
     const buscarUsuarios = async () => {
+        if (!isRoleValid) {
+            setErro("Você não tem permissão para acessar esses dados.");
+            return;
+        }
+
         try {
             const token = localStorage.getItem("token");
-            const savedUserId = localStorage.getItem("userId");
-            const savedRole = localStorage.getItem("role"); // Recupera o role do localStorage
             const response = await fetch("http://localhost:5000/usuarios/listar_usuarios", {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`,
                 },
             });
-    
+
             if (!response.ok) {
                 setErro("Erro na requisição: " + response.statusText);
                 return;
             }
-    
+
             const data = await response.json();
-    
             if (Array.isArray(data)) {
                 setUsuarios(data);
-    
-                // Localiza o usuário logado explicitamente e valida o role
-                const usuarioLogado = data.find(
-                    (usuario) =>
-                        usuario.id === parseInt(savedUserId) &&
-                        usuario.role === savedRole // Confirma que o role também bate
-                );
-                if (usuarioLogado) {
-                    setUsuarioLogado(usuarioLogado);
-                    console.log("Usuário logado:", usuarioLogado);
-                } else {
-                    console.error("Usuário logado não encontrado ou role incorreto.");
-                }
             } else {
                 setErro("A resposta da API não é um array.");
             }
@@ -61,6 +52,12 @@ const GerenciarUsuarios = () => {
             setErro("Erro ao buscar usuários.");
         }
     };
+
+    useEffect(() => {
+        if (isRoleValid) {
+            buscarUsuarios();
+        }
+    }, [isRoleValid]);
     
     
     

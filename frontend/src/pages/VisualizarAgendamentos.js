@@ -204,7 +204,7 @@ const VisualizarAgendamentos = () => {
   // Filtragem dos usuários com base no nome
 
   return (
-    <div className="container col-md-9 my-5">
+    <div className="container  my-2">
       <div className="card shadow">
         <div className="card-header ">
           <h2 className="text-center text-primary fw-bold">Visualizar Agendamentos</h2>

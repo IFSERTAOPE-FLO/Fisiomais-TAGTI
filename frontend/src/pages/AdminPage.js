@@ -7,9 +7,10 @@ import GerenciarClinicas from "../components/GerenciarClinicas";
 import CriarAgendamento from "./CriarAgendamento";
 import VisualizarAgendamentos from "./VisualizarAgendamentos";
 import Dashboard from "./Dashboard";
-
+const savedRole = localStorage.getItem("role");
 
 const AdminPage = () => {
+  
   const [opcaoSelecionada, setOpcaoSelecionada] = useState("dashboard");
 
   const handleOpcaoChange = (opcao) => {
@@ -68,7 +69,7 @@ const AdminPage = () => {
           Adicionar Agendamento
         </a>
       </li>
-      <li className="nav-item">
+      <li className="nav-item z-bot">
         <a
           href="#"
           className={`nav-link ${opcaoSelecionada === "visualizarAgendamentos" ? "active" : ""}`}

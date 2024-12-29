@@ -35,36 +35,44 @@ const DashboardOverview = () => {
   const [mesSelecionado, setMesSelecionado] = useState(''); // Month selected
   const [mesInicio, setMesInicio] = useState(''); // Start month
   const [mesFim, setMesFim] = useState(''); // End month
-
+  const savedRole = localStorage.getItem("role");
+  useEffect(() => {
+    document.title = "Fisiomais - Dashboards ";
+}, []);
 
   useEffect(() => {
+    if (savedRole === "cliente")  {
+      
+      return; 
+    }
+  
     const fetchDashboardData = async () => {
       try {
         const overviewResponse = await axios.get('http://localhost:5000/dashboards/overview', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         setDashboardData(overviewResponse.data);
-
+  
         const servicosResponse = await axios.get('http://localhost:5000/dashboards/servicos/populares', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         setServicosData(servicosResponse.data);
-
+  
         const clinicaResponse = await axios.get('http://localhost:5000/dashboards/agendamentos_por_clinica', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         setAgendamentosPorClinica(clinicaResponse.data);
-
+  
         const colaboradorResponse = await axios.get('http://localhost:5000/dashboards/agendamentos_por_colaborador', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         setAgendamentosPorColaborador(colaboradorResponse.data);
-
+  
         const receitaMensalResponse = await axios.get('http://localhost:5000/dashboards/receita_por_mes', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         setReceitaPorMes(receitaMensalResponse.data);
-
+  
       } catch (error) {
         if (error.response && error.response.status === 401) {
           alert('Sua sessão expirou. Por favor, faça login novamente.');
@@ -75,9 +83,10 @@ const DashboardOverview = () => {
         }
       }
     };
-
+  
     fetchDashboardData();
   }, []);
+  
 
 
   const meses = [
