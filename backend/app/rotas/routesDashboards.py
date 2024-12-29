@@ -5,6 +5,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_tok
 from sqlalchemy import func  # Add this import
 import os
 
+
 dashboards = Blueprint('dashboards', __name__)
 
 @dashboards.route('/overview', methods=['GET'])
@@ -13,18 +14,89 @@ def dashboard_overview():
     total_agendamentos = Agendamentos.query.count()
     total_clientes = Clientes.query.count()
     total_colaboradores = Colaboradores.query.count()
-    total_servicos = Servicos.query.count()
-    
-    # Calcular a receita total dos agendamentos
-    total_receita = db.session.query(func.sum(Servicos.valor)).join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico).scalar() or 0
+    total_servicos = Servicos.query.count()    
+    total_clinicas = Clinicas.query.count()
+
+
+    # Contar agendamentos por status
+    total_cancelados = Agendamentos.query.filter_by(status='cancelado').count()
+    total_pendentes = Agendamentos.query.filter_by(status='pendente').count()
+    total_outros = Agendamentos.query.filter(Agendamentos.status.notin_(['confirmado', 'cancelado', 'pendente'])).count()
+
+    # Calcular a receita total dos agendamentos confirmados
+    total_receita = db.session.query(func.sum(Servicos.valor))\
+        .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
+        .filter(Agendamentos.status == 'confirmado').scalar() or 0
+
+    # Calcular a receita do último ano para agendamentos confirmados
+    ano_atual = datetime.now().year
+    receita_ultimo_ano = db.session.query(func.sum(Servicos.valor))\
+        .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
+        .filter(func.strftime('%Y', Agendamentos.data_e_hora) == str(ano_atual - 1))\
+        .filter(Agendamentos.status == 'confirmado').scalar() or 0
+
+    # Calcular a receita do último mês para agendamentos confirmados
+    ultimo_mes = datetime.now().month - 1 if datetime.now().month > 1 else 12
+    receita_ultimo_mes = db.session.query(func.sum(Servicos.valor))\
+        .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
+        .filter(func.strftime('%m', Agendamentos.data_e_hora) == f"{ultimo_mes:02d}")\
+        .filter(Agendamentos.status == 'confirmado').scalar() or 0
+
+    # Calcular a receita de todos os anos para agendamentos confirmados
+    receita_todos_anos = db.session.query(func.strftime('%Y', Agendamentos.data_e_hora), func.sum(Servicos.valor))\
+        .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
+        .filter(Agendamentos.status == 'confirmado')\
+        .group_by(func.strftime('%Y', Agendamentos.data_e_hora)).all()
+
+    # Converte a lista de tuplas para um formato JSON serializável
+    receita_todos_anos = [
+        {"ano": row[0], "receita": row[1]} for row in receita_todos_anos
+    ]
+
+    # Calcular a receita anual do ano atual para agendamentos confirmados
+    receita_ano_atual = db.session.query(func.sum(Servicos.valor))\
+        .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
+        .filter(func.strftime('%Y', Agendamentos.data_e_hora) == str(ano_atual))\
+        .filter(Agendamentos.status == 'confirmado').scalar() or 0
+
+    # Calcular a média mensal do ano atual para agendamentos confirmados
+    receita_mensal_ano_atual = db.session.query(func.strftime('%m', Agendamentos.data_e_hora), func.sum(Servicos.valor))\
+        .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
+        .filter(func.strftime('%Y', Agendamentos.data_e_hora) == str(ano_atual))\
+        .filter(Agendamentos.status == 'confirmado')\
+        .group_by(func.strftime('%m', Agendamentos.data_e_hora)).all()
+    # Calcular a receita do mês atual para agendamentos confirmados
+    mes_atual = datetime.now().month
+    receita_mes_atual = db.session.query(func.sum(Servicos.valor))\
+        .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
+        .filter(func.strftime('%m', Agendamentos.data_e_hora) == f"{mes_atual:02d}")\
+        .filter(Agendamentos.status == 'confirmado').scalar() or 0
+
+
+    # Calcular a média mensal
+    total_mes = len(receita_mensal_ano_atual)
+    soma_receita_mensal = sum([row[1] for row in receita_mensal_ano_atual])
+    media_mensal_ano_atual = soma_receita_mensal / total_mes if total_mes > 0 else 0
 
     return jsonify({
         "total_agendamentos": total_agendamentos,
         "total_clientes": total_clientes,
         "total_colaboradores": total_colaboradores,
         "total_servicos": total_servicos,
-        "total_receita": str(total_receita)  # Convertendo para string, caso o valor seja Decimal
+        "total_clinicas": total_clinicas,  # Incluindo o total de clínicas
+        "total_receita": str(total_receita),
+        "receita_ultimo_ano": str(receita_ultimo_ano),
+        "receita_ultimo_mes": str(receita_ultimo_mes),
+        "receita_mes_atual": str(receita_mes_atual),  # Adicionando receita do mês atual
+        "receita_todos_anos": receita_todos_anos,
+        "receita_ano_atual": str(receita_ano_atual),
+        "media_mensal_ano_atual": str(media_mensal_ano_atual),
+        "total_cancelados": total_cancelados,
+        "total_pendentes": total_pendentes,
+        "total_outros": total_outros
     })
+
+
 
 
 
@@ -64,3 +136,37 @@ def agendamentos_por_colaborador():
     result = {colaborador.nome: int(colaborador.quantidade) for colaborador in agendamentos_colaborador}  # Garante que a quantidade seja um inteiro
 
     return jsonify(result)
+
+@dashboards.route('/receita_por_mes', methods=['GET'])
+@jwt_required()
+def receita_por_mes():
+    try:
+        # Adicionando log para verificar entrada na rota
+        print("Iniciando consulta para receita por mês.")
+
+        # Query para somar os valores dos serviços por mês e ano
+        receita_mensal = db.session.query(
+            func.strftime('%m/%Y', Agendamentos.data_e_hora).label('mes'),  # Formatar data no estilo 'YYYY-MM'
+            func.sum(Servicos.valor).label('receita')  # Somar os valores dos serviços
+        ).join(Servicos, Agendamentos.id_servico == Servicos.id_servico) \
+         .group_by(func.strftime('%m/%Y', Agendamentos.data_e_hora)) \
+         .order_by(func.strftime('%m/%Y', Agendamentos.data_e_hora)) \
+         .all()
+
+        # Adicionando log para verificar o resultado da query
+        print("Resultado da query receita_mensal:", receita_mensal)
+
+        # Converter o resultado para um formato serializável
+        result = {
+            mes: float(receita) if receita is not None else 0.0  # Formatar o mês como string e converter receita
+            for mes, receita in receita_mensal
+        }
+
+        print("Dados formatados:", result)  # Log dos dados formatados
+        return jsonify(result)
+
+    except Exception as e:
+        # Adicionando log para identificar o erro
+        print("Erro na rota receita_por_mes:", str(e))
+        return jsonify({"error": str(e)}), 500
+

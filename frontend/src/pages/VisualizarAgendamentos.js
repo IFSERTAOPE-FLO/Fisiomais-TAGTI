@@ -18,7 +18,8 @@ const VisualizarAgendamentos = () => {
   const [showDateFilterModal, setShowDateFilterModal] = useState(false); // Para controlar o novo modal de filtro de data
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 15;
+
+  const itemsPerPage = 9;
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [newStatus, setNewStatus] = useState('');
 
@@ -237,116 +238,116 @@ const VisualizarAgendamentos = () => {
           </div>
           <div className="table-responsive">
 
-          {erro && agendamentos.length > 0 && <div className="alert alert-danger">{erro}</div>}
+            {erro && agendamentos.length > 0 && <div className="alert alert-danger">{erro}</div>}
 
-          <table className="table table-striped table-bordered mt-4 agendamento-header">
-            <thead className="agendamento-header">
-              <tr>
-                <th>#</th>
-                <th
-                  onClick={() => handleSort('nome_cliente')}
-                  style={{ cursor: 'pointer' }}
-                >
-                  Nome Cliente{' '}
-                  {sortConfig.key === 'nome_cliente' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-                </th>
-
-                <th
-                  onClick={() => handleSort('data')}
-                  style={{ cursor: 'pointer', verticalAlign: 'middle' }}
-                >
-                  Data{' '}
-                  {sortConfig.key === 'data' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
-                  <Button
-                    variant="btn-danger"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowDateFilterModal(true);
-                    }}
-                    className="ms-2 align-top p-0 text-white"
-                    style={{ lineHeight: 1, height: 'auto' }}
+            <table className="table table-striped table-bordered mt-4 agendamento-header">
+              <thead className="agendamento-header">
+                <tr>
+                  <th>#</th>
+                  <th
+                    onClick={() => handleSort('nome_cliente')}
+                    style={{ cursor: 'pointer' }}
                   >
-                    <FaCalendarAlt />
-                  </Button>
-                </th>
-                <th>Hora</th>
-                <th>Serviço</th>
-                <th>Valor (R$)</th>
-                <th>Colaborador</th>
-                <th>Status</th> {/* Coluna para exibir o status */}
-                <th>Endereço da Clínica</th> {/* Nova coluna para exibir o endereço da clínica */}
-                <th>Detalhes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedAgendamentos.length > 0 ? (
-                currentAgendamentos.map((agendamento, index) => (
-                  <tr key={agendamento.id}>
-                    <td>{agendamento.id}</td>
-                    <td>{agendamento.cliente || 'Cliente não informado'}</td>
-                    <td>{new Date(agendamento.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
-                    <td>{agendamento.hora || 'Hora não informada'}</td>
-                    <td>{agendamento.servico || 'Serviço não encontrado'}</td>
-                    <td>
-                      {agendamento.plano?.nome && agendamento.plano?.valor ? (
-                        <div>
-                          <strong>{agendamento.plano.nome}:</strong> {' '}
-                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.plano.valor)}
-                        </div>
-                      ) : (
-                        <span>
-                          {agendamento.valor
-                            ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.valor)
-                            : 'Valor não disponível'}
-                        </span>
-                      )}
-                    </td>
-                    <td>{agendamento.colaborador || 'Colaborador não encontrado'}</td>
-                    <td>
-                      <span
-                        className={`badge 
-                        ${agendamento.status === 'confirmado' ? 'badge-success' :
-                            agendamento.status === 'negado' ? 'badge-danger' :
-                              agendamento.status === 'cancelado' ? 'badge-secondary' :
-                                agendamento.status === 'remarcado' ? 'badge-info' :
-                                  agendamento.status === 'nao_compareceu' ? 'badge-dark' :
-                                    'badge-warning'} 
-                        text-dark`}
-                      >
-                        {agendamento.status.charAt(0).toUpperCase() + agendamento.status.slice(1)} {/* Primeira letra maiúscula */}
-                      </span>
-                    </td>
-                    <td>
-                      <div>
-                        {agendamento.clinica && agendamento.clinica.endereco ? (
+                    Nome Cliente{' '}
+                    {sortConfig.key === 'nome_cliente' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                  </th>
+
+                  <th
+                    onClick={() => handleSort('data')}
+                    style={{ cursor: 'pointer', verticalAlign: 'middle' }}
+                  >
+                    Data{' '}
+                    {sortConfig.key === 'data' && (sortConfig.direction === 'ascending' ? '↑' : '↓')}
+                    <Button
+                      variant="btn-danger"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowDateFilterModal(true);
+                      }}
+                      className="ms-2 align-top p-0 text-white"
+                      style={{ lineHeight: 1, height: 'auto' }}
+                    >
+                      <FaCalendarAlt />
+                    </Button>
+                  </th>
+                  <th>Hora</th>
+                  <th>Serviço</th>
+                  <th>Valor (R$)</th>
+                  <th>Colaborador</th>
+                  <th>Status</th> {/* Coluna para exibir o status */}
+                  <th>Endereço da Clínica</th> {/* Nova coluna para exibir o endereço da clínica */}
+                  <th>Detalhes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedAgendamentos.length > 0 ? (
+                  currentAgendamentos.map((agendamento, index) => (
+                    <tr key={agendamento.id}>
+                      <td>{agendamento.id}</td>
+                      <td>{agendamento.cliente || 'Cliente não informado'}</td>
+                      <td>{new Date(agendamento.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
+                      <td>{agendamento.hora || 'Hora não informada'}</td>
+                      <td>{agendamento.servico || 'Serviço não encontrado'}</td>
+                      <td>
+                        {agendamento.plano?.nome && agendamento.plano?.valor ? (
                           <div>
-                            <strong>{agendamento.clinica.nome}:</strong><br />
-                            {agendamento.clinica.endereco.rua}, {agendamento.clinica.endereco.numero}, {agendamento.clinica.endereco.bairro}<br />
-                            {agendamento.clinica.endereco.cidade} - {agendamento.clinica.endereco.estado}
+                            <strong>{agendamento.plano.nome}:</strong> {' '}
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.plano.valor)}
                           </div>
-                        ) : 'Endereço não disponível'}
-                      </div>
-                    </td>
-                    <td>
-                      <button
-                        className="btn btn-outline-info btn-sm"
-                        onClick={() => handleShowDetails(agendamento)}
-                      >
-                        Ver Detalhes
-                      </button>
+                        ) : (
+                          <span>
+                            {agendamento.valor
+                              ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.valor)
+                              : 'Valor não disponível'}
+                          </span>
+                        )}
+                      </td>
+                      <td>{agendamento.colaborador || 'Colaborador não encontrado'}</td>
+                      <td>
+                        <span
+                          className={`badge 
+                        ${agendamento.status === 'confirmado' ? 'badge-success' :
+                              agendamento.status === 'negado' ? 'badge-danger' :
+                                agendamento.status === 'cancelado' ? 'badge-secondary' :
+                                  agendamento.status === 'remarcado' ? 'badge-info' :
+                                    agendamento.status === 'nao_compareceu' ? 'badge-dark' :
+                                      'badge-warning'} 
+                        text-dark`}
+                        >
+                          {agendamento.status.charAt(0).toUpperCase() + agendamento.status.slice(1)} {/* Primeira letra maiúscula */}
+                        </span>
+                      </td>
+                      <td>
+                        <div>
+                          {agendamento.clinica && agendamento.clinica.endereco ? (
+                            <div>
+                              <strong>{agendamento.clinica.nome}:</strong><br />
+                              {agendamento.clinica.endereco.rua}, {agendamento.clinica.endereco.numero}, {agendamento.clinica.endereco.bairro}<br />
+                              {agendamento.clinica.endereco.cidade} - {agendamento.clinica.endereco.estado}
+                            </div>
+                          ) : 'Endereço não disponível'}
+                        </div>
+                      </td>
+                      <td>
+                        <button
+                          className="btn btn-outline-info btn-sm"
+                          onClick={() => handleShowDetails(agendamento)}
+                        >
+                          Ver Detalhes
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="10" className="text-center">
+                      Nenhum agendamento encontrado
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="10" className="text-center">
-                    Nenhum agendamento encontrado
-                  </td>
-                </tr>
-              )}
-            </tbody>
+                )}
+              </tbody>
 
-          </table>
+            </table>
           </div>
 
 
@@ -552,11 +553,12 @@ const VisualizarAgendamentos = () => {
       </div>
       {/* Paginador */}
       <Paginator
-        totalItems={sortedAgendamentos.length}
-        itemsPerPage={itemsPerPage}
         currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
+        totalItems={agendamentosFiltrados.length}  // Usando o total de agendamentos filtrados
+        itemsPerPage={itemsPerPage}
+        setCurrentPage={setCurrentPage}  // Passando a função corretamente como prop
       />
+
     </div>
   );
 };

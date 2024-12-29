@@ -156,8 +156,7 @@ function Navbar() {
         setRole(savedRole);
         setUserId(savedUserId); // Usa o setUserId correto
         setUserPhoto(savedUserPhoto || ""); // Usa uma string vazia caso a foto não exista
-      } catch (error) {
-        alert('Faça login novamente')
+      } catch (error) {        
         localStorage.removeItem("token");
         localStorage.removeItem("userName");
         localStorage.removeItem("role");
@@ -165,6 +164,7 @@ function Navbar() {
         localStorage.removeItem("userPhoto");
         setUserName("Usuário");
         setRole("");
+        window.location.reload();
         console.error("Erro ao verificar o token:", error);
       }
     }
