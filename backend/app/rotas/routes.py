@@ -28,25 +28,39 @@ def login():
         access_token = create_access_token(identity=email)
         response = {
             "access_token": access_token,
-            "userId": colaborador.id_colaborador,  # Corrigido para o nome correto
+            "userId": colaborador.id_colaborador,
             "name": colaborador.nome,
-            "photo": colaborador.photo if colaborador.photo else "",  # Retorna vazio se não houver foto
+            "photo": colaborador.photo if colaborador.photo else "",
             "role": "admin" if colaborador.is_admin else "colaborador",
-            "admin_nivel": colaborador.admin_nivel if colaborador.is_admin else None  # Inclui nível do admin, se aplicável
+            "admin_nivel": colaborador.admin_nivel if colaborador.is_admin else None
         }
         return jsonify(response), 200
 
     # Verificar se o email pertence a um cliente
     cliente = Clientes.query.filter_by(email=email).first()
-    if cliente and cliente.check_password(senha):
-        access_token = create_access_token(identity=email)
-        return jsonify(
-            access_token=access_token,
-            userId=cliente.id_cliente,  # Corrigido para o nome correto
-            name=cliente.nome,
-            role="cliente",
-            photo=cliente.photo if cliente.photo else ""  # Retorna vazio se não houver foto
-        ), 200
+    if cliente:
+        # Se o cliente ainda não confirmou o email, mas ele tem a senha correta, loga
+        if not cliente.email_confirmado:
+            access_token = create_access_token(identity=email)
+            return jsonify({
+                "message": "Seu cadastro foi realizado com sucesso! Verifique seu email para confirmação.",
+                "access_token": access_token,
+                "userId": cliente.id_cliente,
+                "name": cliente.nome,
+                "role": "cliente",
+                "photo": cliente.photo if cliente.photo else ""
+            }), 200
+
+        # Se o cliente confirmou o email e a senha está correta
+        if cliente.check_password(senha):
+            access_token = create_access_token(identity=email)
+            return jsonify(
+                access_token=access_token,
+                userId=cliente.id_cliente,
+                name=cliente.nome,
+                role="cliente",
+                photo=cliente.photo if cliente.photo else ""
+            ), 200
 
     # Se o email ou senha estiverem incorretos
     return jsonify(message="Credenciais inválidas"), 401

@@ -1,4 +1,4 @@
-import React, { useState} from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
@@ -23,9 +23,14 @@ function Cadastro() {
   const [cidade, setCidade] = useState('');
   const [bairro, setBairro] = useState('');
   const [dtNasc, setDtNasc] = useState('');
+  const [sexo, setSexo] = useState('');
+  const [foto, setFoto] = useState(null);
   const [cidades, setCidades] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [numero, setNumero] = useState('');
+  const [complemento, setComplemento] = useState('');
+
 
   const buscarCidades = async (estado) => {
     try {
@@ -45,42 +50,59 @@ function Cadastro() {
   };
 
   const handleRegister = async () => {
-    if (!nome || !email || !senha || !cpf) {
-      alert('Por favor, preencha os campos obrigatórios.');
+    if (!nome || !email || !senha || !cpf || !sexo) {
+      alert('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
-  
+
     if (email !== confirmarEmail) {
       alert('Os emails não correspondem.');
       return;
     }
-  
+
     if (senha !== confirmarSenha) {
       alert('As senhas não correspondem.');
       return;
     }
-  
+
     setLoading(true);
     setErrorMessage('');
-  
+
+    // Criar o objeto endereco com os dados do formulário
+    const enderecoObj = {
+      rua: rua,
+      numero: numero,
+      complemento: complemento,
+      bairro: bairro,
+      cidade: cidade,
+      estado: estado,
+    };
+
+    const formData = new FormData();
+    formData.append("nome", nome);
+    formData.append("email", email);
+    formData.append("cpf", cpf);
+    formData.append("senha", senha);
+    formData.append("sexo", sexo);
+    formData.append("telefone", telefone);
+    formData.append("referencias", referencias);
+    formData.append("endereco", JSON.stringify(enderecoObj));  // Envia o endereço como JSON    
+    formData.append("dt_nasc", dtNasc);
+    // Log FormData contents for debugging
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ': ' + pair[1]);
+    }
+
     try {
-      const response = await axios.post("http://localhost:5000/register", {
-        nome,
-        email,
-        cpf,
-        senha,
-        telefone,
-        referencias,
-        endereco,
-        rua,
-        estado,
-        cidade,
-        bairro,
-        dt_nasc: dtNasc,
+      const response = await axios.post("http://localhost:5000/clientes/register/public", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
-  
+
       if (response.status === 201) {
         alert("Inscrição realizada com sucesso!");
+        // Limpar os campos após sucesso
         setNome('');
         setEmail('');
         setConfirmarEmail('');
@@ -90,10 +112,8 @@ function Cadastro() {
         setTelefone('');
         setReferencias('');
         setEndereco('');
-        setRua('');
-        setEstado('');
-        setCidade('');
-        setBairro('');
+        setSexo('');
+        setFoto(null);
         setDtNasc('');
         setCidades([]);
       }
@@ -106,11 +126,14 @@ function Cadastro() {
     }
   };
 
+
+
+
   return (
-    <div className="container col-md-9 my-5">      
+    <div className="container col-md-9 my-5">
       {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
-      <div className="card shadow ">
-        <div className="card-header ">
+      <div className="card shadow">
+        <div className="card-header">
           <h2 className="text-center text-primary">Cadastro</h2>
         </div>
         <div className="card-body">
@@ -162,7 +185,7 @@ function Cadastro() {
                 />
               </div>
             </div>
-  
+
             <div className="row mb-3">
               <div className="col-12 col-md-2">
                 <label htmlFor="senha" className="form-label text-secondary">Senha*</label>
@@ -207,6 +230,20 @@ function Cadastro() {
                   required
                 />
               </div>
+              <div className="col-12 col-md-2">
+                <label htmlFor="sexo" className="form-label text-secondary">Sexo</label>
+                <select
+                  className="form-select"
+                  id="sexo"
+                  value={sexo}
+                  onChange={(e) => setSexo(e.target.value)}
+                >
+                  <option value="">Selecione o sexo</option>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Feminino">Feminino</option>
+                  <option value="Outro">Outro</option>
+                </select>
+              </div>
               <div className="col-12 col-md-1">
                 <label htmlFor="estado" className="form-label text-secondary">Estado*</label>
                 <select
@@ -225,32 +262,28 @@ function Cadastro() {
                   ))}
                 </select>
               </div>
-              <div className="col-12 col-md-2">
-                <label htmlFor="cidade" className="form-label text-secondary">Cidade*</label>
-                <select
-                  className="form-select"
-                  id="cidade"
-                  value={cidade}
-                  onChange={(e) => setCidade(e.target.value)}
-                  required
-                >
-                  <option value="">Selecione uma cidade</option>
-                  {cidades.map((city, index) => (
-                    <option key={index} value={city}>{city}</option>
-                  ))}
-                </select>
-              </div>
+
             </div>
-  
+
             <div className="row mb-2">
-              <div className="col-12 col-md-5">
-                <label htmlFor="endereco" className="form-label text-secondary">Endereço</label>
+              <div className="col-12 col-md-2">
+                <label htmlFor="numero" className="form-label text-secondary">Número</label>
                 <input
                   type="text"
                   className="form-control"
-                  id="endereco"
-                  value={endereco}
-                  onChange={(e) => setEndereco(e.target.value)}
+                  id="numero"
+                  value={numero}
+                  onChange={(e) => setNumero(e.target.value)}
+                />
+              </div>
+              <div className="col-12 col-md-2">
+                <label htmlFor="complemento" className="form-label text-secondary">Complemento</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="complemento"
+                  value={complemento}
+                  onChange={(e) => setComplemento(e.target.value)}
                 />
               </div>
               <div className="col-12 col-md-3">
@@ -263,21 +296,28 @@ function Cadastro() {
                   onChange={(e) => setBairro(e.target.value)}
                 />
               </div>
-              <div className="col-12 col-md-4">
-                <label htmlFor="referencias" className="form-label text-secondary">Referências</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="referencias"
-                  value={referencias}
-                  onChange={(e) => setReferencias(e.target.value)}
-                />
+              <div className="col-12 col-md-3 ">
+                <label htmlFor="cidade" className="form-label text-secondary">Cidade*</label>
+                <select
+                  className="form-select py-2"
+                  id="cidade"
+                  value={cidade}
+                  onChange={(e) => setCidade(e.target.value)}
+                  required
+                >
+                  <option value="">Selecione uma cidade</option>
+                  {cidades.map((city, index) => (
+                    <option key={index} value={city}>{city}</option>
+                  ))}
+                </select>
               </div>
             </div>
-  
+
+            
+
             <div className="col-12 text-center">
               <button type="submit" className="btn btn-signup w-auto mx-auto" disabled={loading}>
-              <i className="bi bi-person-plus"></i>
+                <i className="bi bi-person-plus"></i>
                 {loading ? "Carregando..." : " Inscrever-se"}
               </button>
             </div>

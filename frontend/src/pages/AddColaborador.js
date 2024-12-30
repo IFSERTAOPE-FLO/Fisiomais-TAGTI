@@ -1,128 +1,148 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
-import '../css/Estilos.css';
-import { Link } from "react-router-dom";
 
 function AddColaborador() {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
-  const [confirmarEmail, setConfirmarEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [confirmarSenha, setConfirmarSenha] = useState('');
   const [telefone, setTelefone] = useState('');
-  const [referencias, setReferencias] = useState('');
-  const [cargo, setCargo] = useState('');
-  const [endereco, setEndereco] = useState('');
-  const [estado, setEstado] = useState('');
-  const [cidade, setCidade] = useState('');
-  const [bairros, setBairro] = useState('');
-  const [isAdmin, setIsAdmin] = useState(false);
   const [cpf, setCpf] = useState('');
   const [dtNasc, setDtNasc] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [estados, setEstados] = useState([]);
+  const [rua, setRua] = useState('');
+  const [numero, setNumero] = useState('');
+  const [bairro, setBairro] = useState('');
+  const [estado, setEstado] = useState('');
+  const [cidade, setCidade] = useState('');
+  const [referencias, setReferencias] = useState('');
+  const [cargo, setCargo] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [clinica, setClinica] = useState('');
+  const [clinicas, setClinicas] = useState([]);
   const [cidades, setCidades] = useState([]);
+  const [estados, setEstados] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [sexo, setSexo] = useState('');
+  const [photo, setPhoto] = useState('');
+  const [adminNivel, setAdminNivel] = useState('');
 
-  // Busca estados ao carregar o componente
+
+  const [errorMessage, setErrorMessage] = useState('');
+
   useEffect(() => {
     const fetchEstados = async () => {
       try {
         const response = await axios.get('https://servicodados.ibge.gov.br/api/v1/localidades/estados');
-        setEstados(response.data.sort((a, b) => a.nome.localeCompare(b.nome)));
+        setEstados(response.data.map((estado) => ({ sigla: estado.sigla, nome: estado.nome })));
       } catch (error) {
         console.error('Erro ao buscar estados:', error);
       }
     };
 
+    const fetchClinicas = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/clinicas');
+        setClinicas(response.data);
+      } catch (error) {
+        console.error('Erro ao buscar clínicas:', error);
+      }
+    };
+
     fetchEstados();
+    fetchClinicas();
   }, []);
 
-  // Busca cidades ao selecionar um estado
   useEffect(() => {
     if (estado) {
       const fetchCidades = async () => {
         try {
           const response = await axios.get(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estado}/municipios`);
-          setCidades(response.data.sort((a, b) => a.nome.localeCompare(b.nome)));
+          setCidades(response.data.map((cidade) => cidade.nome).sort());
         } catch (error) {
           console.error('Erro ao buscar cidades:', error);
         }
       };
 
       fetchCidades();
-    } else {
-      setCidades([]);
     }
   }, [estado]);
 
   const handleRegister = async () => {
-    if (!nome || !email || !senha || !cpf) {
-      alert('Por favor, preencha os campos obrigatórios.');
-      return;
-    }
-
-    if (email !== confirmarEmail) {
-      alert('Os emails não correspondem.');
-      return;
-    }
-
-    if (senha !== confirmarSenha) {
-      alert('As senhas não correspondem.');
-      return;
-    }
-
     setLoading(true);
-    setErrorMessage('');
 
     try {
-      const response = await axios.post('http://localhost:5000/colaboradores/register', {
+      const token = localStorage.getItem('token'); // Obter o token armazenado
+      console.log('Token obtido:', token);
+
+      const payload = {
         nome,
         email,
-        cpf,
         senha,
         telefone,
+        cpf,
+        dt_nasc: dtNasc || null,  // Enviar null se não houver data
         referencias,
         cargo,
-        endereco: {
-          rua: endereco,
-          bairro: bairros,
-          cidade,
-          estado,
-        },
-        dt_nasc: dtNasc,
+        sexo: sexo || null,  // Enviar null se não houver sexo
         is_admin: isAdmin,
-      });
+        endereco: { rua, numero, bairro, cidade, estado },
+        clinica_id: clinica,
+        photo: photo || null,  // Enviar null se não houver foto
+        adminNivel: adminNivel || null,  // Enviar null se não houver nível
+      };
+
+
+
+      console.log('Payload enviado:', payload);
+
+      const response = await axios.post(
+        'http://localhost:5000/colaboradores/register',
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Adicionar o token no cabeçalho
+          },
+        }
+      );
+
+      console.log('Resposta do servidor:', response);
 
       if (response.status === 201) {
         alert('Colaborador cadastrado com sucesso!');
         // Resetar os campos
         setNome('');
         setEmail('');
-        setConfirmarEmail('');
         setSenha('');
-        setConfirmarSenha('');
         setTelefone('');
-        setReferencias('');
-        setCargo('');
-        setEndereco('');
+        setCpf('');
+        setDtNasc('');
+        setRua('');
+        setNumero('');
+        setBairro('');
         setEstado('');
         setCidade('');
-        setBairro('');
-        setCpf('');
+        setReferencias('');
+        setCargo('');
         setIsAdmin(false);
-        setDtNasc('');
+        setClinica('');
+        setPhoto('');
+        setAdminNivel('');
       }
     } catch (error) {
       console.error('Erro ao cadastrar colaborador:', error);
-      const message = error.response?.data?.message || 'Erro ao cadastrar colaborador. Verifique os dados fornecidos.';
-      setErrorMessage(message);
+
+      // Exibir a mensagem de erro retornada pelo servidor, se disponível
+      if (error.response && error.response.data) {
+        console.error('Detalhes do erro:', error.response.data);
+        alert(`Erro ao cadastrar colaborador: ${error.response.data.error || 'Erro desconhecido'}`);
+      } else {
+        alert('Erro ao cadastrar colaborador.');
+      }
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="container col-md-9 my-5">
@@ -133,70 +153,249 @@ function AddColaborador() {
         </div>
         <div className="card-body">
           <form onSubmit={(e) => { e.preventDefault(); handleRegister(); }}>
-            {/* Nome e CPF */}
-            <div className="row mb-2">
+            {/* Nome, Email e Senha */}
+            <div className="row mb-3">
               <div className="col-md-4">
-                <label className="form-label">Nome*</label>
-                <input type="text" className="form-control" value={nome} onChange={(e) => setNome(e.target.value)} required />
+                <label htmlFor="nome" className="form-label">Nome*</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="nome"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  required
+                />
               </div>
               <div className="col-md-4">
-                <label className="form-label">CPF*</label>
-                <input type="text" className="form-control" value={cpf} onChange={(e) => setCpf(e.target.value)} required />
+                <label htmlFor="email" className="form-label">Email*</label>
+                <input
+                  type="email"
+                  className="form-control"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
               <div className="col-md-4">
-                <label className="form-label">Data de Nascimento*</label>
-                <input type="date" className="form-control" value={dtNasc} onChange={(e) => setDtNasc(e.target.value)} required />
+                <label htmlFor="senha" className="form-label">Senha*</label>
+                <input
+                  type="password"
+                  className="form-control"
+                  id="senha"
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  required
+                />
               </div>
             </div>
+
+            {/* Telefone e CPF */}
+            <div className="row mb-3">
+              <div className="col-md-4">
+                <label htmlFor="telefone" className="form-label">Telefone</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="telefone"
+                  value={telefone}
+                  onChange={(e) => setTelefone(e.target.value)}
+                />
+              </div>
+              <div className="col-md-4">
+                <label htmlFor="cpf" className="form-label">CPF*</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="cpf"
+                  value={cpf}
+                  onChange={(e) => setCpf(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="col-md-2">
+                <label htmlFor="dtNasc" className="form-label">Data de Nascimento</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  id="dtNasc"
+                  value={dtNasc}
+                  onChange={(e) => setDtNasc(e.target.value)}
+                />
+              </div>
+              {/* Data de Nascimento */}
+              <div className="col-md-2">
+                <label htmlFor="sexo" className="form-label">Sexo</label>
+                <select
+                  id="sexo"
+                  className="form-control"
+                  value={sexo}
+                  onChange={(e) => setSexo(e.target.value)}
+                >
+                  <option value="">Selecione o sexo</option>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Feminino">Feminino</option>
+                  <option value="Outro">Outro</option>
+                </select>
+              </div>
+            </div>
+
+
+
 
             {/* Endereço */}
-            <div className="row mb-2">
+            <div className="row mb-3">
               <div className="col-md-4">
-                <label className="form-label">Estado*</label>
-                <select className="form-select" value={estado} onChange={(e) => setEstado(e.target.value)} required>
-                  <option value="">Selecione um estado</option>
-                  {estados.map((estado) => (
-                    <option key={estado.id} value={estado.sigla}>{estado.nome}</option>
+                <label htmlFor="estado" className="form-label">Estado*</label>
+                <select
+                  className="form-select"
+                  id="estado"
+                  value={estado}
+                  onChange={(e) => setEstado(e.target.value)}
+                  required
+                >
+                  <option value="">Selecione</option>
+                  {estados.map((uf) => (
+                    <option key={uf.sigla} value={uf.sigla}>{uf.nome}</option>
                   ))}
                 </select>
               </div>
               <div className="col-md-4">
-                <label className="form-label">Cidade*</label>
-                <select className="form-select" value={cidade} onChange={(e) => setCidade(e.target.value)} required>
-                  <option value="">Selecione uma cidade</option>
+                <label htmlFor="cidade" className="form-label">Cidade*</label>
+                <select
+                  className="form-select"
+                  id="cidade"
+                  value={cidade}
+                  onChange={(e) => setCidade(e.target.value)}
+                  required
+                >
+                  <option value="">Selecione</option>
                   {cidades.map((cidade) => (
-                    <option key={cidade.id} value={cidade.nome}>{cidade.nome}</option>
+                    <option key={cidade} value={cidade}>{cidade}</option>
                   ))}
                 </select>
               </div>
               <div className="col-md-4">
-                <label className="form-label">Bairro*</label>
-                <input type="text" className="form-control" value={bairros} onChange={(e) => setBairro(e.target.value)} required />
+                <label htmlFor="bairro" className="form-label">Bairro</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="bairro"
+                  value={bairro}
+                  onChange={(e) => setBairro(e.target.value)}
+                />
               </div>
             </div>
 
-            {/* Cargo e Telefone */}
-            <div className="row mb-2">
-              <div className="col-md-6">
-                <label className="form-label">Cargo</label>
-                <input type="text" className="form-control" value={cargo} onChange={(e) => setCargo(e.target.value)} />
+            {/* Rua e Número */}
+            <div className="row mb-3">
+              <div className="col-md-8">
+                <label htmlFor="rua" className="form-label">Rua</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="rua"
+                  value={rua}
+                  onChange={(e) => setRua(e.target.value)}
+                />
               </div>
-              <div className="col-md-6">
-                <label className="form-label">Telefone</label>
-                <input type="text" className="form-control" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
+              <div className="col-md-4">
+                <label htmlFor="numero" className="form-label">Número</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="numero"
+                  value={numero}
+                  onChange={(e) => setNumero(e.target.value)}
+                />
               </div>
             </div>
 
-            {/* Botões */}
-            <div className="text-center">
-              <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Carregando...' : 'Cadastrar'}</button>
-              <Link className="btn btn-secondary ms-2" to="/adminpage">Voltar</Link>
+            {/* Cargo e Referências */}
+            <div className="row mb-3">
+              <div className="col-md-6">
+                <label htmlFor="cargo" className="form-label">Cargo</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="cargo"
+                  value={cargo}
+                  onChange={(e) => setCargo(e.target.value)}
+                />
+              </div>
+              <div className="col-md-6">
+                <label htmlFor="referencias" className="form-label">Referências</label>
+                <textarea
+                  className="form-control"
+                  id="referencias"
+                  value={referencias}
+                  onChange={(e) => setReferencias(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Admin e Clínica */}
+            <div className="row mb-3">
+              <div className="col-md-5">
+                <label htmlFor="clinica" className="form-label">Clínica</label>
+                <select
+                  className="form-select"
+                  id="clinica"
+                  value={clinica}
+                  onChange={(e) => setClinica(e.target.value)}
+                >
+                  <option value="">Selecione</option>
+                  {clinicas.map((clinica) => (
+                    <option key={clinica.ID_Clinica} value={clinica.ID_Clinica}>{clinica.Nome}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="col-md-2 d-flex align-items-center">
+                <div className="form-check">
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    id="isAdmin"
+                    checked={isAdmin}
+                    onChange={(e) => {
+                      setIsAdmin(e.target.checked);
+                      setAdminNivel(e.target.checked ? 'restrito' : 'geral');  // Atualiza o admin_nivel
+                    }}
+                  />
+                  <label htmlFor="isAdmin" className="form-check-label text-dark">É Administrador?</label>
+                </div>
+              </div>
+
+              {/* Exibe o select para escolher o nível de admin quando o checkbox for marcado */}
+              {isAdmin && (
+                <div className="col-md-5 ">
+                  <label htmlFor="adminNivel" className="form-label">Nível de Administrador</label>
+                  <select
+                    id="adminNivel"
+                    className="form-select"
+                    value={adminNivel}
+                    onChange={(e) => setAdminNivel(e.target.value)}
+                  >
+                    <option value="geral">Geral</option>
+                    <option value="restrito">Restrito</option>
+                  </select>
+                </div>
+              )}
+
+            </div>
+
+            {/* Botão de Cadastro */}
+            <div className="d-flex justify-content-end">
+              <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading ? 'Cadastrando...' : 'Cadastrar'}
+              </button>
             </div>
           </form>
         </div>
       </div>
     </div>
   );
+
 }
 
 export default AddColaborador;

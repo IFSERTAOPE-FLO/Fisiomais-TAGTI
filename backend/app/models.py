@@ -43,6 +43,8 @@ class Colaboradores(db.Model):
     telefone = db.Column(db.String(20), unique=True)
     email = db.Column(db.String(255), unique=True, nullable=False)
     senha = db.Column(db.String(255), nullable=False)
+    sexo = db.Column(db.String(20), nullable=True)  # Campo opcional
+    dt_nasc = db.Column(db.Date, nullable=True) 
     is_admin = db.Column(db.Boolean, default=False)  # Determina se é administrador
     admin_nivel = db.Column(db.String(50), nullable=True)  # 'geral' ou 'restrito'
     referencias = db.Column(db.Text)
@@ -78,7 +80,9 @@ class Colaboradores(db.Model):
         return {
             'id_colaborador': self.id_colaborador,
             'nome': self.nome,
-            'cargo': self.cargo
+            'cargo': self.cargo,
+            'sexo': self.sexo,  # Incluindo opcionalmente no dict
+            'dt_nasc': self.dt_nasc  # Incluindo opcionalmente no dict
         }
 
 # Modelo: Clientes
@@ -90,7 +94,8 @@ class Clientes(db.Model):
     email = db.Column(db.String(255), unique=True, nullable=False)
     senha = db.Column(db.String(255), nullable=False)
     referencias = db.Column(db.Text)
-    dt_nasc = db.Column(db.Date)
+    dt_nasc = db.Column(db.Date, nullable=True)  # Campo opcional
+    sexo = db.Column(db.String(20), nullable=True)  # Campo opcional
     cpf = db.Column(db.String(11), unique=True, nullable=False)
     photo = db.Column(db.String(255), nullable=True)
     endereco_id = db.Column(db.Integer, db.ForeignKey('enderecos.id_endereco'), nullable=True)

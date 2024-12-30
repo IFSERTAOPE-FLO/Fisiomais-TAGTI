@@ -1,19 +1,22 @@
 from flask import Blueprint, jsonify, request
 from werkzeug.security import generate_password_hash
-from app.models import Horarios, Colaboradores,Clinicas, db
-from app.utils import is_cpf_valid  # Função de validação de CPF, que pode ser movida para utils
-from flask import Blueprint, jsonify, request
+from app.models import Horarios, Colaboradores, Clinicas, Enderecos, db
+from app.utils import is_cpf_valid
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 
 colaboradores = Blueprint('colaboradores', __name__)
 
 @colaboradores.route('/register', methods=['POST'])
-def register_colaborador():
+@jwt_required()
+def register_or_update_colaborador():
     try:
         data = request.get_json()
 
-        # Capturar os dados do colaborador
+        colaborador_id = data.get('colaborador_id')  # Para distinguir registro e atualização
+        clinica_id = data.get('clinica_id')  # ID da clínica associado
+
+        # Dados do colaborador
         nome = data.get('nome')
         email = data.get('email')
         senha = data.get('senha')
@@ -22,7 +25,8 @@ def register_colaborador():
         referencias = data.get('referencias', '')
         cargo = data.get('cargo', '')
         dt_nasc = data.get('dt_nasc')
-        is_admin = data.get('is_admin', False)  # Booleano para determinar se é admin
+        sexo = data.get('sexo')  # Novo campo
+        is_admin = data.get('is_admin', False)
 
         # Dados de endereço
         endereco_data = data.get('endereco', {})
@@ -32,39 +36,71 @@ def register_colaborador():
         cidade = endereco_data.get('cidade', '')
         estado = endereco_data.get('estado', '')
 
-        # Validar campos obrigatórios
+        # Verificar se é uma atualização
+        if colaborador_id:
+            colaborador = Colaboradores.query.get(colaborador_id)
+
+            if not colaborador:
+                return jsonify({"error": "Colaborador não encontrado."}), 404
+
+            if cpf and not is_cpf_valid(cpf):
+                return jsonify({"error": "CPF inválido."}), 400
+
+            # Atualizar os campos fornecidos
+            colaborador.nome = nome or colaborador.nome
+            colaborador.email = email or colaborador.email
+            colaborador.telefone = telefone or colaborador.telefone
+            colaborador.cpf = cpf or colaborador.cpf
+            colaborador.referencias = referencias or colaborador.referencias
+            colaborador.cargo = cargo or colaborador.cargo
+            colaborador.dt_nasc = dt_nasc or colaborador.dt_nasc
+            colaborador.sexo = sexo or colaborador.sexo  # Atualizando sexo
+            colaborador.is_admin = is_admin
+
+            if senha:
+                colaborador.senha = generate_password_hash(senha)
+
+            if clinica_id:
+                clinica = Clinicas.query.get(clinica_id)
+                if not clinica:
+                    return jsonify({"error": "Clínica não encontrada."}), 404
+                colaborador.clinica_id = clinica_id
+
+            # Atualizar endereço
+            if any([rua, numero, bairro, cidade, estado]):
+                if not colaborador.endereco:
+                    colaborador.endereco = Enderecos()
+                colaborador.endereco.rua = rua or colaborador.endereco.rua
+                colaborador.endereco.numero = numero or colaborador.endereco.numero
+                colaborador.endereco.bairro = bairro or colaborador.endereco.bairro
+                colaborador.endereco.cidade = cidade or colaborador.endereco.cidade
+                colaborador.endereco.estado = estado or colaborador.endereco.estado
+
+            db.session.commit()
+            return jsonify({"message": "Colaborador atualizado com sucesso!"}), 200
+
+        # Registro de um novo colaborador
         if not all([nome, email, senha, cpf]):
-            return jsonify({"message": "Os campos nome, email, senha e CPF são obrigatórios."}), 400
+            return jsonify({"error": "Os campos nome, email, senha e CPF são obrigatórios."}), 400
 
-        # Validar CPF
         if not is_cpf_valid(cpf):
-            return jsonify({"message": "CPF inválido."}), 400
+            return jsonify({"error": "CPF inválido."}), 400
 
-        # Verificar se o email, telefone ou CPF já existe
         if Colaboradores.query.filter(
             (Colaboradores.email == email) |
             (Colaboradores.telefone == telefone) |
             (Colaboradores.cpf == cpf)
         ).first():
-            return jsonify({"message": "Email, telefone ou CPF já cadastrado."}), 400
+            return jsonify({"error": "Email, telefone ou CPF já cadastrado."}), 400
 
-        # Criptografar a senha
         hashed_password = generate_password_hash(senha)
 
-        # Criar endereço se houver dados
         endereco = None
         if any([rua, numero, bairro, cidade, estado]):
-            endereco = Enderecos(
-                rua=rua,
-                numero=numero,
-                bairro=bairro,
-                cidade=cidade,
-                estado=estado
-            )
+            endereco = Enderecos(rua=rua, numero=numero, bairro=bairro, cidade=cidade, estado=estado)
             db.session.add(endereco)
             db.session.commit()
 
-        # Criar um novo colaborador
         new_colaborador = Colaboradores(
             nome=nome,
             email=email,
@@ -74,18 +110,36 @@ def register_colaborador():
             referencias=referencias,
             cargo=cargo,
             dt_nasc=dt_nasc,
-            endereco=endereco,  # Associar endereço criado
+            sexo=sexo,  # Novo campo
+            endereco=endereco,
             is_admin=is_admin
         )
+        # Dados de photo e admin_nivel
+        photo = data.get('photo', None)  # Ou algum valor padrão se desejado
+        admin_nivel = data.get('admin_nivel', None)  # Definir o nível, caso não enviado
 
-        # Salvar no banco de dados
+        # No caso de atualização, você pode deixar esses valores como None se não forem fornecidos:
+        if colaborador_id:
+            # Atualizar os campos fornecidos
+            colaborador.photo = photo or colaborador.photo  # Atualiza se fornecido, senão mantém o valor antigo
+            colaborador.admin_nivel = admin_nivel or colaborador.admin_nivel  # O mesmo para admin_nivel
+
+
+        if clinica_id:
+            clinica = Clinicas.query.get(clinica_id)
+            if not clinica:
+                return jsonify({"error": "Clínica não encontrada."}), 404
+            new_colaborador.clinica_id = clinica_id
+
         db.session.add(new_colaborador)
         db.session.commit()
         return jsonify({"message": "Colaborador registrado com sucesso!"}), 201
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"message": f"Erro ao registrar colaborador: {str(e)}"}), 500
+        return jsonify({"error": f"Erro ao processar solicitação: {str(e)}"}), 500
+
+
 
 
 @colaboradores.route('/listar', methods=['GET'])

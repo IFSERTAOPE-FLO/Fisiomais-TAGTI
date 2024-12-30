@@ -283,10 +283,15 @@
 
 
   /* Cor do fundo e botão de login */
-  .modal-content {
-    background-color: #ffffff;
-    color: #000000;
-  }
+.modal-content {
+  background: radial-gradient(circle, #ffffff, #eeeeee);
+  color: #000000;
+  border: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Adiciona uma sombra leve para destacar o modal */
+  
+}
+
+
 
   .modal-header {
     border-bottom: 1px solid #f1f1f1;

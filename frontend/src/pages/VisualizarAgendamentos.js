@@ -385,24 +385,24 @@ const VisualizarAgendamentos = () => {
                 <div className="row mb-3">
                   <div className="col-12 col-md-6">
                     <strong>Cliente:</strong> {selectedAgendamento.cliente || 'Cliente não informado'}
-                  </div>
-                  
+                  </div>                  
+                  <div className="col-12 col-md-6">
+                    <strong>Colaborador:</strong> {selectedAgendamento.colaborador || 'Colaborador não encontrado'}
+                  </div>                  
                   <div className="col-12 col-md-6">
                     <strong>Data:</strong> {new Date(selectedAgendamento.data).toLocaleDateString()}
                   </div>
-                </div>
-
-                <div className="row mb-3">
                   <div className="col-12 col-md-6">
                     <strong>Hora:</strong> {selectedAgendamento.hora || 'Hora não informada'}
-                  </div>
+                  </div>                
+                  
                   <div className="col-12 col-md-6">
                     <strong>Serviço:</strong> {selectedAgendamento.servico || 'Serviço não encontrado'}
                   </div>
-                </div>
+                  
 
                 {selectedAgendamento.plano?.nome && selectedAgendamento.plano?.valor ? (
-                  <div className="row mb-3">
+                  <>
                     <div className="col-12 col-md-6">
                       <strong>Plano:</strong> {selectedAgendamento.plano.nome}
                     </div>
@@ -410,26 +410,22 @@ const VisualizarAgendamentos = () => {
                       <strong>Valor do Plano:</strong>{' '}
                       {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAgendamento.plano.valor)}
                     </div>
-                  </div>
+                    </>
                 ) : (
-                  <div className="row mb-3">
+                  <>
                     <div className="col-12 col-md-6">
                       <strong>Valor do Serviço:</strong>{' '}
                       {selectedAgendamento.valor
                         ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAgendamento.valor)
                         : 'Não disponível'}
                     </div>
-                  </div>
+                   
+                  </>
                 )}
-
-                <div className="row mb-3">
-                  <div className="col-12 col-md-6">
-                    <strong>Colaborador:</strong> {selectedAgendamento.colaborador || 'Colaborador não encontrado'}
-                  </div>
-                  <div className="col-12 col-md-6">
-                    <strong>Status:</strong>
+                <div className="col-12 col-md-6">
+                    <strong>Status: </strong>
                     <span
-                      className={`
+                      className={` fw-bold
                         ${selectedAgendamento.status === 'confirmado'
                           ? 'text-success'
                           : selectedAgendamento.status === 'negado'
@@ -442,26 +438,23 @@ const VisualizarAgendamentos = () => {
                                   ? 'text-dark'
                                   : 'text-warning'
                         }
-                      `}
+                      `} 
                     >
-                      {selectedAgendamento.status.charAt(0).toUpperCase() + selectedAgendamento.status.slice(1)}
+                       {selectedAgendamento.status.charAt(0).toUpperCase() + selectedAgendamento.status.slice(1)}
                     </span>
                   </div>
-
-                </div>
-
-                <div className="row mb-3">
-                  <div className="col-12">
+                <div className="row ">
+                  <div className="col-12 col-md-6">
                     <strong>Clínica:</strong> {selectedAgendamento.clinica?.nome || 'Clínica não informada'}
                   </div>
-                </div>
-
-                {selectedAgendamento.clinica?.endereco ? (
-                  <div className="row mb-3">
-                    <div className="col-12">
+                  
+                  </div>
+                  {selectedAgendamento.clinica?.endereco ? (
+                  <>
+                    <div className="col-12 col-md-12">
                       <strong>Endereço da Clínica:</strong>
                     </div>
-                    <div className="col-12">
+                    <div className="col-12 col-md-6">
                       {[
                         selectedAgendamento.clinica.endereco.rua,
                         selectedAgendamento.clinica.endereco.numero,
@@ -472,14 +465,18 @@ const VisualizarAgendamentos = () => {
                         .filter(Boolean)
                         .join(', ') || 'Endereço não disponível'}
                     </div>
-                  </div>
+                  </>
                 ) : (
-                  <div className="row mb-3">
-                    <div className="col-12">
+                  
+                    <div className="col-12 col-md-6">
                       <strong>Endereço da Clínica:</strong> Endereço não disponível
                     </div>
-                  </div>
+                  
                 )}
+                 
+
+                
+                </div>
               </Modal.Body>
 
 
