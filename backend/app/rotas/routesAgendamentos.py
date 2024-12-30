@@ -431,7 +431,7 @@ def enviar_email_status_agendamento(agendamento, status):
             subject_cliente = "Seu agendamento foi confirmado!"
             body_cliente = (
                 f"Olá {cliente.nome},\n\n"
-                f"Seu atendimento para o serviço '{servico.Nome_servico}' foi confirmado para "
+                f"Seu atendimento para o serviço '{servico.nome}' foi confirmado para "
                 f"{agendamento.data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\n"
                 f"Atenciosamente,\nEquipe FisioMais"
             )
@@ -439,7 +439,7 @@ def enviar_email_status_agendamento(agendamento, status):
             subject_cliente = "Seu agendamento foi cancelado"
             body_cliente = (
                 f"Olá {cliente.nome},\n\n"
-                f"Infelizmente, seu atendimento para o serviço '{servico.Nome_servico}' foi cancelado. "
+                f"Infelizmente, seu atendimento para o serviço '{servico.nome}' foi cancelado. "
                 f"Por favor, entre em contato para mais informações.\n\n"
                 f"Atenciosamente,\nEquipe FisioMais"
             )
@@ -456,7 +456,7 @@ def enviar_email_status_agendamento(agendamento, status):
             body_colaborador = (
                 f"Olá {colaborador.nome},\n\n"
                 f"O agendamento com o cliente {cliente.nome} foi confirmado para o serviço "
-                f"'{servico.Nome_servico}' em {agendamento.data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\n"
+                f"'{servico.nome}' em {agendamento.data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\n"
                 f"Atenciosamente,\nEquipe FisioMais"
             )
         elif status == 'negado':
@@ -526,7 +526,7 @@ def deletar_agendamento(agendamento_id):
         subject_cliente = "Aviso: Seu agendamento foi cancelado"
         body_cliente = (
             f"Olá {cliente.nome},\n\n"
-            f"Infelizmente, o seu agendamento para o serviço '{servico.Nome_servico}' foi cancelado.\n\n"
+            f"Infelizmente, o seu agendamento para o serviço '{servico.nome}' foi cancelado.\n\n"
             f"Se você tiver dúvidas, entre em contato conosco.\n\n"
             f"Atenciosamente,\nEquipe FisioMais"
         )
@@ -540,7 +540,7 @@ def deletar_agendamento(agendamento_id):
         subject_colaborador = "Aviso: Agendamento cancelado"
         body_colaborador = (
             f"Olá {colaborador.nome},\n\n"
-            f"O agendamento para o serviço '{servico.Nome_servico}' com o cliente {cliente.nome} foi cancelado.\n\n"
+            f"O agendamento para o serviço '{servico.nome}' com o cliente {cliente.nome} foi cancelado.\n\n"
             f"Se você tiver dúvidas, entre em contato conosco.\n\n"
             f"Atenciosamente,\nEquipe FisioMais"
         )
@@ -591,7 +591,7 @@ def enviar_email_agendamento(agendamento_id):
         subject_cliente = "Lembrete: Seu atendimento foi agendado!"
         body_cliente = (
             f"Olá {cliente.nome},\n\n"
-            f"Seu atendimento para o serviço '{servico.Nome_servico}' foi agendado para "
+            f"Seu atendimento para o serviço '{servico.nome}' foi agendado para "
             f"{agendamento.data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\n"
             f"Status: Pendente. Por favor, aguarde a confirmação do colaborador.\n\n"
             f"Atenciosamente,\nEquipe FisioMais"
@@ -607,7 +607,7 @@ def enviar_email_agendamento(agendamento_id):
         body_colaborador = (
             f"Olá {colaborador.nome},\n\n"
             f"Você tem um atendimento agendado com o cliente {cliente.nome} "
-            f"para o serviço '{servico.Nome_servico}' em {agendamento.data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\n"
+            f"para o serviço '{servico.nome}' em {agendamento.data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\n"
             f"Status: Pendente. Por favor, confirme se você pode realizar esse atendimento.\n\n"
             f"Atenciosamente,\nEquipe FisioMais"
         )
@@ -623,7 +623,7 @@ def enviar_email_agendamento(agendamento_id):
             f"Um novo agendamento foi registrado e está aguardando confirmação:\n\n"
             f"Cliente: {cliente.nome}\n"
             f"Colaborador: {colaborador.nome}\n"
-            f"Serviço: {servico.Nome_servico}\n"
+            f"Serviço: {servico.nome}\n"
             f"Data e Hora: {agendamento.data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\n"
             f"Status: Pendente. Aguardando confirmação do colaborador e cliente.\n\n"
             f"Atenciosamente,\nEquipe FisioMais"
