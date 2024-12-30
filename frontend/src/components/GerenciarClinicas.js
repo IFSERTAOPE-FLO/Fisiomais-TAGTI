@@ -93,8 +93,8 @@ const GerenciarClinicas = () => {
     // Filtragem das clínicas pelo nome
     const clinicasFiltradas = pesquisaNome
         ? clinicas.filter((clinica) =>
-              clinica.Nome.toLowerCase().includes(pesquisaNome.toLowerCase())
-          )
+            clinica.Nome.toLowerCase().includes(pesquisaNome.toLowerCase())
+        )
         : clinicas;
 
     // Paginação das clínicas filtradas
@@ -149,7 +149,22 @@ const GerenciarClinicas = () => {
                                     <td>{clinica.Nome}</td>
                                     <td>{clinica.CNPJ}</td>
                                     <td>{clinica.Telefone}</td>
-                                    <td>{clinica.Endereço || "Endereço não disponível"}</td>
+                                    <td>
+                                        {clinica.Endereço
+                                            ? [
+                                                clinica.Endereço.Rua,
+                                                clinica.Endereço.Número,
+                                                clinica.Endereço.Complemento,
+                                                clinica.Endereço.Bairro,
+                                                clinica.Endereço.Cidade,
+                                                clinica.Endereço.Estado
+                                            ]
+                                                .filter(Boolean) // Remove valores null ou undefined
+                                                .join(', ') || "Endereço não disponível"
+                                            : "Endereço não disponível"}
+                                    </td>
+
+
                                     <td>
                                         <button
                                             className="btn btn-warning btn-sm me-2"

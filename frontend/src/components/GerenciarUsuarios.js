@@ -9,7 +9,7 @@ const GerenciarUsuarios = () => {
     const [erro, setErro] = useState("");
     const [usuarioEditando, setUsuarioEditando] = useState(null);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
-    const [tipoAlternado, setTipoAlternado] = useState(true);
+    const [tipoAlternado, setTipoAlternado] = useState("todos"); // "todos", "cliente", "colaborador"
     const [pesquisaNome, setPesquisaNome] = useState(""); // Estado para armazenar o filtro de nome
     const [horariosEditando, setHorariosEditando] = useState(null);  // Adicionar estado para editar horários
     const [currentPage, setCurrentPage] = useState(1);
@@ -20,7 +20,7 @@ const GerenciarUsuarios = () => {
     const isRoleValid = savedRole === "admin" || savedRole === "colaborador";
 
 
-    
+
     const buscarUsuarios = async () => {
         if (!isRoleValid) {
             setErro("Você não tem permissão para acessar esses dados.");
@@ -58,13 +58,23 @@ const GerenciarUsuarios = () => {
         if (isRoleValid) {
             buscarUsuarios();
         }
-    }, [isRoleValid, buscarUsuarios]);
-    
-    
-    
+    }, [isRoleValid]);
+
+
+
+
+
     const toggleTipo = () => {
-        setTipoAlternado(!tipoAlternado);  // Alterna o valor do estado tipoAlternado
+        // Alterna entre os três tipos: "todos", "cliente", "colaborador"
+        if (tipoAlternado === "todos") {
+            setTipoAlternado("cliente");
+        } else if (tipoAlternado === "cliente") {
+            setTipoAlternado("colaborador");
+        } else {
+            setTipoAlternado("todos");
+        }
     };
+
 
     // Função para deletar usuário
     const deletarUsuario = async (tipo, id) => {
@@ -157,15 +167,20 @@ const GerenciarUsuarios = () => {
 
 
 
-    // Filtragem dos usuários com base no nome
     const usuariosFiltrados = sortedUsuarios.filter(usuario => {
-        
-
+        // Exibe todos os usuários se "todos" for selecionado
+        if (tipoAlternado === "todos") {
+            return usuario.nome.toLowerCase().includes(pesquisaNome.toLowerCase());
+        }
+    
+        // Filtra por tipo (cliente ou colaborador) se "cliente" ou "colaborador" for selecionado
         return (
             usuario.nome.toLowerCase().includes(pesquisaNome.toLowerCase()) &&
-            (tipoAlternado ? usuario.role === "colaborador" : usuario.role === "cliente")
+            usuario.role === tipoAlternado
         );
     });
+
+
 
 
 
@@ -253,11 +268,11 @@ const GerenciarUsuarios = () => {
                                 {sortConfig.key === "email" && (sortConfig.direction === "ascending" ? " ↑" : " ↓")}
                             </th>
                             <th onClick={toggleTipo} style={{ cursor: "pointer" }}>
-                                Tipo ({tipoAlternado ? "Colaborador" : "Cliente"})
+                                Tipo ({tipoAlternado === "todos" ? "Todos" : tipoAlternado === "cliente" ? "Cliente" : "Colaborador"})
                             </th>
                             <th>telefone</th>
                             {savedRole === 'admin' && (
-                            <th>Ações</th>
+                                <th>Ações</th>
                             )}
                         </tr>
                     </thead>
@@ -270,9 +285,9 @@ const GerenciarUsuarios = () => {
                                 <td>{usuario.telefone}</td>
                                 {savedRole === 'admin' && (
                                     <>
-                                <td>
-                                    
-                                        
+                                        <td>
+
+
                                             <button
                                                 className="btn btn-warning btn-sm me-2"
                                                 onClick={() => handleEditarUsuario(usuario)}
@@ -293,11 +308,11 @@ const GerenciarUsuarios = () => {
                                             >
                                                 <i className="bi bi-clock"></i> Editar Horários
                                             </button>
-                                            </td>
-                                        </>
-                                    )}
+                                        </td>
+                                    </>
+                                )}
 
-                                
+
 
 
 

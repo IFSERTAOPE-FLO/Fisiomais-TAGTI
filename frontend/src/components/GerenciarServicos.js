@@ -396,8 +396,8 @@ const GerenciarServicos = () => {
           <i className="bi bi-search"></i>
         </button>
       </div>
-      <div className="table-responsive">
-        <table className="table  table-striped table-bordered mt-4">
+      <div className="table-responsive ">
+        <table className="table table-striped table-bordered mt-4">
           <thead>
             <tr>
               <th
@@ -410,7 +410,7 @@ const GerenciarServicos = () => {
               <th>Descrição</th>
               <th>Valor (R$)</th>
               <th onClick={toggleTipo} style={{ cursor: "pointer" }}>
-                Tipo {tipoAlternado ? "*" : "*"}
+                Tipo <small>(clique)</small>< br/> {tipoAlternado ? "Fisioterapia" : "Pilates"}
               </th>
               <th>Planos</th>
               <th>Colaboradores</th>
@@ -423,10 +423,10 @@ const GerenciarServicos = () => {
                 <td>{servico.Nome_servico}</td>
                 <td>{servico.Descricao}</td>
                 <td>{servico.Valor ? `R$ ${parseFloat(servico.Valor).toFixed(2)}` : '-'}</td>
-                <td>{servico.Tipos.join(", ")}</td>
-                <td className="text-center">
+                <td className="text-center">{servico.Tipos[0].charAt(0).toUpperCase() + servico.Tipos[0].slice(1)}</td>
+                <td >
                   {servico.Tipos.includes("pilates") && servico.Planos && servico.Planos.length > 0 ? (
-                    <ul className="list-unstyled">
+                    <ul className="list-unstyled text-center">
                       {servico.Planos.map((plano, index) => (
                         <li key={index}>
                           {plano.Nome_plano} - R${parseFloat(plano.Valor).toFixed(2)}
