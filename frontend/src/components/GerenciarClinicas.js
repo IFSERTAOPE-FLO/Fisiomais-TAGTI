@@ -102,6 +102,11 @@ const GerenciarClinicas = () => {
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
+    const handleSave = () => {
+        buscarClinicas(); 
+        setEditarClinica(null);
+       
+    };
 
     return (
         <div className="container">
@@ -197,16 +202,7 @@ const GerenciarClinicas = () => {
                 <EditarClinica
                     clinica={editarClinica}
                     onClose={() => setEditarClinica(null)}
-                    onSave={(updatedClinica) => {
-                        setClinicas((prev) =>
-                            prev.map((clinica) =>
-                                clinica.ID_Clinica === updatedClinica.ID_Clinica
-                                    ? updatedClinica
-                                    : clinica
-                            )
-                        );
-                        setEditarClinica(null);
-                    }}
+                    onSave={handleSave}
                 />
             )}
         </div>

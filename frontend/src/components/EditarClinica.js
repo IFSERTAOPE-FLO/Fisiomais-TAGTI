@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 
 const EditarClinica = ({ clinica, onClose, onSave }) => {
-    const [nome, setNome] = useState(clinica.nome);
-    const [cnpj, setCnpj] = useState(clinica.cnpj);
-    const [telefone, setTelefone] = useState(clinica.telefone);
-    const [rua, setRua] = useState(clinica.endereco?.rua || '');
-    const [numero, setNumero] = useState(clinica.endereco?.numero || '');
-    const [bairro, setBairro] = useState(clinica.endereco?.bairro || '');
-    const [cidade, setCidade] = useState(clinica.endereco?.cidade || '');
-    const [estado, setEstado] = useState(clinica.endereco?.estado || '');
+    const [idClinica, setIdClinica] = useState(clinica.ID_Clinica);
+    const [nome, setNome] = useState(clinica.Nome);
+    const [cnpj, setCnpj] = useState(clinica.CNPJ);
+    const [telefone, setTelefone] = useState(clinica.Telefone);
+    const [rua, setRua] = useState(clinica.Endereço?.Rua || '');
+    const [numero, setNumero] = useState(clinica.Endereço?.Número || '');
+    const [complemento, setComplemento] = useState(clinica.Endereço?.Complemento || '');
+    const [bairro, setBairro] = useState(clinica.Endereço?.Bairro || '');
+    const [cidade, setCidade] = useState(clinica.Endereço?.Cidade || '');
+    const [estado, setEstado] = useState(clinica.Endereço?.Estado || '');
     const [erro, setErro] = useState('');
 
     const [cidades, setCidades] = useState([]);
@@ -42,29 +44,28 @@ const EditarClinica = ({ clinica, onClose, onSave }) => {
 
     const handleSave = async () => {
         const dadosAtualizados = {
+            id_clinica: idClinica,
             nome,
             cnpj,
             telefone,
             endereco: {
-                id_endereco: clinica.endereco?.id_endereco,
                 rua,
                 numero,
+                complemento,
                 bairro,
                 cidade,
                 estado
             }
         };
 
-        const clinicaId = clinica.id;
-
-        if (!clinicaId) {
+        if (!idClinica) {
             alert("ID da clínica inválido.");
             return;
         }
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:5000/clinicas/editar_clinica/${clinicaId}`, {
+            const response = await fetch(`http://localhost:5000/clinicas/editar_clinica/${idClinica}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -154,6 +155,16 @@ const EditarClinica = ({ clinica, onClose, onSave }) => {
 
                     <div className="row">
                         <div className="col-md-6">
+                            <Form.Group controlId="formComplemento">
+                                <Form.Label>Complemento</Form.Label>
+                                <Form.Control
+                                    type="text"
+                                    value={complemento}
+                                    onChange={(e) => setComplemento(e.target.value)}
+                                />
+                            </Form.Group>
+                        </div>
+                        <div className="col-md-6">
                             <Form.Group controlId="formBairro">
                                 <Form.Label>Bairro</Form.Label>
                                 <Form.Control
@@ -163,6 +174,9 @@ const EditarClinica = ({ clinica, onClose, onSave }) => {
                                 />
                             </Form.Group>
                         </div>
+                    </div>
+
+                    <div className="row">
                         <div className="col-md-6">
                             <Form.Group controlId="formCidade">
                                 <Form.Label>Cidade</Form.Label>
@@ -180,9 +194,6 @@ const EditarClinica = ({ clinica, onClose, onSave }) => {
                                 </Form.Control>
                             </Form.Group>
                         </div>
-                    </div>
-
-                    <div className="row">
                         <div className="col-md-6">
                             <Form.Group controlId="formEstado">
                                 <Form.Label>Estado</Form.Label>
