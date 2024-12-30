@@ -196,72 +196,63 @@ def add_servico():
         db.session.rollback()
         return jsonify({"error": f"Erro ao adicionar serviço: {str(e)}"}), 500
 
-
-
-
-
-
-   
-    
-@servicos.route('/editar_servico/<int:id>', methods=['PUT'])
+ 
+@servicos.route('/editar_servico/<int:id_servico>', methods=['PUT'])
 @jwt_required()
-def editar_servico(id):
+def editar_servico(id_servico):
     try:
-        data = request.get_json()
-        
-        # Busca o serviço no banco de dados
-        servico = Servicos.query.get(id)
+        email = get_jwt_identity()
+        colaborador = Colaboradores.query.filter_by(email=email).first()
+
+        # Verifica se o serviço existe
+        servico = Servicos.query.get(id_servico)
         if not servico:
-            return jsonify({"error": "Serviço não encontrado"}), 404
+            return jsonify({"message": "Serviço não encontrado"}), 404
 
-        # Atualiza os campos básicos do serviço
-        servico.nome = data.get('nome_servico', servico.nome)
-        servico.descricao = data.get('descricao', servico.descricao)
-        
-        # Atualiza o valor do serviço para 'fisioterapia' ou 'pilates' conforme o tipo
-        tipo_servico = data.get('tipo_servico')
-        if tipo_servico:
-            tipo_servico_obj = TipoServico.query.filter_by(tipo=tipo_servico).first()
-            if not tipo_servico_obj:
-                return jsonify({"error": f"Tipo de serviço '{tipo_servico}' não encontrado."}), 404
-            
-            # Limpa os tipos de serviço anteriores e associa o novo tipo
+        # Atualiza os dados do serviço
+        data = request.get_json()
+        servico.nome = data.get('Nome_servico', servico.nome)
+        servico.descricao = data.get('Descricao', servico.descricao)
+
+        # Verifica o tipo de serviço
+        tipo_servico = data.get('Tipo', servico.tipo_servicos[0].tipo if servico.tipo_servicos else None)
+
+        # Se o tipo for alterado, remove a associação atual
+        if tipo_servico != (servico.tipo_servicos[0].tipo if servico.tipo_servicos else None):
+            # Remove o tipo anterior
             servico.tipo_servicos.clear()
-            servico_tipo = ServicosTipoServico(servico_id=servico.id_servico, tipo_servico_id=tipo_servico_obj.id_tipo_servico)
-            db.session.add(servico_tipo)
-        
-        # Atualiza o valor para 'fisioterapia' ou define planos para 'pilates'
+
+            # Adiciona o novo tipo
+            novo_tipo = TipoServico.query.filter_by(tipo=tipo_servico).first()
+            if novo_tipo:
+                servico.tipo_servicos.append(novo_tipo)
+
+        # Atualiza o valor com base no tipo
         if tipo_servico == 'fisioterapia':
-            servico.valor = data.get('valor', servico.valor)
-            servico.planos = None  # Fisioterapia não tem planos
+            servico.valor = data.get('Valor', servico.valor)  # Permite alterar o valor de fisioterapia
         elif tipo_servico == 'pilates':
-            planos = data.get('planos', [])
-            if planos:
-                # Limpa os planos atuais e adiciona os novos
-                servico.planos = []
-                for plano_data in planos:
-                    novo_plano = Planos(
-                        nome=plano_data.get('nome_plano'),
-                        descricao=plano_data.get('descricao', ''),
-                        valor=plano_data.get('valor'),
-                        servico=servico
-                    )
-                    db.session.add(novo_plano)
+            servico.valor = None  # O valor de pilates é controlado pelos planos
 
-        # Atualiza colaboradores se necessário
-        colaboradores_ids = data.get('colaboradores_ids')
-        if colaboradores_ids:
-            colaboradores = Colaboradores.query.filter(Colaboradores.id_colaborador.in_(colaboradores_ids)).all()
-            if len(colaboradores) != len(colaboradores_ids):
-                return jsonify({"error": "Um ou mais colaboradores não encontrados."}), 404
-            servico.colaboradores = colaboradores
+        # Atualiza os planos para o tipo pilates, caso seja o caso
+        if tipo_servico == 'pilates' and 'Planos' in data:
+            for plano_data in data['Planos']:
+                plano = Planos.query.get(plano_data['ID_Plano'])
+                if plano:
+                    plano.nome = plano_data.get('Nome_plano', plano.nome)
+                    plano.valor = plano_data.get('Valor', plano.valor)
 
+        # Salva as alterações no banco
         db.session.commit()
-        return jsonify({"message": "Serviço atualizado com sucesso!", "servico": servico.id_servico}), 200
-
+        return jsonify({"message": "Serviço atualizado com sucesso"}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"error": f"Erro ao atualizar serviço: {str(e)}"}), 500
+        return jsonify({"message": f"Erro ao atualizar o serviço: {str(e)}"}), 500
+
+
+
+
+
+
 
 
     

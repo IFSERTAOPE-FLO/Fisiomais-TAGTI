@@ -164,11 +164,11 @@ def alterar_senha(role, user_id):
 @usuarios.route('/listar_usuarios', methods=['GET'])
 @jwt_required()
 def listar_usuarios():
-    user_id = get_jwt_identity()  # Obtem o ID do usuário logado do token JWT
+    user_email = get_jwt_identity()  # Obtem o email do usuário logado do token JWT
 
     # Buscar os dados do usuário logado (cliente ou colaborador)
-    cliente_logado = Clientes.query.filter_by(id_cliente=user_id).first()
-    colaborador_logado = Colaboradores.query.filter_by(id_colaborador=user_id).first()
+    cliente_logado = Clientes.query.filter_by(email=user_email).first()
+    colaborador_logado = Colaboradores.query.filter_by(email=user_email).first()
 
     # Serializar os dados do usuário logado
     usuario_logado = None
@@ -259,10 +259,11 @@ def listar_usuarios():
     ]
 
     # Adicionar os dados do usuário logado no início da lista, se encontrado
-    if usuario_logado:
+    if usuario_logado and not usuario_logado.get("is_admin", False):
         usuarios.insert(0, usuario_logado)
 
     return jsonify(usuarios), 200
+
 
     
 

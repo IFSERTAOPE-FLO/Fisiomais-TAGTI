@@ -205,11 +205,13 @@ function Navbar() {
               <li className="nav-item">
                 <Link className="nav-link" to="/contato">Fale conosco</Link>
               </li>
-            </ul>
-            <ul className="navbar-nav z-top ms-auto">
+            </ul>          
+ 
+
+            <ul className={`navbar-nav ms-auto ${isLoggedIn ? 'z-top' : ''}`}>
               {!isLoggedIn ? (
                 <>
-                  <li className="nav-item">
+                  <li className="nav-item  ">
                     <button
                       className="btn btn-login d-flex align-items-center gap-2"
                       data-bs-toggle="modal"
@@ -218,16 +220,17 @@ function Navbar() {
                       <i className="bi bi-box-arrow-in-right"> </i> Entrar
                     </button>
                   </li>
-                  <li className="nav-item">
+                  <li className="nav-item ">
                     <Link to="/cadastro" className="btn btn-signup  align-items-center gap-2">
                       <i className="bi bi-person-plus"></i> Inscrever-se
                     </Link>
                   </li>
                 </>
               ) : (
-                <li className="nav-item dropdown btn-user">
+                
+                <li className="nav-item dropdown  btn-user">
                   <a
-                    className="nav-link dropdown-toggle btn-user"
+                    className="nav-link dropdown-toggle   btn-user"
                     href="#"
                     id="navbarDropdown"
                     role="button"
@@ -285,6 +288,7 @@ function Navbar() {
 
                   </ul>
                 </li>
+                
               )}
             </ul>
           </div>

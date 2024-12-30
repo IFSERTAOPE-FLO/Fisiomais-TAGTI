@@ -226,6 +226,12 @@ function CriarAgendamento() {
 
       if (response.ok) {
         alert('Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail');
+        const savedUserId = localStorage.getItem('userId');
+        if (savedUserId) {
+          fetchHorariosDisponiveis(savedUserId, data); // Atualiza os horários do colaborador
+        } else if (colaborador) {
+          fetchHorariosDisponiveis(colaborador, data); // Caso o colaborador tenha sido selecionado
+        }
       } else {
         const errorData = await response.json();
         alert(errorData.message || 'Erro ao agendar a sessão.');
@@ -246,11 +252,10 @@ function CriarAgendamento() {
     return !diasPermitidos.includes(diaSemana) || feriados.includes(dataFormatada);
   };
 
-  // Handle the date change
   const handleDateChange = (value) => {
     const dataEscolhida = value.toISOString().split('T')[0];
     setData(dataEscolhida);
-
+  
     // Se for um colaborador logado, buscar os horários disponíveis para a data escolhida
     if (role === 'colaborador') {
       const savedUserId = localStorage.getItem('userId'); // Obtém o ID do colaborador logado
@@ -261,6 +266,13 @@ function CriarAgendamento() {
       fetchHorariosDisponiveis(colaborador, dataEscolhida); // Caso o colaborador seja selecionado
     }
   };
+  
+  // UseEffect to fetch horariosDisponiveis when either colaborador or data changes
+  useEffect(() => {
+    if (colaborador && data) {
+      fetchHorariosDisponiveis(colaborador, data); // Atualiza os horários disponíveis
+    }
+  }, [colaborador, data]);
   const fetchDiasPermitidos = async (colaboradorId) => {
     if (!colaboradorId) {
       console.error('Colaborador não definido. Abortando chamada à API.');

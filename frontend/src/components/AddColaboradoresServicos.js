@@ -9,9 +9,21 @@ const AddColaboradoresServicos = ({ servicoId, onSave, onClose }) => {
   useEffect(() => {
     const fetchColaboradores = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/colaboradores/colaboradoresdisponiveis?servico_id=${servicoId}`);
+        const token = localStorage.getItem("token");
+  
+        if (!token) {
+          setErro("Usuário não autenticado. Por favor, faça login novamente.");
+          return;
+        }
+  
+        const response = await fetch(`http://localhost:5000/colaboradores/colaboradoresdisponiveis?servico_id=${servicoId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+  
         const data = await response.json();
-
+  
         if (response.ok) {
           setColaboradoresDisponiveis(data.disponiveis);
           setColaboradoresServico(data.alocados);
@@ -22,9 +34,11 @@ const AddColaboradoresServicos = ({ servicoId, onSave, onClose }) => {
         setErro(err.message);
       }
     };
-
+  
     if (servicoId) fetchColaboradores();
   }, [servicoId]);
+  
+  
 
   const adicionarColaborador = (colaboradorId) => {
     setColaboradoresDisponiveis((prev) =>
@@ -116,7 +130,7 @@ const AddColaboradoresServicos = ({ servicoId, onSave, onClose }) => {
                 <ul className="list-group">
                   {colaboradoresDisponiveis.map((colaborador) => (
                     <li key={colaborador.id_colaborador} className="list-group-item d-flex justify-content-between align-items-center">
-                      {colaborador.Nome}
+                      {colaborador.nome}
                       <button className="btn btn-success" onClick={() => adicionarColaborador(colaborador.id_colaborador)}>
                         <FaUserPlus />
                       </button>
@@ -131,7 +145,7 @@ const AddColaboradoresServicos = ({ servicoId, onSave, onClose }) => {
                 <ul className="list-group">
                   {colaboradoresServico.map((colaborador) => (
                     <li key={colaborador.id_colaborador} className="list-group-item d-flex justify-content-between align-items-center">
-                      {colaborador.Nome}
+                      {colaborador.nome}
                       <button className="btn btn-danger" onClick={() => removerColaborador(colaborador.id_colaborador)}>
                         <FaUserMinus />
                       </button>

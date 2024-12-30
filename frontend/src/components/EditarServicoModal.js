@@ -2,37 +2,25 @@ import React, { useState, useEffect } from "react";
 
 const EditarServicoModal = ({ servico, onSave, onClose }) => {
   const [formData, setFormData] = useState({
-    Nome_servico: "",
-    Descricao: "",
-    Valor: "",
-    Tipo: "",
-    Planos: [],
-    Colaboradores: [],
+    Nome_servico: servico?.Nome_servico || "",
+    Descricao: servico?.Descricao || "",
+    Valor: servico?.Valor || "",
+    Tipo: servico?.Tipos || null,
+    Planos: servico?.Planos || [],
+    Colaboradores: servico?.Colaboradores || [],
   });
- 
+
   const [erro, setErro] = useState("");
   const [novoPlano, setNovoPlano] = useState({ nome: "", valor: "" });
 
-  useEffect(() => {
-    if (servico) {
-      setFormData({
-        Nome_servico: servico.Nome_servico || "",
-        Descricao: servico.Descricao || "",
-        Valor: servico.Valor || "",
-        Tipo: servico.Tipo || "",
-        Planos: servico.Planos || [],
-        Colaboradores: servico.Colaboradores || [],
-      });
-      
-    }
-  }, [servico]);
+  
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  
+
 
   const handleTipoServicoChange = (e) => {
     const { value } = e.target;
@@ -48,7 +36,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
     const novoID = formData.Planos.length > 0
       ? Math.max(...formData.Planos.map((plano) => plano.ID_Plano)) + 1
       : 1;
-  
+
     // Adiciona o novo plano com o ID gerado
     setFormData((prev) => ({
       ...prev,
@@ -61,22 +49,20 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
   };
 
   const handleSave = async () => {
-    // Valida o campo Valor antes de enviar
-    const valorValido =
-      formData.Valor && !isNaN(parseFloat(formData.Valor))
-        ? parseFloat(formData.Valor)
-        : null;
-  
+    const valorValido = formData.Valor && !isNaN(parseFloat(formData.Valor))
+      ? parseFloat(formData.Valor)
+      : null;
+
     const dataToSend = {
       ...formData,
-      Valor: valorValido, // Garante que seja um número ou null
+      Valor: valorValido, // Se o tipo for 'fisioterapia', atribui o valor. Caso contrário, mantemos o Valor como null.
     };
-  
-    // Remove o campo Planos se o tipo for fisioterapia
+
+    // Remove planos se for fisioterapia (não há planos para este tipo)
     if (formData.Tipo === "fisioterapia") {
       delete dataToSend.Planos;
     }
-  
+
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
@@ -90,7 +76,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
           body: JSON.stringify(dataToSend),
         }
       );
-  
+
       const data = await response.json();
       if (response.ok) {
         onSave(data);
@@ -101,6 +87,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
       setErro(err.message);
     }
   };
+
 
   return (
     <div
@@ -144,7 +131,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
                       setFormData((prev) => ({ ...prev, Valor: valor }));
                     }
                   }}
-                  disabled={formData.Tipo !== "fisioterapia"}
+                  disabled={formData.Tipo === "pilates"}
                 />
               </div>
 
@@ -192,35 +179,46 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
                     />
                   </div>
                 </div>
-                <button type="button" onClick={adicionarPlano} className="btn btn-primary mb-3">
-                  Adicionar Plano
-                </button>
+                <div className="d-flex justify-content-center">
+                  <button type="button" onClick={adicionarPlano} className="btn btn-primary mb-3">
+                    Adicionar Plano
+                  </button>
+                </div>
                 {formData.Planos.length > 0 && (
-                  <div>
+                  <div className="mb-3">
                     <h5>Planos Adicionados:</h5>
-                    <ul className="list-unstyled">
+                    <div className="row">
                       {formData.Planos.map((plano, index) => (
-                        <li key={index}>
-                          {plano.Nome_plano} - R${plano.Valor.toFixed(2)}{" "}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                Planos: prev.Planos.filter((_, i) => i !== index),
-                              }))
-                            }
-                            className="btn btn-danger btn-sm ms-2"
-                          >
-                            <i className="bi bi-trash"></i>
-                          </button>
-                        </li>
+                        <div key={index} className="col-md-4 mb-4">
+                          <div className="d-flex justify-content-between align-items-center p-3 border btn-plano rounded">
+                            <div className="flex-grow-1">
+                              <strong>{plano.Nome_plano}</strong>
+                            </div>
+                            <div className="text-end">
+                              <span className="fw-bold">R$ {plano.Valor}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  Planos: prev.Planos.filter((_, i) => i !== index),
+                                }))
+                              }
+                              className="btn btn-danger btn-sm ms-2"
+                            >
+                              <i className="bi bi-trash"></i>
+                            </button>
+                          </div>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 )}
               </>
             )}
+
+
 
           </div>
           <div className="modal-footer">

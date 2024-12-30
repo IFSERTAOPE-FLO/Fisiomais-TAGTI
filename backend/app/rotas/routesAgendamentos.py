@@ -286,19 +286,28 @@ def obter_horarios_disponiveis(colaborador_id, data_obj):
     print(f"Dia da semana (nome mapeado): {dia_semana_mapeado}")  # Log para verificar o dia da semana nome mapeado
 
     # Obtém os horários do colaborador para o dia da semana específico
-    horarios_colaborador = Horarios.query.filter_by(id_colaborador=colaborador_id, dia_semana=dia_semana_mapeado).all()
-    print(f"Horários do colaborador: {horarios_colaborador}")  # Log para verificar os horários obtidos
+    try:
+        horarios_colaborador = Horarios.query.filter_by(id_colaborador=colaborador_id, dia_semana=dia_semana_mapeado).all()
+        print(f"Horários do colaborador: {horarios_colaborador}")  # Log para verificar os horários obtidos
+    except Exception as e:
+        print(f"Erro ao buscar horários: {str(e)}")  # Log de erro ao buscar horários
+        horarios_colaborador = []
 
     # Obtém os agendamentos existentes para o colaborador na data específica (início do dia a fim do dia)
     data_inicio = data_obj.replace(hour=0, minute=0, second=0, microsecond=0)
     data_fim = data_obj.replace(hour=23, minute=59, second=59, microsecond=999999)
-    
-    agendamentos = Agendamentos.query.filter(
-        Agendamentos.id_colaborador == colaborador_id,
-        Agendamentos.data_e_hora >= data_inicio,
-        Agendamentos.data_e_hora <= data_fim
-    ).all()
-    print(f"Agendamentos existentes: {agendamentos}")  # Log para verificar os agendamentos encontrados
+    print(f"Data início: {data_inicio}, Data fim: {data_fim}")  # Log para verificar os limites de data para agendamentos
+
+    try:
+        agendamentos = Agendamentos.query.filter(
+            Agendamentos.id_colaborador == colaborador_id,
+            Agendamentos.data_e_hora >= data_inicio,
+            Agendamentos.data_e_hora <= data_fim
+        ).all()
+        print(f"Agendamentos existentes: {agendamentos}")  # Log para verificar os agendamentos encontrados
+    except Exception as e:
+        print(f"Erro ao buscar agendamentos: {str(e)}")  # Log de erro ao buscar agendamentos
+        agendamentos = []
 
     # Coleta os horários já agendados (convertidos para objetos 'time' com data incluída)
     agendamentos_horarios = {agendamento.data_e_hora.replace(second=0, microsecond=0) for agendamento in agendamentos}
@@ -315,16 +324,13 @@ def obter_horarios_disponiveis(colaborador_id, data_obj):
         while hora_atual < hora_fim:
             # Adiciona o horário ao resultado se não estiver agendado
             if hora_atual.replace(second=0, microsecond=0) not in agendamentos_horarios:
+                print(f"Horário disponível: {hora_atual}")  # Log para verificar horário disponível
                 horarios_disponiveis.append(hora_atual)
             hora_atual += timedelta(hours=1)  # Ajuste para 1 hora
 
     print(f"Horários disponíveis: {horarios_disponiveis}")  # Log para verificar os horários disponíveis
 
     return horarios_disponiveis
-
-
-   
-
 
 
 @agendamentos.route('/horarios-disponiveis/<int:colaborador_id>/', methods=['GET'])
@@ -354,7 +360,9 @@ def horarios_disponiveis(colaborador_id):
         else:
             return jsonify({"message": "Nenhum horário disponível."}), 200
     except Exception as e:
+        print(f"Erro ao buscar horários disponíveis: {str(e)}")  # Log de erro ao buscar horários
         return jsonify({"message": f"Erro ao buscar horários disponíveis: {str(e)}"}), 500
+
 
 
 

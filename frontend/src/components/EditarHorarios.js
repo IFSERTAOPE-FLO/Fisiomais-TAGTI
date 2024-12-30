@@ -19,6 +19,7 @@ const EditarHorarios = ({ colaboradorId, colaboradorNome, onClose, onSave }) => 
           'Authorization': `Bearer ${token}`,
         },
       });
+      
 
       const data = await response.json();
       if (response.ok) {
@@ -124,13 +125,13 @@ const EditarHorarios = ({ colaboradorId, colaboradorNome, onClose, onSave }) => 
               onChange={handleNovoHorarioChange}
             >
               <option value="">Selecione o dia</option>
-              <option value="Segunda-feira">Segunda-feira</option>
-              <option value="Terca-feira">Terça-feira</option>
-              <option value="Quarta-feira">Quarta-feira</option>
-              <option value="Quinta-feira">Quinta-feira</option>
-              <option value="Sexta-feira">Sexta-feira</option>
-              <option value="Sabado">Sábado</option>
-              <option value="Domingo">Domingo</option>
+              <option value="segunda-feira">Segunda-feira</option>
+              <option value="terca-feira">Terça-feira</option>
+              <option value="quarta-feira">Quarta-feira</option>
+              <option value="quinta-feira">Quinta-feira</option>
+              <option value="sexta-feira">Sexta-feira</option>
+              <option value="sabado">Sábado</option>
+              <option value="domingo">Domingo</option>
             </Form.Control>
           </Form.Group>
 

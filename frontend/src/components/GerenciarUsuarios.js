@@ -45,6 +45,7 @@ const GerenciarUsuarios = () => {
             const data = await response.json();
             if (Array.isArray(data)) {
                 setUsuarios(data);
+                setUsuarioLogado(data[0])
             } else {
                 setErro("A resposta da API não é um array.");
             }
@@ -158,7 +159,7 @@ const GerenciarUsuarios = () => {
 
     // Filtragem dos usuários com base no nome
     const usuariosFiltrados = sortedUsuarios.filter(usuario => {
-        // Se o usuário logado for colaborador, filtra apenas os clientes
+        
 
         return (
             usuario.nome.toLowerCase().includes(pesquisaNome.toLowerCase()) &&

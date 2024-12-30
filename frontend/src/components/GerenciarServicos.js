@@ -27,7 +27,7 @@ const GerenciarServicos = () => {
   const [pesquisaNome, setPesquisaNome] = useState("");
   const [currentPage, setCurrentPage] = useState(1);  // State for current page
   const [itemsPerPage] = useState(10);  // Number of items per page
-  
+
 
   const buscarServicos = async () => {
     try {
@@ -115,9 +115,12 @@ const GerenciarServicos = () => {
       const data = await response.json();
 
       if (response.ok) {
+        // Atualiza a lista de serviços localmente
         setServicos((prev) => [...prev, data.servico]);
         resetForm();
         setMensagem(data.message);
+        // Recarrega os serviços para garantir que a lista está atualizada
+        buscarServicos();
       } else {
         throw new Error(data.error || "Erro ao salvar serviço.");
       }
@@ -125,6 +128,7 @@ const GerenciarServicos = () => {
       setErro(err.message);
     }
   };
+
 
   const resetForm = () => {
     setNovoServico({
@@ -171,9 +175,12 @@ const GerenciarServicos = () => {
 
       const data = await response.json();
       if (response.ok) {
-        setServicos((prev) => prev.filter((servico) => servico.ID_Servico !== idServico));
+        setServicos((prev) => [...prev, data.servico]);
+        resetForm();
         setMensagem(data.message);
-      } else {
+        buscarServicos();  // Recarrega a lista dos serviços caso precise
+      }
+      else {
         throw new Error(data.message || "Erro ao deletar serviço.");
       }
     } catch (err) {
@@ -248,21 +255,23 @@ const GerenciarServicos = () => {
   };
 
   const servicosFiltrados = sortedServicos.filter((servico) => {
+    const nomeServico = servico.Nome_servico || '';  // Fallback para string vazia se undefined ou null
+    const tipos = servico.Tipos || []; // Garante que tipos seja um array
     return (
-      servico.Nome_servico.toLowerCase().includes(pesquisaNome.toLowerCase()) &&
+      nomeServico.toLowerCase().includes(pesquisaNome.toLowerCase()) &&
       (tipoAlternado
-        ? servico.Tipos.includes('fisioterapia')
-        : servico.Tipos.includes('pilates'))
+        ? tipos.includes('fisioterapia')
+        : tipos.includes('pilates'))
     );
   });
-  
 
 
-// Paginação dos usuários filtrados
-const servicosPaginados = servicosFiltrados.slice(
-  (currentPage - 1) * itemsPerPage,
-  currentPage * itemsPerPage
-);
+
+  // Paginação dos usuários filtrados
+  const servicosPaginados = servicosFiltrados.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
 
   return (
@@ -347,16 +356,27 @@ const servicosPaginados = servicosFiltrados.slice(
                         <div className="text-end">
                           <span className="fw-bold">R$ {plano.Valor.toFixed(2)}</span>
                         </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setNovoServico((prev) => ({
+                              ...prev,
+                              planos: prev.planos.filter((_, i) => i !== index),
+                            }))
+                          }
+                          className="btn btn-danger btn-sm ms-2"
+                        >
+                          <i className="bi bi-trash"></i>
+                        </button>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-
-
           </>
         )}
+
 
         <div className="d-flex justify-content-center">
           <button type="submit" className="btn btn-login mt-3">Adicionar Serviço</button>
@@ -377,77 +397,77 @@ const servicosPaginados = servicosFiltrados.slice(
         </button>
       </div>
       <div className="table-responsive">
-      <table className="table  table-striped table-bordered mt-4">
-        <thead>
-          <tr>
-            <th
-              onClick={() => handleSort("Nome_servico")}
-              style={{ cursor: "pointer" }}
-            >
-              Nome
-              {sortConfig.key === "Nome_servico" && (sortConfig.direction === "ascending" ? " ↑" : " ↓")}
-            </th>
-            <th>Descrição</th>
-            <th>Valor (R$)</th>
-            <th onClick={toggleTipo} style={{ cursor: "pointer" }}>
-              Tipo {tipoAlternado ? "*" : "*"}
-            </th>
-            <th>Planos</th>
-            <th>Colaboradores</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {servicosPaginados.map((servico) => (
-            <tr key={servico.ID_Servico}>
-              <td>{servico.Nome_servico}</td>
-              <td>{servico.Descricao}</td>
-              <td>{servico.Valor ? `R$ ${parseFloat(servico.Valor).toFixed(2)}` : '-'}</td>
-              <td>{servico.Tipos.join(", ")}</td>
-              <td className="text-center">
-                {servico.Tipos.includes("pilates") && servico.Planos && servico.Planos.length > 0 ? (
-                  <ul className="list-unstyled">
-                    {servico.Planos.map((plano, index) => (
-                      <li key={index}>
-                        {plano.Nome_plano} - R${parseFloat(plano.Valor).toFixed(2)}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  servico.Tipos.includes("pilates") ? "Nenhum plano adicionado" : <span className="d-block">-</span>
-                )}
-              </td>
-              <td>
-                {servico.Colaboradores && servico.Colaboradores.length > 0
-                  ? servico.Colaboradores.join(", ")
-                  : "Nenhum colaborador"}
-              </td>
-              <td >
-                <div className="d-flex justify-content-start align-items-center align-middle border-0 ">
-                <button
-                  className="btn btn-primary btn-sm ms "
-                  onClick={() => abrirModalEditarServico(servico)}
-                >
-                  <FaEdit className="fs-7" />
-                </button>
-                <button
-                  className="btn btn-info btn-sm ms-2"
-                  onClick={() => abrirModalColaboradores(servico)}
-                >
-                  <FaUserPlus className="fs-7" />
-                </button>
-                <button
-                  className="btn btn-danger btn-sm ms-2"
-                  onClick={() => deletarServico(servico.ID_Servico)}
-                >
-                  <FaTrashAlt className="fs-7" />
-                </button>
-                </div>
-              </td>
+        <table className="table  table-striped table-bordered mt-4">
+          <thead>
+            <tr>
+              <th
+                onClick={() => handleSort("Nome_servico")}
+                style={{ cursor: "pointer" }}
+              >
+                Nome
+                {sortConfig.key === "Nome_servico" && (sortConfig.direction === "ascending" ? " ↑" : " ↓")}
+              </th>
+              <th>Descrição</th>
+              <th>Valor (R$)</th>
+              <th onClick={toggleTipo} style={{ cursor: "pointer" }}>
+                Tipo {tipoAlternado ? "*" : "*"}
+              </th>
+              <th>Planos</th>
+              <th>Colaboradores</th>
+              <th>Ações</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {servicosPaginados.map((servico) => (
+              <tr key={servico.ID_Servico}>
+                <td>{servico.Nome_servico}</td>
+                <td>{servico.Descricao}</td>
+                <td>{servico.Valor ? `R$ ${parseFloat(servico.Valor).toFixed(2)}` : '-'}</td>
+                <td>{servico.Tipos.join(", ")}</td>
+                <td className="text-center">
+                  {servico.Tipos.includes("pilates") && servico.Planos && servico.Planos.length > 0 ? (
+                    <ul className="list-unstyled">
+                      {servico.Planos.map((plano, index) => (
+                        <li key={index}>
+                          {plano.Nome_plano} - R${parseFloat(plano.Valor).toFixed(2)}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    servico.Tipos.includes("pilates") ? "Nenhum plano adicionado" : <span className="d-block">-</span>
+                  )}
+                </td>
+                <td>
+                  {servico.Colaboradores && servico.Colaboradores.length > 0
+                    ? servico.Colaboradores.join(", ")
+                    : "Nenhum colaborador"}
+                </td>
+                <td >
+                  <div className="d-flex justify-content-start align-items-center align-middle border-0 ">
+                    <button
+                      className="btn btn-primary btn-sm ms "
+                      onClick={() => abrirModalEditarServico(servico)}
+                    >
+                      <FaEdit className="fs-7" />
+                    </button>
+                    <button
+                      className="btn btn-info btn-sm ms-2"
+                      onClick={() => abrirModalColaboradores(servico)}
+                    >
+                      <FaUserPlus className="fs-7" />
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm ms-2"
+                      onClick={() => deletarServico(servico.ID_Servico)}
+                    >
+                      <FaTrashAlt className="fs-7" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* Pagination */}

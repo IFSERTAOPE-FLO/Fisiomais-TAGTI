@@ -1,7 +1,7 @@
-.z-top { z-index: 9999999; position: relative; 
+.z-top { z-index: 2; position: relative; 
 }/* Assegura que o z-index seja aplicado */
 
-.z-bot { z-index: -9999999; position: relative; 
+.z-bot { z-index: 1; position: relative; 
 }/* Assegura que o z-index seja aplicado */
 
 /* Sub-navbar */

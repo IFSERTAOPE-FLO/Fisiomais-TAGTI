@@ -3,7 +3,7 @@ from werkzeug.security import generate_password_hash
 from app.models import Horarios, Colaboradores,Clinicas, db
 from app.utils import is_cpf_valid  # Função de validação de CPF, que pode ser movida para utils
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 
 colaboradores = Blueprint('colaboradores', __name__)
@@ -98,32 +98,65 @@ def get_colaboradores():
     return jsonify(colaboradores_list)
 
 
-@colaboradores.route('/colaboradoresdisponiveis', methods=['GET'])
+
+
+@colaboradores.route('/colaboradoresdisponiveis', methods=['GET'])  # Aceitando apenas 'GET'
+@jwt_required()
 def get_colaboradoresdisponiveis():
-    servico_id = request.args.get('servico_id')
-    if not servico_id:
-        return jsonify({"error": "Servico ID é necessário"}), 400
-    
-    # Buscar colaboradores que já estão alocados nesse serviço
-    colaboradores_alocados = Colaboradores.query.filter(
-        Colaboradores.servicos.any(id_servico=servico_id),
-        Colaboradores.is_admin == False
-    ).all()
-    
-    # Buscar colaboradores disponíveis (aqueles que não estão alocados nesse serviço)
-    colaboradores_disponiveis = Colaboradores.query.filter(
-        ~Colaboradores.servicos.any(id_servico=servico_id),
-        Colaboradores.is_admin == False
-    ).all()
+    try:
+        # Obtendo o parâmetro 'servico_id' da query string
+        servico_id = request.args.get("servico_id")
 
-    # Formatar as respostas para as listas de colaboradores alocados e disponíveis
-    colaboradores_alocados_list = [{"id_colaborador": c.id_colaborador, "Nome": c.nome} for c in colaboradores_alocados]
-    colaboradores_disponiveis_list = [{"id_colaborador": c.id_colaborador, "Nome": c.nome} for c in colaboradores_disponiveis]
+        if not servico_id:
+            return jsonify({"error": "Servico ID é necessário"}), 400
 
-    return jsonify({
-        "alocados": colaboradores_alocados_list,
-        "disponiveis": colaboradores_disponiveis_list
-    })
+        # Obtendo a identidade do usuário autenticado
+        current_user_id = get_jwt_identity()
+        current_user = Colaboradores.query.filter_by(email=current_user_id).first()  # Verificação por email
+
+        if not current_user:
+            return jsonify({"error": "Usuário não encontrado."}), 404
+
+        if current_user.is_admin:
+            # Administrador pode acessar todos os colaboradores
+            colaboradores_alocados = Colaboradores.query.filter(
+                Colaboradores.servicos.any(id_servico=servico_id)
+            ).all()
+            colaboradores_disponiveis = Colaboradores.query.filter(
+                ~Colaboradores.servicos.any(id_servico=servico_id)
+            ).all()
+        else:
+            # Colaborador comum vê apenas a si mesmo
+            colaboradores_alocados = Colaboradores.query.filter(
+                Colaboradores.servicos.any(id_servico=servico_id),
+                Colaboradores.id_colaborador == current_user.id_colaborador
+            ).all()
+            colaboradores_disponiveis = Colaboradores.query.filter(
+                ~Colaboradores.servicos.any(id_servico=servico_id),
+                Colaboradores.id_colaborador == current_user.id_colaborador  # Exibindo apenas o próprio colaborador
+            ).all()
+
+        # Formatando os resultados
+        colaboradores_alocados_list = [
+            {"id_colaborador": c.id_colaborador, "nome": c.nome} for c in colaboradores_alocados
+        ]
+        colaboradores_disponiveis_list = [
+            {"id_colaborador": c.id_colaborador, "nome": c.nome} for c in colaboradores_disponiveis
+        ]
+
+        return jsonify({
+            "alocados": colaboradores_alocados_list,
+            "disponiveis": colaboradores_disponiveis_list
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+
+
+
+
+
     
 
 
@@ -169,6 +202,7 @@ def configurar_horarios():
 
     except Exception as e:
         return jsonify({"message": f"Erro ao configurar horário: {str(e)}"}), 500
+
 
 
 

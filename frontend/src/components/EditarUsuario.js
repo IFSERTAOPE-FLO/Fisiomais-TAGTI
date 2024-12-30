@@ -18,6 +18,7 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
   const [cargo, setCargo] = useState(usuario.cargo || '');
   const [clinica, setClinica] = useState('');
   const [clinicas, setClinicas] = useState([]);
+  const [cidades, setCidades] = useState([]);
   const [erro, setErro] = useState('');
 
   useEffect(() => {
@@ -26,7 +27,7 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
         const response = await fetch('http://localhost:5000/clinicas');
         if (response.ok) {
           const data = await response.json();
-          setClinicas(data); 
+          setClinicas(data);
         } else {
           throw new Error("Erro ao carregar clínicas.");
         }
@@ -114,6 +115,28 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
       alert('Erro ao atualizar o usuário');
     }
   };
+
+  const buscarCidades = async (estado) => {
+    try {
+      const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estado}/distritos`);
+      if (response.ok) {
+        const cidades = await response.json();
+        const cidadesOrdenadas = cidades
+          .map((cidade) => cidade.nome)
+          .sort((a, b) => a.localeCompare(b));  // Ordenação alfabética
+        setCidades(cidadesOrdenadas);
+      } else {
+        throw new Error("Erro ao carregar cidades.");
+      }
+    } catch (err) {
+      setErro(err.message);
+    }
+  };
+  useEffect(() => {
+    if (estado) {
+      buscarCidades(estado);
+    }
+  }, [estado]);
 
   return (
     <Modal show onHide={onClose}>
@@ -211,12 +234,13 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
                   onChange={(e) => setCidade(e.target.value)}
                 >
                   <option value="">Selecione a cidade</option>
-                  {estados.map((estado) => (
-                    <option key={estado} value={estado}>
-                      {estado}
+                  {cidades.map((cidade) => (
+                    <option key={cidade} value={cidade}>
+                      {cidade}
                     </option>
                   ))}
                 </Form.Control>
+
               </Form.Group>
             </div>
           </div>
@@ -266,14 +290,14 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={onClose}>Fechar</Button>
-        <Button variant="primary" onClick={handleSave}>Salvar alterações</Button>        
+        <Button variant="primary" onClick={handleSave}>Salvar alterações</Button>
         <Button
-                      type="button"
-                      
-                      onClick={alterarClinica} // Função para atualizar a clínica
-                    >
-                      Alterar Clinica
-                    </Button>
+          type="button"
+
+          onClick={alterarClinica} // Função para atualizar a clínica
+        >
+          Alterar Clinica
+        </Button>
       </Modal.Footer>
     </Modal>
   );
