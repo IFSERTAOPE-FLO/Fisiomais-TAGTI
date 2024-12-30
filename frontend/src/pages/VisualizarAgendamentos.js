@@ -382,49 +382,106 @@ const VisualizarAgendamentos = () => {
                 <Modal.Title>Detalhes do Agendamento</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                <p><strong>Cliente:</strong> {selectedAgendamento.cliente || 'Cliente não informado'}</p>
-                <p><strong>Data:</strong> {new Date(selectedAgendamento.data).toLocaleDateString()}</p>
-                <p><strong>Hora:</strong> {selectedAgendamento.hora || 'Hora não informada'}</p>
-                <p><strong>Serviço:</strong> {selectedAgendamento.servico || 'Serviço não encontrado'}</p>
+                <div className="row mb-3">
+                  <div className="col-12 col-md-6">
+                    <strong>Cliente:</strong> {selectedAgendamento.cliente || 'Cliente não informado'}
+                  </div>
+                  
+                  <div className="col-12 col-md-6">
+                    <strong>Data:</strong> {new Date(selectedAgendamento.data).toLocaleDateString()}
+                  </div>
+                </div>
+
+                <div className="row mb-3">
+                  <div className="col-12 col-md-6">
+                    <strong>Hora:</strong> {selectedAgendamento.hora || 'Hora não informada'}
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <strong>Serviço:</strong> {selectedAgendamento.servico || 'Serviço não encontrado'}
+                  </div>
+                </div>
 
                 {selectedAgendamento.plano?.nome && selectedAgendamento.plano?.valor ? (
-                  <>
-                    <p><strong>Plano:</strong> {selectedAgendamento.plano.nome}</p>
-                    <p><strong>Valor do Plano:</strong> {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAgendamento.plano.valor)}</p>
-                  </>
+                  <div className="row mb-3">
+                    <div className="col-12 col-md-6">
+                      <strong>Plano:</strong> {selectedAgendamento.plano.nome}
+                    </div>
+                    <div className="col-12 col-md-6">
+                      <strong>Valor do Plano:</strong>{' '}
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAgendamento.plano.valor)}
+                    </div>
+                  </div>
                 ) : (
-                  <p><strong>Valor do Serviço:</strong> {selectedAgendamento.valor ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAgendamento.valor) : 'Não disponível'}</p>
+                  <div className="row mb-3">
+                    <div className="col-12 col-md-6">
+                      <strong>Valor do Serviço:</strong>{' '}
+                      {selectedAgendamento.valor
+                        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAgendamento.valor)
+                        : 'Não disponível'}
+                    </div>
+                  </div>
                 )}
 
-                <p><strong>Colaborador:</strong> {selectedAgendamento.colaborador || 'Colaborador não encontrado'}</p>
+                <div className="row mb-3">
+                  <div className="col-12 col-md-6">
+                    <strong>Colaborador:</strong> {selectedAgendamento.colaborador || 'Colaborador não encontrado'}
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <strong>Status:</strong>
+                    <span
+                      className={`
+                        ${selectedAgendamento.status === 'confirmado'
+                          ? 'text-success'
+                          : selectedAgendamento.status === 'negado'
+                            ? 'text-danger'
+                            : selectedAgendamento.status === 'cancelado'
+                              ? 'text-secondary'
+                              : selectedAgendamento.status === 'remarcado'
+                                ? 'text-info'
+                                : selectedAgendamento.status === 'nao_compareceu'
+                                  ? 'text-dark'
+                                  : 'text-warning'
+                        }
+                      `}
+                    >
+                      {selectedAgendamento.status.charAt(0).toUpperCase() + selectedAgendamento.status.slice(1)}
+                    </span>
+                  </div>
 
-                <p>
-                  <strong>Status:</strong>
-                  <span
-                    className={`
-      ${selectedAgendamento.status === 'confirmado' ? 'badge-success' :
-                        selectedAgendamento.status === 'negado' ? 'badge-danger' :
-                          selectedAgendamento.status === 'cancelado' ? 'badge-secondary' :
-                            selectedAgendamento.status === 'remarcado' ? 'badge-info' :
-                              selectedAgendamento.status === 'nao_compareceu' ? 'badge-dark' :
-                                'badge-warning'} 
-      text-dark`}
-                  >
-                    {selectedAgendamento.status.charAt(0).toUpperCase() + selectedAgendamento.status.slice(1)}
-                  </span>
-                </p>
+                </div>
 
-
-                <p><strong>Clínica:</strong> {selectedAgendamento.clinica?.nome || 'Clínica não informada'}</p>
+                <div className="row mb-3">
+                  <div className="col-12">
+                    <strong>Clínica:</strong> {selectedAgendamento.clinica?.nome || 'Clínica não informada'}
+                  </div>
+                </div>
 
                 {selectedAgendamento.clinica?.endereco ? (
-                  <div>
-                    <p><strong>Endereço da Clínica:</strong></p>
-                    <p>{selectedAgendamento.clinica.endereco.rua}, {selectedAgendamento.clinica.endereco.numero}, {selectedAgendamento.clinica.endereco.bairro}</p>
-                    <p>{selectedAgendamento.clinica.endereco.cidade} - {selectedAgendamento.clinica.endereco.estado}</p>
+                  <div className="row mb-3">
+                    <div className="col-12">
+                      <strong>Endereço da Clínica:</strong>
+                    </div>
+                    <div className="col-12">
+                      {[
+                        selectedAgendamento.clinica.endereco.rua,
+                        selectedAgendamento.clinica.endereco.numero,
+                        selectedAgendamento.clinica.endereco.bairro,
+                        selectedAgendamento.clinica.endereco.cidade,
+                        selectedAgendamento.clinica.endereco.estado,
+                      ]
+                        .filter(Boolean)
+                        .join(', ') || 'Endereço não disponível'}
+                    </div>
                   </div>
-                ) : 'Endereço não disponível'}
+                ) : (
+                  <div className="row mb-3">
+                    <div className="col-12">
+                      <strong>Endereço da Clínica:</strong> Endereço não disponível
+                    </div>
+                  </div>
+                )}
               </Modal.Body>
+
 
               <Modal.Footer>
                 {(role === 'colaborador' || role === 'admin') && (

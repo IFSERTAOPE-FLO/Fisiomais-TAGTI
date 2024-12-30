@@ -93,8 +93,8 @@ const GerenciarClinicas = () => {
     // Filtragem das clínicas pelo nome
     const clinicasFiltradas = pesquisaNome
         ? clinicas.filter((clinica) =>
-              clinica.Nome.toLowerCase().includes(pesquisaNome.toLowerCase())
-          )
+            clinica.Nome.toLowerCase().includes(pesquisaNome.toLowerCase())
+        )
         : clinicas;
 
     // Paginação das clínicas filtradas
@@ -102,6 +102,11 @@ const GerenciarClinicas = () => {
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
+    const handleSave = () => {
+        buscarClinicas(); 
+        setEditarClinica(null);
+       
+    };
 
     return (
         <div className="container">
@@ -149,7 +154,22 @@ const GerenciarClinicas = () => {
                                     <td>{clinica.Nome}</td>
                                     <td>{clinica.CNPJ}</td>
                                     <td>{clinica.Telefone}</td>
-                                    <td>{clinica.Endereço || "Endereço não disponível"}</td>
+                                    <td>
+                                        {clinica.Endereço
+                                            ? [
+                                                clinica.Endereço.Rua,
+                                                clinica.Endereço.Número,
+                                                clinica.Endereço.Complemento,
+                                                clinica.Endereço.Bairro,
+                                                clinica.Endereço.Cidade,
+                                                clinica.Endereço.Estado
+                                            ]
+                                                .filter(Boolean) // Remove valores null ou undefined
+                                                .join(', ') || "Endereço não disponível"
+                                            : "Endereço não disponível"}
+                                    </td>
+
+
                                     <td>
                                         <button
                                             className="btn btn-warning btn-sm me-2"
@@ -182,16 +202,7 @@ const GerenciarClinicas = () => {
                 <EditarClinica
                     clinica={editarClinica}
                     onClose={() => setEditarClinica(null)}
-                    onSave={(updatedClinica) => {
-                        setClinicas((prev) =>
-                            prev.map((clinica) =>
-                                clinica.ID_Clinica === updatedClinica.ID_Clinica
-                                    ? updatedClinica
-                                    : clinica
-                            )
-                        );
-                        setEditarClinica(null);
-                    }}
+                    onSave={handleSave}
                 />
             )}
         </div>
