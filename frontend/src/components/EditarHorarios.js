@@ -19,7 +19,7 @@ const EditarHorarios = ({ colaboradorId, colaboradorNome, onClose, onSave }) => 
           'Authorization': `Bearer ${token}`,
         },
       });
-      
+
 
       const data = await response.json();
       if (response.ok) {
@@ -105,7 +105,7 @@ const EditarHorarios = ({ colaboradorId, colaboradorNome, onClose, onSave }) => 
             <ul className="list-group">
               {horarios.map((horario, index) => (
                 <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
-                  <span>{`${horario.dia_semana} - ${horario.hora_inicio} às ${horario.hora_fim}`}</span>
+                  <span>{`${horario.dia_semana.charAt(0).toUpperCase()}${horario.dia_semana.slice(1)} - ${horario.hora_inicio} às ${horario.hora_fim}`}</span>
                 </li>
               ))}
             </ul>
