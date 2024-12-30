@@ -10,64 +10,79 @@ colaboradores = Blueprint('colaboradores', __name__)
 
 @colaboradores.route('/register', methods=['POST'])
 def register_colaborador():
-    data = request.get_json()
-
-    # Capturar os dados do colaborador
-    nome = data.get('nome')
-    email = data.get('email')
-    senha = data.get('senha')
-    telefone = data.get('telefone')
-    cpf = data.get('cpf')
-    referencias = data.get('referencias', '')
-    cargo = data.get('cargo', '')
-    endereco = data.get('endereco', '')
-    rua = data.get('rua', '')
-    estado = data.get('estado', '')
-    cidade = data.get('cidade', '')
-    bairro = data.get('bairro', '')
-    is_admin = data.get('is_admin', False)  # Booleano para determinar se é admin
-
-    # Validar campos obrigatórios
-    if not all([nome, email, senha, cpf]):
-        return jsonify({"message": "Os campos nome, email, senha e CPF são obrigatórios."}), 400
-
-    # Validar CPF
-    if not is_cpf_valid(cpf):
-        return jsonify({"message": "CPF inválido."}), 400
-
-    # Verificar se o email, telefone ou CPF já existe
-    if Colaboradores.query.filter(
-        (Colaboradores.email == email) | 
-        (Colaboradores.telefone == telefone) | 
-        (Colaboradores.cpf == cpf)
-    ).first():
-        return jsonify({"message": "Email, telefone ou CPF já cadastrado."}), 400
-
-    # Criptografar a senha
-    hashed_password = generate_password_hash(senha)
-
-    # Criar um novo colaborador
-    new_colaborador = Colaboradores(
-        nome=nome,
-        email=email,
-        telefone=telefone,
-        senha=hashed_password,
-        cpf=cpf,
-        referencias=referencias,
-        cargo=cargo,
-        endereco=endereco,
-        rua=rua,
-        estado=estado,
-        cidade=cidade,
-        bairro=bairro,
-        is_admin=is_admin
-    )
-
     try:
+        data = request.get_json()
+
+        # Capturar os dados do colaborador
+        nome = data.get('nome')
+        email = data.get('email')
+        senha = data.get('senha')
+        telefone = data.get('telefone')
+        cpf = data.get('cpf')
+        referencias = data.get('referencias', '')
+        cargo = data.get('cargo', '')
+        dt_nasc = data.get('dt_nasc')
+        is_admin = data.get('is_admin', False)  # Booleano para determinar se é admin
+
+        # Dados de endereço
+        endereco_data = data.get('endereco', {})
+        rua = endereco_data.get('rua', '')
+        numero = endereco_data.get('numero', '')
+        bairro = endereco_data.get('bairro', '')
+        cidade = endereco_data.get('cidade', '')
+        estado = endereco_data.get('estado', '')
+
+        # Validar campos obrigatórios
+        if not all([nome, email, senha, cpf]):
+            return jsonify({"message": "Os campos nome, email, senha e CPF são obrigatórios."}), 400
+
+        # Validar CPF
+        if not is_cpf_valid(cpf):
+            return jsonify({"message": "CPF inválido."}), 400
+
+        # Verificar se o email, telefone ou CPF já existe
+        if Colaboradores.query.filter(
+            (Colaboradores.email == email) |
+            (Colaboradores.telefone == telefone) |
+            (Colaboradores.cpf == cpf)
+        ).first():
+            return jsonify({"message": "Email, telefone ou CPF já cadastrado."}), 400
+
+        # Criptografar a senha
+        hashed_password = generate_password_hash(senha)
+
+        # Criar endereço se houver dados
+        endereco = None
+        if any([rua, numero, bairro, cidade, estado]):
+            endereco = Enderecos(
+                rua=rua,
+                numero=numero,
+                bairro=bairro,
+                cidade=cidade,
+                estado=estado
+            )
+            db.session.add(endereco)
+            db.session.commit()
+
+        # Criar um novo colaborador
+        new_colaborador = Colaboradores(
+            nome=nome,
+            email=email,
+            telefone=telefone,
+            senha=hashed_password,
+            cpf=cpf,
+            referencias=referencias,
+            cargo=cargo,
+            dt_nasc=dt_nasc,
+            endereco=endereco,  # Associar endereço criado
+            is_admin=is_admin
+        )
+
         # Salvar no banco de dados
         db.session.add(new_colaborador)
         db.session.commit()
         return jsonify({"message": "Colaborador registrado com sucesso!"}), 201
+
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Erro ao registrar colaborador: {str(e)}"}), 500

@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import '../css/Estilos.css';
-import { Link} from "react-router-dom";
-
+import { Link } from "react-router-dom";
 
 function AddColaborador() {
   const [nome, setNome] = useState('');
@@ -18,12 +17,46 @@ function AddColaborador() {
   const [endereco, setEndereco] = useState('');
   const [estado, setEstado] = useState('');
   const [cidade, setCidade] = useState('');
-  const [bairro, setBairro] = useState('');
+  const [bairros, setBairro] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [cpf, setCpf] = useState('');
   const [dtNasc, setDtNasc] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [estados, setEstados] = useState([]);
+  const [cidades, setCidades] = useState([]);
+
+  // Busca estados ao carregar o componente
+  useEffect(() => {
+    const fetchEstados = async () => {
+      try {
+        const response = await axios.get('https://servicodados.ibge.gov.br/api/v1/localidades/estados');
+        setEstados(response.data.sort((a, b) => a.nome.localeCompare(b.nome)));
+      } catch (error) {
+        console.error('Erro ao buscar estados:', error);
+      }
+    };
+
+    fetchEstados();
+  }, []);
+
+  // Busca cidades ao selecionar um estado
+  useEffect(() => {
+    if (estado) {
+      const fetchCidades = async () => {
+        try {
+          const response = await axios.get(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estado}/municipios`);
+          setCidades(response.data.sort((a, b) => a.nome.localeCompare(b.nome)));
+        } catch (error) {
+          console.error('Erro ao buscar cidades:', error);
+        }
+      };
+
+      fetchCidades();
+    } else {
+      setCidades([]);
+    }
+  }, [estado]);
 
   const handleRegister = async () => {
     if (!nome || !email || !senha || !cpf) {
@@ -45,7 +78,7 @@ function AddColaborador() {
     setErrorMessage('');
 
     try {
-      const response = await axios.post('http://localhost:5000/register-colaborador', {
+      const response = await axios.post('http://localhost:5000/colaboradores/register', {
         nome,
         email,
         cpf,
@@ -53,10 +86,12 @@ function AddColaborador() {
         telefone,
         referencias,
         cargo,
-        endereco,
-        estado,
-        cidade,
-        bairro,
+        endereco: {
+          rua: endereco,
+          bairro: bairros,
+          cidade,
+          estado,
+        },
         dt_nasc: dtNasc,
         is_admin: isAdmin,
       });
@@ -93,183 +128,75 @@ function AddColaborador() {
     <div className="container col-md-9 my-5">
       {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
       <div className="card shadow">
-        <div className="card-header ">
+        <div className="card-header">
           <h2 className="text-center text-primary">Adicionar Colaborador</h2>
         </div>
         <div className="card-body">
           <form onSubmit={(e) => { e.preventDefault(); handleRegister(); }}>
-            {/* Nome e Email */}
+            {/* Nome e CPF */}
             <div className="row mb-2">
-              <div className="col-12 col-md-4">
-                <label htmlFor="nome" className="form-label">Nome*</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="nome"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  required
-                />
+              <div className="col-md-4">
+                <label className="form-label">Nome*</label>
+                <input type="text" className="form-control" value={nome} onChange={(e) => setNome(e.target.value)} required />
               </div>
-              <div className="col-12 col-md-2">
-                <label htmlFor="cpf" className="form-label">CPF*</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="cpf"
-                  value={cpf}
-                  onChange={(e) => setCpf(e.target.value)}
-                  placeholder="123.456.789-00"
-                  required
-                />
+              <div className="col-md-4">
+                <label className="form-label">CPF*</label>
+                <input type="text" className="form-control" value={cpf} onChange={(e) => setCpf(e.target.value)} required />
               </div>
-              <div className="col-12 col-md-3">
-                <label htmlFor="email" className="form-label">Email*</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="col-12 col-md-3">
-                <label htmlFor="confirmarEmail" className="form-label">Confirme seu Email*</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  id="confirmarEmail"
-                  value={confirmarEmail}
-                  onChange={(e) => setConfirmarEmail(e.target.value)}
-                  required
-                />
+              <div className="col-md-4">
+                <label className="form-label">Data de Nascimento*</label>
+                <input type="date" className="form-control" value={dtNasc} onChange={(e) => setDtNasc(e.target.value)} required />
               </div>
             </div>
-  
-            {/* Senha e Confirmação */}
-            <div className="row mb-3">
-              <div className="col-12 col-md-2">
-                <label htmlFor="senha" className="form-label">Senha*</label>
-                <input
-                  type="password"
-                  className="form-control"
-                  id="senha"
-                  value={senha}
-                  onChange={(e) => setSenha(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="col-12 col-md-2">
-                <label htmlFor="confirmarSenha" className="form-label">Confirme sua Senha*</label>
-                <input
-                  type="password"
-                  className="form-control"
-                  id="confirmarSenha"
-                  value={confirmarSenha}
-                  onChange={(e) => setConfirmarSenha(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="col-12 col-md-2">
-                <label htmlFor="dtNasc" className="form-label">Data de Nascimento</label>
-                <input
-                  type="date"
-                  className="form-control"
-                  id="dtNasc"
-                  value={dtNasc}
-                  onChange={(e) => setDtNasc(e.target.value)}
-                />
-              </div>
-              <div className="col-12 col-md-3">
-                <label htmlFor="telefone" className="form-label">Telefone</label>
-                <input
-                  type="tel"
-                  className="form-control"
-                  id="telefone"
-                  value={telefone}
-                  onChange={(e) => setTelefone(e.target.value)}
-                />
-              </div>
-              <div className="col-12 col-md-3">
-                <label htmlFor="cargo" className="form-label">Cargo</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="cargo"
-                  value={cargo}
-                  onChange={(e) => setCargo(e.target.value)}
-                />
-              </div>
-            </div>
-  
-            {/* Endereço, Estado, Cidade, Bairro */}
+
+            {/* Endereço */}
             <div className="row mb-2">
-              <div className="col-12 col-md-5">
-                <label htmlFor="endereco" className="form-label">Endereço</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="endereco"
-                  value={endereco}
-                  onChange={(e) => setEndereco(e.target.value)}
-                />
+              <div className="col-md-4">
+                <label className="form-label">Estado*</label>
+                <select className="form-select" value={estado} onChange={(e) => setEstado(e.target.value)} required>
+                  <option value="">Selecione um estado</option>
+                  {estados.map((estado) => (
+                    <option key={estado.id} value={estado.sigla}>{estado.nome}</option>
+                  ))}
+                </select>
               </div>
-              <div className="col-12 col-md-3">
-                <label htmlFor="bairro" className="form-label">Bairro</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="bairro"
-                  value={bairro}
-                  onChange={(e) => setBairro(e.target.value)}
-                />
+              <div className="col-md-4">
+                <label className="form-label">Cidade*</label>
+                <select className="form-select" value={cidade} onChange={(e) => setCidade(e.target.value)} required>
+                  <option value="">Selecione uma cidade</option>
+                  {cidades.map((cidade) => (
+                    <option key={cidade.id} value={cidade.nome}>{cidade.nome}</option>
+                  ))}
+                </select>
               </div>
-              <div className="col-12 col-md-4">
-                <label htmlFor="referencias" className="form-label">Referências</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="referencias"
-                  value={referencias}
-                  onChange={(e) => setReferencias(e.target.value)}
-                />
+              <div className="col-md-4">
+                <label className="form-label">Bairro*</label>
+                <input type="text" className="form-control" value={bairros} onChange={(e) => setBairro(e.target.value)} required />
               </div>
             </div>
-  
-            {/* Administrador */}
-            <div className="row mb-3">
-              <div className="col-12 col-md-12">
-                <div className="form-check">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    id="isAdmin"
-                    checked={isAdmin}
-                    onChange={(e) => setIsAdmin(e.target.checked)}
-                  />
-                  <label className="form-label " htmlFor="isAdmin">Administrador</label>
-                </div>
+
+            {/* Cargo e Telefone */}
+            <div className="row mb-2">
+              <div className="col-md-6">
+                <label className="form-label">Cargo</label>
+                <input type="text" className="form-control" value={cargo} onChange={(e) => setCargo(e.target.value)} />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Telefone</label>
+                <input type="text" className="form-control" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
               </div>
             </div>
-  
-            <div className="col-12 text-center">
-              <button type="submit" className="btn btn-login w-auto mx-auto ms-2" disabled={loading}>
-              <i className="bi bi-person-plus me-1"></i>
-                {loading ? "Carregando..." : "Cadastrar"}
-              </button>
-              <Link  className="btn btn-signup w-auto  mx-auto ms-2" to="/adminpage" disabled={loading}>
-              <i class="bi bi-arrow-return-left me-2"></i>
-                            {loading ? "Carregando..." : "Voltar"}
-            </Link>
+
+            {/* Botões */}
+            <div className="text-center">
+              <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Carregando...' : 'Cadastrar'}</button>
+              <Link className="btn btn-secondary ms-2" to="/adminpage">Voltar</Link>
             </div>
-            
           </form>
         </div>
       </div>
     </div>
   );
-  
 }
 
 export default AddColaborador;
