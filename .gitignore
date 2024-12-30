@@ -393,3 +393,7 @@ frontend/node_modules/@restart/ui/cjs/Anchor.d.ts
 frontend/node_modules/@restart/ui/Button/package.json
 frontend/node_modules/@restart/ui/Anchor/package.json
 frontend/node_modules/.package-lock.json
+/frontend/node_modules
+/frontend/node_modules/.bin
+/node_modules
+/node_modules/bootstrap

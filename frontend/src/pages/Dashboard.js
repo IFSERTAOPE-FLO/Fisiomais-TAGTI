@@ -85,17 +85,14 @@ const DashboardOverview = () => {
     };
   
     fetchDashboardData();
-  }, []);
+  }, [savedRole]); 
   
 
 
-  const meses = [
-    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-  ];
+ 
 
-  const mesAtual = new Date().getMonth(); // Mês atual, de 0 (Janeiro) a 11 (Dezembro)
-  const mesUltimo = mesAtual === 0 ? 11 : mesAtual - 1; // Mês anterior (se Janeiro, pega Dezembro)
+  
+  
 
   const overviewData = {
     labels: [

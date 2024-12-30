@@ -58,7 +58,7 @@ const GerenciarUsuarios = () => {
         if (isRoleValid) {
             buscarUsuarios();
         }
-    }, [isRoleValid]);
+    }, [isRoleValid, buscarUsuarios]);
     
     
     

@@ -242,13 +242,18 @@ const Perfil = () => {
   };
 
   useEffect(() => {
-    // Verifica se a foto já foi carregada no localStorage antes de sobrescrever
-    const fotoNoLocalStorage = localStorage.getItem("userPhoto");
-    if (fotoNoLocalStorage && !dadosUsuario.photo) {  // Evitar sobrescrever foto se já estiver definida
-      setDadosUsuario((prev) => ({ ...prev, photo: fotoNoLocalStorage }));
-    }
+    // Função para atualizar o estado com a foto do localStorage, se necessário
+    const verificarFotoNoLocalStorage = () => {
+      const fotoNoLocalStorage = localStorage.getItem("userPhoto");
+      if (fotoNoLocalStorage && !dadosUsuario.photo) {
+        setDadosUsuario((prev) => ({ ...prev, photo: fotoNoLocalStorage }));
+      }
+    };
+  
+    verificarFotoNoLocalStorage();
     buscarDadosUsuario();
-  }, [buscarDadosUsuario]);
+  }, [buscarDadosUsuario, dadosUsuario.photo]);
+  
 
   useEffect(() => {
     // Verificar se existe um estado já definido para buscar as cidades correspondentes

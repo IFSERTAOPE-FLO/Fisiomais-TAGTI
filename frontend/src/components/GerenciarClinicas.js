@@ -1,34 +1,25 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/Profile.css";
 import AddClinica from "./AddClinica";
-import EditarClinica from "./EditarClinica";  // Modal de edição de clínica
+import EditarClinica from "./EditarClinica"; // Modal de edição de clínica
 import Paginator from "./Paginator"; // Importe o componente Paginator
-
-
 
 const GerenciarClinicas = () => {
     const [clinicas, setClinicas] = useState([]); // Lista de todas as clínicas disponíveis
-    const [clinicasAssociadas, setClinicasAssociadas] = useState([]); // Clínicas associadas ao usuário
-    const [novaClinica, setNovaClinica] = useState(""); // ID da clínica selecionada para associar
-    const [editarClinica, setEditarClinica] = useState(null);  // Modal para editar clínica
+    const [editarClinica, setEditarClinica] = useState(null); // Modal para editar clínica
     const [pesquisaNome, setPesquisaNome] = useState(""); // Estado para armazenar o filtro de nome
     const [erro, setErro] = useState("");
     const [sucesso, setSucesso] = useState("");
-    const [currentPage, setCurrentPage] = useState(1);  // State for current page
-    const [itemsPerPage] = useState(10);  // Number of items per page
+    const [currentPage, setCurrentPage] = useState(1); // Página atual
+    const [itemsPerPage] = useState(10); // Itens por página
     const savedRole = localStorage.getItem("role"); // Recupera o role do localStorage
-
-
 
     const token = localStorage.getItem("token");
     const apiBaseUrl = "http://localhost:5000/";
 
     const buscarClinicas = async () => {
-
-
-        if (savedRole !== 'admin' && savedRole !== 'colaborador') {
-            
+        if (savedRole !== "admin" && savedRole !== "colaborador") {
             return; // Encerra a execução se o usuário não for admin ou colaborador
         }
 
@@ -43,12 +34,8 @@ const GerenciarClinicas = () => {
             const textResponse = await response.text(); // Obtém o conteúdo como texto
 
             if (response.ok) {
-                try {
-                    const data = JSON.parse(textResponse);  // Tenta converter para JSON
-                    setClinicas(data);
-                } catch (error) {
-                    throw new Error("A resposta não é um JSON válido.");
-                }
+                const data = JSON.parse(textResponse); // Converte para JSON
+                setClinicas(data);
             } else {
                 throw new Error("Erro ao buscar a lista de clínicas: " + textResponse);
             }
@@ -59,22 +46,25 @@ const GerenciarClinicas = () => {
 
     // Função para remover clínica
     const removerClinica = async (clinicaId) => {
-        if (savedRole !== 'admin') {
-            alert('Apenas administradores podem remover clinicas')
+        if (savedRole !== "admin") {
+            alert("Apenas administradores podem remover clínicas.");
             return;
         }
+
         try {
-            const savedRole = localStorage.getItem("role"); // Recupera o role do localStorage
-            const response = await fetch(`${apiBaseUrl}clinicas/remover_clinica/${clinicaId}`, {
-                method: "DELETE",
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
-                    Role: savedRole,  // Envia o role no cabeçalho da requisição
-                },
-            });
+            const response = await fetch(
+                `${apiBaseUrl}clinicas/remover_clinica/${clinicaId}`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        Role: savedRole,
+                    },
+                }
+            );
 
             if (response.ok) {
-                setClinicasAssociadas((prev) => prev.filter((c) => c.id !== clinicaId));
+                setClinicas((prev) => prev.filter((c) => c.ID_Clinica !== clinicaId));
                 setSucesso("Clínica removida com sucesso.");
                 buscarClinicas();
             } else {
@@ -87,8 +77,7 @@ const GerenciarClinicas = () => {
 
     useEffect(() => {
         buscarClinicas();
-
-    }, []);
+    }, []); // Apenas no carregamento inicial, pois buscarClinicas não depende de outras variáveis
 
     // Função para ordenação das clínicas
     const handleSort = (key) => {
@@ -96,9 +85,7 @@ const GerenciarClinicas = () => {
         sorted.sort((a, b) => {
             const aValue = a[key].toLowerCase();
             const bValue = b[key].toLowerCase();
-            if (aValue < bValue) return -1;
-            if (aValue > bValue) return 1;
-            return 0;
+            return aValue.localeCompare(bValue);
         });
         setClinicas(sorted);
     };
@@ -106,14 +93,11 @@ const GerenciarClinicas = () => {
     // Filtragem das clínicas pelo nome
     const clinicasFiltradas = pesquisaNome
         ? clinicas.filter((clinica) =>
-            clinica.Nome.toLowerCase().includes(pesquisaNome.toLowerCase()) // Verifica se o nome existe
-        )
-        : clinicas; // Se pesquisaNome estiver vazio, retorna todas as clínicas
-    // Function to handle page change
-    const handlePageChange = (pageNumber) => {
-        setCurrentPage(pageNumber);
-    };
-    // Paginação dos usuários filtrados
+              clinica.Nome.toLowerCase().includes(pesquisaNome.toLowerCase())
+          )
+        : clinicas;
+
+    // Paginação das clínicas filtradas
     const clinicasPaginadas = clinicasFiltradas.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
@@ -121,15 +105,18 @@ const GerenciarClinicas = () => {
 
     return (
         <div className="container">
-            <h2 className="mb-4 text-secondary text-center">Gerenciar Clinicas</h2>
+            <h2 className="mb-4 text-secondary text-center">Gerenciar Clínicas</h2>
 
             <div className="card-body">
                 {erro && <p className="alert alert-danger">{erro}</p>}
                 {sucesso && <p className="alert alert-success">{sucesso}</p>}
 
-                <AddClinica onClinicaCriada={(novaClinica) => setClinicas((prev) => [...prev, novaClinica])} />
-                < br />
-                {/* Filtro de pesquisa */}
+                <AddClinica
+                    onClinicaCriada={(novaClinica) =>
+                        setClinicas((prev) => [...prev, novaClinica])
+                    }
+                />
+                <br />
                 <div className="input-group mb-3">
                     <input
                         type="text"
@@ -142,15 +129,12 @@ const GerenciarClinicas = () => {
                         <i className="bi bi-search"></i>
                     </button>
                 </div>
+
                 <div className="table-responsive">
-                    {/* Tabela de Clínicas */}
-                    <table className="table table-striped  table-bordered mt-4">
+                    <table className="table table-striped table-bordered mt-4">
                         <thead>
                             <tr>
-                                <th
-                                    onClick={() => handleSort("nome")}
-                                    style={{ cursor: "pointer" }}
-                                >
+                                <th onClick={() => handleSort("Nome")} style={{ cursor: "pointer" }}>
                                     Nome
                                 </th>
                                 <th>CNPJ</th>
@@ -162,47 +146,31 @@ const GerenciarClinicas = () => {
                         <tbody>
                             {clinicasPaginadas.map((clinica) => (
                                 <tr key={clinica.ID_Clinica}>
-                                    <td>
-                                        <span className="fw-bold">{clinica.Nome}</span>
-                                    </td>
+                                    <td>{clinica.Nome}</td>
                                     <td>{clinica.CNPJ}</td>
                                     <td>{clinica.Telefone}</td>
+                                    <td>{clinica.Endereço || "Endereço não disponível"}</td>
                                     <td>
-                                        {clinica.Endereço ? (
-                                            <div className="text-justify">
-                                                <p className="mb-1"><strong>Rua:</strong> {clinica.Endereço.Rua}, {clinica.Endereço.Número}</p>
-                                                <p className="mb-1"><strong>Complemento:</strong> {clinica.Endereço.Complemento}</p>
-                                                <p className="mb-1"><strong>Bairro:</strong> {clinica.Endereço.Bairro}, {clinica.Endereço.Cidade} - {clinica.Endereço.Estado}</p>
-                                            </div>
-                                        ) : (
-                                            <p>Endereço não disponível</p>
-                                        )}
+                                        <button
+                                            className="btn btn-warning btn-sm me-2"
+                                            onClick={() => setEditarClinica(clinica)}
+                                        >
+                                            <i className="bi bi-pencil-square"></i>
+                                        </button>
+                                        <button
+                                            className="btn btn-danger btn-sm"
+                                            onClick={() => removerClinica(clinica.ID_Clinica)}
+                                        >
+                                            <i className="bi bi-trash"></i>
+                                        </button>
                                     </td>
-                                    <td>
-                                        <div className="d-flex">
-                                            <button
-                                                className="btn btn-warning btn-sm me-2"
-                                                onClick={() => setEditarClinica(clinica)}
-                                            >
-                                                <i className="bi bi-pencil-square"></i>
-                                            </button>
-                                            <button
-                                                className="btn btn-danger btn-sm"
-                                                onClick={() => removerClinica(clinica.ID_Clinica)}
-                                            >
-                                                <i className="bi bi-trash"></i>
-                                            </button>
-
-                                        </div>
-                                    </td>
-
                                 </tr>
                             ))}
                         </tbody>
-
                     </table>
                 </div>
             </div>
+
             <Paginator
                 totalItems={clinicasFiltradas.length}
                 itemsPerPage={itemsPerPage}
@@ -210,11 +178,6 @@ const GerenciarClinicas = () => {
                 setCurrentPage={setCurrentPage}
             />
 
-            {/* Modal para adicionar colaborador */}
-
-
-
-            {/* Modal para editar clínica */}
             {editarClinica && (
                 <EditarClinica
                     clinica={editarClinica}
@@ -222,7 +185,9 @@ const GerenciarClinicas = () => {
                     onSave={(updatedClinica) => {
                         setClinicas((prev) =>
                             prev.map((clinica) =>
-                                clinica.id === updatedClinica.id ? updatedClinica : clinica
+                                clinica.ID_Clinica === updatedClinica.ID_Clinica
+                                    ? updatedClinica
+                                    : clinica
                             )
                         );
                         setEditarClinica(null);

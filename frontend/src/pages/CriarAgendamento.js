@@ -47,7 +47,7 @@ function CriarAgendamento() {
     fetchServicos();
     fetchClientes();
     fetchFeriados();
-  }, []);
+  }, [data]); 
 
 
   const fetchServicos = async () => {
@@ -89,12 +89,7 @@ function CriarAgendamento() {
     ]);
   };
 
-  useEffect(() => {
-    if (servico && clinica) {
-      setColaboradores([]); // Limpando a lista antes de buscar novos dados
-      fetchColaboradores(); // Buscando colaboradores
-    }
-  }, [servico, clinica]);
+  
 
 
 
@@ -127,7 +122,12 @@ function CriarAgendamento() {
     }
   }, [servico, clinica]); // Apenas quando "servico" ou "clinica" mudarem
 
-
+  useEffect(() => {
+    if (servico && clinica) {
+      setColaboradores([]); // Limpando a lista antes de buscar novos dados
+      fetchColaboradores(); // Buscando colaboradores
+    }
+  }, [servico, clinica, fetchColaboradores]);
 
   useEffect(() => {
     if (servico) {
