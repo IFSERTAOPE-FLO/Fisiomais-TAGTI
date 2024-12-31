@@ -11,54 +11,50 @@ function Navbar() {
   const [role, setRole] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
   const [userId, setUserId] = useState(null);
   const [userPhoto, setUserPhoto] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [emailConfirmed, setEmailConfirmed] = useState(true);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [isEmailConfirmed, setIsEmailConfirmed] = useState(false); // Inicialmente assumimos que não está confirmado
+
 
   const navigate = useNavigate();
 
+
   const handleLogin = async () => {
     try {
-      const response = await axios.post("http://localhost:5000/login", {
-        email,
-        senha,
-      });
+      const response = await axios.post("http://localhost:5000/login", { email, senha });
+      const { access_token, name, role, userId, photo, email_confirmado } = response.data;
 
-      const { access_token, name, role, userId, photo } = response.data;
       setIsLoggedIn(true);
       setUserName(name);
       setRole(role);
       setUserId(userId);
-      setUserPhoto(photo);
+      setUserPhoto(photo || "");
+      setEmailConfirmed(email_confirmado);
 
+      // Armazenar as informações no localStorage
       localStorage.setItem("token", access_token);
       localStorage.setItem("userName", name);
       localStorage.setItem("role", role);
       localStorage.setItem("userId", userId);
-      localStorage.setItem("userPhoto", photo);
+      localStorage.setItem("userPhoto", photo || "");
+      localStorage.setItem("email_confirmado", email_confirmado.toString()); // Armazenar o estado de email confirmado
 
+      // Fecha o modal de login
       const modalElement = document.getElementById("loginModal");
       const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
-      if (modalInstance) {
-        modalInstance.hide();
-      }
+      if (modalInstance) modalInstance.hide();
       document.querySelectorAll(".modal-backdrop").forEach((backdrop) => backdrop.remove());
 
-      console.log("Usuário logado:", name);
-
-      // Redirecionar com base no papel do usuário
+      // Redireciona com base no papel do usuário
       setTimeout(() => {
-        if (role === "admin") {
-          navigate("/adminpage");
-        } else {
-          navigate("/");
-
-        }
+        navigate(role === "admin" ? "/adminpage" : "/");
         window.location.reload();
       }, 300);
 
-      // Iniciar renovação automática do token
+      // Inicia a renovação automática do token
       autoRefreshToken();
     } catch (error) {
       console.error("Erro no login:", error);
@@ -66,15 +62,31 @@ function Navbar() {
     }
   };
 
-  const autoRefreshToken = () => {
-    const refreshInterval = 10 * 60 * 1000;  // Atualizar a cada 10 minutos
-    const sessionEndTime = 60 * 60 * 1000;  // Sessão de 1 hora
+  useEffect(() => {
+    const storedIsLoggedIn = localStorage.getItem("token"); // Verifica se há um token no localStorage
+    const storedIsEmailConfirmed = localStorage.getItem("email_confirmado");
 
-    let logoutTimeout;
+    if (storedIsLoggedIn) {
+      setIsLoggedIn(true);
+    }
+
+    // Verifica se o email está confirmado
+    if (storedIsEmailConfirmed) {
+      setIsEmailConfirmed(storedIsEmailConfirmed === "true");
+    }
+  }, []);
+
+
+  // Função para renovar o token automaticamente
+  const autoRefreshToken = () => {
+    const refreshInterval = 10 * 60 * 1000; // 10 minutos
+    const sessionEndTime = 60 * 60 * 1000; // 1 hora
 
     const refreshToken = async () => {
       try {
         const savedToken = localStorage.getItem("token");
+        if (!savedToken) return;
+
         const response = await axios.post(
           "http://localhost:5000/refresh-token",
           {},
@@ -83,7 +95,6 @@ function Navbar() {
 
         if (response.data.access_token) {
           localStorage.setItem("token", response.data.access_token);
-          console.log("Token atualizado com sucesso.");
         }
       } catch (error) {
         console.error("Erro ao renovar o token:", error);
@@ -92,82 +103,67 @@ function Navbar() {
       }
     };
 
-    // Configurar a renovação periódica do token
-    const refreshIntervalId = setInterval(() => {
-      refreshToken();
-    }, refreshInterval);
+    const intervalId = setInterval(refreshToken, refreshInterval);
+    const logoutTimeout = setTimeout(handleLogout, sessionEndTime);
 
-    // Configurar o logout após o fim da sessão
-    logoutTimeout = setTimeout(() => {
-      alert("Sua sessão expirou. Você será deslogado.");
-      handleLogout();
-    }, sessionEndTime);
-
-    // Limpar os intervalos/tempos ao desmontar
     return () => {
-      clearInterval(refreshIntervalId);
+      clearInterval(intervalId);
       clearTimeout(logoutTimeout);
     };
   };
 
-  useEffect(() => {
-    const cleanup = autoRefreshToken();
-    return cleanup; // Limpa os temporizadores ao desmontar
-  }, []);
 
-  // Função de logout
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("role");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("userPhoto");
-    setIsLoggedIn(false);
-    setUserName("Usuário");
-    setRole("");
-    setUserId(null);
-    setUserPhoto("");
-    window.location.reload();
+
+  // Função para realizar logout
+  const handleLogout = async () => {
+    try {
+      const savedToken = localStorage.getItem("token");
+      if (savedToken) {
+        await axios.post("http://localhost:5000/logout", {}, {
+          headers: { Authorization: `Bearer ${savedToken}` },
+        });
+      }
+    } catch (error) {
+      console.error("Erro no logout:", error);
+    } finally {
+      localStorage.clear();
+      setIsLoggedIn(false);
+      setUserName("Usuário");
+      setRole("");
+      setUserId(null);
+      setUserPhoto("");
+      navigate("/");
+    }
   };
-
 
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
     const savedUserName = localStorage.getItem("userName");
     const savedRole = localStorage.getItem("role");
     const savedUserId = localStorage.getItem("userId");
-    const savedUserPhoto = localStorage.getItem("userPhoto"); // Recupera a foto salva no localStorage
-
-    console.log(savedUserPhoto); // Verifique se o valor de userPhoto é o esperado
+    const savedUserPhoto = localStorage.getItem("userPhoto");
 
     if (savedToken && savedUserName && savedRole) {
       try {
         const decodedToken = JSON.parse(atob(savedToken.split(".")[1]));
         const isTokenExpired = decodedToken.exp * 1000 < Date.now();
-
-        if (isTokenExpired) {
-          throw new Error("Token expirado");
-
-        }
-
+        if (isTokenExpired) throw new Error("Token expirado");
 
         setIsLoggedIn(true);
         setUserName(savedUserName);
         setRole(savedRole);
-        setUserId(savedUserId); // Usa o setUserId correto
-        setUserPhoto(savedUserPhoto || ""); // Usa uma string vazia caso a foto não exista
-      } catch (error) {        
-        localStorage.removeItem("token");
-        localStorage.removeItem("userName");
-        localStorage.removeItem("role");
-        localStorage.removeItem("userId");
-        localStorage.removeItem("userPhoto");
-        setUserName("Usuário");
-        setRole("");
-        window.location.reload();
+        setUserId(savedUserId);
+        setUserPhoto(savedUserPhoto || "");
+      } catch (error) {
         console.error("Erro ao verificar o token:", error);
+        handleLogout();
       }
     }
+  }, []);
+
+  useEffect(() => {
+    const cleanup = autoRefreshToken();
+    return cleanup; // Limpa os temporizadores ao desmontar
   }, []);
 
 
@@ -205,8 +201,10 @@ function Navbar() {
               <li className="nav-item">
                 <Link className="nav-link" to="/contato">Fale conosco</Link>
               </li>
-            </ul>          
- 
+
+
+            </ul>
+
 
             <ul className={`navbar-nav ms-auto ${isLoggedIn ? 'z-top' : ''}`}>
               {!isLoggedIn ? (
@@ -227,7 +225,7 @@ function Navbar() {
                   </li>
                 </>
               ) : (
-                
+
                 <li className="nav-item dropdown  btn-user">
                   <a
                     className="nav-link dropdown-toggle   btn-user"
@@ -280,7 +278,7 @@ function Navbar() {
                         className="dropdown-item"
                         onClick={handleLogout}
                         type="button"
-                        
+
                       >
                         Sair
                       </button>
@@ -288,12 +286,26 @@ function Navbar() {
 
                   </ul>
                 </li>
-                
+
               )}
             </ul>
           </div>
         </div>
       </nav>
+      {isLoggedIn && !isEmailConfirmed && (
+        <div className="container-fluid mt-2">
+          <div className="alert alert-warning alert-dismissible fade show text-center" role="alert">
+            <strong>Atenção!</strong> E-mail não confirmado. Por favor, verifique seu e-mail.
+            <button
+              type="button"
+              className="btn-close"
+              data-bs-dismiss="alert"
+              aria-label="Close"
+            ></button>
+          </div>
+        </div>
+      )}
+
 
       {/* Modal de Login */}
       <div

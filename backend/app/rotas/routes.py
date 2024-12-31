@@ -32,15 +32,16 @@ def login():
             "name": colaborador.nome,
             "photo": colaborador.photo if colaborador.photo else "",
             "role": "admin" if colaborador.is_admin else "colaborador",
-            "admin_nivel": colaborador.admin_nivel if colaborador.is_admin else None
+            "admin_nivel": colaborador.admin_nivel if colaborador.is_admin else None,
+            "email_confirmado": True  # Colaboradores sempre têm email confirmado
         }
         return jsonify(response), 200
 
     # Verificar se o email pertence a um cliente
     cliente = Clientes.query.filter_by(email=email).first()
     if cliente:
-        # Se o cliente ainda não confirmou o email, mas ele tem a senha correta, loga
-        if not cliente.email_confirmado:
+        # Se o cliente ainda não confirmou o email
+        if not cliente.email_confirmado and cliente.check_password(senha):
             access_token = create_access_token(identity=email)
             return jsonify({
                 "message": "Seu cadastro foi realizado com sucesso! Verifique seu email para confirmação.",
@@ -48,22 +49,25 @@ def login():
                 "userId": cliente.id_cliente,
                 "name": cliente.nome,
                 "role": "cliente",
-                "photo": cliente.photo if cliente.photo else ""
+                "photo": cliente.photo if cliente.photo else "",
+                "email_confirmado": False
             }), 200
 
         # Se o cliente confirmou o email e a senha está correta
         if cliente.check_password(senha):
             access_token = create_access_token(identity=email)
-            return jsonify(
-                access_token=access_token,
-                userId=cliente.id_cliente,
-                name=cliente.nome,
-                role="cliente",
-                photo=cliente.photo if cliente.photo else ""
-            ), 200
+            return jsonify({
+                "access_token": access_token,
+                "userId": cliente.id_cliente,
+                "name": cliente.nome,
+                "role": "cliente",
+                "photo": cliente.photo if cliente.photo else "",
+                "email_confirmado": True
+            }), 200
 
     # Se o email ou senha estiverem incorretos
     return jsonify(message="Credenciais inválidas"), 401
+
 
 
 
@@ -94,11 +98,11 @@ def handle_options():
 
 
 @main.route('/refresh-token', methods=['POST'])
-@jwt_required()
+@jwt_required(refresh=True)  # Garante que apenas tokens de refresh são aceitos
 def refresh_token():
     current_user = get_jwt_identity()
-    access_token = create_access_token(identity=current_user)
-    return jsonify(access_token=access_token), 200
+    new_access_token = create_access_token(identity=current_user)
+    return jsonify(access_token=new_access_token), 200
 
 
 @main.route('/api/notificar_admin', methods=['POST'])

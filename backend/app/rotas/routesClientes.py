@@ -1,12 +1,12 @@
 from flask import Blueprint, jsonify, request, url_for
 from app.models import Clientes, Enderecos, db
 from app.utils import is_cpf_valid, send_email
-from werkzeug.security import generate_password_hash, secure_filename
+from werkzeug.security import generate_password_hash
 from datetime import datetime
 import secrets
 from app.utils import is_cpf_valid, send_email
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
-
+from werkzeug.utils import secure_filename
 
 clientes = Blueprint('clientes', __name__)
 
