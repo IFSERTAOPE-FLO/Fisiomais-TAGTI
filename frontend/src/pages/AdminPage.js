@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect} from 'react';
 import '../css/AdminPage.css';
 import "bootstrap/dist/css/bootstrap.min.css";
 import GerenciarUsuarios from "../components/GerenciarUsuarios";
@@ -7,16 +7,24 @@ import GerenciarClinicas from "../components/GerenciarClinicas";
 import CriarAgendamento from "./CriarAgendamento";
 import VisualizarAgendamentos from "./VisualizarAgendamentos";
 import Dashboard from "./Dashboard";
-const savedRole = localStorage.getItem("role");
+
 
 const AdminPage = () => {
+  const savedRole = localStorage.getItem("role");
   
-  const [opcaoSelecionada, setOpcaoSelecionada] = useState("dashboard");
+  // Recupera a opção selecionada do localStorage, se existir
+  const savedOpcao = localStorage.getItem("opcaoSelecionada") || "dashboard";
+  
+  const [opcaoSelecionada, setOpcaoSelecionada] = useState(savedOpcao);
+
+  useEffect(() => {
+    // Salva a opção selecionada no localStorage sempre que mudar
+    localStorage.setItem("opcaoSelecionada", opcaoSelecionada);
+  }, [opcaoSelecionada]);
 
   const handleOpcaoChange = (opcao) => {
     setOpcaoSelecionada(opcao);
   };
-
   return (
     
     <div className="container-fluid   p-4 bg-light rounded shadow">
@@ -26,7 +34,7 @@ const AdminPage = () => {
     <ul className="navbar-nav mx-auto">
     <li className="nav-item">
         <a
-          href="#"
+          href="#dashboard"
           className={`nav-link ${opcaoSelecionada === "dashboard" ? "active" : ""}`}
           onClick={() => handleOpcaoChange("dashboard")}
         >
@@ -35,7 +43,7 @@ const AdminPage = () => {
       </li>
       <li className="nav-item">
         <a
-          href="#"
+          href="#usuarios"
           className={`nav-link ${opcaoSelecionada === "usuarios" ? "active" : ""}`}
           onClick={() => handleOpcaoChange("usuarios")}
         >
@@ -44,7 +52,7 @@ const AdminPage = () => {
       </li>
       <li className="nav-item">
         <a
-          href="#"
+          href="#servicos"
           className={`nav-link ${opcaoSelecionada === "servicos" ? "active" : ""}`}
           onClick={() => handleOpcaoChange("servicos")}
         >
@@ -53,7 +61,7 @@ const AdminPage = () => {
       </li>
       <li className="nav-item">
         <a
-          href="#"
+          href="#clinicas"
           className={`nav-link ${opcaoSelecionada === "clinicas" ? "active" : ""}`}
           onClick={() => handleOpcaoChange("clinicas")}
         >
@@ -62,7 +70,7 @@ const AdminPage = () => {
       </li>
       <li className="nav-item">
         <a
-          href="#"
+          href="#criarAgendamento"
           className={`nav-link ${opcaoSelecionada === "criarAgendamento" ? "active" : ""}`}
           onClick={() => handleOpcaoChange("criarAgendamento")}
         >
@@ -71,7 +79,7 @@ const AdminPage = () => {
       </li>
       <li className="nav-item z-bot">
         <a
-          href="#"
+          href="#visualizarAgendamentos"
           className={`nav-link ${opcaoSelecionada === "visualizarAgendamentos" ? "active" : ""}`}
           onClick={() => handleOpcaoChange("visualizarAgendamentos")}
         >

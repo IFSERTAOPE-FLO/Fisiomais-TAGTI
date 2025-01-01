@@ -26,8 +26,11 @@ def login():
     colaborador = Colaboradores.query.filter_by(email=email).first()
     if colaborador and colaborador.check_password(senha):
         access_token = create_access_token(identity=email)
+        refresh_token = create_access_token(identity=email, fresh=False)  # Criação do refresh_token
+
         response = {
             "access_token": access_token,
+            "refresh_token": refresh_token,  # Inclui o refresh_token
             "userId": colaborador.id_colaborador,
             "name": colaborador.nome,
             "photo": colaborador.photo if colaborador.photo else "",
@@ -43,9 +46,12 @@ def login():
         # Se o cliente ainda não confirmou o email
         if not cliente.email_confirmado and cliente.check_password(senha):
             access_token = create_access_token(identity=email)
+            refresh_token = create_access_token(identity=email, fresh=False)  # Criação do refresh_token
+
             return jsonify({
                 "message": "Seu cadastro foi realizado com sucesso! Verifique seu email para confirmação.",
                 "access_token": access_token,
+                "refresh_token": refresh_token,  # Inclui o refresh_token
                 "userId": cliente.id_cliente,
                 "name": cliente.nome,
                 "role": "cliente",
@@ -56,8 +62,10 @@ def login():
         # Se o cliente confirmou o email e a senha está correta
         if cliente.check_password(senha):
             access_token = create_access_token(identity=email)
+            refresh_token = create_access_token(identity=email, fresh=False)  # Criação do refresh_token
             return jsonify({
                 "access_token": access_token,
+                "refresh_token": refresh_token,  # Inclui o refresh_token
                 "userId": cliente.id_cliente,
                 "name": cliente.nome,
                 "role": "cliente",
@@ -98,11 +106,17 @@ def handle_options():
 
 
 @main.route('/refresh-token', methods=['POST'])
-@jwt_required(refresh=True)  # Garante que apenas tokens de refresh são aceitos
+@jwt_required(refresh=True)
 def refresh_token():
-    current_user = get_jwt_identity()
-    new_access_token = create_access_token(identity=current_user)
-    return jsonify(access_token=new_access_token), 200
+    try:
+        current_user = get_jwt_identity()
+        print(f"Token válido para o usuário: {current_user}")  # Log para verificar o usuário
+        new_access_token = create_access_token(identity=current_user)
+        return jsonify(access_token=new_access_token), 200
+    except Exception as e:
+        print(f"Erro ao renovar o token: {str(e)}")  # Log para verificar o erro
+        return jsonify({"error": "Erro ao renovar o token"}), 422
+
 
 
 @main.route('/api/notificar_admin', methods=['POST'])
@@ -119,10 +133,18 @@ def notificar_admin():
     # Obter dados do agendamento
     cliente_nome = agendamento.cliente.nome  # Nome do cliente
     colaborador_nome = agendamento.colaborador.nome  # Nome do colaborador
-    servico_nome = agendamento.servico.Nome_servico  # Nome do serviço
+    servico_nome = agendamento.servico.nome  # Nome do serviço
     data_agendamento = agendamento.data_e_hora.strftime('%d/%m/%Y %H:%M')  # Data e hora do agendamento
     cliente_email = agendamento.cliente.email  # E-mail do cliente
     colaborador_email = agendamento.colaborador.email  # E-mail do colaborador
+    clinica = agendamento.clinica
+    clinica_nome = clinica.nome if clinica else "Não especificada"
+    clinica_endereco = (
+        f"{clinica.endereco.rua}, {clinica.endereco.numero}, "
+        f"{clinica.endereco.bairro}, {clinica.endereco.cidade} - {clinica.endereco.estado}"
+        if clinica and clinica.endereco else "Endereço não especificado"
+    )
+    clinica_telefone = clinica.telefone if clinica else "Não especificado"
 
     # Criar o e-mail para o administrador
     subject = f'Cancelamento de Agendamento - {cliente_nome}'
@@ -136,6 +158,9 @@ def notificar_admin():
     - Colaborador: {colaborador_nome}
     - Serviço: {servico_nome}
     - Data e Hora: {data_agendamento}
+    - Clínica: {clinica_nome}
+    - Endereço da Clínica: {clinica_endereco}
+    - Telefone da Clínica: {clinica_telefone}
 
     Por favor, tome as medidas necessárias.
 
@@ -156,13 +181,16 @@ def notificar_admin():
     - Cliente: {cliente_nome}
     - Serviço: {servico_nome}
     - Data e Hora: {data_agendamento}
+    - Clínica: {clinica_nome}
+    - Endereço da Clínica: {clinica_endereco}
+    - Telefone da Clínica: {clinica_telefone}
 
     Por favor, tome as medidas necessárias.
 
     Atenciosamente,
     Sistema de Agendamentos
     '''
-    
+
     msg_colaborador = Message(subject=subject_colaborador, recipients=[colaborador_email], body=body_colaborador)
 
     # Criar o e-mail para o cliente
@@ -175,6 +203,9 @@ def notificar_admin():
     Detalhes do agendamento:
     - Serviço: {servico_nome}
     - Data e Hora: {data_agendamento}
+    - Clínica: {clinica_nome}
+    - Endereço da Clínica: {clinica_endereco}
+    - Telefone da Clínica: {clinica_telefone}
 
     Retornaremos por e-mail informando se o cancelamento foi possível ou se haverá algum custo relacionado ao processo.
 
@@ -194,6 +225,7 @@ def notificar_admin():
         return jsonify({'message': 'Administrador, colaborador e cliente notificados com sucesso!'}), 200
     except Exception as e:
         return jsonify({'message': f'Erro ao enviar e-mail: {str(e)}'}), 500
+
     
 @main.route('/api/contato', methods=['POST'])
 def contato():

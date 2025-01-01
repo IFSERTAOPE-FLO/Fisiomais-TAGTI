@@ -3,6 +3,7 @@ import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import '../css/Estilos.css';
+import { useNavigate } from 'react-router-dom';  // Importe o useNavigate
 
 const estados = [
   "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
@@ -30,6 +31,7 @@ function Cadastro() {
   const [errorMessage, setErrorMessage] = useState('');
   const [numero, setNumero] = useState('');
   const [complemento, setComplemento] = useState('');
+  const navigate = useNavigate(); // Declare useNavigate no escopo do componente
 
 
   const buscarCidades = async (estado) => {
@@ -49,25 +51,27 @@ function Cadastro() {
     }
   };
 
+
+
   const handleRegister = async () => {
     if (!nome || !email || !senha || !cpf || !sexo) {
       alert('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
-
+  
     if (email !== confirmarEmail) {
       alert('Os emails não correspondem.');
       return;
     }
-
+  
     if (senha !== confirmarSenha) {
       alert('As senhas não correspondem.');
       return;
     }
-
+  
     setLoading(true);
     setErrorMessage('');
-
+  
     // Criar o objeto endereco com os dados do formulário
     const enderecoObj = {
       rua: rua,
@@ -77,7 +81,7 @@ function Cadastro() {
       cidade: cidade,
       estado: estado,
     };
-
+  
     const formData = new FormData();
     formData.append("nome", nome);
     formData.append("email", email);
@@ -92,16 +96,24 @@ function Cadastro() {
     for (let pair of formData.entries()) {
       console.log(pair[0] + ': ' + pair[1]);
     }
-
+  
     try {
       const response = await axios.post("http://localhost:5000/clientes/register/public", formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-
+  
       if (response.status === 201) {
         alert("Inscrição realizada com sucesso!");
+        
+        // Armazenar o token de acesso no localStorage (ou sessionStorage)
+        localStorage.setItem('access_token', response.data.access_token);
+        localStorage.setItem('user_id', response.data.userId);
+        localStorage.setItem('user_name', response.data.name);
+        localStorage.setItem('user_role', response.data.role);
+        localStorage.setItem('user_photo', response.data.photo);
+  
         // Limpar os campos após sucesso
         setNome('');
         setEmail('');
@@ -116,6 +128,10 @@ function Cadastro() {
         setFoto(null);
         setDtNasc('');
         setCidades([]);
+  
+        // Redirecionar para a página principal após o sucesso
+        
+      navigate('/criaragendamento');
       }
     } catch (error) {
       console.error("Erro na inscrição:", error);
@@ -125,6 +141,7 @@ function Cadastro() {
       setLoading(false);
     }
   };
+  
 
 
 

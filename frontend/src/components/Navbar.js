@@ -22,11 +22,12 @@ function Navbar() {
   const navigate = useNavigate();
 
 
-  const handleLogin = async () => {
+  const handleLogin = async (email, senha) => {
     try {
       const response = await axios.post("http://localhost:5000/login", { email, senha });
       const { access_token, name, role, userId, photo, email_confirmado } = response.data;
 
+      // Armazenar os dados no estado e no localStorage
       setIsLoggedIn(true);
       setUserName(name);
       setRole(role);
@@ -40,7 +41,8 @@ function Navbar() {
       localStorage.setItem("role", role);
       localStorage.setItem("userId", userId);
       localStorage.setItem("userPhoto", photo || "");
-      localStorage.setItem("email_confirmado", email_confirmado.toString()); // Armazenar o estado de email confirmado
+      localStorage.setItem("email_confirmado", email_confirmado.toString());
+      localStorage.setItem("isLoggedIn", "true"); // Armazenar isLoggedIn
 
       // Fecha o modal de login
       const modalElement = document.getElementById("loginModal");
@@ -63,8 +65,23 @@ function Navbar() {
   };
 
   useEffect(() => {
+    const storedIsLoggedIn = localStorage.getItem("isLoggedIn");
+
+    if (storedIsLoggedIn === "true") {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
     const storedIsLoggedIn = localStorage.getItem("token"); // Verifica se há um token no localStorage
     const storedIsEmailConfirmed = localStorage.getItem("email_confirmado");
+
+    if (storedToken) {
+      setIsLoggedIn(true);
+    }
 
     if (storedIsLoggedIn) {
       setIsLoggedIn(true);
@@ -79,25 +96,26 @@ function Navbar() {
 
   // Função para renovar o token automaticamente
   const autoRefreshToken = () => {
-    const refreshInterval = 10 * 60 * 1000; // 10 minutos
+    const refreshInterval = 1 * 60 * 1000; // 10 minutos
     const sessionEndTime = 60 * 60 * 1000; // 1 hora
+
 
     const refreshToken = async () => {
       try {
-        const savedToken = localStorage.getItem("token");
-        if (!savedToken) return;
+        const storedRefreshToken = localStorage.getItem("refresh_token");
+        if (!storedRefreshToken) return;
 
         const response = await axios.post(
           "http://localhost:5000/refresh-token",
           {},
-          { headers: { Authorization: `Bearer ${savedToken}` } }
+          { headers: { Authorization: `Bearer ${storedRefreshToken}` } }
         );
 
         if (response.data.access_token) {
           localStorage.setItem("token", response.data.access_token);
         }
       } catch (error) {
-        console.error("Erro ao renovar o token:", error);
+        console.error("Erro ao renovar o token:", error.response?.data?.message || "Erro desconhecido");
         alert("Sua sessão expirou. Faça login novamente.");
         handleLogout();
       }
@@ -201,7 +219,11 @@ function Navbar() {
               <li className="nav-item">
                 <Link className="nav-link" to="/contato">Fale conosco</Link>
               </li>
-
+              {role !== "cliente" && (
+                <li className="nav-item">
+                  <Link className="nav-link" to="/adminPage">Central de Controle</Link>
+                </li>
+              )}
 
             </ul>
 
@@ -294,7 +316,7 @@ function Navbar() {
       </nav>
       {isLoggedIn && !isEmailConfirmed && (
         <div className="container-fluid mt-2">
-          <div className="alert alert-warning alert-dismissible fade show text-center" role="alert">
+          <div className="alert alert-warning alert-dismissible fade show text-center z-bot" role="alert">
             <strong>Atenção!</strong> E-mail não confirmado. Por favor, verifique seu e-mail.
             <button
               type="button"

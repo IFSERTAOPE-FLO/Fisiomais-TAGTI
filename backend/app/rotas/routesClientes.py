@@ -54,6 +54,7 @@ def register_with_jwt():
     bairro = data.get('bairro', '')
     cidade = data.get('cidade', '')
     estado = data.get('estado', '')
+    sexo = data.get('sexo', '')  # Novo campo 'sexo'
 
     # Verificar e validar CPF
     if not is_cpf_valid(cpf):
@@ -89,7 +90,7 @@ def register_with_jwt():
     )
 
     # Gerar token de confirmação de email
-    token_confirmacao = secrets.token_urlsafe(32)
+   
     novo_cliente = Clientes(
         nome=nome,
         email=email,
@@ -100,22 +101,16 @@ def register_with_jwt():
         dt_nasc=dt_nasc,
         endereco=novo_endereco,
         email_confirmado=False,
-        token_confirmacao=token_confirmacao
+        sexo = data.get('sexo', '')  # Novo campo 'sexo'
+        
     )
 
     try:
         db.session.add(novo_endereco)
         db.session.add(novo_cliente)
-        db.session.commit()
+        db.session.commit()        
 
-        link_confirmacao = url_for('clientes.confirm_email', token=token_confirmacao, _external=True)
-        send_email(
-            subject="Confirme seu email",
-            recipients=[email],
-            body=f"Olá {nome}, clique no link para confirmar seu email: {link_confirmacao}"
-        )
-
-        return jsonify({"message": "Inscrição realizada com sucesso! Verifique seu email para confirmação."}), 201
+        return jsonify({"message": "Inscrição realizada com sucesso! "}), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Erro ao realizar a inscrição: {str(e)}"}), 500

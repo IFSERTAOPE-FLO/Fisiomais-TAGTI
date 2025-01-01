@@ -103,9 +103,9 @@ const GerenciarClinicas = () => {
         currentPage * itemsPerPage
     );
     const handleSave = () => {
-        buscarClinicas(); 
+        buscarClinicas();
         setEditarClinica(null);
-       
+
     };
 
     return (
@@ -126,7 +126,7 @@ const GerenciarClinicas = () => {
                     <input
                         type="text"
                         className="form-control"
-                        placeholder="Pesquisar por nome do serviço"
+                        placeholder="Pesquisar clinica"
                         value={pesquisaNome}
                         onChange={(e) => setPesquisaNome(e.target.value)}
                     />
@@ -139,6 +139,7 @@ const GerenciarClinicas = () => {
                     <table className="table table-striped table-bordered mt-4">
                         <thead>
                             <tr>
+                                <th>#</th>
                                 <th onClick={() => handleSort("Nome")} style={{ cursor: "pointer" }}>
                                     Nome
                                 </th>
@@ -151,6 +152,7 @@ const GerenciarClinicas = () => {
                         <tbody>
                             {clinicasPaginadas.map((clinica) => (
                                 <tr key={clinica.ID_Clinica}>
+                                    <td >{clinica.ID_Clinica}</td>
                                     <td>{clinica.Nome}</td>
                                     <td>{clinica.CNPJ}</td>
                                     <td>{clinica.Telefone}</td>

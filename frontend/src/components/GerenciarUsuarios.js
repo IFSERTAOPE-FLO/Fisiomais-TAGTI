@@ -13,9 +13,11 @@ const GerenciarUsuarios = () => {
     const [pesquisaNome, setPesquisaNome] = useState(""); // Estado para armazenar o filtro de nome
     const [horariosEditando, setHorariosEditando] = useState(null);  // Adicionar estado para editar horários
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10; // Defina o número de itens por página
     const savedRole = localStorage.getItem("role"); // Recupera o role do localStorage
     const [usuarioLogado, setUsuarioLogado] = useState(null);
+    const [usuariosFiltrados, setUsuariosFiltrados] = useState([]); // Estado para armazenar usuários filtrados
+
+    const itemsPerPage = 5; // Defina o número de itens por página
 
     const isRoleValid = savedRole === "admin" || savedRole === "colaborador";
 
@@ -43,25 +45,17 @@ const GerenciarUsuarios = () => {
             }
 
             const data = await response.json();
-            if (Array.isArray(data)) {
-                setUsuarios(data);
-                setUsuarioLogado(data[0])
+            if (data.usuarios && Array.isArray(data.usuarios)) {
+                setUsuarios(data.usuarios);
+                const usuarioLogado = data.usuario_logado_index !== null ? data.usuarios[data.usuario_logado_index] : null;
+                setUsuarioLogado(usuarioLogado);
             } else {
-                setErro("A resposta da API não é um array.");
+                setErro("A resposta da API não é válida.");
             }
         } catch (err) {
             setErro("Erro ao buscar usuários.");
         }
     };
-
-    useEffect(() => {
-        if (isRoleValid) {
-            buscarUsuarios();
-        }
-    }, [isRoleValid]);
-
-
-
 
 
     const toggleTipo = () => {
@@ -127,9 +121,7 @@ const GerenciarUsuarios = () => {
         setHorariosEditando(null);  // Fechar modal
     };
 
-    useEffect(() => {
-        buscarUsuarios(); // Carregar usuários inicialmente
-    }, []);
+
 
 
 
@@ -167,28 +159,32 @@ const GerenciarUsuarios = () => {
 
 
 
-    const usuariosFiltrados = sortedUsuarios.filter(usuario => {
-        // Exibe todos os usuários se "todos" for selecionado
-        if (tipoAlternado === "todos") {
-            return usuario.nome.toLowerCase().includes(pesquisaNome.toLowerCase());
-        }
+   
     
-        // Filtra por tipo (cliente ou colaborador) se "cliente" ou "colaborador" for selecionado
-        return (
-            usuario.nome.toLowerCase().includes(pesquisaNome.toLowerCase()) &&
-            usuario.role === tipoAlternado
-        );
-    });
+    useEffect(() => {
+        // Filtra os usuários baseados no nome e tipo
+        const filtered = usuarios.filter(usuario => {
+            const nomeMatches = usuario.nome.toLowerCase().includes(pesquisaNome.toLowerCase());
+            if (tipoAlternado === "todos") {
+                return nomeMatches;
+            }
+            return nomeMatches && usuario.role === tipoAlternado;
+        });
+    
+        // Atualiza apenas os usuários filtrados sem adicionar novamente o usuário logado
+        setUsuariosFiltrados(filtered);
+    }, [tipoAlternado, pesquisaNome]); // O filtro será aplicado sempre que mudar o tipo, a pesquisa ou a lista de usuários
+    
+    // Paginação dos usuários filtrados
+    const usuariosPaginados = usuariosFiltrados.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+    
 
 
 
 
-
-
-    // Paginação
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const usuariosPaginados = usuariosFiltrados.slice(indexOfFirstItem, indexOfLastItem);
 
     return (
         <div className="container">
@@ -253,6 +249,7 @@ const GerenciarUsuarios = () => {
                 <table className="table table-striped table-bordered mt-4">
                     <thead>
                         <tr>
+                            <th>#</th>
                             <th
                                 onClick={() => handleSort("nome")}
                                 style={{ cursor: "pointer" }}
@@ -279,6 +276,7 @@ const GerenciarUsuarios = () => {
                     <tbody>
                         {usuariosPaginados.map((usuario) => (
                             <tr key={usuario.id}>
+                                <td>{usuario.id}</td>
                                 <td>{usuario.nome}</td>
                                 <td>{usuario.email}</td>
                                 <td>{usuario.role}</td>
@@ -325,8 +323,9 @@ const GerenciarUsuarios = () => {
                 totalItems={usuariosFiltrados.length}
                 itemsPerPage={itemsPerPage}
                 currentPage={currentPage}
-                setCurrentPage={setCurrentPage} // Correctly pass the setCurrentPage function
+                setCurrentPage={setCurrentPage}  // Passando a função para atualizar a página
             />
+
 
 
             {usuarioEditando && (

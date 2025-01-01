@@ -258,11 +258,14 @@ def listar_usuarios():
         for colaborador in colaboradores
     ]
 
-    # Adicionar os dados do usuário logado no início da lista, se encontrado
-    if usuario_logado and not usuario_logado.get("is_admin", False):
-        usuarios.insert(0, usuario_logado)
+    # Encontrar o índice do usuário logado
+    usuario_logado_index = None
+    if usuario_logado:
+        usuario_logado_index = next((index for index, user in enumerate(usuarios) if user['email'] == usuario_logado['email']), None)
 
-    return jsonify(usuarios), 200
+    # Retornar o índice do usuário logado
+    return jsonify({"usuarios": usuarios, "usuario_logado_index": usuario_logado_index}), 200
+
 
 
     

@@ -267,10 +267,6 @@ def dias_permitidos(colaborador_id):
         # Captura mais detalhes do erro
         return jsonify({"message": f"Erro ao buscar dias permitidos: {str(e)}"}), 500
 
-
-
-
-
 def obter_horarios_disponiveis(colaborador_id, data_obj):
     # Converte a data para o dia da semana (ex: Segunda-feira)
     dia_semana = data_obj.strftime("%A")  # Usa o nome completo do dia da semana (ex: "Monday")
@@ -313,6 +309,10 @@ def obter_horarios_disponiveis(colaborador_id, data_obj):
     agendamentos_horarios = {agendamento.data_e_hora.replace(second=0, microsecond=0) for agendamento in agendamentos}
     print(f"Horários agendados: {agendamentos_horarios}")  # Log para verificar horários agendados
 
+    # Verifica se a data é o dia atual e ajusta o filtro de horários
+    hora_atual_brasilia = datetime.now() + timedelta(hours=-3)  # Ajusta para o horário de Brasília
+    limite_minimo_horario = hora_atual_brasilia + timedelta(hours=2)
+
     horarios_disponiveis = []
 
     for horario in horarios_colaborador:
@@ -322,8 +322,9 @@ def obter_horarios_disponiveis(colaborador_id, data_obj):
 
         # Use timedelta para incrementar em intervalos de 1 hora
         while hora_atual < hora_fim:
-            # Adiciona o horário ao resultado se não estiver agendado
-            if hora_atual.replace(second=0, microsecond=0) not in agendamentos_horarios:
+            # Verifica se o horário está no futuro e não em cima da hora no dia atual
+            if (data_obj.date() != hora_atual_brasilia.date() or hora_atual >= limite_minimo_horario) and \
+                    hora_atual.replace(second=0, microsecond=0) not in agendamentos_horarios:
                 print(f"Horário disponível: {hora_atual}")  # Log para verificar horário disponível
                 horarios_disponiveis.append(hora_atual)
             hora_atual += timedelta(hours=1)  # Ajuste para 1 hora
@@ -423,10 +424,14 @@ def enviar_email_status_agendamento(agendamento, status):
         servico = Servicos.query.get(agendamento.id_servico)
 
         if not cliente or not colaborador or not servico:
-            print("Dados do agendamento incompletos")
+            current_app.logger.error("Dados do agendamento incompletos.")
             return
 
-        # Preparar o e-mail para o cliente
+        # Função auxiliar para criar e-mails
+        def criar_email(subject, recipients, body):
+            return Message(subject=subject, recipients=recipients, body=body)
+
+        # Preparar os e-mails com base no status
         if status == 'confirmado':
             subject_cliente = "Seu agendamento foi confirmado!"
             body_cliente = (
@@ -435,6 +440,15 @@ def enviar_email_status_agendamento(agendamento, status):
                 f"{agendamento.data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\n"
                 f"Atenciosamente,\nEquipe FisioMais"
             )
+
+            subject_colaborador = "Agendamento confirmado!"
+            body_colaborador = (
+                f"Olá {colaborador.nome},\n\n"
+                f"O agendamento com o cliente {cliente.nome} foi confirmado para o serviço "
+                f"'{servico.nome}' em {agendamento.data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\n"
+                f"Atenciosamente,\nEquipe FisioMais"
+            )
+
         elif status == 'negado':
             subject_cliente = "Seu agendamento foi cancelado"
             body_cliente = (
@@ -444,22 +458,6 @@ def enviar_email_status_agendamento(agendamento, status):
                 f"Atenciosamente,\nEquipe FisioMais"
             )
 
-        msg_cliente = Message(
-            subject=subject_cliente,
-            recipients=[cliente.email],
-            body=body_cliente
-        )
-
-        # Preparar o e-mail para o colaborador
-        if status == 'confirmado':
-            subject_colaborador = "Agendamento confirmado!"
-            body_colaborador = (
-                f"Olá {colaborador.nome},\n\n"
-                f"O agendamento com o cliente {cliente.nome} foi confirmado para o serviço "
-                f"'{servico.nome}' em {agendamento.data_e_hora.strftime('%d/%m/%Y %H:%M')}.\n\n"
-                f"Atenciosamente,\nEquipe FisioMais"
-            )
-        elif status == 'negado':
             subject_colaborador = "Agendamento cancelado"
             body_colaborador = (
                 f"Olá {colaborador.nome},\n\n"
@@ -468,19 +466,22 @@ def enviar_email_status_agendamento(agendamento, status):
                 f"Atenciosamente,\nEquipe FisioMais"
             )
 
-        msg_colaborador = Message(
-            subject=subject_colaborador,
-            recipients=[colaborador.email],
-            body=body_colaborador
-        )
+        else:
+            current_app.logger.warning(f"Status desconhecido: {status}")
+            return
+
+        # Criar e-mails
+        msg_cliente = criar_email(subject_cliente, [cliente.email], body_cliente)
+        msg_colaborador = criar_email(subject_colaborador, [colaborador.email], body_colaborador)
 
         # Enviar os e-mails
         mail.send(msg_cliente)
         mail.send(msg_colaborador)
-        print(f"E-mails enviados para cliente {cliente.nome} e colaborador {colaborador.nome}.")
+        current_app.logger.info(f"E-mails enviados para cliente {cliente.nome} e colaborador {colaborador.nome}.")
     
     except Exception as e:
-        print(f"Erro ao enviar e-mails: {str(e)}")
+        current_app.logger.error(f"Erro ao enviar e-mails: {str(e)}")
+
 
 
 @agendamentos.route('/deletar_agendamento/<int:agendamento_id>', methods=['DELETE'])
@@ -587,6 +588,10 @@ def enviar_email_agendamento(agendamento_id):
         if not cliente or not colaborador or not servico:
             return jsonify({'message': 'Dados do agendamento incompletos'}), 404
 
+        # Função auxiliar para montar o e-mail
+        def criar_email(subject, recipients, body):
+            return Message(subject=subject, recipients=recipients, body=body)
+
         # Dados do e-mail para o cliente
         subject_cliente = "Lembrete: Seu atendimento foi agendado!"
         body_cliente = (
@@ -596,11 +601,7 @@ def enviar_email_agendamento(agendamento_id):
             f"Status: Pendente. Por favor, aguarde a confirmação do colaborador.\n\n"
             f"Atenciosamente,\nEquipe FisioMais"
         )
-        msg_cliente = Message(
-            subject=subject_cliente,
-            recipients=[cliente.email],
-            body=body_cliente
-        )
+        msg_cliente = criar_email(subject_cliente, [cliente.email], body_cliente)
 
         # Dados do e-mail para o colaborador
         subject_colaborador = "Novo agendamento - Aguardando confirmação"
@@ -611,11 +612,7 @@ def enviar_email_agendamento(agendamento_id):
             f"Status: Pendente. Por favor, confirme se você pode realizar esse atendimento.\n\n"
             f"Atenciosamente,\nEquipe FisioMais"
         )
-        msg_colaborador = Message(
-            subject=subject_colaborador,
-            recipients=[colaborador.email],
-            body=body_colaborador
-        )
+        msg_colaborador = criar_email(subject_colaborador, [colaborador.email], body_colaborador)
 
         # Dados do e-mail para o administrador
         subject_admin = "Novo agendamento registrado - Aguardando confirmação"
@@ -628,11 +625,7 @@ def enviar_email_agendamento(agendamento_id):
             f"Status: Pendente. Aguardando confirmação do colaborador e cliente.\n\n"
             f"Atenciosamente,\nEquipe FisioMais"
         )
-        msg_admin = Message(
-            subject=subject_admin,
-            recipients=[current_app.config['MAIL_DEFAULT_SENDER']],
-            body=body_admin
-        )
+        msg_admin = criar_email(subject_admin, [current_app.config['MAIL_DEFAULT_SENDER']], body_admin)
 
         # Enviar os e-mails
         mail.send(msg_cliente)
@@ -642,4 +635,6 @@ def enviar_email_agendamento(agendamento_id):
         return jsonify({'message': 'E-mails enviados com sucesso'}), 200
 
     except Exception as e:
-        return jsonify({'message': f'Erro ao enviar e-mails: {str(e)}'}), 500
+        current_app.logger.error(f"Erro ao enviar e-mails para o agendamento {agendamento_id}: {e}")
+        return jsonify({'message': 'Erro ao enviar e-mails'}), 500
+

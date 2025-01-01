@@ -23,7 +23,7 @@ const VisualizarAgendamentos = () => {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [newStatus, setNewStatus] = useState('');
 
-  const [pesquisaTipo, setPesquisaTipo] = useState('cliente'); // Estado para o tipo de pesquisa
+  const [pesquisaTipo, setPesquisaTipo] = useState('Número do Agendamento'); // Estado para o tipo de pesquisa
   const [pesquisaValor, setPesquisaValor] = useState(''); // Estado para o valor da pesquisa
 
 
@@ -184,12 +184,13 @@ const VisualizarAgendamentos = () => {
   // Função de filtragem
   const agendamentosFiltrados = sortedAgendamentos.filter((agendamento) => {
     switch (pesquisaTipo) {
+      case 'agendamento':
+        return agendamento.id.toString().includes(pesquisaValor);
       case 'cliente':
         return agendamento.cliente.toLowerCase().includes(pesquisaValor.toLowerCase());
       case 'colaborador':
         return agendamento.colaborador.toLowerCase().includes(pesquisaValor.toLowerCase());
-      case 'agendamento':
-        return agendamento.id.toString().includes(pesquisaValor);
+      
       case 'clinica':
         return agendamento.clinica?.nome.toLowerCase().includes(pesquisaValor.toLowerCase());
       default:
@@ -219,9 +220,12 @@ const VisualizarAgendamentos = () => {
                 value={pesquisaTipo}
                 onChange={(e) => setPesquisaTipo(e.target.value)}
               >
+                <option value="agendamento">Nº do Agendamento</option>
+                { role!=='cliente' &&(
                 <option value="cliente">Cliente</option>
-                <option value="colaborador">Colaborador</option>
-                <option value="agendamento">ID Agendamento</option>
+              )
+              }
+                <option value="colaborador">Colaborador</option>                
                 <option value="clinica">Clínica</option>
               </select>
               <input
