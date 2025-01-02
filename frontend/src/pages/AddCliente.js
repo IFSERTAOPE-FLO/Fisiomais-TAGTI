@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Form, Button, Col, Row, Modal, Spinner } from 'react-bootstrap';
+import { Form, Button, Col, Row, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
 const AddCliente = () => {
@@ -22,7 +22,6 @@ const AddCliente = () => {
   });
 
   const [loading, setLoading] = useState(false);
-  const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [estados, setEstados] = useState([]);
   const [cidades, setCidades] = useState([]);

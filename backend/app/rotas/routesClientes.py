@@ -115,32 +115,31 @@ def register_with_jwt():
         db.session.rollback()
         return jsonify({"message": f"Erro ao realizar a inscrição: {str(e)}"}), 500
 
+
+from datetime import datetime
+
 @clientes.route('/register/public', methods=['POST'])
 def register_without_jwt():
-    data = request.get_json()  # Modificado para receber dados como JSON
+    data = request.get_json()  # Recebe os dados em formato JSON
     nome = data.get('nome')
     email = data.get('email')
     cpf = data.get('cpf', '').strip()    
     senha = data.get('senha')
     telefone = data.get('telefone', '')
-    referencias = data.get('referencias', '')
     dt_nasc_str = data.get('dt_nasc', None)
-    rua = data.get('rua', '')
-    numero = data.get('numero', '')
-    complemento = data.get('complemento', '')
-    bairro = data.get('bairro', '')
-    cidade = data.get('cidade', '')
-    estado = data.get('estado', '')
-    sexo = data.get('sexo')  # Novo campo 'sexo'
+    sexo = data.get('sexo', '').strip()  # Campo sexo
+    
+    # Verificar se o sexo foi informado
+    if sexo not in ['Masculino', 'Feminino', 'Outro']:
+        return jsonify({"message": "Sexo inválido. Deve ser 'Masculino', 'Feminino' ou 'Outro'."}), 400
         
     if not cpf:
         return jsonify({"message": "CPF é obrigatório."}), 400
 
     # Verificar e validar CPF
     if not is_cpf_valid(cpf):
-        return jsonify({"message": "CPF inválido."}), 400    
-   
-
+        return jsonify({"message": "CPF inválido."}), 400
+    
     # Converter a data de nascimento
     dt_nasc = None
     if dt_nasc_str:
@@ -148,6 +147,17 @@ def register_without_jwt():
             dt_nasc = datetime.strptime(dt_nasc_str, '%Y-%m-%d').date()
         except ValueError:
             return jsonify({"message": "Data de nascimento em formato inválido. Use AAAA-MM-DD."}), 400
+    
+    # Verificar se dt_nasc foi corretamente convertida
+    if not dt_nasc:
+        return jsonify({"message": "Data de nascimento é obrigatória."}), 400
+
+    # Verificar a idade mínima de 18 anos
+    today = datetime.today().date()
+    idade = today.year - dt_nasc.year - ((today.month, today.day) < (dt_nasc.month, dt_nasc.day))
+    
+    if idade < 18:
+        return jsonify({"message": "A idade mínima para se inscrever é de 18 anos."}), 400
 
     # Verificar se o e-mail ou CPF já estão cadastrados
     if Clientes.query.filter((Clientes.email == email) | (Clientes.cpf == cpf)).first():
@@ -160,16 +170,6 @@ def register_without_jwt():
     # Hash da senha
     hashed_password = generate_password_hash(senha)
 
-    # Criar novo endereço
-    novo_endereco = Enderecos(
-        rua=rua,
-        numero=numero,
-        complemento=complemento,
-        bairro=bairro,
-        cidade=cidade,
-        estado=estado
-    )
-
     # Gerar token de confirmação de email
     token_confirmacao = secrets.token_urlsafe(32)
     novo_cliente = Clientes(
@@ -178,20 +178,15 @@ def register_without_jwt():
         cpf=cpf,
         telefone=telefone,
         senha=hashed_password,
-        sexo=sexo,  # Adiciona o sexo        
-        referencias=referencias,
         dt_nasc=dt_nasc,
-        endereco=novo_endereco,
+        sexo=sexo,  
         email_confirmado=False,
         token_confirmacao=token_confirmacao
     )
 
-    # Comentando o bloco do envio de e-mail para testar
     try:
-        db.session.add(novo_endereco)
         db.session.add(novo_cliente)
         db.session.commit()
-
         # Simulação de falha no envio de e-mail (sem enviar)
         # link_confirmacao = url_for('clientes.confirm_email', token=token_confirmacao, _external=True)
         # try:
@@ -213,14 +208,11 @@ def register_without_jwt():
             "userId": novo_cliente.id_cliente,
             "name": novo_cliente.nome,
             "role": "cliente",
-            "photo": novo_cliente.photo if novo_cliente.photo else "",
-            "email": email,  # Adiciona o email para login automático
-            "senha": senha  # Inclui a senha para simulação (apenas para desenvolvimento)
+            "email": email  # Adiciona o email para login automático
         }), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Erro ao realizar a inscrição: {str(e)}"}), 500
-
 
 
 

@@ -18,24 +18,12 @@ function Navbar() {
   const [emailConfirmed, setEmailConfirmed] = useState(true);
   const [rememberMe, setRememberMe] = useState(false);
   const [isEmailConfirmed, setIsEmailConfirmed] = useState(false); // Inicialmente assumimos que não está confirmado
-  const [user, setUser] = useState({
-    id: null,
-    name: '',
-    role: '',
-    email: '',
-    photo: '',
-  });
-  const [token, setToken] = useState('');
   const [showCadastroModal, setShowCadastroModal] = useState(false);
-
-
-  
-
 
   const navigate = useNavigate();
 
 
-  const handleLogin = async (email, senha) => {
+  const handleLogin = async () => {
     try {
       const response = await axios.post("http://localhost:5000/login", { email, senha });
       const { access_token, name, role, userId, photo, email_confirmado } = response.data;
@@ -78,58 +66,54 @@ function Navbar() {
   };
 
   const handleCadastroSuccess = (data) => {
-    setUser({
-      id: data.userId,
-      name: data.name,
-      role: data.role,
-      email: data.email,
-      photo: data.photo,
-    });
-  
-    setToken(data.access_token);  // Salva o token no estado ou no localStorage
-    localStorage.setItem('access_token', data.access_token);  // Armazena no localStorage
-    localStorage.setItem('userName', data.name);
-    localStorage.setItem('role', data.role);
-    localStorage.setItem('userId', data.userId);
-    localStorage.setItem('userPhoto', data.photo || "");
-    localStorage.setItem('email_confirmado', data.email_confirmado.toString());
-    localStorage.setItem('isLoggedIn', 'true'); // Marca que o usuário está logado
-  
-    setShowCadastroModal(false); // Fecha o modal após o sucesso
-    setIsLoggedIn(true);
-    setEmailConfirmed(data.email_confirmado);  // Atualiza o estado de confirmação de e-mail
-    navigate("/criarAgendamento");
-  };
-  
+    console.log('Dados recebidos no cadastro:', data);
 
-  useEffect(() => {
-    const storedIsLoggedIn = localStorage.getItem("isLoggedIn");
-
-    if (storedIsLoggedIn === "true") {
+    if (data && data.userId && data.name && data.role && data.email) {
+      // Atualizando o estado de forma individual
       setIsLoggedIn(true);
-    }
-  }, []);
+      setUserName(data.name);
+      setRole(data.role);
+      setUserId(data.userId);
+      setUserPhoto(data.photo || "");
+      setEmailConfirmed(data.email_confirmado);
 
+      // Persistindo as informações no localStorage
+      localStorage.setItem('token', data.access_token); // Correção aqui
+      localStorage.setItem('userName', data.name);
+      localStorage.setItem('role', data.role);
+      localStorage.setItem('userId', data.userId);
+      localStorage.setItem('userPhoto', data.photo || "");
+      localStorage.setItem('email_confirmado', data.email_confirmado ? "true" : "false");
+      localStorage.setItem('isLoggedIn', 'true');
+
+      setShowCadastroModal(false);
+
+      navigate("/criarAgendamento");
+    } else {
+      console.error('Erro: Dados incompletos ou ausentes', data);
+      alert("Erro ao cadastrar o usuário. Tente novamente.");
+    }
+  };
 
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
-    const storedIsLoggedIn = localStorage.getItem("token"); // Verifica se há um token no localStorage
+    const storedIsLoggedIn = localStorage.getItem("isLoggedIn");
     const storedIsEmailConfirmed = localStorage.getItem("email_confirmado");
 
-    if (storedToken) {
+    if (storedToken && storedIsLoggedIn === "true") {
       setIsLoggedIn(true);
     }
 
-    if (storedIsLoggedIn) {
-      setIsLoggedIn(true);
-    }
-
-    // Verifica se o email está confirmado
     if (storedIsEmailConfirmed) {
       setIsEmailConfirmed(storedIsEmailConfirmed === "true");
     }
   }, []);
+
+
+
+
+
 
 
   // Função para renovar o token automaticamente
@@ -279,13 +263,13 @@ function Navbar() {
                     </button>
                   </li>
                   <li className="nav-item">
-                <button
-                    className="btn btn-signup align-items-center gap-2"
-                    onClick={() => setShowCadastroModal(true)} // Abre o modal ao clicar no botão
-                >
-                    <i className="bi bi-person-plus"></i> Inscrever-se
-                </button>
-            </li>
+                    <button
+                      className="btn btn-signup align-items-center gap-2"
+                      onClick={() => setShowCadastroModal(true)} // Abre o modal ao clicar no botão
+                    >
+                      <i className="bi bi-person-plus"></i> Inscrever-se
+                    </button>
+                  </li>
                 </>
               ) : (
 
@@ -369,7 +353,12 @@ function Navbar() {
         </div>
       )}
 
-
+      {/* Modal de Cadastro */}
+      <CadastroClienteModal
+        show={showCadastroModal}
+        onHide={() => setShowCadastroModal(false)} // Fecha o modal
+        onRegisterSuccess={handleCadastroSuccess} // Lida com o sucesso do cadastro
+      />
       {/* Modal de Login */}
       <div
         className="modal fade"
@@ -380,9 +369,9 @@ function Navbar() {
       >
         <div className="modal-dialog">
           <div className="modal-content">
-            <div className="modal-header justify-content-center">
-              <h5 className="modal-title d-flex align-items-center gap-2" id="loginModalLabel">
-                <i className="bi bi-person-circle"></i>
+            <div className="modal-header text-center justify-content-center">
+              <h5 className="modal-title  d-flex align-items-center gap-2" id="loginModalLabel">
+                <i className="bi  bi-person-circle"></i>
                 Login
               </h5>
               <button
@@ -458,7 +447,22 @@ function Navbar() {
             </div>
             <div className="modal-footer">
               <p>
-                Não tem uma conta? <a href="/cadastro">Inscreva-se</a>
+                Não tem uma conta?{" "}
+                <button
+                  className="btn text-white"
+                  onClick={() => {
+                    // Fecha o modal de login, se estiver aberto
+                    const modalElement = document.getElementById("loginModal");
+                    const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
+                    if (modalInstance) modalInstance.hide();
+                    document.querySelectorAll(".modal-backdrop").forEach((backdrop) => backdrop.remove());
+
+                    // Abre o modal de cadastro
+                    setShowCadastroModal(true);
+                  }}
+                >
+                  Inscreva-se
+                </button>
               </p>
               <div className="social-icons">
                 <button className="btn btn-outline-primary btn-social">
@@ -472,12 +476,7 @@ function Navbar() {
           </div>
         </div>
       </div>
-  {/* Modal de Cadastro */}
-  <CadastroClienteModal
-                show={showCadastroModal}
-                onHide={() => setShowCadastroModal(false)} // Fecha o modal
-                onRegisterSuccess={handleCadastroSuccess} // Lida com o sucesso do cadastro
-            />
+
     </>
   );
 }

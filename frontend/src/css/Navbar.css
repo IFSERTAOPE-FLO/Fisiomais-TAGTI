@@ -188,8 +188,10 @@
     border-radius: 20px;
     padding: 10px 20px;
     transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-    margin-right: 10px;
+    margin-right: 0px;
     border: none;
+    width: auto;
+    
   }
 
 
@@ -415,19 +417,23 @@
     font-weight: bold;
     text-decoration: underline;
   }
-
-  /* Botões de redes sociais */
-  .social-icons .btn-social {
-    width: 50px;
-    height: 50px;
-    font-size: 22px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    border: none;
-  }
+/* Estilos para o container dos botões sociais */
+.social-icons {
+  display: flex; /* Adiciona layout flexível para alinhar horizontalmente */
+  gap: 10px; /* Adiciona espaçamento entre os botões */
+}
+ /* Botões de redes sociais */
+.social-icons .btn-social {
+  width: 40px;
+  height: 40px;
+  font-size: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  border: none;
+}
 
   .social-icons .btn-outline-primary:hover {
     background-color: #007bff;
