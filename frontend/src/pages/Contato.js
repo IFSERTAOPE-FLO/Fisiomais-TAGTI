@@ -52,12 +52,12 @@ function Contato() {
 
 
   return (
-    <div className="container-fluid my-5 w-100">
+    <div className="container my-5 ">
 
 <div className="row d-flex justify-content-center  align-items-center">
         {/* Bloco de Informações de Contato */}
 
-        <div className="col-md-3 ">
+        <div className="col-md-4 ">
           <div className="card shadow rounded ">
             <div className="card-header agendamento rounded  info ">
               <h3 className="mb-4 agendamento-titulo fw-bold  text-center ">Nossas clinicas</h3>
@@ -89,7 +89,7 @@ function Contato() {
         </div>
 
         {/* Formulário de Contato */}
-        <div className="col-md-4">
+        <div className="col-md-5">
           <div className="card shadow ">
             <div className="card-header ">
               <h2 className="text-center text-primary">Fale Conosco</h2>
