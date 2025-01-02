@@ -54,7 +54,7 @@ function Contato() {
   return (
     <div className="container my-5 ">
 
-<div className="row d-flex justify-content-center  align-items-center">
+      <div className="row d-flex justify-content-center  align-items-center">
         {/* Bloco de Informações de Contato */}
 
         <div className="col-md-4 ">
@@ -152,23 +152,24 @@ function Contato() {
                   disabled={isLoading}
                 >
                   {isLoading ? 'Enviando...' : 'Enviar'}
-                </button> 
+                </button>
               </form>
             </div>
-            
+
           </div>
-          
+
         </div>
-        
-        
-          <div className="col-md-3">
-            <img
-              src="/images/Atendimento.gif"
-              alt="5"
-              className="img-fluid"
-            />
-          </div>
-        
+
+
+        <div className="col-md-3">
+          <img
+            src="/images/Atendimento.gif"
+            alt="5"
+            className="img-fluid custom-img"
+          />
+        </div>
+
+
 
       </div>
     </div>
