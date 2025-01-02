@@ -4,6 +4,7 @@ import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import "../css/Navbar.css";
+import CadastroClienteModal from './CadastroClienteModal'; // Atualize o caminho conforme necessário
 
 function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -17,6 +18,18 @@ function Navbar() {
   const [emailConfirmed, setEmailConfirmed] = useState(true);
   const [rememberMe, setRememberMe] = useState(false);
   const [isEmailConfirmed, setIsEmailConfirmed] = useState(false); // Inicialmente assumimos que não está confirmado
+  const [user, setUser] = useState({
+    id: null,
+    name: '',
+    role: '',
+    email: '',
+    photo: '',
+  });
+  const [token, setToken] = useState('');
+  const [showCadastroModal, setShowCadastroModal] = useState(false);
+
+
+  
 
 
   const navigate = useNavigate();
@@ -63,6 +76,31 @@ function Navbar() {
       alert("Erro ao fazer login. Verifique suas credenciais.");
     }
   };
+
+  const handleCadastroSuccess = (data) => {
+    setUser({
+      id: data.userId,
+      name: data.name,
+      role: data.role,
+      email: data.email,
+      photo: data.photo,
+    });
+  
+    setToken(data.access_token);  // Salva o token no estado ou no localStorage
+    localStorage.setItem('access_token', data.access_token);  // Armazena no localStorage
+    localStorage.setItem('userName', data.name);
+    localStorage.setItem('role', data.role);
+    localStorage.setItem('userId', data.userId);
+    localStorage.setItem('userPhoto', data.photo || "");
+    localStorage.setItem('email_confirmado', data.email_confirmado.toString());
+    localStorage.setItem('isLoggedIn', 'true'); // Marca que o usuário está logado
+  
+    setShowCadastroModal(false); // Fecha o modal após o sucesso
+    setIsLoggedIn(true);
+    setEmailConfirmed(data.email_confirmado);  // Atualiza o estado de confirmação de e-mail
+    navigate("/criarAgendamento");
+  };
+  
 
   useEffect(() => {
     const storedIsLoggedIn = localStorage.getItem("isLoggedIn");
@@ -240,11 +278,14 @@ function Navbar() {
                       <i className="bi bi-box-arrow-in-right"> </i> Entrar
                     </button>
                   </li>
-                  <li className="nav-item ">
-                    <Link to="/cadastro" className="btn btn-signup  align-items-center gap-2">
-                      <i className="bi bi-person-plus"></i> Inscrever-se
-                    </Link>
-                  </li>
+                  <li className="nav-item">
+                <button
+                    className="btn btn-signup align-items-center gap-2"
+                    onClick={() => setShowCadastroModal(true)} // Abre o modal ao clicar no botão
+                >
+                    <i className="bi bi-person-plus"></i> Inscrever-se
+                </button>
+            </li>
                 </>
               ) : (
 
@@ -431,7 +472,12 @@ function Navbar() {
           </div>
         </div>
       </div>
-
+  {/* Modal de Cadastro */}
+  <CadastroClienteModal
+                show={showCadastroModal}
+                onHide={() => setShowCadastroModal(false)} // Fecha o modal
+                onRegisterSuccess={handleCadastroSuccess} // Lida com o sucesso do cadastro
+            />
     </>
   );
 }

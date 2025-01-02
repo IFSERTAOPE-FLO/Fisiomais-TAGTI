@@ -117,10 +117,10 @@ def register_with_jwt():
 
 @clientes.route('/register/public', methods=['POST'])
 def register_without_jwt():
-    data = request.form
+    data = request.get_json()  # Modificado para receber dados como JSON
     nome = data.get('nome')
     email = data.get('email')
-    cpf = data.get('cpf')
+    cpf = data.get('cpf', '').strip()    
     senha = data.get('senha')
     telefone = data.get('telefone', '')
     referencias = data.get('referencias', '')
@@ -132,10 +132,14 @@ def register_without_jwt():
     cidade = data.get('cidade', '')
     estado = data.get('estado', '')
     sexo = data.get('sexo')  # Novo campo 'sexo'
+        
+    if not cpf:
+        return jsonify({"message": "CPF é obrigatório."}), 400
 
     # Verificar e validar CPF
     if not is_cpf_valid(cpf):
-        return jsonify({"message": "CPF inválido."}), 400
+        return jsonify({"message": "CPF inválido."}), 400    
+   
 
     # Converter a data de nascimento
     dt_nasc = None
@@ -148,6 +152,10 @@ def register_without_jwt():
     # Verificar se o e-mail ou CPF já estão cadastrados
     if Clientes.query.filter((Clientes.email == email) | (Clientes.cpf == cpf)).first():
         return jsonify({"message": "Email ou CPF já cadastrado."}), 400
+    
+    # Verificar se o telefone já está cadastrado
+    if Clientes.query.filter(Clientes.telefone == telefone).first():
+        return jsonify({"message": "Telefone já cadastrado."}), 400    
 
     # Hash da senha
     hashed_password = generate_password_hash(senha)
@@ -162,14 +170,6 @@ def register_without_jwt():
         estado=estado
     )
 
-    # Processar a foto
-    photo = request.files.get('foto')  # Campo foto
-    if photo:
-        photo_filename = secure_filename(photo.filename)
-        photo.save(os.path.join(app.config['UPLOAD_FOLDER'], photo_filename))
-    else:
-        photo_filename = None  # Caso não tenha foto
-
     # Gerar token de confirmação de email
     token_confirmacao = secrets.token_urlsafe(32)
     novo_cliente = Clientes(
@@ -178,8 +178,7 @@ def register_without_jwt():
         cpf=cpf,
         telefone=telefone,
         senha=hashed_password,
-        sexo=sexo,  # Adiciona o sexo
-        photo=photo_filename,  # Salva o nome do arquivo de foto
+        sexo=sexo,  # Adiciona o sexo        
         referencias=referencias,
         dt_nasc=dt_nasc,
         endereco=novo_endereco,
@@ -187,18 +186,23 @@ def register_without_jwt():
         token_confirmacao=token_confirmacao
     )
 
+    # Comentando o bloco do envio de e-mail para testar
     try:
         db.session.add(novo_endereco)
         db.session.add(novo_cliente)
         db.session.commit()
 
-        # Enviar email de confirmação
-        link_confirmacao = url_for('clientes.confirm_email', token=token_confirmacao, _external=True)
-        send_email(
-            subject="Confirme seu email",
-            recipients=[email],
-            body=f"Olá {nome}, clique no link para confirmar seu email: {link_confirmacao}"
-        )
+        # Simulação de falha no envio de e-mail (sem enviar)
+        # link_confirmacao = url_for('clientes.confirm_email', token=token_confirmacao, _external=True)
+        # try:
+        #     send_email(
+        #         subject="Confirme seu email",
+        #         recipients=[email],
+        #         body=f"Olá {nome}, clique no link para confirmar seu email: {link_confirmacao}"
+        #     )
+        # except Exception as e:
+        #     db.session.rollback()  # Reverter a inscrição no banco se o envio falhar
+        #     return jsonify({"message": f"Erro ao enviar o e-mail de confirmação: {str(e)}"}), 500
 
         # Realizar login automático
         access_token = create_access_token(identity=email)
@@ -209,11 +213,14 @@ def register_without_jwt():
             "userId": novo_cliente.id_cliente,
             "name": novo_cliente.nome,
             "role": "cliente",
-            "photo": novo_cliente.photo if novo_cliente.photo else ""
+            "photo": novo_cliente.photo if novo_cliente.photo else "",
+            "email": email,  # Adiciona o email para login automático
+            "senha": senha  # Inclui a senha para simulação (apenas para desenvolvimento)
         }), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Erro ao realizar a inscrição: {str(e)}"}), 500
+
 
 
 
