@@ -19,6 +19,8 @@ function Navbar() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isEmailConfirmed, setIsEmailConfirmed] = useState(false); // Inicialmente assumimos que não está confirmado
   const [showCadastroModal, setShowCadastroModal] = useState(false);
+  const [sidebarVisible, setSidebarVisible] = React.useState(false);
+
 
   const navigate = useNavigate();
 
@@ -212,7 +214,7 @@ function Navbar() {
 
       <nav className="navbar navbar-expand-lg navbar-light bg-light">
         <div className="container-fluid">
-          <Link className="navbar-brand" to="/">
+          <Link className={`navbar-brand ${sidebarVisible ? 'd-none' : ''}`} to="/">
             <img src="/fisiomais.png" alt="Logo" className="navbar-logo" />
           </Link>
           <button
@@ -339,9 +341,73 @@ function Navbar() {
           </div>
         </div>
       </nav>
+
+      {/* Remove a logo do navbar */}
+      {isLoggedIn && (
+        <div className="sidebar-container d-none d-md-block ">
+          <button
+            className={`sidebar-toggle ${sidebarVisible ? 'toggle-open' : ''}`}
+            onClick={() => setSidebarVisible(!sidebarVisible)}
+          >
+            <i className="bi bi-list"></i> {/* Ícone de menu */}
+          </button>
+          <div className={`sidebar ${sidebarVisible ? 'show' : ''}`}>
+            <img src="/fisiomais.png" alt="Logo" className="sidebar-logo" />
+            <div className="sidebar-header">
+              {/* Logo na parte superior da sidebar */}
+
+              {sidebarVisible && <h4>Bem-vindo, {userName.split(' ')[0]}</h4>}
+              {!sidebarVisible && <br />}
+            </div>
+            <ul className="sidebar-menu bg-light ">
+              <li className=" mt-3 ">
+                <Link to="/perfil" className="sidebar-item gap-2">
+                  <i className="bi bi-person"></i> {/* Ícone de perfil */}
+                  {sidebarVisible && " Meu Perfil"}
+                </Link>
+              </li>
+              <li className=" mt-3 ">
+                <Link to="/criaragendamento" className="sidebar-item">
+                  <i className="bi bi-calendar-plus"></i> {/* Ícone de agendamento */}
+                  {sidebarVisible && " Agendar Atendimento"}
+                </Link>
+              </li >
+              {role === "admin" && (
+                <li className=" mt-3 ">
+                  <Link to="/adminPage" className="sidebar-item">
+                    <i className="bi bi-shield-lock"></i> {/* Ícone de administração */}
+                    {sidebarVisible && " Página Administrador"}
+                  </Link>
+                </li>
+              )}
+              {role === "colaborador" && (
+                <li className=" mt-3 ">
+                  <Link to="/central" className="sidebar-item">
+                    <i className="bi bi-person-workspace"></i> {/* Ícone de colaborador */}
+                    {sidebarVisible && " Central de Controle"}
+                  </Link>
+                </li>
+              )}
+              <li className=" mt-3 ">
+                <Link to="/visualizaragendamentos" className="sidebar-item">
+                  <i className="bi bi-calendar-check"></i> {/* Ícone de agendamentos */}
+                  {sidebarVisible && " Agendamentos"}
+                </Link>
+              </li>
+              <li className=" mt-3 ">
+                <button onClick={handleLogout} className="sidebar-item logout-btn">
+                  <i className="bi bi-box-arrow-right"></i> {/* Ícone de logout */}
+                  {sidebarVisible && " Sair"}
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      )}
+
       {isLoggedIn && !isEmailConfirmed && (
-        <div className="container-fluid mt-2">
-          <div className="alert alert-warning alert-dismissible fade show text-center z-bot" role="alert">
+        <>
+          <div className="alert alert-warning alert-dismissible fade show text-center z-bot fixed-top w-100" role="alert">
             <strong>Atenção!</strong> E-mail não confirmado. Por favor, verifique seu e-mail.
             <button
               type="button"
@@ -350,8 +416,13 @@ function Navbar() {
               aria-label="Close"
             ></button>
           </div>
-        </div>
+        </>
       )}
+
+
+
+
+
 
       {/* Modal de Cadastro */}
       <CadastroClienteModal

@@ -493,3 +493,124 @@
     transform: scale(1.1);
     /* Destaca o ícone no hover */
   }
+
+/* Estilo do botão toggle */
+.sidebar-container {
+  position: absolute;
+}
+
+.sidebar-toggle {
+  position: fixed;
+  top: 6px; /* Ajuste conforme a altura do seu navbar */
+  left: 5px;
+  background-color: #36ab9c;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.sidebar-toggle.toggle-open {
+  left: 220px; /* Ajuste conforme a largura da sidebar */
+}
+
+/* Logo dentro da sidebar */
+.sidebar-logo {
+  width: 100%;
+  max-width: 200px; /* Ajuste a largura conforme necessário */
+  margin: 0 auto;
+  display: block;
+  padding: 20px 0;
+}
+
+/* Sidebar */
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0; /* Garante que a sidebar comece no topo da tela */
+  width: 50px; /* Largura mínima da sidebar */
+  height: 100%; /* Sidebar ocupa 100% da altura da tela */
+  background-color: #fff;
+  color: #2d9485;
+  overflow-y: auto;
+  transition: width 0.3s ease, left 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 999;
+}
+
+/* Sidebar visível */
+.sidebar.show {
+  width: 265px; /* Largura total da sidebar quando visível */
+}
+
+.sidebar-header {
+  padding: 0;
+  background-color: #36ab9c;
+  color: #fff;
+  display: flex;
+  flex-direction: column; /* Alinha a logo no topo */
+  justify-content: center;
+  align-items: center;
+}
+
+.sidebar-header h4 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  height: calc(100% - 150px); /* Garante que o menu ocupe o restante da tela após a logo */
+  overflow-y: auto;
+}
+
+/* Itens da sidebar */
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  padding: 5px 15px;
+  color: #525252;
+  text-decoration: none;
+  font-size: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  transition: background-color 0.3s ease, padding-left 0.3s ease;
+}
+
+/* Hover para os itens da sidebar */
+.sidebar-item:hover {
+  background-color: #2d9485;
+  color: #ffffff;
+}
+
+.sidebar-item i {
+  margin-right: 10px;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: #525252;
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: left;
+  padding: 5px 15px;
+  width: 100%;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.logout-btn:hover {
+  background-color: #9c0845;
+}
+
+

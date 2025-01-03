@@ -52,6 +52,8 @@ function Home() {
       {/* Carrossel de Colaboradores */}
       <div className="mt-5">
         <h2 className="text-center text-primary mb-3">Nossos Colaboradores</h2>
+        <p className="text-center text-primary mb-3">Junte-se à nossa equipe e ajude nossos pacientes a alcançar uma vida com mais <strong className="cor-pink">flexibilidade</strong>, <strong className="cor-pink">mobilidade</strong> e <strong className="cor-pink">saúde integral</strong>. Na nossa clínica, seu trabalho faz a diferença para um futuro mais <strong className="cor-pink">ativo</strong> e <strong className="cor-pink">revitalizado</strong>.</p>
+
         <div id="carouselColaboradores" className="carousel slide" data-bs-ride="carousel">
           <div className="carousel-inner">
             <div className="carousel-item active">
