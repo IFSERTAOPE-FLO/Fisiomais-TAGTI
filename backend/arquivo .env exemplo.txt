@@ -1,7 +1,0 @@
-SECRET_KEY=Senha123
-MAIL_USERNAME=fisiomaispilatesefisioterapia@gmail.com
-MAIL_PASSWORD=xosd kaon wspd jpoa
-MAIL_DEFAULT_SENDER=fisiomaispilatesefisioterapia@gmail.com
-FLASK_APP=wsgi.py
-FLASK_ENV=development
-FLASK_DEBUG=1
