@@ -117,9 +117,10 @@ const GerenciarClinicas = () => {
                 {sucesso && <p className="alert alert-success">{sucesso}</p>}
 
                 <AddClinica
-                    onClinicaCriada={(novaClinica) =>
-                        setClinicas((prev) => [...prev, novaClinica])
-                    }
+                    onClinicaCriada={async (novaClinica) => {
+                        setClinicas((prev) => [...prev, novaClinica]);
+                        await buscarClinicas();  // Chama buscarClinicas para garantir que a lista seja atualizada do backend
+                    }}
                 />
                 <br />
                 <div className="input-group mb-3">

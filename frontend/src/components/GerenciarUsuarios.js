@@ -9,7 +9,7 @@ const GerenciarUsuarios = () => {
     const [erro, setErro] = useState("");
     const [usuarioEditando, setUsuarioEditando] = useState(null);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
-    const [tipoAlternado, setTipoAlternado] = useState("todos"); // "todos", "cliente", "colaborador"
+    const [tipoAlternado, setTipoAlternado] = useState("cliente");
     const [pesquisaNome, setPesquisaNome] = useState(""); // Estado para armazenar o filtro de nome
     const [horariosEditando, setHorariosEditando] = useState(null);  // Adicionar estado para editar horários
     const [currentPage, setCurrentPage] = useState(1);
@@ -17,7 +17,7 @@ const GerenciarUsuarios = () => {
     const [usuarioLogado, setUsuarioLogado] = useState(null);
     const [usuariosFiltrados, setUsuariosFiltrados] = useState([]); // Estado para armazenar usuários filtrados
 
-    const itemsPerPage = 20; // Defina o número de itens por página
+    const itemsPerPage = 10; // Defina o número de itens por página
 
     const isRoleValid = savedRole === "admin" || savedRole === "colaborador";
 
@@ -59,14 +59,8 @@ const GerenciarUsuarios = () => {
 
 
     const toggleTipo = () => {
-        // Alterna entre os três tipos: "todos", "cliente", "colaborador"
-        if (tipoAlternado === "todos") {
-            setTipoAlternado("cliente");
-        } else if (tipoAlternado === "cliente") {
-            setTipoAlternado("colaborador");
-        } else {
-            setTipoAlternado("todos");
-        }
+        // Alterna apenas entre "cliente" e "colaborador"
+        setTipoAlternado((prevTipo) => (prevTipo === "cliente" ? "colaborador" : "cliente"));
     };
 
 
@@ -118,8 +112,7 @@ const GerenciarUsuarios = () => {
         setUsuarioEditando(null);
         setHorariosEditando(null);  // Fechar modal
     };
-
-    // Função para ordenar os usuários
+ // Função para ordenar os usuários
     const handleSort = (key) => {
         let direction = "ascending";
         if (sortConfig.key === key && sortConfig.direction === "ascending") {
@@ -150,16 +143,9 @@ const GerenciarUsuarios = () => {
     useEffect(() => {
         buscarUsuarios(); // Carregar usuários inicialmente
     }, []);
-
-
-    useEffect(() => {
-        buscarUsuarios(); // Carregar usuários inicialmente
-    }, []);
-   
     
     useEffect(() => {
-        // Filtra os usuários baseados no nome e tipo
-        const filtered =sortedUsuarios.filter(usuario => {
+        const filtered = sortedUsuarios.filter(usuario => {
             const nomeMatches = usuario.nome.toLowerCase().includes(pesquisaNome.toLowerCase());
             if (tipoAlternado === "todos") {
                 return nomeMatches;
@@ -167,21 +153,18 @@ const GerenciarUsuarios = () => {
             return nomeMatches && usuario.role === tipoAlternado;
         });
     
-        // Atualiza apenas os usuários filtrados sem adicionar novamente o usuário logado
         setUsuariosFiltrados(filtered);
-    }, [tipoAlternado, pesquisaNome]); // O filtro será aplicado sempre que mudar o tipo, a pesquisa ou a lista de usuários
+        setCurrentPage(1); // Resetar para a primeira página
+    }, [tipoAlternado, pesquisaNome, sortedUsuarios]);
     
-    // Paginação dos usuários filtrados
-    const usuariosPaginados = usuariosFiltrados.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
+    const usuariosPaginados = React.useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return usuariosFiltrados.slice(startIndex, endIndex);
+    }, [usuariosFiltrados, currentPage, itemsPerPage]);
     
-
-
-
-
-
+    
+    
     return (
         <div className="container">
             <h2 className="mb-3 text-secondary text-center">Gerenciar Usuários</h2>

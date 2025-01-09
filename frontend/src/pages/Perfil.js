@@ -111,6 +111,7 @@ const Perfil = () => {
         bairro: dadosEdicao.endereco?.bairro,
         cidade: dadosEdicao.endereco?.cidade,
         estado: dadosEdicao.endereco?.estado,
+        complemento: dadosEdicao.endereco?.complemento,
       },
       cpf: dadosEdicao.cpf,
       cargo: papelUsuario === 'colaborador' ? dadosEdicao.cargo : undefined, // Se for colaborador, adiciona o cargo
