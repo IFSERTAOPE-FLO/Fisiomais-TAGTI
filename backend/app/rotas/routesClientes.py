@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, url_for
-from app.models import Clientes, Enderecos, db
+from app.models import Clientes, Enderecos, Colaboradores, db
 from app.utils import is_cpf_valid, send_email
 from werkzeug.security import generate_password_hash
 from datetime import datetime
@@ -79,7 +79,8 @@ def register_with_jwt():
 
     # Verificar se o e-mail ou CPF já estão cadastrados
     cliente_existente = Clientes.query.filter((Clientes.email == email) | (Clientes.cpf == cpf)).first()
-    if cliente_existente:
+    colaborador_existente = Colaboradores.query.filter((Colaboradores.email == email) | (Colaboradores.cpf == cpf)).first()
+    if cliente_existente or colaborador_existente:
         print(f"Email ou CPF já cadastrado: Email: {email}, CPF: {cpf}")
         return jsonify({"message": "Email ou CPF já cadastrado."}), 400
 
@@ -183,7 +184,9 @@ def register_without_jwt():
         return jsonify({"message": "A idade mínima para se inscrever é de 18 anos."}), 400
 
     # Verificar se o e-mail ou CPF já estão cadastrados
-    if Clientes.query.filter((Clientes.email == email) | (Clientes.cpf == cpf)).first():
+     # Verificar duplicidade de email ou CPF entre Clientes e Colaboradores
+    if Clientes.query.filter((Clientes.email == email) | (Clientes.cpf == cpf)).first() or \
+       Colaboradores.query.filter((Colaboradores.email == email) | (Colaboradores.cpf == cpf)).first():
         return jsonify({"message": "Email ou CPF já cadastrado."}), 400
     
     # Verificar se o telefone já está cadastrado

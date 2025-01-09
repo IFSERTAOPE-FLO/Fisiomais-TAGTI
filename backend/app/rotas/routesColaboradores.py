@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from werkzeug.security import generate_password_hash
-from app.models import Horarios, Colaboradores, Clinicas, Enderecos, db
+from app.models import Horarios, Colaboradores, Clinicas, Enderecos, Clientes, db
 from app.utils import is_cpf_valid
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
@@ -95,11 +95,16 @@ def register_or_update_colaborador():
         if not is_cpf_valid(cpf):
             return jsonify({"error": "CPF inválido."}), 400
 
-        if Colaboradores.query.filter(
-            (Colaboradores.email == email) |
-            (Colaboradores.telefone == telefone) |
-            (Colaboradores.cpf == cpf)
-        ).first():
+       # Verificar se o email, telefone ou CPF já estão cadastrados como cliente ou colaborador
+        if (Clientes.query.filter(
+                (Clientes.email == email) | 
+                (Clientes.telefone == telefone) | 
+                (Clientes.cpf == cpf)
+            ).first()) or (Colaboradores.query.filter(
+                (Colaboradores.email == email) | 
+                (Colaboradores.telefone == telefone) | 
+                (Colaboradores.cpf == cpf)
+            ).first()):
             return jsonify({"error": "Email, telefone ou CPF já cadastrado."}), 400
 
         hashed_password = generate_password_hash(senha)

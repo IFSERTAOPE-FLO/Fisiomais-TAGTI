@@ -67,12 +67,20 @@ const AddClinica = ({ onClinicaCriada, savedRole }) => {
                 },
                 body: JSON.stringify(dadosClinica),
             });
-
+    
             if (response.ok) {
                 const data = await response.json();
                 setSucesso("Clínica criada com sucesso!");
                 setErro("");
                 onClinicaCriada(data);
+    
+                // Apagar os dados do formulário após sucesso
+                setDadosClinica({
+                    Nome: "",
+                    CNPJ: "",
+                    Telefone: "",
+                    Endereço: {} // ou o formato que o endereço possui
+                });
             } else {
                 const errorData = await response.json();
                 setErro(errorData.message || "Erro ao criar clínica.");
@@ -81,6 +89,7 @@ const AddClinica = ({ onClinicaCriada, savedRole }) => {
             setErro(err.message);
         }
     };
+    
 
     return (
         <div className="container mt-5">

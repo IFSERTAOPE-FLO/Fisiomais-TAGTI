@@ -85,7 +85,17 @@ def editar_usuario_com_endereco(role, user_id):
         if not user:
             return jsonify({"message": "Usuário não encontrado!"}), 404
 
-        # Atualizar os dados do usuário
+        # Verifica e atualiza o e-mail, se necessário
+        novo_email = data.get('email')
+        if novo_email and novo_email != user.email:  # O e-mail foi alterado
+            # Verifica se o e-mail novo já está em uso, mas ignora se o e-mail for o mesmo do usuário logado
+            if Clientes.query.filter_by(email=novo_email).first():
+                return jsonify({"message": "Este e-mail já está em uso por outro cliente!"}), 400
+            if Colaboradores.query.filter_by(email=novo_email).first():
+                return jsonify({"message": "Este e-mail já está em uso por outro colaborador!"}), 400
+            user.email = novo_email  # Atualiza o e-mail, caso passe na verificação
+
+        # Atualiza os dados do usuário
         for key, value in data.items():
             if key == 'endereco':
                 endereco_data = value  # O valor de 'endereco' é um dicionário
@@ -103,7 +113,8 @@ def editar_usuario_com_endereco(role, user_id):
                         numero=endereco_data.get('numero'),
                         bairro=endereco_data.get('bairro'),
                         cidade=endereco_data.get('cidade'),
-                        estado=endereco_data.get('estado')
+                        estado=endereco_data.get('estado'),
+                        complemento=endereco_data.get('complemento')
                     )
                     db.session.add(endereco)
                     db.session.commit()
@@ -157,7 +168,6 @@ def alterar_senha(role, user_id):
     db.session.commit()
 
     return jsonify({'message': 'Senha alterada com sucesso.'}), 200
-
 
 
 
@@ -267,13 +277,6 @@ def listar_usuarios():
     return jsonify({"usuarios": usuarios, "usuario_logado_index": usuario_logado_index}), 200
 
 
-
-    
-
- 
-
-
-
 # Deletar usuário (cliente ou colaborador)
 @usuarios.route('/deletar_usuario/<string:tipo>/<int:id>', methods=['DELETE'])
 @jwt_required()
@@ -317,6 +320,7 @@ def get_perfil():
             'endereco': {
                 "rua": cliente.endereco.rua if cliente.endereco else None,
                 "numero": cliente.endereco.numero if cliente.endereco else None,
+                "complemento": cliente.endereco.complemento if cliente.endereco else None,  # Adicionando complemento
                 "bairro": cliente.endereco.bairro if cliente.endereco else None,
                 "cidade": cliente.endereco.cidade if cliente.endereco else None,
                 "estado": cliente.endereco.estado if cliente.endereco else None,
@@ -339,6 +343,7 @@ def get_perfil():
             'endereco': {
                 "rua": colaborador.endereco.rua if colaborador.endereco else None,
                 "numero": colaborador.endereco.numero if colaborador.endereco else None,
+                "complemento": colaborador.endereco.complemento if colaborador.endereco else None,  # Adicionando complemento
                 "bairro": colaborador.endereco.bairro if colaborador.endereco else None,
                 "cidade": colaborador.endereco.cidade if colaborador.endereco else None,
                 "estado": colaborador.endereco.estado if colaborador.endereco else None,
@@ -347,40 +352,6 @@ def get_perfil():
         })
 
     return jsonify({'message': 'Usuário não encontrado.'}), 404
-
-@usuarios.route('/editar_usuario/<role>/<int:id>', methods=['PUT'])
-@jwt_required()
-def atualizar_usuario(role, id):
-    dados = request.get_json()
-    
-    if role == 'cliente':
-        usuario = Clientes.query.get(id)
-    elif role == 'colaborador':
-        usuario = Colaboradores.query.get(id)
-    else:
-        return jsonify({'message': 'Role não reconhecido.'}), 400
-
-    if not usuario:
-        return jsonify({'message': 'Usuário não encontrado.'}), 404
-    
-    # Atualiza os dados do usuário
-    usuario.nome = dados.get('nome', usuario.nome)
-    usuario.email = dados.get('email', usuario.email)
-    usuario.telefone = dados.get('telefone', usuario.telefone)
-    usuario.endereco = dados.get('endereco', usuario.endereco)
-    usuario.bairro = dados.get('bairro', usuario.bairro)
-    usuario.cidade = dados.get('cidade', usuario.cidade)
-    usuario.cpf = dados.get('cpf', usuario.cpf)  # Atualizando o CPF
-    if role == 'colaborador':
-        usuario.cargo = dados.get('cargo', usuario.cargo)
-    
-    try:
-        db.session.commit()
-        return jsonify({'message': 'Dados atualizados com sucesso.'}), 200
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'message': f'Erro ao atualizar dados: {str(e)}'}), 500
-
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
