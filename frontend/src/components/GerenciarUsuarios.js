@@ -173,7 +173,7 @@ const GerenciarUsuarios = () => {
     
         // Atualiza apenas os usuários filtrados sem adicionar novamente o usuário logado
         setUsuariosFiltrados(filtered);
-    }, [tipoAlternado, pesquisaNome]); // O filtro será aplicado sempre que mudar o tipo, a pesquisa ou a lista de usuários
+    }, [tipoAlternado, pesquisaNome, usuarios]); // O filtro será aplicado sempre que mudar o tipo, a pesquisa ou a lista de usuários
     
     // Paginação dos usuários filtrados
     const usuariosPaginados = usuariosFiltrados.slice(

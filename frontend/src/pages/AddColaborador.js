@@ -26,9 +26,9 @@
     const [sexo, setSexo] = useState('');
     const [photo, setPhoto] = useState('');
     const [adminNivel, setAdminNivel] = useState('');
+    const [message, setMessage] = useState('');
 
-
-    const [errorMessage, setErrorMessage] = useState('');
+    
 
     useEffect(() => {
       const fetchEstados = async () => {
@@ -70,18 +70,21 @@
 
     const handleRegister = async () => {
       setLoading(true);
-
+    
       try {
         const token = localStorage.getItem('token'); // Obter o token armazenado
         console.log('Token obtido:', token);
-
+        
+        // Garantir que dt_nasc seja no formato YYYY-MM-DD
+        const formattedDtNasc = dtNasc ? new Date(dtNasc).toISOString().split('T')[0] : null; 
+    
         const payload = {
           nome,
           email,
           senha,
           telefone,
           cpf,
-          dt_nasc: dtNasc || null,  // Enviar null se não houver data
+          dt_nasc: formattedDtNasc,  // Enviar a data formatada ou null se não houver data
           referencias,
           cargo,
           sexo: sexo || null,  // Enviar null se não houver sexo
@@ -91,11 +94,9 @@
           photo: photo || null,  // Enviar null se não houver foto
           adminNivel: adminNivel || null,  // Enviar null se não houver nível
         };
-
-
-
+    
         console.log('Payload enviado:', payload);
-
+    
         const response = await axios.post(
           'http://localhost:5000/colaboradores/register',
           payload,
@@ -105,9 +106,9 @@
             },
           }
         );
-
+    
         console.log('Resposta do servidor:', response);
-
+    
         if (response.status === 201) {
           alert('Colaborador cadastrado com sucesso!');
           // Resetar os campos
@@ -131,23 +132,24 @@
         }
       } catch (error) {
         console.error('Erro ao cadastrar colaborador:', error);
-
+    
         // Exibir a mensagem de erro retornada pelo servidor, se disponível
         if (error.response && error.response.data) {
           console.error('Detalhes do erro:', error.response.data);
-          alert(`Erro ao cadastrar colaborador: ${error.response.data.error || 'Erro desconhecido'}`);
+          setMessage(`Erro ao cadastrar colaborador: ${error.response.data.error || 'Erro desconhecido'}`);
         } else {
-          alert('Erro ao cadastrar colaborador.');
+          setMessage('Erro ao cadastrar colaborador.');
         }
       } finally {
         setLoading(false);
       }
     };
+    
 
 
     return (
       <div className="container col-md-9 my-5">
-        {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
+        {message && <div className={`alert ${message.includes('sucesso') ? 'alert-success' : 'alert-danger'}`}>{message}</div>}
         <div className="card shadow">
           <div className="card-header">
             <h2 className="text-center text-primary">Adicionar Colaborador</h2>
@@ -267,6 +269,7 @@
                     className="form-select"
                     id="cidade"
                     value={cidade}
+                    disabled={!estado}
                     onChange={(e) => setCidade(e.target.value)}
                     required
                   >

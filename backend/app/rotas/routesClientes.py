@@ -41,6 +41,8 @@ def get_clientes():
 def register_with_jwt():
     # Obter dados do JSON enviado
     data = request.get_json()
+    print("Dados recebidos no request:", data)
+
     nome = data.get('nome')
     email = data.get('email')
     cpf = data.get('cpf')
@@ -58,6 +60,7 @@ def register_with_jwt():
 
     # Verificar e validar CPF
     if not is_cpf_valid(cpf):
+        print(f"CPF inválido: {cpf}")
         return jsonify({"message": "CPF inválido."}), 400
 
     # Converter a data de nascimento
@@ -65,7 +68,9 @@ def register_with_jwt():
     if dt_nasc_str:
         try:
             dt_nasc = datetime.strptime(dt_nasc_str, '%Y-%m-%d').date()
-        except ValueError:
+            print(f"Data de nascimento convertida: {dt_nasc}")
+        except ValueError as ve:
+            print(f"Erro ao converter data de nascimento: {dt_nasc_str}, erro: {ve}")
             return jsonify({"message": "Data de nascimento em formato inválido. Use AAAA-MM-DD."}), 400
 
     # Obter o e-mail do usuário autenticado
@@ -73,47 +78,65 @@ def register_with_jwt():
     print(f"Usuário logado: {usuario_email}")
 
     # Verificar se o e-mail ou CPF já estão cadastrados
-    if Clientes.query.filter((Clientes.email == email) | (Clientes.cpf == cpf)).first():
+    cliente_existente = Clientes.query.filter((Clientes.email == email) | (Clientes.cpf == cpf)).first()
+    if cliente_existente:
+        print(f"Email ou CPF já cadastrado: Email: {email}, CPF: {cpf}")
         return jsonify({"message": "Email ou CPF já cadastrado."}), 400
 
     # Hash da senha
-    hashed_password = generate_password_hash(senha)
+    try:
+        hashed_password = generate_password_hash(senha)
+        print(f"Senha criptografada com sucesso para o cliente: {nome}")
+    except Exception as e:
+        print(f"Erro ao criptografar senha: {e}")
+        return jsonify({"message": "Erro ao processar a senha."}), 500
 
     # Criar novo endereço
-    novo_endereco = Enderecos(
-        rua=rua,
-        numero=numero,
-        complemento=complemento,
-        bairro=bairro,
-        cidade=cidade,
-        estado=estado
-    )
+    try:
+        novo_endereco = Enderecos(
+            rua=rua,
+            numero=numero,
+            complemento=complemento,
+            bairro=bairro,
+            cidade=cidade,
+            estado=estado
+        )
+        print(f"Endereço criado: {novo_endereco}")
+    except Exception as e:
+        print(f"Erro ao criar endereço: {e}")
+        return jsonify({"message": "Erro ao processar o endereço."}), 500
 
-    # Gerar token de confirmação de email
-   
-    novo_cliente = Clientes(
-        nome=nome,
-        email=email,
-        cpf=cpf,
-        telefone=telefone,
-        senha=hashed_password,
-        referencias=referencias,
-        dt_nasc=dt_nasc,
-        endereco=novo_endereco,
-        email_confirmado=False,
-        sexo = data.get('sexo', '')  # Novo campo 'sexo'
-        
-    )
+    # Criar novo cliente
+    try:
+        novo_cliente = Clientes(
+            nome=nome,
+            email=email,
+            cpf=cpf,
+            telefone=telefone,
+            senha=hashed_password,
+            referencias=referencias,
+            dt_nasc=dt_nasc,
+            endereco=novo_endereco,
+            email_confirmado=False,
+            sexo=sexo
+        )
+        print(f"Cliente criado: {novo_cliente}")
+    except Exception as e:
+        print(f"Erro ao criar cliente: {e}")
+        return jsonify({"message": "Erro ao processar o cliente."}), 500
 
+    # Salvar no banco de dados
     try:
         db.session.add(novo_endereco)
         db.session.add(novo_cliente)
-        db.session.commit()        
-
-        return jsonify({"message": "Inscrição realizada com sucesso! "}), 201
+        db.session.commit()
+        print("Cliente e endereço salvos com sucesso no banco de dados.")
+        return jsonify({"message": "Inscrição realizada com sucesso!"}), 201
     except Exception as e:
+        print(f"Erro ao salvar no banco de dados: {e}")
         db.session.rollback()
         return jsonify({"message": f"Erro ao realizar a inscrição: {str(e)}"}), 500
+
 
 
 from datetime import datetime

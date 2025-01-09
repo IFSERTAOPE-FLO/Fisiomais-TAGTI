@@ -47,35 +47,11 @@ const GerenciarServicos = () => {
     } catch (error) {
       console.error('Erro ao buscar serviços:', error);
     }
-  };
-
-
-  const buscarUsuarios = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/usuarios/listar_usuarios", {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        setErro("Erro ao buscar usuários: " + response.statusText);
-        return;
-      }
-
-      const data = await response.json();
-      const colaboradores = data.filter((usuario) => usuario.role === "colaborador");
-      setColaboradores(colaboradores);
-    } catch (err) {
-      setErro("Erro ao buscar usuários.");
-    }
-  };
+  };  
 
   useEffect(() => {
     buscarServicos();
-    buscarUsuarios();
+    
   }, []);
 
   const salvarServico = async () => {

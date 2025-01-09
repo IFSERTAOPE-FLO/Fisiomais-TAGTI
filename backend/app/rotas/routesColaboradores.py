@@ -7,6 +7,8 @@ from datetime import datetime
 
 colaboradores = Blueprint('colaboradores', __name__)
 
+from datetime import datetime
+
 @colaboradores.route('/register', methods=['POST'])
 @jwt_required()
 def register_or_update_colaborador():
@@ -24,9 +26,16 @@ def register_or_update_colaborador():
         cpf = data.get('cpf')
         referencias = data.get('referencias', '')
         cargo = data.get('cargo', '')
-        dt_nasc = data.get('dt_nasc')
+        dt_nasc = data.get('dt_nasc')  # A data de nascimento
         sexo = data.get('sexo')  # Novo campo
         is_admin = data.get('is_admin', False)
+
+        # Verificar se dt_nasc é uma string e convertê-la para um objeto date
+        if dt_nasc:
+            try:
+                dt_nasc = datetime.strptime(dt_nasc, "%Y-%m-%d").date()
+            except ValueError:
+                return jsonify({"error": "Formato de data inválido para 'dt_nasc'. Utilize o formato YYYY-MM-DD."}), 400
 
         # Dados de endereço
         endereco_data = data.get('endereco', {})
@@ -138,7 +147,6 @@ def register_or_update_colaborador():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Erro ao processar solicitação: {str(e)}"}), 500
-
 
 
 

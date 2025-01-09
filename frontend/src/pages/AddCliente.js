@@ -61,16 +61,20 @@ const AddCliente = () => {
     }
   }, [formData.estado]);
 
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setModalMessage('');
+    
 
     try {
+      const token = localStorage.getItem("token");
       const response = await axios.post('http://localhost:5000/clientes/register', formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+        headers: {          
+          Authorization: `Bearer ${token}`,
+      },
       });
       setLoading(false);
       setModalMessage(response.data.message);
