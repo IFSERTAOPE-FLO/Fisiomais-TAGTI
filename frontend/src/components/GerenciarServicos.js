@@ -6,8 +6,7 @@
 
 
   const GerenciarServicos = () => {
-    const [servicos, setServicos] = useState([]);
-    const [colaboradores, setColaboradores] = useState([]);
+    const [servicos, setServicos] = useState([]);    
     const [novoServico, setNovoServico] = useState({
       nome_servico: "",
       descricao: "",
