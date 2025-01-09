@@ -17,7 +17,7 @@ const GerenciarUsuarios = () => {
     const [usuarioLogado, setUsuarioLogado] = useState(null);
     const [usuariosFiltrados, setUsuariosFiltrados] = useState([]); // Estado para armazenar usuários filtrados
 
-    const itemsPerPage = 5; // Defina o número de itens por página
+    const itemsPerPage = 20; // Defina o número de itens por página
 
     const isRoleValid = savedRole === "admin" || savedRole === "colaborador";
 

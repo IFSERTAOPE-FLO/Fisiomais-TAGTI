@@ -216,7 +216,12 @@ const CadastroClienteModal = ({ show, onHide, onRegisterSuccess }) => {
           </Form>
         </Modal.Body>
         <Modal.Footer className="d-flex justify-content-between align-items-center">
-          <button type="submit" disabled={isLoading} className="btn btn-signup">
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isLoading}
+            className="btn btn-signup"
+          >
             {isLoading ? (
               <i className="bi bi-arrow-repeat spinner"></i>
             ) : (
@@ -225,6 +230,7 @@ const CadastroClienteModal = ({ show, onHide, onRegisterSuccess }) => {
             {' '}
             {isLoading ? 'Carregando...' : 'Cadastrar'}
           </button>
+
 
           <div className="d-flex gap-3 social-icons">
             <button className="btn btn-outline-primary btn-social">

@@ -19,7 +19,7 @@ const VisualizarAgendamentos = () => {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const itemsPerPage = 9;
+  const itemsPerPage = 10;
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [newStatus, setNewStatus] = useState('');
 
