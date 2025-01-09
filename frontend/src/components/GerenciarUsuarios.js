@@ -108,8 +108,6 @@ const GerenciarUsuarios = () => {
         setUsuarioEditando(null); // Garantir que o modal de edição de usuário seja fechado ao editar horários
     };
 
-
-
     const handleCloseModal = () => {
         setUsuarioEditando(null);
         setHorariosEditando(null);  // Fechar modal de horários
@@ -120,10 +118,6 @@ const GerenciarUsuarios = () => {
         setUsuarioEditando(null);
         setHorariosEditando(null);  // Fechar modal
     };
-
-
-
-
 
     // Função para ordenar os usuários
     const handleSort = (key) => {
@@ -139,8 +133,8 @@ const GerenciarUsuarios = () => {
         let sorted = [...usuarios];
         if (sortConfig.key && sortConfig.direction) {
             sorted.sort((a, b) => {
-                const aValue = a[sortConfig.key].toLowerCase();
-                const bValue = b[sortConfig.key].toLowerCase();
+                const aValue = a[sortConfig.key] ? a[sortConfig.key].toString().toLowerCase() : "";
+                const bValue = b[sortConfig.key] ? b[sortConfig.key].toString().toLowerCase() : "";
                 if (aValue < bValue) {
                     return sortConfig.direction === "ascending" ? -1 : 1;
                 }
@@ -158,12 +152,14 @@ const GerenciarUsuarios = () => {
     }, []);
 
 
-
+    useEffect(() => {
+        buscarUsuarios(); // Carregar usuários inicialmente
+    }, []);
    
     
     useEffect(() => {
         // Filtra os usuários baseados no nome e tipo
-        const filtered = usuarios.filter(usuario => {
+        const filtered =sortedUsuarios.filter(usuario => {
             const nomeMatches = usuario.nome.toLowerCase().includes(pesquisaNome.toLowerCase());
             if (tipoAlternado === "todos") {
                 return nomeMatches;

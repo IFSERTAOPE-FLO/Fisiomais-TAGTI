@@ -34,7 +34,7 @@ function Home() {
         </p>
         <div className="mt-4 text-center">
           <Link
-            to={isLoggedIn ? "/criaragendamento" : "/cadastro"}
+            to={isLoggedIn ? "/criaragendamento" : ""}
             className="btn btn-signup gap-2"
           >
             {isLoggedIn ? (
