@@ -382,7 +382,7 @@ function Navbar() {
               )}
               {role === "colaborador" && (
                 <li className=" mt-3 ">
-                  <Link to="/central" className="sidebar-item">
+                  <Link to="/adminPage" className="sidebar-item">
                     <i className="bi bi-person-workspace"></i> {/* Ícone de colaborador */}
                     {sidebarVisible && " Central de Controle"}
                   </Link>
