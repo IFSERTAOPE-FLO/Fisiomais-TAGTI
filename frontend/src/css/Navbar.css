@@ -9,7 +9,7 @@
     z-index:1;
     height: 80px; 
     width: 220px;
-        display: block; 
+    display: block; 
   }
 
   .navbar-nav {
@@ -19,10 +19,10 @@
   }
 
   .navbar-nav .nav-item {
-    margin: 0 10px; /* Espaço entre os itens do menu */
-    z-index:1;
-    
+    margin: 0 0 0.4rem 0; /* Espaço reduzido entre os itens do menu */
+    z-index: 1;
   }
+
 .custom-navbar {
   background-color: #ffffff;
   padding: 0 0;
@@ -34,7 +34,7 @@
   height: 80px;
   width: 220px;
   margin-top: 0;
-  margin-left: 90px;
+  margin-bottom: 2rem;
   display: block;
 }
 
@@ -47,17 +47,13 @@
   justify-content: center;
 }
 
-.navbar-nav .nav-item {
-  margin: 0 5px; /* Espaço reduzido entre os itens do menu */
-}
-
 .nav-link {
   color: white;
   font-size: 0.9rem;
   font-weight: 500;
   background-color: #36ab9c;
   border-radius: 5px;
-  margin: 0 4px;
+  /* margin: 0 4px; */
   padding: 8px 12px;
   transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   position: relative;
@@ -94,7 +90,7 @@
   border-radius: 20px;
   padding: 8px 12px;
   transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-  margin-right: 5px; /* Espaço reduzido entre os botões */
+  /* margin-right: 5px; /* Espaço reduzido entre os botões */
   border: none;
 }
 
@@ -146,7 +142,7 @@
     border-radius: 20px;
     padding: 10px 20px; /* Ajustado para maior largura */
     transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease; 
-    margin-right: 10px;
+    /* margin-right: 10px; */
   
   }
 
@@ -164,7 +160,7 @@
     border-radius: 20px;
     padding: 10px 20px; 
     transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-    margin-right: 10px;
+    /* margin-right: 10px; */
     border: none;
   }
 
@@ -198,6 +194,8 @@
 /* Resolve o problema de colapso no mobile */
 .navbar-collapse {
   transition: height 0.3s ease;
+  margin-left: 1rem;
+  align-items: baseline;
 }
 
 .dropdown-menu {
@@ -229,6 +227,7 @@
   }
   .navbar-nav.ms-auto {
     flex-grow: 0; /* Garante que os itens na direita não interfiram no centro */
+    margin-top: 2rem;
   }
   /* Centralizar o dropdown à direita */
   .navbar-nav.ms-auto {

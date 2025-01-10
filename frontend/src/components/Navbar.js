@@ -8,62 +8,63 @@ import "../css/Navbar.css";
 function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userName, setUserName] = useState("Usuário");
-  const [role, setRole] = useState(""); 
+  const [role, setRole] = useState("");
   const [email, setEmail] = useState("");
   const [senha, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false); 
+  const [rememberMe, setRememberMe] = useState(false);
   const [userId, setUserId] = useState(null);
-  const [userPhoto, setUserPhoto] = useState(""); 
-  const [mostrarSenha, setMostrarSenha] = useState(false); 
-  
+  const [userPhoto, setUserPhoto] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+
   const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
-        const response = await axios.post("http://localhost:5000/login", {
-            email,
-            senha,
-        });
+      const response = await axios.post("http://localhost:5000/login", {
+        email,
+        senha,
+      });
 
-        const { access_token, name, role, userId, photo } = response.data;
+      const { access_token, name, role, userId, photo } = response.data;
 
-        setIsLoggedIn(true);
-        setUserName(name);
-        setRole(role);
-        setUserId(userId);
-        setUserPhoto(photo);
-        localStorage.setItem("token", access_token);
-        localStorage.setItem("userName", name);
-        localStorage.setItem("role", role);
-        localStorage.setItem("userId", userId); // Salva o ID
-        localStorage.setItem("userPhoto", photo);
+      setIsLoggedIn(true);
+      setUserName(name);
+      setRole(role);
+      setUserId(userId);
+      setUserPhoto(photo);
+      localStorage.setItem("token", access_token);
+      localStorage.setItem("userName", name);
+      localStorage.setItem("role", role);
+      localStorage.setItem("userId", userId); // Salva o ID
+      localStorage.setItem("userPhoto", photo);
 
-        // Fechar o modal
-        const modalElement = document.getElementById("loginModal");
-        const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
-        if (modalInstance) {
-            modalInstance.hide();
+      // Fechar o modal
+      const modalElement = document.getElementById("loginModal");
+      const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
+      if (modalInstance) {
+        modalInstance.hide();
+      }
+
+      document
+        .querySelectorAll(".modal-backdrop")
+        .forEach((backdrop) => backdrop.remove());
+
+      console.log("Usuário logado:", name);
+
+      // Redirecionar com base no papel do usuário
+      setTimeout(() => {
+        if (role === "admin") {
+          navigate("/adminpage");
+        } else {
+          navigate("/");
         }
-
-        document.querySelectorAll(".modal-backdrop").forEach((backdrop) => backdrop.remove());
-
-        console.log("Usuário logado:", name);
-
-        // Redirecionar com base no papel do usuário
-        setTimeout(() => {
-            if (role === "admin") {
-                navigate("/adminpage");
-            } else {
-                navigate("/");
-            }
-            window.location.reload();
-        }, 300); // Reduzido o tempo para 300ms
+        window.location.reload();
+      }, 300); // Reduzido o tempo para 300ms
     } catch (error) {
-        console.error("Erro no login:", error);
-        alert("Erro ao fazer login. Verifique suas credenciais.");
+      console.error("Erro no login:", error);
+      alert("Erro ao fazer login. Verifique suas credenciais.");
     }
-};
-
+  };
 
   const handleLogout = async () => {
     try {
@@ -112,18 +113,18 @@ function Navbar() {
     const savedRole = localStorage.getItem("role");
     const savedUserId = localStorage.getItem("userId");
     const savedUserPhoto = localStorage.getItem("userPhoto"); // Recupera a foto salva no localStorage
-  
+
     console.log(savedUserPhoto); // Verifique se o valor de userPhoto é o esperado
-  
+
     if (savedToken && savedUserName && savedRole) {
       try {
         const decodedToken = JSON.parse(atob(savedToken.split(".")[1]));
         const isTokenExpired = decodedToken.exp * 1000 < Date.now();
-  
+
         if (isTokenExpired) {
           throw new Error("Token expirado");
         }
-  
+
         setIsLoggedIn(true);
         setUserName(savedUserName);
         setRole(savedRole);
@@ -142,49 +143,59 @@ function Navbar() {
       }
     }
   }, []);
- 
 
   return (
     <>
-    
-    <nav className="navbar navbar-expand-lg navbar-light bg-light">
-      <div className="container-fluid">
-        <Link className="navbar-brand" to="/">
-          <img src="/fisiomais.png" alt="Logo" className="navbar-logo" />
-        </Link>
-        <button
-          className="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-          aria-controls="navbarNav"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span className="navbar-toggler-icon"></span>
-        </button>
-        <div className="collapse navbar-collapse" id="navbarNav">
-          <ul className="navbar-nav mx-auto">
+      <nav className="navbar navbar-expand-lg navbar-light bg-light h-100 align-items-baseline">
+        <div className="container-fluid flex-column align-items-baseline">
+          <Link className="navbar-brand" to="/">
+            <img
+              src="/fisiomais.png"
+              alt="Logo"
+              className="navbar-logo img-fluid"
+            />
+          </Link>
+          <button
+            className="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNav"
+            aria-controls="navbarNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span className="navbar-toggler-icon"></span>
+          </button>
+          <div className="collapse navbar-collapse flex-column" id="navbarNav">
+            <ul className="navbar-nav flex-column">
               <li className="nav-item">
-                <Link className="nav-link" to="/">Início</Link>
+                <Link className="nav-link" to="/">
+                  Início
+                </Link>
               </li>
-              
+
               <li className="nav-item">
-                <Link className="nav-link" to="/sobrenos">Sobre Nós</Link>
+                <Link className="nav-link" to="/sobrenos">
+                  Sobre Nós
+                </Link>
               </li>
               <li className="nav-item">
-                <Link className="nav-link" to="/especialidades">Especialidades</Link>
+                <Link className="nav-link" to="/especialidades">
+                  Especialidades
+                </Link>
               </li>
               <li className="nav-item">
-                <Link className="nav-link" to="/contato">Fale conosco</Link>
+                <Link className="nav-link" to="/contato">
+                  Fale conosco
+                </Link>
               </li>
             </ul>
-            <ul className="navbar-nav ms-auto">
+            <ul className="navbar-nav ms-auto flex-column">
               {!isLoggedIn ? (
                 <>
                   <li className="nav-item">
                     <button
-                      className="btn btn-login d-flex align-items-center gap-2"
+                      className="btn btn-login d-flex align-items-center gap-2 w-100"
                       data-bs-toggle="modal"
                       data-bs-target="#loginModal"
                     >
@@ -192,8 +203,11 @@ function Navbar() {
                     </button>
                   </li>
                   <li className="nav-item">
-                    <Link to="/cadastro" className="btn btn-signup  align-items-center gap-2">
-                    <i className="bi bi-person-plus"></i> Inscrever-se
+                    <Link
+                      to="/cadastro"
+                      className="btn btn-signup  align-items-center gap-2"
+                    >
+                      <i className="bi bi-person-plus"></i> Inscrever-se
                     </Link>
                   </li>
                 </>
@@ -205,7 +219,6 @@ function Navbar() {
                     id="navbarDropdown"
                     role="button"
                     data-bs-toggle="dropdown"
-                    
                     aria-expanded="false"
                   >
                     {userPhoto && userPhoto.trim() !== "" ? (
@@ -219,31 +232,45 @@ function Navbar() {
                     )}
                     <span>{userName}</span>
                   </a>
-                  <ul className="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <ul
+                    className="dropdown-menu"
+                    aria-labelledby="navbarDropdown"
+                  >
                     <li>
-                      <Link className="dropdown-item" to="/perfil">Meu Perfil</Link>
+                      <Link className="dropdown-item" to="/perfil">
+                        Meu Perfil
+                      </Link>
                     </li>
                     <li>
-                      <Link className="dropdown-item" to="/criaragendamento">Agendar Atendimento</Link>
+                      <Link className="dropdown-item" to="/criaragendamento">
+                        Agendar Atendimento
+                      </Link>
                     </li>
-                   
-                        {role === "admin" && (
-                          <>
-                            <li>
-                              <Link className="dropdown-item" to="/adminPage">Pagina Administrador</Link>
-                            </li>
-                          </>
-                        )}
-                        {role === "colaborador" &&  (
-                           <li>
-                           <Link className="dropdown-item" to="/adminPage">Controle de usários</Link>
-                         </li>
-                        )
-                        }
-                      
-                    
+
+                    {role === "admin" && (
+                      <>
+                        <li>
+                          <Link className="dropdown-item" to="/adminPage">
+                            Pagina Administrador
+                          </Link>
+                        </li>
+                      </>
+                    )}
+                    {role === "colaborador" && (
+                      <li>
+                        <Link className="dropdown-item" to="/adminPage">
+                          Controle de usários
+                        </Link>
+                      </li>
+                    )}
+
                     <li>
-                      <Link className="dropdown-item" to="/visualizaragendamentos">Meus Agendamentos</Link>
+                      <Link
+                        className="dropdown-item"
+                        to="/visualizaragendamentos"
+                      >
+                        Meus Agendamentos
+                      </Link>
                     </li>
                     <li>
                       <button
@@ -264,107 +291,109 @@ function Navbar() {
 
       {/* Modal de Login */}
       <div
-  className="modal fade"
-  id="loginModal"
-  tabIndex="-1"
-  aria-labelledby="loginModalLabel"
-  aria-hidden="true"
->
-  <div className="modal-dialog">
-    <div className="modal-content">
-    <div className="modal-header justify-content-center">
-      <h5 className="modal-title d-flex align-items-center gap-2" id="loginModalLabel">
-        <i className="bi bi-person-circle"></i>
-        Login
-      </h5>
-        <button
-          type="button"
-          className="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
-      </div>
-      <div className="modal-body">
-        <form onSubmit={(e) => e.preventDefault()}>
-          <div className="mb-2">
-            <label htmlFor="email" className="form-label ">
-              <i className="bi bi-envelope"></i> Email
-            </label>
-            <input
-              type="email"
-              className="form-control"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="mb-2">
-            <label htmlFor="senha" className="form-label">
-              <i className="bi bi-lock"></i> Senha
-            </label>
-            <div className="input-group">
-              <input
-                type={mostrarSenha ? "text" : "password"}
-                className="form-control"
-                id="senha"
-                value={senha}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+        className="modal fade"
+        id="loginModal"
+        tabIndex="-1"
+        aria-labelledby="loginModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header justify-content-center">
+              <h5
+                className="modal-title d-flex align-items-center gap-2"
+                id="loginModalLabel"
+              >
+                <i className="bi bi-person-circle"></i>
+                Login
+              </h5>
               <button
                 type="button"
-                className="btn btn-outline-secondary"
-                onClick={() => setMostrarSenha(!mostrarSenha)}
-              >
-                {mostrarSenha ? (
-                  <i className="bi bi-eye-slash"></i>
-                ) : (
-                  <i className="bi bi-eye"></i>
-                )}
-              </button>
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={(e) => e.preventDefault()}>
+                <div className="mb-2">
+                  <label htmlFor="email" className="form-label ">
+                    <i className="bi bi-envelope"></i> Email
+                  </label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="mb-2">
+                  <label htmlFor="senha" className="form-label">
+                    <i className="bi bi-lock"></i> Senha
+                  </label>
+                  <div className="input-group">
+                    <input
+                      type={mostrarSenha ? "text" : "password"}
+                      className="form-control"
+                      id="senha"
+                      value={senha}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={() => setMostrarSenha(!mostrarSenha)}
+                    >
+                      {mostrarSenha ? (
+                        <i className="bi bi-eye-slash"></i>
+                      ) : (
+                        <i className="bi bi-eye"></i>
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <div>
+                    <input
+                      type="checkbox"
+                      id="rememberMe"
+                      checked={rememberMe}
+                      onChange={() => setRememberMe(!rememberMe)}
+                    />
+                    <label htmlFor="rememberMe"> Lembre-me</label>
+                  </div>
+                  <a href="#" className="">
+                    <i className="bi bi-arrow-clockwise"></i> Esqueceu a senha?
+                  </a>
+                </div>
+                <button
+                  type="submit"
+                  className="btn btn btn-signup w-100"
+                  onClick={handleLogin}
+                >
+                  <i className="bi bi-box-arrow-in-right"></i> Entrar
+                </button>
+              </form>
+            </div>
+            <div className="modal-footer">
+              <p>
+                Não tem uma conta? <a href="/cadastro">Inscreva-se</a>
+              </p>
+              <div className="social-icons">
+                <button className="btn btn-outline-primary btn-social">
+                  <i className="bi bi-facebook"></i>
+                </button>
+                <button className="btn btn-outline-danger btn-social">
+                  <i className="bi bi-google"></i>
+                </button>
+              </div>
             </div>
           </div>
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <div>
-              <input
-                type="checkbox"
-                id="rememberMe"
-                checked={rememberMe}
-                onChange={() => setRememberMe(!rememberMe)}
-              />
-              <label htmlFor="rememberMe"> Lembre-me</label>
-            </div>
-            <a href="#" className="">
-              <i className="bi bi-arrow-clockwise"></i> Esqueceu a senha?
-            </a>
-          </div>
-          <button
-            type="submit"
-            className="btn btn btn-signup w-100"
-            onClick={handleLogin}
-          >
-            <i className="bi bi-box-arrow-in-right"></i> Entrar
-          </button>
-        </form>
-      </div>
-      <div className="modal-footer">
-        <p>
-          Não tem uma conta? <a href="/cadastro">Inscreva-se</a>
-        </p>
-        <div className="social-icons">
-          <button className="btn btn-outline-primary btn-social">
-            <i className="bi bi-facebook"></i>
-          </button>
-          <button className="btn btn-outline-danger btn-social">
-            <i className="bi bi-google"></i>
-          </button>
         </div>
       </div>
-    </div>
-  </div>
-</div>
-
     </>
   );
 }

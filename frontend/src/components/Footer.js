@@ -44,13 +44,12 @@ function Footer() {
           Siga-nos nas redes sociais
         </p>
         <div className="mb-3">
-        
-              <img
-                src="/images/logo4.png"
-                alt="Logo 2"
-                className="girar me-5 img-fluid footerimg"
-              />
-            
+          <img
+            src="/images/logo4.png"
+            alt="Logo 2"
+            className="girar me-5 img-fluid footerimg"
+          />
+
           <a
             href="https://facebook.com"
             target="_blank"
@@ -93,11 +92,12 @@ function Footer() {
           </a>
         </div>
         <p className="text-secondary" style={{ fontSize: "0.8rem" }}>
-          &copy; {new Date().getFullYear()} <b className="text-primary">Fisiomais</b>. Todos os direitos reservados.
+          &copy; {new Date().getFullYear()}{" "}
+          <b className="text-primary">Fisiomais</b>. Todos os direitos
+          reservados.
         </p>
       </div>
       {/* Imagem Logo 0 */}
- 
     </footer>
   );
 }
