@@ -243,6 +243,9 @@ function Navbar() {
               <li className="nav-item">
                 <Link className="nav-link" to="/contato">Fale conosco</Link>
               </li>
+              <li className="nav-item">
+                <Link className="nav-link" to="/planostratamento">Planos de Tratamento</Link>
+              </li>
               {isLoggedIn && role !== "cliente" && (
                 <li className="nav-item">
                   <Link className="nav-link" to="/adminPage">Central de Controle</Link>

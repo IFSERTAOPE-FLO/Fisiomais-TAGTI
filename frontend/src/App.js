@@ -16,6 +16,7 @@ import Perfil from "./pages/Perfil";
 import VisualizarAgendamentos from "./pages/VisualizarAgendamentos";
 import AdminPage from "./pages/AdminPage"; 
 import Especialidades from "./pages/Especialidades"; 
+import PlanosTratamento from "./pages/PlanosTratamento"; 
 
 function App() {
     return (
@@ -111,6 +112,14 @@ function App() {
                             </PageWrapper>
                         } 
                     />
+                    <Route 
+                    path="/planostratamento" 
+                    element={
+                        <PageWrapper title=" Planos de Tratamento - Fisiomais">
+                            <PlanosTratamento />
+                        </PageWrapper>
+                    } 
+                />
                 </Routes>
                 <Footer />
             </div>
