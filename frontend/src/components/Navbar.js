@@ -169,6 +169,7 @@ function Navbar() {
       console.error("Erro no logout:", error);
     } finally {
       localStorage.clear();
+      setSidebarVisible(false)
       setIsLoggedIn(false);
       setUserName("Usuário");
       setRole("");
