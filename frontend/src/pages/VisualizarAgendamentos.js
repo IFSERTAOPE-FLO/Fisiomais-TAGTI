@@ -119,14 +119,15 @@ const VisualizarAgendamentos = () => {
   const sortedAgendamentos = React.useMemo(() => {
     let filteredAgendamentos = agendamentos;
 
-    // Filtrando por data selecionada
     if (selectedDate) {
+      const adjustedDate = new Date(selectedDate);
+      adjustedDate.setHours(adjustedDate.getHours() - 3); // Soma 3 horas
+  
       filteredAgendamentos = filteredAgendamentos.filter(
         (agendamento) =>
-          new Date(agendamento.data).toLocaleDateString() === new Date(selectedDate).toLocaleDateString()
+          new Date(agendamento.data).toLocaleDateString() === adjustedDate.toLocaleDateString()
       );
     }
-
     // Ordenando agendamentos por data e hora
     filteredAgendamentos.sort((a, b) => {
       const dateA = new Date(a.data);
