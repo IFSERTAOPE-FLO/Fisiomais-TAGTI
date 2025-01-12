@@ -46,12 +46,33 @@ function PlanosTratamento() {
         <p className="text-center text-secondary">Nenhum plano de tratamento cadastrado ainda.</p>
       ) : (
         planos.map((plano) => (
-          <div key={plano.id} className="card mb-3 shadow-sm">
+          <div
+            key={plano.id}
+            className="card mb-3 shadow-sm"
+            style={{
+              border: "1px solid #919292",
+              padding: "1rem",
+              position: "relative",
+              maxWidth: "800px",
+              margin: "0 auto",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: "-10px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                backgroundColor: "#919292",
+                color: "#fff",
+                fontWeight: "bold",
+                padding: "0 10px",
+              }}
+            >
+              Plano de Tratamento #{plano.id}
+            </div>
             <div className="card-body">
-              <h5 className="card-title text-primary">
-                Plano de Tratamento #{plano.id}
-              </h5>
-              <div className="mb-3">
+              <div className="mb-3" style={{ maxWidth: "600px", margin: "0 auto" }}>
                 <label className="form-label text-secondary">
                   Descrição do Tratamento
                 </label>
@@ -62,9 +83,10 @@ function PlanosTratamento() {
                   onChange={(e) =>
                     atualizarPlano(plano.id, "descricao", e.target.value)
                   }
+                  style={{ borderColor: "#919292" }}
                 ></textarea>
               </div>
-              <div className="mb-3">
+              <div className="mb-3" style={{ maxWidth: "600px", margin: "0 auto" }}>
                 <label className="form-label text-secondary">
                   Progresso do Cliente
                 </label>
@@ -75,9 +97,10 @@ function PlanosTratamento() {
                   onChange={(e) =>
                     atualizarPlano(plano.id, "progresso", e.target.value)
                   }
+                  style={{ borderColor: "#919292" }}
                 ></textarea>
               </div>
-              <div className="mb-3">
+              <div className="mb-3" style={{ maxWidth: "600px", margin: "0 auto" }}>
                 <label className="form-label text-secondary">
                   Data do Plano
                 </label>
@@ -88,6 +111,7 @@ function PlanosTratamento() {
                   onChange={(e) =>
                     atualizarPlano(plano.id, "data", e.target.value)
                   }
+                  style={{ borderColor: "#919292" }}
                 />
               </div>
             </div>
@@ -112,6 +136,8 @@ function PlanosTratamento() {
 }
 
 export default PlanosTratamento;
+
+
 
 
 
