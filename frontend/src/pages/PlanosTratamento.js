@@ -34,7 +34,8 @@ function PlanosTratamento() {
       
       <div className="d-flex justify-content-end mb-4">
         <button
-          className="btn btn-primary"
+          className="btn"
+          style={{ backgroundColor: "#BC155B", color: "#fff" }}
           onClick={adicionarPlano}
         >
           <i className="bi bi-plus-circle"></i> Novo Plano de Tratamento
@@ -95,7 +96,14 @@ function PlanosTratamento() {
       )}
 
       <div className="mt-4 text-center">
-        <Link to="/" className="btn btn-outline-primary">
+        <Link
+          to="/"
+          className="btn"
+          style={{
+            borderColor: "#BC155B",
+            color: "#BC155B",
+          }}
+        >
           <i className="bi bi-arrow-left"></i> Voltar para Home
         </Link>
       </div>
@@ -104,4 +112,8 @@ function PlanosTratamento() {
 }
 
 export default PlanosTratamento;
+
+
+
+
 
