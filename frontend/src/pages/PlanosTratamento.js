@@ -1,150 +1,107 @@
 import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { Link } from "react-router-dom";
 import "../css/Estilos.css";
+import "../css/Home.css";
 
 function PlanosTratamento() {
-  const [cliente, setCliente] = useState({
-    nome: "",
-    idade: "",
-    telefone: "",
-    email: "",
-    diagnostico: "",
-    objetivo: "",
-    progresso: "",
-  });
+  const [planos, setPlanos] = useState([]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setCliente({ ...cliente, [name]: value });
+  const adicionarPlano = () => {
+    setPlanos([
+      ...planos,
+      { id: planos.length + 1, descricao: "", progresso: "", data: "" },
+    ]);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Dados do cliente:", cliente);
-    alert("Informações do cliente salvas com sucesso!");
+  const atualizarPlano = (id, campo, valor) => {
+    setPlanos(
+      planos.map((plano) =>
+        plano.id === id ? { ...plano, [campo]: valor } : plano
+      )
+    );
   };
 
   return (
-    <div className="container mt-5">
-      <h1 className="text-center fw-bold text-primary mb-4">
-        Plano de Tratamento
+    <div className="container mt-4">
+      <h1 className="text-center fw-bold text-primary mb-3">
+        Gerenciamento de Planos de Tratamento
       </h1>
-      <p className="text-center text-secondary mb-4">
-        Preencha as informações do cliente para criar um histórico de progresso.
+      <p className="text-center text-primary mb-3">
+        Aqui você pode acompanhar o progresso de seus pacientes e criar novos
+        planos de tratamento personalizados.
       </p>
+      
+      <div className="d-flex justify-content-end mb-4">
+        <button
+          className="btn btn-primary"
+          onClick={adicionarPlano}
+        >
+          <i className="bi bi-plus-circle"></i> Novo Plano de Tratamento
+        </button>
+      </div>
 
-      <form className="bg-light p-4 rounded shadow" onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label htmlFor="nome" className="form-label fw-bold">
-            Nome do Cliente
-          </label>
-          <input
-            type="text"
-            className="form-control"
-            id="nome"
-            name="nome"
-            value={cliente.nome}
-            onChange={handleChange}
-            required
-          />
-        </div>
+      {planos.length === 0 ? (
+        <p className="text-center text-secondary">Nenhum plano de tratamento cadastrado ainda.</p>
+      ) : (
+        planos.map((plano) => (
+          <div key={plano.id} className="card mb-3 shadow-sm">
+            <div className="card-body">
+              <h5 className="card-title text-primary">
+                Plano de Tratamento #{plano.id}
+              </h5>
+              <div className="mb-3">
+                <label className="form-label text-secondary">
+                  Descrição do Tratamento
+                </label>
+                <textarea
+                  className="form-control"
+                  rows="3"
+                  value={plano.descricao}
+                  onChange={(e) =>
+                    atualizarPlano(plano.id, "descricao", e.target.value)
+                  }
+                ></textarea>
+              </div>
+              <div className="mb-3">
+                <label className="form-label text-secondary">
+                  Progresso do Cliente
+                </label>
+                <textarea
+                  className="form-control"
+                  rows="3"
+                  value={plano.progresso}
+                  onChange={(e) =>
+                    atualizarPlano(plano.id, "progresso", e.target.value)
+                  }
+                ></textarea>
+              </div>
+              <div className="mb-3">
+                <label className="form-label text-secondary">
+                  Data do Plano
+                </label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={plano.data}
+                  onChange={(e) =>
+                    atualizarPlano(plano.id, "data", e.target.value)
+                  }
+                />
+              </div>
+            </div>
+          </div>
+        ))
+      )}
 
-        <div className="mb-3">
-          <label htmlFor="idade" className="form-label fw-bold">
-            Idade
-          </label>
-          <input
-            type="number"
-            className="form-control"
-            id="idade"
-            name="idade"
-            value={cliente.idade}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="mb-3">
-          <label htmlFor="telefone" className="form-label fw-bold">
-            Telefone
-          </label>
-          <input
-            type="tel"
-            className="form-control"
-            id="telefone"
-            name="telefone"
-            value={cliente.telefone}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="mb-3">
-          <label htmlFor="email" className="form-label fw-bold">
-            Email
-          </label>
-          <input
-            type="email"
-            className="form-control"
-            id="email"
-            name="email"
-            value={cliente.email}
-            onChange={handleChange}
-          />
-        </div>
-
-        <div className="mb-3">
-          <label htmlFor="diagnostico" className="form-label fw-bold">
-            Diagnóstico
-          </label>
-          <textarea
-            className="form-control"
-            id="diagnostico"
-            name="diagnostico"
-            rows="3"
-            value={cliente.diagnostico}
-            onChange={handleChange}
-            required
-          ></textarea>
-        </div>
-
-        <div className="mb-3">
-          <label htmlFor="objetivo" className="form-label fw-bold">
-            Objetivo do Tratamento
-          </label>
-          <textarea
-            className="form-control"
-            id="objetivo"
-            name="objetivo"
-            rows="3"
-            value={cliente.objetivo}
-            onChange={handleChange}
-            required
-          ></textarea>
-        </div>
-
-        <div className="mb-3">
-          <label htmlFor="progresso" className="form-label fw-bold">
-            Progresso Atual
-          </label>
-          <textarea
-            className="form-control"
-            id="progresso"
-            name="progresso"
-            rows="3"
-            value={cliente.progresso}
-            onChange={handleChange}
-          ></textarea>
-        </div>
-
-        <div className="text-center">
-          <button type="submit" className="btn btn-primary">
-            Salvar Informações
-          </button>
-        </div>
-      </form>
+      <div className="mt-4 text-center">
+        <Link to="/" className="btn btn-outline-primary">
+          <i className="bi bi-arrow-left"></i> Voltar para Home
+        </Link>
+      </div>
     </div>
   );
 }
 
 export default PlanosTratamento;
+
