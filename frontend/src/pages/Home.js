@@ -60,7 +60,7 @@ function Home() {
               <div className="row">
                 <div className="col-4">
                   <img
-                    src="https://via.placeholder.com/150x100?text=Colaborador+1"
+                    src="/images/pilates1.jpg"
                     className="d-block w-100"
                     alt="Colaborador 1"
                   />
@@ -69,7 +69,7 @@ function Home() {
                 </div>
                 <div className="col-4">
                   <img
-                    src="https://via.placeholder.com/150x100?text=Colaborador+2"
+                    src="/images/pilates1.jpg"
                     className="d-block w-100"
                     alt="Colaborador 2"
                   />
@@ -78,7 +78,7 @@ function Home() {
                 </div>
                 <div className="col-4">
                   <img
-                    src="https://via.placeholder.com/150x100?text=Colaborador+3"
+                    src="/images/pilates1.jpg"
                     className="d-block w-100"
                     alt="Colaborador 3"
                   />
@@ -91,7 +91,7 @@ function Home() {
               <div className="row">
                 <div className="col-4">
                   <img
-                    src="https://via.placeholder.com/150x100?text=Colaborador+4"
+                    src="/images/pilates1.jpg"
                     className="d-block w-100"
                     alt="Colaborador 4"
                   />
@@ -100,7 +100,7 @@ function Home() {
                 </div>
                 <div className="col-4">
                   <img
-                    src="https://via.placeholder.com/150x100?text=Colaborador+5"
+                    src="/images/pilates1.jpg"
                     className="d-block w-100"
                     alt="Colaborador 5"
                   />
@@ -109,7 +109,7 @@ function Home() {
                 </div>
                 <div className="col-4">
                   <img
-                    src="https://via.placeholder.com/150x100?text=Colaborador+6"
+                    src="/images/pilates1.jpg"
                     className="d-block w-100"
                     alt="Colaborador 6"
                   />
@@ -154,8 +154,8 @@ function Home() {
               <div className="row">
                 <div className="col-4">
                   <img
-                    src="https://via.placeholder.com/150x100?text=Pilates"
-                    className="d-block w-100"
+                    src="/images/pilates1.jpg"
+                    className="d-block w-100 custom-image"
                     alt="Pilates"
                   />
                   <h5 className="text-center fw-bold text-secondary">Pilates</h5>
@@ -163,8 +163,8 @@ function Home() {
                 </div>
                 <div className="col-4">
                   <img
-                    src="https://via.placeholder.com/150x100?text=Reabilitação+Física"
-                    className="d-block w-100"
+                    src="/images/pilates2.png"
+                    className="d-block w-100 custom-image"
                     alt="Reabilitação Física"
                   />
                   <h5 className="text-center fw-bold text-secondary">Reabilitação Física</h5>
@@ -172,8 +172,8 @@ function Home() {
                 </div>
                 <div className="col-4">
                   <img
-                    src="https://via.placeholder.com/150x100?text=Massoterapia"
-                    className="d-block w-100"
+                    src="https://policonsultas.com.br/wp-content/uploads/2023/01/massoterapia-1.jpg"
+                    className="d-block w-100 custom-image"
                     alt="Massoterapia"
                   />
                   <h5 className="text-center fw-bold text-secondary">Massoterapia</h5>
@@ -185,8 +185,8 @@ function Home() {
               <div className="row">
                 <div className="col-4">
                   <img
-                    src="https://via.placeholder.com/150x100?text=Acupuntura"
-                    className="d-block w-100"
+                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4VWSjnFu2LvpsnTrGAnSUtkpFgeYXaTeSVw&s"
+                    className="d-block w-100 custom-image"
                     alt="Acupuntura"
                   />
                   <h5 className="text-center fw-bold text-secondary">Acupuntura</h5>
@@ -194,8 +194,8 @@ function Home() {
                 </div>
                 <div className="col-4">
                   <img
-                    src="https://via.placeholder.com/150x100?text=RPG"
-                    className="d-block w-100"
+                    src="https://static.wixstatic.com/media/0dac19_cb0b9eec411e458aa7a46e65c364402b~mv2.jpg/v1/fill/w_849,h_429,al_c,q_85/RPG_CHIBAFISIOMED.jpg"
+                    className="d-block w-100 custom-image"
                     alt="RPG"
                   />
                   <h5 className="text-center fw-bold text-secondary">Reeducação Postural Global</h5>
@@ -203,8 +203,8 @@ function Home() {
                 </div>
                 <div className="col-4">
                   <img
-                    src="https://via.placeholder.com/150x100?text=Hidroterapia"
-                    className="d-block w-100"
+                    src="https://www.institutoreaction.com.br/wp-content/uploads/2020/06/beneficios-hidroterapia-miniatura.jpg"
+                    className="d-block w-100 custom-image"
                     alt="Hidroterapia"
                   />
                   <h5 className="text-center fw-bold text-secondary">Hidroterapia</h5>
