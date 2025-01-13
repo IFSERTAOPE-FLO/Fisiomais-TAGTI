@@ -136,10 +136,3 @@ function PlanosTratamento() {
 }
 
 export default PlanosTratamento;
-
-
-
-
-
-
-
