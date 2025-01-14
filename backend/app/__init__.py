@@ -1,11 +1,18 @@
-#python -m venv venv
+#cd backend
+#python -m venv venv(a primeira vez)
 #.\venv\Scripts\activate
 #pip install -r requirements.txt
-#fisiomaispilatesefisioterapia@gmail.com  12345
+#flask run
+#email: fisiomaispilatesefisioterapia@gmail.com  senha: 12345
 
 #DBeaver baixar para trabalhar com o sqlite
 #flask db migrate -m "mensagem"
 #flask db upgrade
+
+#abra um novo cmd
+#cd frontend
+#npm install (a primeira vez)
+#npm start
 
 
 from flask import Flask
