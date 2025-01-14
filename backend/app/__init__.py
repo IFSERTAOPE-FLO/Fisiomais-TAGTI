@@ -3,7 +3,7 @@
 #.\venv\Scripts\activate
 #pip install -r requirements.txt
 #flask run
-#fisiomaispilatesefisioterapia@gmail.com  12345
+#email: fisiomaispilatesefisioterapia@gmail.com  senha: 12345
 
 #DBeaver baixar para trabalhar com o sqlite
 #flask db migrate -m "mensagem"
