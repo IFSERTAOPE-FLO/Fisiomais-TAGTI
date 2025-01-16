@@ -9,12 +9,18 @@ from sqlalchemy import cast, Date
 from pytz import timezone
 import os
 
-
 main = Blueprint('main', __name__)
 
-@main.route('/api/ping', methods=['GET'])
-def ping():
-    return jsonify({"message": "Pong!"})
+"""
+Rotas POST:
+1. '/login' - Rota POST para autenticar usuários (colaboradores ou clientes) com base em e-mail e senha, retornando tokens de acesso e informações do usuário.
+2. '/logout' - Rota POST protegida que realiza logout adicionando o token à blacklist.
+3. '/refresh-token' - Rota POST protegida que gera um novo token de acesso com base em um refresh token válido.
+4. '/api/notificar_admin' - Rota POST protegida para notificar administrador, colaborador e cliente sobre o cancelamento de um agendamento, enviando e-mails detalhados.
+5. '/api/contato' - Rota POST para receber mensagens de contato e enviar um e-mail ao administrador com os detalhes.
+"""
+
+
 
 @main.route('/login', methods=['POST'])
 def login():

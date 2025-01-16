@@ -7,6 +7,22 @@ from datetime import datetime
 
 colaboradores = Blueprint('colaboradores', __name__)
 
+"""
+Rotas relacionadas a colaboradores no sistema:
+
+# Rotas GET:
+1. '/listar' - Retorna uma lista de colaboradores disponíveis para o serviço solicitado, com a possibilidade de filtrar por clínica, se fornecido.
+2. '/colaboradoresdisponiveis' - Retorna a lista de colaboradores alocados e disponíveis para o serviço solicitado, levando em consideração o tipo de usuário (admin ou colaborador comum).
+3. '/horarios/listar/<int:colaborador_id>' - Retorna os horários cadastrados para o colaborador especificado, incluindo o dia da semana e o intervalo de horas.
+
+# Rotas PUT:
+1. '/alterar_clinica' - Permite a alteração da clínica associada a um colaborador, atualizando o campo `clinica_id`.
+2. '/configurar_horarios' - Configura os horários de trabalho para um colaborador, permitindo definir múltiplos horários, e remove conflitos de horários existentes.
+   
+Essas rotas utilizam autenticação JWT para garantir a segurança, incluem validações de entrada para garantir que as informações sejam consistentes, e interagem com o banco de dados para realizar as operações nos colaboradores e seus horários.
+"""
+
+
 from datetime import datetime
 
 @colaboradores.route('/register', methods=['POST'])

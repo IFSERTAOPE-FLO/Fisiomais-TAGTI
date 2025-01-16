@@ -5,6 +5,25 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 clinicas = Blueprint('clinicas', __name__)
 
+"""
+Rotas relacionadas a clínicas no sistema:
+
+# Rotas GET:
+1. '/' - Lista todas as clínicas cadastradas no sistema, incluindo seus detalhes como nome, CNPJ, telefone e endereço (se disponível).
+
+# Rotas POST:
+1. '/register' - Cadastra uma nova clínica no sistema, incluindo os dados de nome, CNPJ, telefone e endereço. Valida o CNPJ e verifica se já existe uma clínica com o mesmo CNPJ antes de realizar o cadastro.
+
+# Rotas PUT:
+1. '/editar_clinica/<int:clinica_id>' - Edita os dados de uma clínica especificada pelo ID, permitindo a atualização de informações como nome, telefone e endereço. Se um endereço for fornecido, ele será atualizado ou criado, caso não exista.
+
+# Rotas DELETE:
+1. '/remover_clinica/<int:clinica_id>' - Remove uma clínica do sistema, incluindo a remoção do endereço associado e a reatribuição de colaboradores para `None`.
+
+Essas rotas requerem autenticação JWT para garantir a segurança. A rota `register` exige que o usuário seja um administrador para adicionar uma nova clínica, enquanto a rota PUT permite a edição dos dados de uma clínica existente.
+"""
+
+
 # Função para verificar se o usuário é administrador
 def is_admin():
     role = request.headers.get('Role')  # Pega o role diretamente do cabeçalho da requisição

@@ -10,6 +10,28 @@ from sqlalchemy.orm import joinedload
 
 agendamentos= Blueprint('agendamentos', __name__)
 
+"""
+Rotas relacionadas aos serviços no sistema:
+
+# Rotas GET:
+1. '/listar_servicos' - Lista os serviços relacionados ao colaborador autenticado, incluindo planos e tipos de serviço. Se o colaborador for administrador, lista todos os serviços do sistema.
+2. '/listar_todos_servicos' - Lista todos os serviços do sistema, independentemente do colaborador autenticado. Inclui planos e tipos de serviço.
+
+# Rotas PUT:
+1. '/editar_servico/<int:id_servico>' - Atualiza as informações de um serviço específico pelo ID, incluindo nome, descrição, tipo e planos (se for do tipo pilates). Se o tipo de serviço for alterado, a associação é atualizada.
+
+# Rotas POST:
+1. '/add_servico' - Adiciona um novo serviço ao sistema, incluindo nome, descrição, valor, tipo, colaboradores associados e planos (se o serviço for do tipo pilates).
+2. '/adicionar_colaboradores' - Associa colaboradores a um serviço existente, permitindo adicionar múltiplos colaboradores ao serviço.
+3. '/remover_colaboradores' - Remove colaboradores de um serviço existente, com base nos IDs fornecidos.
+
+# Rota DELETE:
+1. '/deletar_servico/<int:id>' - Exclui um serviço do sistema, removendo também os relacionamentos com colaboradores associados.
+
+Essas rotas utilizam autenticação JWT para garantir a segurança e fazem uso de validações de entrada para evitar dados inconsistentes. As operações de leitura (GET) retornam os dados solicitados, enquanto as de escrita (POST, PUT, DELETE) atualizam o banco de dados e realizam ações sobre os serviços e seus relacionamentos com colaboradores.
+"""
+
+
 
 import traceback
 

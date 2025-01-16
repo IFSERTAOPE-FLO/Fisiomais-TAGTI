@@ -10,6 +10,21 @@ from werkzeug.utils import secure_filename
 
 clientes = Blueprint('clientes', __name__)
 
+"""
+Rotas relacionadas a clientes no sistema:
+
+# Rotas GET:
+1. '/' - Retorna a lista de todos os clientes cadastrados com seus detalhes, incluindo informações de endereço (se disponíveis).
+2. '/confirm/<token>' - Confirma o e-mail de um cliente usando um token de confirmação.
+
+# Rotas POST:
+1. '/register' - Registra um cliente no sistema, exigindo autenticação JWT. Inclui validações de CPF, duplicidade de dados e informações obrigatórias.
+2. '/register/public' - Registra um cliente no sistema sem exigir autenticação JWT. Inclui validações semelhantes à rota '/register', além de verificar a idade mínima de 18 anos.
+
+Cada rota executa operações como validação de dados, criptografia de senha, gerenciamento de tokens de confirmação de e-mail e interação com o banco de dados para criar e salvar registros.
+"""
+
+
 @clientes.route('/', methods=['GET'])
 def get_clientes():
     clientes = Clientes.query.all()

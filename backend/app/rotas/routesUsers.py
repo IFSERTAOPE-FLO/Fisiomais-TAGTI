@@ -6,6 +6,22 @@ from werkzeug.utils import secure_filename
 
 usuarios = Blueprint('usuarios', __name__)
 
+"""
+Rotas relacionadas a usuários no sistema:
+
+# Rotas GET:
+1. '/listar_usuarios' - Lista todos os usuários (clientes e colaboradores) cadastrados no sistema, incluindo seus detalhes como endereço, cargo e clínica, dependendo do tipo de usuário.
+
+# Rotas PUT:
+1. '/editar_usuario/<role>/<int:user_id>' - Edita os dados de um usuário (cliente ou colaborador) especificado pelo ID e tipo (role).
+2. '/editar_endereco/<role>/<int:user_id>' - Edita ou cria um endereço associado ao usuário especificado pelo ID e tipo.
+3. '/editar_usuario_com_endereco/<role>/<int:user_id>' - Edita dados do usuário e seu endereço em uma única requisição. Cria o endereço se necessário.
+4. '/alterar_senha/<role>/<int:user_id>' - Altera a senha de um usuário, verificando a senha atual e atualizando para uma nova.
+
+Essas rotas utilizam autenticação JWT para garantir a segurança, incluem validações de entrada para evitar inconsistências, e interagem com o banco de dados para atualizar as informações dos usuários e seus endereços.
+"""
+
+
 
 
 @usuarios.route('/editar_usuario/<role>/<int:user_id>', methods=['PUT'])

@@ -8,6 +8,20 @@ import os
 
 dashboards = Blueprint('dashboards', __name__)
 
+"""
+Rotas relacionadas a dashboards no sistema:
+
+# Rotas GET:
+1. '/overview' - Retorna uma visão geral do sistema, incluindo o total de agendamentos, clientes, colaboradores, serviços, clínicas, além de estatísticas como a receita total, receitas por ano e mês, e a média mensal do ano atual.
+2. '/servicos/populares' - Retorna uma lista dos serviços mais populares, ordenados pela quantidade de agendamentos realizados para cada serviço.
+3. '/agendamentos_por_clinica' - Retorna a quantidade de agendamentos realizados por clínica, agrupados por nome de clínica.
+4. '/agendamentos_por_colaborador' - Retorna a quantidade de agendamentos realizados por colaborador, agrupados por nome de colaborador.
+5. '/receita_por_mes' - Retorna a receita mensal de agendamentos confirmados, com a soma dos valores dos serviços por mês e ano.
+
+Essas rotas utilizam autenticação JWT para garantir a segurança, realizam consultas ao banco de dados utilizando SQLAlchemy e funções agregadas para gerar relatórios e estatísticas sobre agendamentos, serviços e receitas. As respostas são formatadas em JSON para fácil integração com o frontend.
+"""
+
+
 @dashboards.route('/overview', methods=['GET'])
 @jwt_required()
 def dashboard_overview():

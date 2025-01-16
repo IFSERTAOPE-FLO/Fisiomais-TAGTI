@@ -5,6 +5,26 @@ from sqlalchemy.orm import joinedload
 
 servicos= Blueprint('servicos', __name__)
 
+"""
+Rotas relacionadas aos serviços no sistema:
+
+# Rotas GET:
+1. '/listar_servicos' - Lista os serviços associados ao colaborador logado, incluindo informações sobre planos e tipos de serviço (pilates ou fisioterapia). Se o colaborador não for administrador, os serviços são filtrados pelos colaboradores atribuídos a ele.
+2. '/listar_todos_servicos' - Lista todos os serviços do sistema, incluindo planos e tipos de serviço. O acesso é restrito a colaboradores autenticados.
+
+# Rotas PUT:
+1. '/editar_servico/<int:id_servico>' - Atualiza os dados de um serviço existente, incluindo nome, descrição e tipo. Caso o tipo de serviço seja alterado, a associação ao tipo de serviço anterior é removida e a nova associação é criada. Permite também atualizar os planos no caso de serviços do tipo 'pilates'.
+    
+# Rotas POST:
+1. '/add_servico' - Cria um novo serviço, incluindo dados como nome, descrição, tipo de serviço, colaboradores e planos (se aplicável). Valida se todos os campos obrigatórios foram fornecidos antes de adicionar o serviço à base de dados.
+2. '/adicionar_colaboradores' - Adiciona colaboradores a um serviço específico. Verifica se os colaboradores e o serviço existem, e garante que não haja duplicação na associação.
+3. '/remover_colaboradores' - Remove colaboradores de um serviço específico, com validação dos IDs de serviço e colaboradores antes de proceder com a remoção.
+
+# Rotas DELETE:
+1. '/deletar_servico/<int:id>' - Deleta um serviço do sistema, removendo também as associações com colaboradores e excluindo os registros correspondentes.
+
+Essas rotas utilizam autenticação JWT para garantir a segurança e implementam verificações rigorosas para garantir que as operações de criação, atualização, exclusão e associação sejam realizadas corretamente.
+"""
 
 
 @servicos.route('/listar_servicos', methods=['GET'])

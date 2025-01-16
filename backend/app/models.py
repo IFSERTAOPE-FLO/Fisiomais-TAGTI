@@ -9,11 +9,11 @@ class Enderecos(db.Model):
     __tablename__ = 'enderecos'
     id_endereco = db.Column(db.Integer, primary_key=True)  # Padronizado
     rua = db.Column(db.String(255), nullable=True)  # Tornado opcional
-    numero = db.Column(db.String(20), nullable=True)  # Tornado opcional
+    numero = db.Column(db.String(20), nullable=True) 
     complemento = db.Column(db.String(255), nullable=True)
-    bairro = db.Column(db.String(100), nullable=True)  # Tornado opcional
-    cidade = db.Column(db.String(100), nullable=True)  # Tornado opcional
-    estado = db.Column(db.String(50), nullable=True)  # Tornado opcional
+    bairro = db.Column(db.String(100), nullable=True)  
+    cidade = db.Column(db.String(100), nullable=True)  
+    estado = db.Column(db.String(50), nullable=True)  
 
     # Relacionamentos
     clientes = db.relationship('Clientes', back_populates='endereco')
