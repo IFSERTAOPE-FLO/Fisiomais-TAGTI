@@ -225,7 +225,8 @@ function CriarAgendamento() {
       });
 
       if (response.ok) {
-        alert('Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail');
+        const successData = await response.json();
+        alert(successData.message || 'Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail');
         const savedUserId = localStorage.getItem('userId');
         if (savedUserId) {
           fetchHorariosDisponiveis(savedUserId, data); // Atualiza os horários do colaborador
