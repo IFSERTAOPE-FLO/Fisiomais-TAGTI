@@ -706,3 +706,74 @@ def enviar_email_agendamento(agendamento_id):
         current_app.logger.error(f"Erro ao enviar e-mails para o agendamento {agendamento_id}: {e}")
         return jsonify({'message': 'Erro ao enviar e-mails'}), 500
 
+from datetime import datetime, timedelta
+
+@agendamentos.route('/listar_agendamentos_calendario', methods=['GET'])
+@jwt_required()
+def listar_agendamentos_calendario():
+    try:
+        usuario_email = get_jwt_identity()
+        colaborador = Colaboradores.query.filter_by(email=usuario_email).first()
+        admin = Colaboradores.query.filter_by(is_admin=True, email=usuario_email).first()
+        cliente = Clientes.query.filter_by(email=usuario_email).first()
+
+        if not colaborador and not admin and not cliente:
+            return jsonify({'message': 'Usuário não autorizado'}), 403
+
+        start_date_str = request.args.get('start_date')
+        end_date_str = request.args.get('end_date')
+
+        if not start_date_str or not end_date_str:
+            return jsonify({'message': 'Datas inválidas'}), 400
+
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+
+        query = db.session.query(Agendamentos).options(
+            joinedload(Agendamentos.servico),
+            joinedload(Agendamentos.colaborador),
+            joinedload(Agendamentos.cliente),
+            joinedload(Agendamentos.clinica).joinedload(Clinicas.endereco)
+        ).filter(Agendamentos.data_e_hora.between(start_date, end_date))
+
+        agendamentos = query.all()
+
+        resultado = []
+        for agendamento in agendamentos:
+            clinica = agendamento.clinica
+            endereco_clinica = clinica.endereco if clinica else None
+            cliente = agendamento.cliente
+            colaborador = agendamento.colaborador
+            servico = agendamento.servico
+
+            plano_servico = None
+            if servico and servico.valor is None:
+                plano_servico = Planos.query.filter_by(servico_id=servico.id_servico).first()
+
+            if agendamento.data_e_hora:
+                data_e_hora_brasilia = agendamento.data_e_hora.astimezone(BRASILIA)
+                data_str = data_e_hora_brasilia.strftime('%Y-%m-%d')
+                hora_str = data_e_hora_brasilia.strftime('%H:%M')
+            else:
+                data_str = "Data a ser definida"
+                hora_str = None
+
+            resultado.append({
+                'id': agendamento.id_agendamento,
+                'data': data_str,
+                'hora': hora_str,
+                'status': agendamento.status,
+                'servico': agendamento.servico.nome if agendamento.servico else None,
+                'colaborador': agendamento.colaborador.nome if agendamento.colaborador else None,
+                'cliente': agendamento.cliente.nome if agendamento.cliente else None,
+                'clinica': {
+                    'nome': clinica.nome if clinica else None,
+                    'endereco': endereco_clinica
+                }
+            })
+
+        return jsonify(resultado), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+

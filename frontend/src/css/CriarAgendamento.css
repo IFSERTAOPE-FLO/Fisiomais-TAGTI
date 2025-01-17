@@ -1,3 +1,7 @@
+.z-bot {
+    z-index: 1;
+    position: relative;
+  }
 /* Definição da animação de pulsar */
 @keyframes pulsar {
     0% {

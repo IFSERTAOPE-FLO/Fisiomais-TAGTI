@@ -20,7 +20,15 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-
+  useEffect(() => {
+    if (servico?.Tipo === "pilates") {
+      setFormData((prev) => ({
+        ...prev,
+        Planos: servico.Planos || [],
+      }));
+    }
+  }, [servico]);
+  
 
   const handleTipoServicoChange = (e) => {
     const { value } = e.target;
@@ -48,6 +56,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
     setNovoPlano({ nome: "", valor: "" }); // Reset the new plan input fields
   };
 
+  
   const handleSave = async () => {
     const valorValido = formData.Valor && !isNaN(parseFloat(formData.Valor))
       ? parseFloat(formData.Valor)

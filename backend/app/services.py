@@ -33,10 +33,10 @@ def populate_database():
 
     # Criar endereços para clínicas
     enderecos = [
-        {"rua": "Rua A", "numero": "123", "bairro": "Centro", "cidade": "São Paulo", "estado": "PE"},
-        {"rua": "Rua B", "numero": "456", "bairro": "Bairro Novo", "cidade": "Rio de Janeiro", "estado": "PE"},
-        {"rua": "Rua C", "numero": "789", "bairro": "Centro", "cidade": "Belo Horizonte", "estado": "PE"},
-        {"rua": "Rua D", "numero": "101", "bairro": "Jardins", "cidade": "Salvador", "estado": "PE"},
+        {"rua": "Rua A", "numero": "123", "bairro": "Centro", "cidade": "Floresta", "estado": "PE"},
+        {"rua": "Rua B", "numero": "456", "bairro": "Bairro Novo", "cidade": "Serra Talhada", "estado": "PE"},
+        {"rua": "Rua C", "numero": "789", "bairro": "Centro", "cidade": "Caruaru", "estado": "PE"},
+        {"rua": "Rua D", "numero": "101", "bairro": "Jardins", "cidade": "Salgueiro", "estado": "PE"},
         {"rua": "Rua E", "numero": "202", "bairro": "Boa Vista", "cidade": "Recife", "estado": "PE"}
     ]
 

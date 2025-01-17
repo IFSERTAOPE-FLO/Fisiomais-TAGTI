@@ -120,47 +120,50 @@ const VisualizarAgendamentos = () => {
     let filteredAgendamentos = agendamentos;
 
     if (selectedDate) {
-      const adjustedDate = new Date(selectedDate);
-      adjustedDate.setHours(adjustedDate.getHours() - 3); // Soma 3 horas
-  
-      filteredAgendamentos = filteredAgendamentos.filter(
-        (agendamento) =>
-          new Date(agendamento.data).toLocaleDateString() === adjustedDate.toLocaleDateString()
-      );
+      if (selectedDate instanceof Date) {
+        // Filtro por dia específico
+        const adjustedDate = new Date(selectedDate);
+        adjustedDate.setHours(adjustedDate.getHours() - 3); // Ajuste de fuso horário
+        filteredAgendamentos = filteredAgendamentos.filter(
+          (agendamento) =>
+            new Date(agendamento.data).toLocaleDateString() === adjustedDate.toLocaleDateString()
+        );
+      } else if (selectedDate.type === 'week') {
+        // Filtro para semana atual
+        const { start } = selectedDate;
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6); // Final da semana
+        filteredAgendamentos = filteredAgendamentos.filter((agendamento) => {
+          const agendamentoDate = new Date(agendamento.data);
+          return agendamentoDate >= start && agendamentoDate <= end;
+        });
+      } else if (selectedDate.type === 'month') {
+        // Filtro para mês atual
+        const { start } = selectedDate;
+        const end = new Date(start.getFullYear(), start.getMonth() + 1, 0); // Final do mês
+        filteredAgendamentos = filteredAgendamentos.filter((agendamento) => {
+          const agendamentoDate = new Date(agendamento.data);
+          return agendamentoDate >= start && agendamentoDate <= end;
+        });
+      }
     }
-    // Ordenando agendamentos por data e hora
+
+    // Ordenar por data e hora
     filteredAgendamentos.sort((a, b) => {
       const dateA = new Date(a.data);
       const dateB = new Date(b.data);
-
       if (dateA.getTime() !== dateB.getTime()) {
         return dateA - dateB;
       }
-
       const timeA = a.hora.split(':').map(Number);
       const timeB = b.hora.split(':').map(Number);
-
-      const minutesA = timeA[0] * 60 + timeA[1];
-      const minutesB = timeB[0] * 60 + timeB[1];
-
-      return minutesA - minutesB;
+      return timeA[0] * 60 + timeA[1] - (timeB[0] * 60 + timeB[1]);
     });
 
-    // Se houver a configuração de ordenação, aplicar
-    if (sortConfig.key) {
-      filteredAgendamentos.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === 'ascending' ? -1 : 1;
-        }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === 'ascending' ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-
     return filteredAgendamentos;
-  }, [agendamentos, sortConfig, selectedDate]);
+  }, [agendamentos, selectedDate]);
+
+
 
   const handleConfirmarNegar = async (agendamentoId, novoStatus) => {
     try {
@@ -191,7 +194,7 @@ const VisualizarAgendamentos = () => {
         return agendamento.cliente.toLowerCase().includes(pesquisaValor.toLowerCase());
       case 'colaborador':
         return agendamento.colaborador.toLowerCase().includes(pesquisaValor.toLowerCase());
-      
+
       case 'clinica':
         return agendamento.clinica?.nome.toLowerCase().includes(pesquisaValor.toLowerCase());
       default:
@@ -215,18 +218,18 @@ const VisualizarAgendamentos = () => {
 
         <div className="card-body">
           <div className="col-md-2 col-lg-12 d-flex justify-content-center align-items-center">
-            <div className="input-group">
+            <div className="input-group z-bot">
               <select
                 className="form-select"
                 value={pesquisaTipo}
                 onChange={(e) => setPesquisaTipo(e.target.value)}
               >
                 <option value="agendamento">Nº do Agendamento</option>
-                { role!=='cliente' &&(
-                <option value="cliente">Cliente</option>
-              )
-              }
-                <option value="colaborador">Colaborador</option>                
+                {role !== 'cliente' && (
+                  <option value="cliente">Cliente</option>
+                )
+                }
+                <option value="colaborador">Colaborador</option>
                 <option value="clinica">Clínica</option>
               </select>
               <input
@@ -236,8 +239,8 @@ const VisualizarAgendamentos = () => {
                 value={pesquisaValor}
                 onChange={(e) => setPesquisaValor(e.target.value)}
               />
-              <button className="btn btn-secondary z-bot" type="button">
-                <i className="bi bi-search"></i>
+              <button className="btn btn-secondary z-bot " type="button">
+                <i className="bi bi-search z-bot"></i>
               </button>
             </div>
           </div>
@@ -356,29 +359,68 @@ const VisualizarAgendamentos = () => {
           </div>
 
 
-          {/* Modal de filtro de data */}
           <Modal show={showDateFilterModal} onHide={() => setShowDateFilterModal(false)}>
             <Modal.Header closeButton>
               <Modal.Title>Filtro de Datas</Modal.Title>
             </Modal.Header>
-            <Modal.Body className="d-flex justify-content-center align-items-center">
-              <Calendar value={selectedDate} onChange={handleDateFilter} />
+            <Modal.Body>
+              <div className="d-flex flex-column justify-content-center align-items-center">
+                <p>Escolha uma data específica ou selecione uma das opções abaixo:</p>
+                <Calendar value={selectedDate instanceof Date ? selectedDate : null} onChange={handleDateFilter} />
+                <div className="mt-3 d-flex flex-column gap-2">
+                  
+                </div>
+              </div>
             </Modal.Body>
             <Modal.Footer>
+            <Button
+                    className='btn btn-login'
+                    onClick={() => {
+                      setSelectedDate(new Date()); // Define o filtro para o dia atual
+                      setShowDateFilterModal(false);
+                    }}
+                  >
+                    Hoje
+                  </Button>
+                  <Button
+                  className='btn btn-login'
+                    variant="primary"
+                    onClick={() => {
+                      const today = new Date();
+                      const startOfWeek = new Date(today);
+                      startOfWeek.setDate(today.getDate() - today.getDay()); // Início da semana
+                      setSelectedDate({ type: 'week', start: startOfWeek }); // Filtro para semana atual
+                      setShowDateFilterModal(false);
+                    }}
+                  >
+                    Esta Semana
+                  </Button>
+                  <Button
+                    className='btn btn-login'
+                    onClick={() => {
+                      const today = new Date();
+                      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // Início do mês
+                      setSelectedDate({ type: 'month', start: startOfMonth }); // Filtro para mês atual
+                      setShowDateFilterModal(false);
+                    }}
+                  >
+                    Este Mês
+                  </Button>
               <Button
                 variant="danger"
                 onClick={() => {
-                  setSelectedDate(null); // Limpa a data selecionada
+                  setSelectedDate(null); // Limpa o filtro
                   setShowDateFilterModal(false); // Fecha o modal
                 }}
               >
                 Remover Filtro
               </Button>
-              <Button variant="btn btn-secondary" onClick={() => setShowDateFilterModal(false)}>
-                Fechar
-              </Button>
+              
             </Modal.Footer>
           </Modal>
+
+
+
 
           {/* Modal de detalhes do agendamento */}
           {selectedAgendamento && (
@@ -390,44 +432,44 @@ const VisualizarAgendamentos = () => {
                 <div className="row mb-3">
                   <div className="col-12 col-md-6">
                     <strong>Cliente:</strong> {selectedAgendamento.cliente || 'Cliente não informado'}
-                  </div>                  
+                  </div>
                   <div className="col-12 col-md-6">
                     <strong>Colaborador:</strong> {selectedAgendamento.colaborador || 'Colaborador não encontrado'}
-                  </div>                  
+                  </div>
                   <div className="col-12 col-md-6">
                     <strong>Data:</strong> {new Date(selectedAgendamento.data).toLocaleDateString()}
                   </div>
                   <div className="col-12 col-md-6">
                     <strong>Hora:</strong> {selectedAgendamento.hora || 'Hora não informada'}
-                  </div>                
-                  
+                  </div>
+
                   <div className="col-12 col-md-6">
                     <strong>Serviço:</strong> {selectedAgendamento.servico || 'Serviço não encontrado'}
                   </div>
-                  
 
-                {selectedAgendamento.plano?.nome && selectedAgendamento.plano?.valor ? (
-                  <>
-                    <div className="col-12 col-md-6">
-                      <strong>Plano:</strong> {selectedAgendamento.plano.nome}
-                    </div>
-                    <div className="col-12 col-md-6">
-                      <strong>Valor do Plano:</strong>{' '}
-                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAgendamento.plano.valor)}
-                    </div>
+
+                  {selectedAgendamento.plano?.nome && selectedAgendamento.plano?.valor ? (
+                    <>
+                      <div className="col-12 col-md-6">
+                        <strong>Plano:</strong> {selectedAgendamento.plano.nome}
+                      </div>
+                      <div className="col-12 col-md-6">
+                        <strong>Valor do Plano:</strong>{' '}
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAgendamento.plano.valor)}
+                      </div>
                     </>
-                ) : (
-                  <>
-                    <div className="col-12 col-md-6">
-                      <strong>Valor do Serviço:</strong>{' '}
-                      {selectedAgendamento.valor
-                        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAgendamento.valor)
-                        : 'Não disponível'}
-                    </div>
-                   
-                  </>
-                )}
-                <div className="col-12 col-md-6">
+                  ) : (
+                    <>
+                      <div className="col-12 col-md-6">
+                        <strong>Valor do Serviço:</strong>{' '}
+                        {selectedAgendamento.valor
+                          ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedAgendamento.valor)
+                          : 'Não disponível'}
+                      </div>
+
+                    </>
+                  )}
+                  <div className="col-12 col-md-6">
                     <strong>Status: </strong>
                     <span
                       className={` fw-bold
@@ -443,44 +485,44 @@ const VisualizarAgendamentos = () => {
                                   ? 'text-dark'
                                   : 'text-warning'
                         }
-                      `} 
+                      `}
                     >
-                       {selectedAgendamento.status.charAt(0).toUpperCase() + selectedAgendamento.status.slice(1)}
+                      {selectedAgendamento.status.charAt(0).toUpperCase() + selectedAgendamento.status.slice(1)}
                     </span>
                   </div>
-                <div className="row ">
-                  <div className="col-12 col-md-6">
-                    <strong>Clínica:</strong> {selectedAgendamento.clinica?.nome || 'Clínica não informada'}
-                  </div>
-                  
+                  <div className="row ">
+                    <div className="col-12 col-md-6">
+                      <strong>Clínica:</strong> {selectedAgendamento.clinica?.nome || 'Clínica não informada'}
+                    </div>
+
                   </div>
                   {selectedAgendamento.clinica?.endereco ? (
-                  <>
-                    <div className="col-12 col-md-12">
-                      <strong>Endereço da Clínica:</strong>
-                    </div>
-                    <div className="col-12 col-md-6">
-                      {[
-                        selectedAgendamento.clinica.endereco.rua,
-                        selectedAgendamento.clinica.endereco.numero,
-                        selectedAgendamento.clinica.endereco.bairro,
-                        selectedAgendamento.clinica.endereco.cidade,
-                        selectedAgendamento.clinica.endereco.estado,
-                      ]
-                        .filter(Boolean)
-                        .join(', ') || 'Endereço não disponível'}
-                    </div>
-                  </>
-                ) : (
-                  
+                    <>
+                      <div className="col-12 col-md-12">
+                        <strong>Endereço da Clínica:</strong>
+                      </div>
+                      <div className="col-12 col-md-6">
+                        {[
+                          selectedAgendamento.clinica.endereco.rua,
+                          selectedAgendamento.clinica.endereco.numero,
+                          selectedAgendamento.clinica.endereco.bairro,
+                          selectedAgendamento.clinica.endereco.cidade,
+                          selectedAgendamento.clinica.endereco.estado,
+                        ]
+                          .filter(Boolean)
+                          .join(', ') || 'Endereço não disponível'}
+                      </div>
+                    </>
+                  ) : (
+
                     <div className="col-12 col-md-6">
                       <strong>Endereço da Clínica:</strong> Endereço não disponível
                     </div>
-                  
-                )}
-                 
 
-                
+                  )}
+
+
+
                 </div>
               </Modal.Body>
 
