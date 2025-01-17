@@ -236,7 +236,7 @@ const VisualizarAgendamentos = () => {
                 value={pesquisaValor}
                 onChange={(e) => setPesquisaValor(e.target.value)}
               />
-              <button className="btn btn-secondary" type="button">
+              <button className="btn btn-secondary z-bot" type="button">
                 <i className="bi bi-search"></i>
               </button>
             </div>

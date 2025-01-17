@@ -33,26 +33,26 @@ def populate_database():
 
     # Criar endereços para clínicas
     enderecos = [
-        {"rua": "Rua A", "numero": "123", "bairro": "Centro", "cidade": "São Paulo", "estado": "SP"},
-        {"rua": "Rua B", "numero": "456", "bairro": "Bairro Novo", "cidade": "Rio de Janeiro", "estado": "RJ"},
-        {"rua": "Rua C", "numero": "789", "bairro": "Centro", "cidade": "Belo Horizonte", "estado": "MG"},
-        {"rua": "Rua D", "numero": "101", "bairro": "Jardins", "cidade": "Salvador", "estado": "BA"},
+        {"rua": "Rua A", "numero": "123", "bairro": "Centro", "cidade": "São Paulo", "estado": "PE"},
+        {"rua": "Rua B", "numero": "456", "bairro": "Bairro Novo", "cidade": "Rio de Janeiro", "estado": "PE"},
+        {"rua": "Rua C", "numero": "789", "bairro": "Centro", "cidade": "Belo Horizonte", "estado": "PE"},
+        {"rua": "Rua D", "numero": "101", "bairro": "Jardins", "cidade": "Salvador", "estado": "PE"},
         {"rua": "Rua E", "numero": "202", "bairro": "Boa Vista", "cidade": "Recife", "estado": "PE"}
     ]
 
     clinicas = [
-        {"cnpj": "11.111.111/0001-11", "nome": "Clínica Saúde SP", "telefone": "111112111"},
-        {"cnpj": "22.222.222/0001-22", "nome": "Clínica Rio", "telefone": "222422222"},
-        {"cnpj": "33.333.333/0001-33", "nome": "Clínica BH", "telefone": "333533333"},
-        {"cnpj": "44.444.444/0001-44", "nome": "Clínica Salvador", "telefone": "446444444"},
-        {"cnpj": "55.555.555/0001-55", "nome": "Clínica Recife", "telefone": "555575555"}
+        {"cnpj": "11.111.111/0001-11", "nome": "Clínica Fisiomais Floresta", "telefone": "111112111"},
+        {"cnpj": "22.222.222/0001-22", "nome": "Clínica Fisiomais Serra Talhada", "telefone": "222422222"},
+        {"cnpj": "33.333.333/0001-33", "nome": "Clínica Fisiomais Caruaru", "telefone": "333533333"},
+        {"cnpj": "44.444.444/0001-44", "nome": "Clínica Fisiomais Salgueiro", "telefone": "446444444"},
+        {"cnpj": "55.555.555/0001-55", "nome": "Clínica Fisiomais Recife", "telefone": "555575555"}
     ]
 
     colaboradores = [
         {"nome": "João Victor Ramos de Souza", "email": "joao.ramos.souza@gmail.com", "telefone": "999988888", "cargo": "Fisioterapeuta", "cpf": "11111111111"},
         {"nome": "Lucas Alves", "email": "lucas@teste.com", "telefone": "999977777", "cargo": "Fisioterapeuta", "cpf": "22222222222"},
-        {"nome": "Manases Silva", "email": "manases@teste.com", "telefone": "999966666", "cargo": "Fisioterapeuta", "cpf": "33333333333"},
-        {"nome": "Aline Rayane", "email": "aline@teste.com", "telefone": "999955555", "cargo": "Fisioterapeuta", "cpf": "44444444444"},
+        {"nome": "Manases Silva", "email": "manases@teste.com", "telefone": "999966666", "cargo": "Instrutor", "cpf": "33333333333"},
+        {"nome": "Aline Rayane", "email": "aline@teste.com", "telefone": "999955555", "cargo": "Instrutor", "cpf": "44444444444"},
         {"nome": "Eveline Santos", "email": "eveline@teste.com", "telefone": "999944444", "cargo": "Fisioterapeuta", "cpf": "55555555555"}
     ]
 
@@ -124,6 +124,42 @@ def populate_database():
             db.session.add(horario)
         else:
             print(f"Clínica com CNPJ {clinica['cnpj']} já existe. Ignorando inserção.")
+        # Associar instrutores de pilates a todas as clínicas
+    instrutores_pilates = [
+        {"nome": "Aline Rayane", "cargo": "Instrutor"},
+        {"nome": "Manases Silva", "cargo": "Instrutor"}
+    ]
+
+    for clinica in Clinicas.query.all():
+        # Verificar se já há instrutores de pilates na clínica
+        for instrutor_data in instrutores_pilates:
+            instrutor = Colaboradores.query.filter_by(nome=instrutor_data["nome"], cargo=instrutor_data["cargo"]).first()
+
+            # Se o instrutor não existir, criar e associar à clínica
+            if not instrutor:
+                instrutor = Colaboradores(
+                    nome=instrutor_data["nome"],
+                    cargo=instrutor_data["cargo"],
+                    clinica_id=clinica.id_clinica,
+                    cpf="00000000000",  # CPF fictício ou valor correto
+                    email=f"{instrutor_data['nome'].lower().replace(' ', '')}@teste.com",  # Email fictício
+                    telefone="999999999"  # Telefone fictício
+                )
+                instrutor.set_password("123")
+                db.session.add(instrutor)
+
+            # Associar instrutor ao serviço de pilates
+            servico_pilates_1 = Servicos.query.filter_by(nome="Pilates Clínico").first()
+            servico_pilates_2 = Servicos.query.filter_by(nome="Pilates Tradicional").first()
+
+            if servico_pilates_1 and servico_pilates_1 not in instrutor.servicos:
+                instrutor.servicos.append(servico_pilates_1)
+
+            if servico_pilates_2 and servico_pilates_2 not in instrutor.servicos:
+                instrutor.servicos.append(servico_pilates_2)
+
+        db.session.commit()
+
 
     db.session.commit()
     # Populando os tipos de serviços
@@ -197,12 +233,13 @@ def populate_database():
 
     # Criar planos para serviços de Pilates
     planos_pilates = [
+        {"nome": "Plano Plates Clinico", "valor": 500.00, "servico_nome": "Pilates Clínico"},
         {"nome": "Plano Mensal", "valor": 300.00, "servico_nome": "Pilates Clínico"},
-        {"nome": "2 dias por semana", "valor": 250.00, "servico_nome": "Pilates Clínico"},
-        {"nome": "1 dia por semana", "valor": 200.00, "servico_nome": "Pilates Clínico"},
-        {"nome": "Plano Anual", "valor": 2000.00, "servico_nome": "Pilates Tradicional"},
-        {"nome": "Plano Mensal", "valor": 300.00, "servico_nome": "Pilates Tradicional"},
-        {"nome": "3 dias por semana", "valor": 349.99, "servico_nome": "Pilates Tradicional"},
+        {"nome": "Plano Mensal", "valor": 300.00, "servico_nome": "Pilates Tradicional"},          
+        {"nome": "Plano Anual", "valor": 3000.00, "servico_nome": "Pilates Tradicional"},
+        {"nome": "Plano Trimestral", "valor": 849.99, "servico_nome": "Pilates Tradicional"},
+        {"nome": "Plano Semestral", "valor": 1549.99, "servico_nome": "Pilates Tradicional"},
+        
     ]
 
     # Criar planos para os serviços de pilates
@@ -224,20 +261,33 @@ def populate_database():
 
     # Associar colaboradores aos serviços
     for colaborador in Colaboradores.query.all():
-        servico = Servicos.query.filter_by(nome="Fisioterapia Clássica").first()
-        if servico and servico not in colaborador.servicos:
-            colaborador.servicos.append(servico)
-    # Associar colaboradores aos serviços
-    for colaborador in Colaboradores.query.all():
-        servico = Servicos.query.filter_by(nome="Pilates ClínicoPilates Clínico").first()
-        if servico and servico not in colaborador.servicos:
-            colaborador.servicos.append(servico)
+        # Associar fisioterapeutas aos serviços de fisioterapia
+        if colaborador.cargo == "Fisioterapeuta":
+            servico_fisioterapia_1 = Servicos.query.filter_by(nome="Fisioterapia Clássica").first()
+            servico_fisioterapia_2 = Servicos.query.filter_by(nome="Reabilitação Pós-Cirúrgica").first()
+
+            if servico_fisioterapia_1 and servico_fisioterapia_1 not in colaborador.servicos:
+                colaborador.servicos.append(servico_fisioterapia_1)
+            
+            if servico_fisioterapia_2 and servico_fisioterapia_2 not in colaborador.servicos:
+                colaborador.servicos.append(servico_fisioterapia_2)
+
+        # Associar instrutores aos serviços de pilates
+        if colaborador.cargo == "Instrutor":
+            servico_pilates_1 = Servicos.query.filter_by(nome="Pilates Clínico").first()
+            servico_pilates_2 = Servicos.query.filter_by(nome="Pilates Tradicional").first()
+
+            if servico_pilates_1 and servico_pilates_1 not in colaborador.servicos:
+                colaborador.servicos.append(servico_pilates_1)
+            
+            if servico_pilates_2 and servico_pilates_2 not in colaborador.servicos:
+                colaborador.servicos.append(servico_pilates_2)
 
     db.session.commit()
     
     
 
-    db.session.commit()
+    
     # Criar clientes
     clientes = [
         {"nome": "Cliente 1", "email": "cliente1@teste.com", "telefone": "888877777", "cpf": "66666666666"},

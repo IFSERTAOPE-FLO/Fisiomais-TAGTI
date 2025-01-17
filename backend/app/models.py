@@ -193,7 +193,7 @@ class Horarios(db.Model):
 class Agendamentos(db.Model):
     __tablename__ = 'agendamentos'
     id_agendamento = db.Column(db.Integer, primary_key=True)
-    data_e_hora = db.Column(db.DateTime, nullable=False)
+    data_e_hora = db.Column(db.DateTime, nullable=True)
     id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False)
     id_colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.id_colaborador'), nullable=False)
     id_servico = db.Column(db.Integer, db.ForeignKey('servicos.id_servico'), nullable=False)

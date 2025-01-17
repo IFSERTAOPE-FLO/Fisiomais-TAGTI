@@ -47,7 +47,7 @@ function CriarAgendamento() {
     fetchServicos();
     fetchClientes();
     fetchFeriados();
-  }, [data]); 
+  }, [data]);
 
 
   const fetchServicos = async () => {
@@ -89,7 +89,7 @@ function CriarAgendamento() {
     ]);
   };
 
-  
+
 
 
 
@@ -205,6 +205,7 @@ function CriarAgendamento() {
       data: dataHoraISO,
       cliente_id: cliente,
       plano_id: tipoServico === 'pilates' ? planoSelecionado || null : null,
+      
     };
 
     const token = localStorage.getItem('token');
@@ -225,7 +226,8 @@ function CriarAgendamento() {
       });
 
       if (response.ok) {
-        alert('Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail');
+        const successData = await response.json();
+        alert(successData.message || 'Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail');
         const savedUserId = localStorage.getItem('userId');
         if (savedUserId) {
           fetchHorariosDisponiveis(savedUserId, data); // Atualiza os horários do colaborador
@@ -255,7 +257,7 @@ function CriarAgendamento() {
   const handleDateChange = (value) => {
     const dataEscolhida = value.toISOString().split('T')[0];
     setData(dataEscolhida);
-  
+
     // Se for um colaborador logado, buscar os horários disponíveis para a data escolhida
     if (role === 'colaborador') {
       const savedUserId = localStorage.getItem('userId'); // Obtém o ID do colaborador logado
@@ -266,7 +268,7 @@ function CriarAgendamento() {
       fetchHorariosDisponiveis(colaborador, dataEscolhida); // Caso o colaborador seja selecionado
     }
   };
-  
+
   // UseEffect to fetch horariosDisponiveis when either colaborador or data changes
   useEffect(() => {
     if (colaborador && data) {
@@ -549,25 +551,17 @@ function CriarAgendamento() {
               <img
                 src="/images/smart.gif"
                 alt="Smart"
-                className="img-fluid"  // Adicionando a classe img-fluid para responsividade
+                className="img-fluid" 
               />
             </div>
 
           </div>
           < br />
           < br />
-
-
-
         </div>
-
-
         <div>
-
         </div>
-
       </div>
-
     </div>
   );
 }

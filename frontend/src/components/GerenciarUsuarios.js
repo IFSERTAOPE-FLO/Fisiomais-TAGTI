@@ -112,7 +112,7 @@ const GerenciarUsuarios = () => {
         setUsuarioEditando(null);
         setHorariosEditando(null);  // Fechar modal
     };
- // Função para ordenar os usuários
+    // Função para ordenar os usuários
     const handleSort = (key) => {
         let direction = "ascending";
         if (sortConfig.key === key && sortConfig.direction === "ascending") {
@@ -143,7 +143,7 @@ const GerenciarUsuarios = () => {
     useEffect(() => {
         buscarUsuarios(); // Carregar usuários inicialmente
     }, []);
-    
+
     useEffect(() => {
         const filtered = sortedUsuarios.filter(usuario => {
             const nomeMatches = usuario.nome.toLowerCase().includes(pesquisaNome.toLowerCase());
@@ -152,19 +152,19 @@ const GerenciarUsuarios = () => {
             }
             return nomeMatches && usuario.role === tipoAlternado;
         });
-    
+
         setUsuariosFiltrados(filtered);
         setCurrentPage(1); // Resetar para a primeira página
     }, [tipoAlternado, pesquisaNome, sortedUsuarios]);
-    
+
     const usuariosPaginados = React.useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
         return usuariosFiltrados.slice(startIndex, endIndex);
     }, [usuariosFiltrados, currentPage, itemsPerPage]);
-    
-    
-    
+
+
+
     return (
         <div className="container">
             <h2 className="mb-3 text-secondary text-center">Gerenciar Usuários</h2>
@@ -244,9 +244,11 @@ const GerenciarUsuarios = () => {
                                 {sortConfig.key === "email" && (sortConfig.direction === "ascending" ? " ↑" : " ↓")}
                             </th>
                             <th onClick={toggleTipo} style={{ cursor: "pointer" }}>
-                                Tipo ({tipoAlternado === "todos" ? "Todos" : tipoAlternado === "cliente" ? "Cliente" : "Colaborador"})
+                                Tipo ({tipoAlternado === "cliente" ? "Cliente" : "Colaborador"})
+
                             </th>
                             <th>telefone</th>
+                            {tipoAlternado === 'colaborador' && (<th>Clínica</th>)}
                             {savedRole === 'admin' && (
                                 <th>Ações</th>
                             )}
@@ -260,6 +262,10 @@ const GerenciarUsuarios = () => {
                                 <td>{usuario.email}</td>
                                 <td>{usuario.role}</td>
                                 <td>{usuario.telefone}</td>
+                                {tipoAlternado === 'colaborador' && (
+                                    <td>{usuario.clinica ? usuario.clinica.nome : "Nenhuma"}</td>
+                                )}
+
                                 {savedRole === 'admin' && (
                                     <>
                                         <td>
@@ -269,7 +275,7 @@ const GerenciarUsuarios = () => {
                                                 className="btn btn-warning btn-sm me-2"
                                                 onClick={() => handleEditarUsuario(usuario)}
                                             >
-                                                <i className="bi bi-pencil"></i> Editar
+                                                <i className="bi bi-pencil"></i>
                                             </button>
 
 
@@ -277,14 +283,16 @@ const GerenciarUsuarios = () => {
                                                 className="btn btn-danger btn-sm me-2"
                                                 onClick={() => deletarUsuario(usuario.role, usuario.id)}
                                             >
-                                                <i className="bi bi-trash"></i> Excluir
+                                                <i className="bi bi-trash"></i>
                                             </button>
-                                            <button
-                                                className="btn btn-info btn-sm me-2"
-                                                onClick={() => handleEditarHorarios(usuario)}
-                                            >
-                                                <i className="bi bi-clock"></i> Editar Horários
-                                            </button>
+                                            {tipoAlternado === 'colaborador' &&  (
+                                                <button
+                                                    className="btn btn-info btn-sm me-2"
+                                                    onClick={() => handleEditarHorarios(usuario)}
+                                                >
+                                                    <i className="bi bi-clock"></i>
+                                                </button>
+                                            )}
                                         </td>
                                     </>
                                 )}

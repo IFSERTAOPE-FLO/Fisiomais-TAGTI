@@ -160,7 +160,7 @@ def receita_por_mes():
 
         # Query para somar os valores dos serviços por mês e ano
         receita_mensal = db.session.query(
-            func.strftime('%m/%Y', Agendamentos.data_e_hora).label('mes'),  # Formatar data no estilo 'YYYY-MM'
+            func.strftime('%m/%Y', Agendamentos.data_e_hora).label('mes'),  # Formatar data no estilo 'MM/YYYY'
             func.sum(Servicos.valor).label('receita')  # Somar os valores dos serviços
         ).join(Servicos, Agendamentos.id_servico == Servicos.id_servico) \
          .group_by(func.strftime('%m/%Y', Agendamentos.data_e_hora)) \
@@ -170,17 +170,19 @@ def receita_por_mes():
         # Adicionando log para verificar o resultado da query
         print("Resultado da query receita_mensal:", receita_mensal)
 
-        # Converter o resultado para um formato serializável
+        # Filtrar e formatar os dados para evitar valores None
         result = {
-            mes: float(receita) if receita is not None else 0.0  # Formatar o mês como string e converter receita
+            mes if mes is not None else "Data Indisponível": float(receita) if receita is not None else 0.0
             for mes, receita in receita_mensal
         }
 
-        print("Dados formatados:", result)  # Log dos dados formatados
+        # Log dos dados formatados
+        print("Dados formatados:", result)
         return jsonify(result)
 
     except Exception as e:
         # Adicionando log para identificar o erro
         print("Erro na rota receita_por_mes:", str(e))
         return jsonify({"error": str(e)}), 500
+
 
