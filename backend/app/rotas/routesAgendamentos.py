@@ -134,13 +134,25 @@ def agendamento():
             if agendamento_existente:
                 return jsonify({'message': 'Já existe um agendamento para esse colaborador neste horário.'}), 400
 
+            # Debug: Verificar o tipo de usuário
+            print(f"Cliente encontrado: {cliente}")
+            print(f"Colaborador encontrado: {colaborador}")
+            cliente2 = Clientes.query.filter_by(email=usuario_email).first()
+            colaborador2 = Colaboradores.query.filter_by(email=usuario_email).first()
+            if cliente2 is None:
+                status_agendamento = "Confirmado"
+            elif colaborador2 is None:
+                status_agendamento = "Pendente"
+            else:
+                print("Usuário não é cliente nem colaborador ou ambos foram encontrados.")
+                return jsonify({'message': 'Usuário inválido para realizar agendamentos.'}), 400
             # Criação do novo agendamento
             novo_agendamento = Agendamentos(
                 data_e_hora=data_e_hora_local,
                 id_cliente=cliente.id_cliente,
                 id_colaborador=colaborador.id_colaborador,
                 id_servico=servico.id_servico,
-                status="Pendente",
+                status=status_agendamento,
                 id_clinica=clinica.id_clinica
             )
             if plano_selecionado:
@@ -152,8 +164,16 @@ def agendamento():
             # Enviar e-mail de agendamento (opcional)
             # enviar_email_agendamento(novo_agendamento.id_agendamento)
 
-            return jsonify({'message': 'Agendamento criado com status pendente'}), 201
+            # Determinar mensagem com base no status do agendamento
+        if status_agendamento == "Confirmado":
+            mensagem = "Agendamento confirmado com sucesso!"
+        else:
+            mensagem = "Agendamento solicitado. Aguarde confirmação por e-mail!"
 
+        # Enviar e-mail de agendamento (opcional)
+        # enviar_email_agendamento(novo_agendamento.id_agendamento)
+
+        return jsonify({'message': mensagem}), 201
     except Exception as e:
         error_details = traceback.format_exc()
         print(f"Error: {e}")
@@ -212,13 +232,19 @@ def listar_agendamentos():
             if servico and servico.valor is None:
                 plano_servico = Planos.query.filter_by(servico_id=servico.id_servico).first()
 
-            # Convertendo a data e hora para o fuso horário de Brasília
-            data_e_hora_brasilia = agendamento.data_e_hora.astimezone(BRASILIA)
+            # Verificar se a data do agendamento não é nula
+            if agendamento.data_e_hora:
+                data_e_hora_brasilia = agendamento.data_e_hora.astimezone(BRASILIA)
+                data_str = data_e_hora_brasilia.strftime('%Y-%m-%d')
+                hora_str = data_e_hora_brasilia.strftime('%H:%M')
+            else:
+                data_str = "Data a ser definida"
+                hora_str = None
 
             resultado.append({
                 'id': agendamento.id_agendamento,
-                'data': data_e_hora_brasilia.strftime('%Y-%m-%d'),
-                'hora': data_e_hora_brasilia.strftime('%H:%M'),
+                'data': data_str,
+                'hora': hora_str,
                 'status': agendamento.status,
                 'servico': agendamento.servico.nome if agendamento.servico else None,
                 'valor': servico.valor if servico.valor else (plano_servico.valor if plano_servico else None),
@@ -248,6 +274,7 @@ def listar_agendamentos():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 
 

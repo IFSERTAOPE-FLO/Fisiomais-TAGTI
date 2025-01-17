@@ -238,7 +238,7 @@ def populate_database():
         {"nome": "Plano Mensal", "valor": 300.00, "servico_nome": "Pilates Tradicional"},          
         {"nome": "Plano Anual", "valor": 3000.00, "servico_nome": "Pilates Tradicional"},
         {"nome": "Plano Trimestral", "valor": 849.99, "servico_nome": "Pilates Tradicional"},
-        {"nome": "Plano Simestral", "valor": 1549.99, "servico_nome": "Pilates Tradicional"},
+        {"nome": "Plano Semestral", "valor": 1549.99, "servico_nome": "Pilates Tradicional"},
         
     ]
 

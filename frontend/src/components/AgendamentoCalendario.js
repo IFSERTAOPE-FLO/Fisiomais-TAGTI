@@ -11,8 +11,8 @@ const AgendamentosCalendario = () => {
   // Função para buscar os agendamentos no backend
   const fetchAgendamentos = async () => {
     try {
-      const token = localStorage.getItem('token'); // Substitua se necessário
-      const response = await fetch('/api/agendamentos/listar_agendamentos', {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/agendamentos/listar_agendamentos', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -72,32 +72,44 @@ const AgendamentosCalendario = () => {
   }, [selectedDates]);
 
   return (
-    <div>
-      <h2>Agendamentos</h2>
-      <Calendar
-        tileClassName={({ date }) => {
-          const isSelected =
-            selectedDates.length === 2 &&
-            date >= selectedDates[0] &&
-            date <= selectedDates[1];
-          return isSelected ? 'selected-day' : null;
-        }}
-        onMouseDown={(value) => handleMouseDown(value)}
-        onMouseEnter={(value) => handleMouseEnter(value)}
-      />
-      <div>
-        {filteredAgendamentos.length > 0 ? (
-          filteredAgendamentos.map((agendamento) => (
-            <div key={agendamento.id}>
-              <p>Cliente: {agendamento.cliente}</p>
-              <p>Serviço: {agendamento.servico}</p>
-              <p>Data: {agendamento.data}</p>
-              <p>Hora: {agendamento.hora}</p>
+    <div className="container mt-4">
+      <h2 className="mb-4 text-secondary text-center">Agendamentos</h2>
+
+      {/* Calendário */}
+      <div className="row">
+        <div className="col-12 col-md-6">
+          <Calendar
+            tileClassName={({ date }) => {
+              const isSelected =
+                selectedDates.length === 2 &&
+                date >= selectedDates[0] &&
+                date <= selectedDates[1];
+              return isSelected ? 'selected-day' : null;
+            }}
+            onMouseDown={(value) => handleMouseDown(value)}
+            onMouseEnter={(value) => handleMouseEnter(value)}
+          />
+        </div>
+
+        {/* Exibição dos Agendamentos */}
+        <div className="col-12 col-md-6">
+          <div className="card mt-3">
+            <div className="card-body">
+              {filteredAgendamentos.length > 0 ? (
+                filteredAgendamentos.map((agendamento) => (
+                  <div key={agendamento.id} className="mb-3">
+                    <h5 className="card-title">Agendamento de {agendamento.cliente}</h5>
+                    <p><strong>Serviço:</strong> {agendamento.servico}</p>
+                    <p><strong>Data:</strong> {agendamento.data}</p>
+                    <p><strong>Hora:</strong> {agendamento.hora}</p>
+                  </div>
+                ))
+              ) : (
+                <p className="alert alert-info">Nenhum agendamento para o período selecionado.</p>
+              )}
             </div>
-          ))
-        ) : (
-          <p>Nenhum agendamento para o período selecionado.</p>
-        )}
+          </div>
+        </div>
       </div>
     </div>
   );

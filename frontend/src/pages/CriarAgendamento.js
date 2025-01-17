@@ -205,6 +205,7 @@ function CriarAgendamento() {
       data: dataHoraISO,
       cliente_id: cliente,
       plano_id: tipoServico === 'pilates' ? planoSelecionado || null : null,
+      
     };
 
     const token = localStorage.getItem('token');
