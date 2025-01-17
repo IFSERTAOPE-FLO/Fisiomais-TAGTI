@@ -47,7 +47,7 @@ function CriarAgendamento() {
     fetchServicos();
     fetchClientes();
     fetchFeriados();
-  }, [data]); 
+  }, [data]);
 
 
   const fetchServicos = async () => {
@@ -89,7 +89,7 @@ function CriarAgendamento() {
     ]);
   };
 
-  
+
 
 
 
@@ -255,7 +255,7 @@ function CriarAgendamento() {
   const handleDateChange = (value) => {
     const dataEscolhida = value.toISOString().split('T')[0];
     setData(dataEscolhida);
-  
+
     // Se for um colaborador logado, buscar os horários disponíveis para a data escolhida
     if (role === 'colaborador') {
       const savedUserId = localStorage.getItem('userId'); // Obtém o ID do colaborador logado
@@ -266,7 +266,7 @@ function CriarAgendamento() {
       fetchHorariosDisponiveis(colaborador, dataEscolhida); // Caso o colaborador seja selecionado
     }
   };
-  
+
   // UseEffect to fetch horariosDisponiveis when either colaborador or data changes
   useEffect(() => {
     if (colaborador && data) {
@@ -549,25 +549,17 @@ function CriarAgendamento() {
               <img
                 src="/images/smart.gif"
                 alt="Smart"
-                className="img-fluid"  // Adicionando a classe img-fluid para responsividade
+                className="img-fluid" 
               />
             </div>
 
           </div>
           < br />
           < br />
-
-
-
         </div>
-
-
         <div>
-
         </div>
-
       </div>
-
     </div>
   );
 }

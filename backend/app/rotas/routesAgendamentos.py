@@ -75,12 +75,15 @@ def agendamento():
             return jsonify({'message': 'Serviço não encontrado'}), 404
 
         plano_id = data.get('plano_id')
+        plano_selecionado = None
+
+        # Se o serviço for de pilates, a mensagem de retorno muda
         if 'pilates' in [tipo.tipo for tipo in servico.tipo_servicos]:
             if not plano_id:
                 print("Plano não fornecido para Pilates.")  # Mensagem de erro
                 return jsonify({'message': 'Plano não fornecido para Pilates.'}), 400
 
-            plano_selecionado = None
+            # Procurando plano se o serviço for de pilates
             for plano in servico.planos or []:
                 if plano.id_plano == plano_id:
                     plano_selecionado = plano
@@ -89,51 +92,67 @@ def agendamento():
             if not plano_selecionado:
                 print("Plano não encontrado para Pilates.")  # Mensagem de erro
                 return jsonify({'message': 'Plano não encontrado para Pilates.'}), 404
+
+            # Registro da solicitação sem ocupar um horário do colaborador
+            novo_agendamento = Agendamentos(
+                data_e_hora=None,  # Horário não será reservado
+                id_cliente=cliente.id_cliente,
+                id_colaborador=colaborador.id_colaborador,
+                id_servico=servico.id_servico,
+                status="Pendente",  # Solicitação pendente
+                id_clinica=colaborador.clinica_id
+            )
+            if plano_selecionado:
+                novo_agendamento.id_plano = plano_selecionado.id_plano
+
+            db.session.add(novo_agendamento)
+            db.session.commit()
+
+            # Enviar mensagem indicando que o cliente deve entrar em contato
+            return jsonify({'message': 'Agendamento criado. Entre em contato na data agendada para averiguar os dias das aulas de Pilates.'}), 201
+
         else:
-            plano_selecionado = None  # Fisioterapia não exige plano.
+            # Para serviços de fisioterapia, a data e o horário são verificados
+            clinica = Clinicas.query.filter_by(id_clinica=colaborador.clinica_id).first()
+            if not clinica:
+                print("Clinica not found")  # Mensagem de erro se a clínica não for encontrada
+                return jsonify({'message': 'Clínica não encontrada'}), 404
 
-        clinica = Clinicas.query.filter_by(id_clinica=colaborador.clinica_id).first()
-        if not clinica:
-            print("Clinica not found")  # Mensagem de erro se a clínica não for encontrada
-            return jsonify({'message': 'Clínica não encontrada'}), 404
+            # Corrigir o problema da data
+            data_e_hora_utc = datetime.fromisoformat(data['data']).astimezone(timezone('UTC'))
+            data_e_hora_brasilia = data_e_hora_utc.astimezone(BRASILIA)
 
-        # Corrigir o problema da data
-        data_e_hora_utc = datetime.fromisoformat(data['data']).astimezone(timezone('UTC'))
-        data_e_hora_brasilia = data_e_hora_utc.astimezone(BRASILIA)
+            # Remover a parte do fuso horário depois de ajustar para o horário correto
+            data_e_hora_local = data_e_hora_brasilia.replace(tzinfo=None)
 
-        # Remover a parte do fuso horário depois de ajustar para o horário correto
-        data_e_hora_local = data_e_hora_brasilia.replace(tzinfo=None)
+            # Verifica se já existe um agendamento nesse horário
+            agendamento_existente = Agendamentos.query.filter(
+                Agendamentos.id_colaborador == colaborador.id_colaborador,
+                Agendamentos.data_e_hora == data_e_hora_local
+            ).first()
 
-        # Verifica se já existe um agendamento nesse horário
-        agendamento_existente = Agendamentos.query.filter(
-            Agendamentos.id_colaborador == colaborador.id_colaborador,
-            Agendamentos.data_e_hora == data_e_hora_local
-        ).first()
+            if agendamento_existente:
+                return jsonify({'message': 'Já existe um agendamento para esse colaborador neste horário.'}), 400
 
-        if agendamento_existente:
-            return jsonify({'message': 'Já existe um agendamento para esse colaborador neste horário.'}), 400
-        
-        # Criação do novo agendamento
-        novo_agendamento = Agendamentos(
-            data_e_hora=data_e_hora_local,
-            id_cliente=cliente.id_cliente,
-            id_colaborador=colaborador.id_colaborador,
-            id_servico=servico.id_servico,
-            status="pendente",
-            id_clinica=clinica.id_clinica
-        )
-        if plano_selecionado:
-            novo_agendamento.id_plano = plano_selecionado.id_plano
+            # Criação do novo agendamento
+            novo_agendamento = Agendamentos(
+                data_e_hora=data_e_hora_local,
+                id_cliente=cliente.id_cliente,
+                id_colaborador=colaborador.id_colaborador,
+                id_servico=servico.id_servico,
+                status="Pendente",
+                id_clinica=clinica.id_clinica
+            )
+            if plano_selecionado:
+                novo_agendamento.id_plano = plano_selecionado.id_plano
 
-        print(f"Created appointment: {novo_agendamento}")
+            db.session.add(novo_agendamento)
+            db.session.commit()
 
-        db.session.add(novo_agendamento)
-        db.session.commit()
+            # Enviar e-mail de agendamento (opcional)
+            # enviar_email_agendamento(novo_agendamento.id_agendamento)
 
-        # Enviar e-mail de agendamento (opcional)
-        # enviar_email_agendamento(novo_agendamento.id_agendamento)
-
-        return jsonify({'message': 'Agendamento criado com status pendente'}), 201
+            return jsonify({'message': 'Agendamento criado com status pendente'}), 201
 
     except Exception as e:
         error_details = traceback.format_exc()

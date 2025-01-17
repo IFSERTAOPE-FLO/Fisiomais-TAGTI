@@ -17,6 +17,7 @@ import VisualizarAgendamentos from "./pages/VisualizarAgendamentos";
 import AdminPage from "./pages/AdminPage"; 
 import Especialidades from "./pages/Especialidades"; 
 
+
 function App() {
     return (
         <Router>

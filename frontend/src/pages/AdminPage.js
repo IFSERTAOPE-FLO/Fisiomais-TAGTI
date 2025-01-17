@@ -7,6 +7,7 @@ import GerenciarClinicas from "../components/GerenciarClinicas";
 import CriarAgendamento from "./CriarAgendamento";
 import VisualizarAgendamentos from "./VisualizarAgendamentos";
 import Dashboard from "./Dashboard";
+import AgendamentosCalendario from "../components/AgendamentoCalendario"; 
 
 
 const AdminPage = () => {
@@ -86,6 +87,15 @@ const AdminPage = () => {
           Visualizar Agendamentos
         </a>
       </li>
+      <li className="nav-item z-bot">
+        <a
+          href="#calendáriointerativo"
+          className={`nav-link ${opcaoSelecionada === "agendamentocalendario" ? "active" : ""}`}
+          onClick={() => handleOpcaoChange("agendamentocalendario")}
+        >
+          Calendário Interativo
+        </a>
+      </li>
       
     </ul>
   </div>
@@ -103,6 +113,7 @@ const AdminPage = () => {
       {opcaoSelecionada === "criarAgendamento" && <CriarAgendamento />}
       {opcaoSelecionada === "visualizarAgendamentos" && <VisualizarAgendamentos />}
       {opcaoSelecionada === "dashboard" && <Dashboard />}
+      {opcaoSelecionada === "agendamentocalendario" && <AgendamentosCalendario />}
     </div>
   );
 };
