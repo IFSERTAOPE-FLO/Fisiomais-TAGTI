@@ -112,7 +112,7 @@ def agendamento():
 
         if agendamento_existente:
             return jsonify({'message': 'Já existe um agendamento para esse colaborador neste horário.'}), 400
-
+        
         # Criação do novo agendamento
         novo_agendamento = Agendamentos(
             data_e_hora=data_e_hora_local,
