@@ -5,7 +5,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
     Nome_servico: servico?.Nome_servico || "",
     Descricao: servico?.Descricao || "",
     Valor: servico?.Valor || "",
-    Tipo: servico?.Tipos || null,
+    Tipo: servico?.Tipo || "", // Certifique-se de usar servico.Tipo corretamente
     Planos: servico?.Planos || [],
     Colaboradores: servico?.Colaboradores || [],
   });
@@ -13,61 +13,67 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
   const [erro, setErro] = useState("");
   const [novoPlano, setNovoPlano] = useState({ nome: "", valor: "" });
 
-  
+  useEffect(() => {
+    if (servico) {
+      setFormData({
+        Nome_servico: servico.Nome_servico,
+        Descricao: servico.Descricao,
+        Valor: servico.Valor,
+        Tipo: servico.Tipo,
+        Planos: servico.Planos || [],
+        Colaboradores: servico.Colaboradores || [],
+      });
+    }
+  }, [servico]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
-
-  useEffect(() => {
-    if (servico?.Tipo === "pilates") {
-      setFormData((prev) => ({
-        ...prev,
-        Planos: servico.Planos || [],
-      }));
-    }
-  }, [servico]);
-  
 
   const handleTipoServicoChange = (e) => {
     const { value } = e.target;
     setFormData((prev) => ({
       ...prev,
       Tipo: value,
-      Planos: value === "pilates" ? prev.Planos : [], // Limpa os planos apenas se o tipo não for Pilates
+      Planos: value === "pilates" ? prev.Planos : [],
     }));
   };
 
   const adicionarPlano = () => {
-    // Determina o próximo ID com base no maior ID existente
-    const novoID = formData.Planos.length > 0
-      ? Math.max(...formData.Planos.map((plano) => plano.ID_Plano)) + 1
-      : 1;
+    const novoID = formData.Planos.length > 0 ? Math.max(...formData.Planos.map((plano) => plano.ID_Plano)) + 1 : 1;
 
-    // Adiciona o novo plano com o ID gerado
+    const novoPlanoComServico = {
+      ID_Plano: novoID,
+      Nome_plano: novoPlano.nome,
+      Valor: parseFloat(novoPlano.valor),
+      Servico_ID: servico.ID_Servico,
+    };
+
     setFormData((prev) => ({
       ...prev,
-      Planos: [
-        ...prev.Planos,
-        { ID_Plano: novoID, Nome_plano: novoPlano.nome, Valor: parseFloat(novoPlano.valor) },
-      ],
+      Planos: [...prev.Planos, novoPlanoComServico],
     }));
-    setNovoPlano({ nome: "", valor: "" }); // Reset the new plan input fields
+
+    setNovoPlano({ nome: "", valor: "" });
   };
 
-  
   const handleSave = async () => {
-    const valorValido = formData.Valor && !isNaN(parseFloat(formData.Valor))
-      ? parseFloat(formData.Valor)
-      : null;
+    const valorValido =
+      formData.Valor && !isNaN(parseFloat(formData.Valor))
+        ? parseFloat(formData.Valor)
+        : null;
 
     const dataToSend = {
       ...formData,
-      Valor: valorValido, // Se o tipo for 'fisioterapia', atribui o valor. Caso contrário, mantemos o Valor como null.
+      Valor: valorValido,
+      Tipo: formData.Tipo,
+      Planos: formData.Tipo === "pilates" ? formData.Planos : undefined,
     };
 
-    // Remove planos se for fisioterapia (não há planos para este tipo)
     if (formData.Tipo === "fisioterapia") {
       delete dataToSend.Planos;
     }
@@ -85,8 +91,8 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
           body: JSON.stringify(dataToSend),
         }
       );
-
       const data = await response.json();
+
       if (response.ok) {
         onSave(data);
       } else {
@@ -96,7 +102,6 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
       setErro(err.message);
     }
   };
-
 
   return (
     <div
@@ -113,7 +118,6 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
           </div>
           <div className="modal-body">
             {erro && <div className="alert alert-danger">{erro}</div>}
-
             <div className="row mb-3">
               <div className="col-6">
                 <label className="form-label">Nome do Serviço:</label>
@@ -131,10 +135,10 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
                   type="number"
                   name="Valor"
                   className="form-control"
-                  value={formData.Tipo === "pilates" ? "" : formData.Valor} // Limpa o campo se for Pilates
+                  value={formData.Tipo === "pilates" ? "" : formData.Valor}
                   onChange={(e) => {
                     if (formData.Tipo === "pilates") {
-                      setFormData((prev) => ({ ...prev, Valor: null })); // Define como null para Pilates
+                      setFormData((prev) => ({ ...prev, Valor: null }));
                     } else {
                       const valor = e.target.value ? parseFloat(e.target.value) : "";
                       setFormData((prev) => ({ ...prev, Valor: valor }));
@@ -143,9 +147,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
                   disabled={formData.Tipo === "pilates"}
                 />
               </div>
-
             </div>
-
             <div className="mb-3">
               <label className="form-label">Descrição:</label>
               <textarea
@@ -155,10 +157,14 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
                 onChange={handleChange}
               />
             </div>
-
             <div className="mb-3">
               <label className="form-label">Tipo de Serviço:</label>
-              <select name="Tipo" className="form-select" value={formData.Tipo} onChange={handleTipoServicoChange}>
+              <select
+                name="Tipo"
+                className="form-select"
+                value={formData.Tipo}
+                onChange={handleTipoServicoChange}
+              >
                 <option value="fisioterapia">Fisioterapia</option>
                 <option value="pilates">Pilates</option>
               </select>
@@ -173,7 +179,9 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
                       type="text"
                       placeholder="Nome do Plano"
                       value={novoPlano.nome}
-                      onChange={(e) => setNovoPlano({ ...novoPlano, nome: e.target.value })}
+                      onChange={(e) =>
+                        setNovoPlano({ ...novoPlano, nome: e.target.value })
+                      }
                       className="form-control mb-2"
                     />
                   </div>
@@ -183,13 +191,19 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
                       type="number"
                       placeholder="Valor do Plano"
                       value={novoPlano.valor}
-                      onChange={(e) => setNovoPlano({ ...novoPlano, valor: e.target.value })}
+                      onChange={(e) =>
+                        setNovoPlano({ ...novoPlano, valor: e.target.value })
+                      }
                       className="form-control mb-2"
                     />
                   </div>
                 </div>
                 <div className="d-flex justify-content-center">
-                  <button type="button" onClick={adicionarPlano} className="btn btn-primary mb-3">
+                  <button
+                    type="button"
+                    onClick={adicionarPlano}
+                    className="btn btn-signup mb-3"
+                  >
                     Adicionar Plano
                   </button>
                 </div>
@@ -226,9 +240,6 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
                 )}
               </>
             )}
-
-
-
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={onClose}>

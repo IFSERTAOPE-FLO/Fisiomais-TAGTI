@@ -140,7 +140,7 @@ def deletar_servico(id):
         if servico.colaboradores:
             for colaborador in servico.colaboradores:
                 # Deletar a entrada na tabela de junção 'colaboradores_servicos'
-                colaborador_servico = ColaboradoresServicos.query.filter_by(ID_Colaborador=colaborador.id_colaborador, ID_Servico=servico.ID_Servico).first()
+                colaborador_servico = ColaboradoresServicos.query.filter_by(colaborador_id=colaborador.id_colaborador, servico_id=servico.id_servico).first()
                 if colaborador_servico:
                     db.session.delete(colaborador_servico)
 
@@ -237,9 +237,12 @@ def editar_servico(id_servico):
         # Verifica o tipo de serviço
         tipo_servico = data.get('Tipo', servico.tipo_servicos[0].tipo if servico.tipo_servicos else None)
 
-        # Se o tipo for alterado, remove a associação atual
+        # Verifica se está tentando alterar o tipo de fisioterapia para pilates ou vice-versa
         if tipo_servico != (servico.tipo_servicos[0].tipo if servico.tipo_servicos else None):
-            # Remove o tipo anterior
+            if (servico.tipo_servicos[0].tipo == 'fisioterapia' and tipo_servico == 'pilates') or (servico.tipo_servicos[0].tipo == 'pilates' and tipo_servico == 'fisioterapia'):
+                return jsonify({"message": "Não é possível alterar o tipo de serviço de Fisioterapia para Pilates ou de Pilates para Fisioterapia."}), 400
+
+            # Remove a associação atual se o tipo foi alterado
             servico.tipo_servicos.clear()
 
             # Adiciona o novo tipo
@@ -255,11 +258,15 @@ def editar_servico(id_servico):
 
         # Atualiza os planos para o tipo pilates, caso seja o caso
         if tipo_servico == 'pilates' and 'Planos' in data:
+            # Limpar planos antigos associados ao serviço
+            planos_existentes = Planos.query.filter_by(servico_id=servico.id_servico).all()
+            for plano in planos_existentes:
+                db.session.delete(plano)
+            
+            # Adiciona os novos planos
             for plano_data in data['Planos']:
-                plano = Planos.query.get(plano_data['ID_Plano'])
-                if plano:
-                    plano.nome = plano_data.get('Nome_plano', plano.nome)
-                    plano.valor = plano_data.get('Valor', plano.valor)
+                novo_plano = Planos(nome=plano_data['Nome_plano'], valor=plano_data['Valor'], servico_id=servico.id_servico)
+                db.session.add(novo_plano)
 
         # Salva as alterações no banco
         db.session.commit()
@@ -267,6 +274,8 @@ def editar_servico(id_servico):
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Erro ao atualizar o serviço: {str(e)}"}), 500
+
+
 
 
 
