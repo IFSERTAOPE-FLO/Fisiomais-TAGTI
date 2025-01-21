@@ -6,8 +6,9 @@
 #email: fisiomaispilatesefisioterapia@gmail.com  senha: 12345
 
 #DBeaver baixar para trabalhar com o sqlite
+#atualização de mudanças no banco de dados
 #flask db init
-#flask db migrate -m "mensagem"
+#flask db migrate -m "descreva aqui a mudança que voce fez"
 #flask db upgrade
 
 #abra um novo cmd
@@ -37,7 +38,7 @@ def create_app():
     db.init_app(app)
     mail.init_app(app)
     migrate.init_app(app, db)
-    CORS(app) # Habilita CORS
+    CORS(app) # Habilita CORS conexão com frontend em react
     jwt = JWTManager(app)
 
     with app.app_context():
@@ -51,6 +52,7 @@ def create_app():
         from app.rotas.routesServicos import servicos
         from app.rotas.routesClinicas import clinicas
         from app.rotas.routesDashboards import dashboards
+        from app.rotas.routesPagamentos import pagamentos_faturas
 
         app.register_blueprint(main, url_prefix='/')
         app.register_blueprint(usuarios, url_prefix='/usuarios')
@@ -60,7 +62,7 @@ def create_app():
         app.register_blueprint(agendamentos, url_prefix='/agendamentos')
         app.register_blueprint(clinicas, url_prefix='/clinicas')
         app.register_blueprint(dashboards, url_prefix='/dashboards')
-        
+        app.register_blueprint(pagamentos_faturas, url_prefix='/pagamentos')
 
         # Garantir que a pasta de uploads exista
         if not os.path.exists(app.config['UPLOAD_FOLDER']):
