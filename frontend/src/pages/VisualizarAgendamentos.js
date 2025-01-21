@@ -315,6 +315,7 @@ const VisualizarAgendamentos = () => {
                         <span
                           className={`badge 
                         ${agendamento.status === 'confirmado' ? 'badge-success' :
+                            agendamento.status === 'pago' ? 'badge-success' :
                               agendamento.status === 'negado' ? 'badge-danger' :
                                 agendamento.status === 'cancelado' ? 'badge-secondary' :
                                   agendamento.status === 'remarcado' ? 'badge-info' :
@@ -483,12 +484,15 @@ const VisualizarAgendamentos = () => {
                                 ? 'text-info'
                                 : selectedAgendamento.status === 'nao_compareceu'
                                   ? 'text-dark'
-                                  : 'text-warning'
+                                  : selectedAgendamento.status === 'pago'
+                                    ? 'text-primary'
+                                    : 'text-warning'
                         }
                       `}
                     >
-                      {selectedAgendamento.status.charAt(0).toUpperCase() + selectedAgendamento.status.slice(1)}
+                      {selectedAgendamento.status}
                     </span>
+
                   </div>
                   <div className="row ">
                     <div className="col-12 col-md-6">
@@ -563,6 +567,22 @@ const VisualizarAgendamentos = () => {
                         'Negar'
                       )}
                     </Button>
+                    <Button
+                      variant="btn btn-success"
+                      onClick={async () => {
+                        await handleConfirmarNegar(selectedAgendamento.id, 'pago');
+                        handleCloseModal(); // Fecha o modal após negar
+                      }}
+                      disabled={loading || selectedAgendamento.status === 'pago'}
+                    >
+                      {loading && selectedAgendamento.status !== 'Pago' ? (
+                        <>
+                          <i className="bi bi-arrow-repeat spinner"></i> Carregando...
+                        </>
+                      ) : (
+                        'Pago'
+                      )}
+                    </Button>
 
 
 
@@ -624,6 +644,7 @@ const VisualizarAgendamentos = () => {
                 onChange={(e) => setNewStatus(e.target.value)}
               >
                 <option value="">Selecione</option>
+                <option value="pago">pago</option>
                 <option value="cancelado">Cancelado</option>
                 <option value="nao_compareceu">Não Compareceu</option>
                 <option value="remarcado">Remarcado</option>

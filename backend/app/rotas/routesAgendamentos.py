@@ -470,7 +470,7 @@ def confirmar_negativo_agendamento(agendamento_id):
         novo_status = request.json.get('status')
         print(f"Novo status recebido: {novo_status}")  # Print para verificar o status recebido
         
-        if novo_status not in ['confirmado', 'negado', 'cancelado', 'nao_compareceu', 'remarcado']:
+        if novo_status not in ['confirmado', 'negado', 'cancelado', 'nao_compareceu', 'remarcado', 'pago']:
             return jsonify({'message': 'Status inválido'}), 400
 
 
