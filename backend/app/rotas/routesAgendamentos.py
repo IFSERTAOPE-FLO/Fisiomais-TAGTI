@@ -203,9 +203,6 @@ def agendamento():
         db.session.rollback()
         return jsonify({'message': f'Erro ao criar agendamento: {str(e)}', 'error_details': error_details}), 500
 
-
-
-
 @agendamentos.route('/listar_agendamentos', methods=['GET'])
 @jwt_required()
 def listar_agendamentos():
@@ -296,10 +293,6 @@ def listar_agendamentos():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-
-
-
 
 @agendamentos.route('/dias-permitidos/<int:colaborador_id>', methods=['GET'])
 def dias_permitidos(colaborador_id):
@@ -431,12 +424,6 @@ def horarios_disponiveis(colaborador_id):
     except Exception as e:
         print(f"Erro ao buscar horários disponíveis: {str(e)}")  # Log de erro ao buscar horários
         return jsonify({"message": f"Erro ao buscar horários disponíveis: {str(e)}"}), 500
-
-
-
-
-
-
 
 
 @agendamentos.route('/confirmar_negativo_agendamento/<int:agendamento_id>', methods=['PUT'])

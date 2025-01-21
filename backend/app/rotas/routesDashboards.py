@@ -16,7 +16,7 @@ Rotas relacionadas a dashboards no sistema:
 2. '/servicos/populares' - Retorna uma lista dos serviços mais populares, ordenados pela quantidade de agendamentos realizados para cada serviço.
 3. '/agendamentos_por_clinica' - Retorna a quantidade de agendamentos realizados por clínica, agrupados por nome de clínica.
 4. '/agendamentos_por_colaborador' - Retorna a quantidade de agendamentos realizados por colaborador, agrupados por nome de colaborador.
-5. '/receita_por_mes' - Retorna a receita mensal de agendamentos confirmados, com a soma dos valores dos serviços por mês e ano.
+5. '/receita_por_mes' - Retorna a receita mensal de agendamentos pagos, com a soma dos valores dos serviços por mês e ano.
 
 Essas rotas utilizam autenticação JWT para garantir a segurança, realizam consultas ao banco de dados utilizando SQLAlchemy e funções agregadas para gerar relatórios e estatísticas sobre agendamentos, serviços e receitas. As respostas são formatadas em JSON para fácil integração com o frontend.
 """
@@ -37,29 +37,29 @@ def dashboard_overview():
     total_pendentes = Agendamentos.query.filter_by(status='pendente').count()
     total_outros = Agendamentos.query.filter(Agendamentos.status.notin_(['confirmado', 'cancelado', 'pendente'])).count()
 
-    # Calcular a receita total dos agendamentos confirmados
+    # Calcular a receita total dos agendamentos pagos
     total_receita = db.session.query(func.sum(Servicos.valor))\
         .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
-        .filter(Agendamentos.status == 'confirmado').scalar() or 0
+        .filter(Agendamentos.status == 'pago').scalar() or 0
 
-    # Calcular a receita do último ano para agendamentos confirmados
+    # Calcular a receita do último ano para agendamentos pagos
     ano_atual = datetime.now().year
     receita_ultimo_ano = db.session.query(func.sum(Servicos.valor))\
         .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
         .filter(func.strftime('%Y', Agendamentos.data_e_hora) == str(ano_atual - 1))\
-        .filter(Agendamentos.status == 'confirmado').scalar() or 0
+        .filter(Agendamentos.status == 'pago').scalar() or 0
 
-    # Calcular a receita do último mês para agendamentos confirmados
+    # Calcular a receita do último mês para agendamentos pagos
     ultimo_mes = datetime.now().month - 1 if datetime.now().month > 1 else 12
     receita_ultimo_mes = db.session.query(func.sum(Servicos.valor))\
         .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
         .filter(func.strftime('%m', Agendamentos.data_e_hora) == f"{ultimo_mes:02d}")\
-        .filter(Agendamentos.status == 'confirmado').scalar() or 0
+        .filter(Agendamentos.status == 'pago').scalar() or 0
 
-    # Calcular a receita de todos os anos para agendamentos confirmados
+    # Calcular a receita de todos os anos para agendamentos pagos
     receita_todos_anos = db.session.query(func.strftime('%Y', Agendamentos.data_e_hora), func.sum(Servicos.valor))\
         .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
-        .filter(Agendamentos.status == 'confirmado')\
+        .filter(Agendamentos.status == 'pago')\
         .group_by(func.strftime('%Y', Agendamentos.data_e_hora)).all()
 
     # Converte a lista de tuplas para um formato JSON serializável
@@ -67,24 +67,24 @@ def dashboard_overview():
         {"ano": row[0], "receita": row[1]} for row in receita_todos_anos
     ]
 
-    # Calcular a receita anual do ano atual para agendamentos confirmados
+    # Calcular a receita anual do ano atual para agendamentos pagos
     receita_ano_atual = db.session.query(func.sum(Servicos.valor))\
         .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
         .filter(func.strftime('%Y', Agendamentos.data_e_hora) == str(ano_atual))\
-        .filter(Agendamentos.status == 'confirmado').scalar() or 0
+        .filter(Agendamentos.status == 'pago').scalar() or 0
 
-    # Calcular a média mensal do ano atual para agendamentos confirmados
+    # Calcular a média mensal do ano atual para agendamentos pagos
     receita_mensal_ano_atual = db.session.query(func.strftime('%m', Agendamentos.data_e_hora), func.sum(Servicos.valor))\
         .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
         .filter(func.strftime('%Y', Agendamentos.data_e_hora) == str(ano_atual))\
-        .filter(Agendamentos.status == 'confirmado')\
+        .filter(Agendamentos.status == 'pago')\
         .group_by(func.strftime('%m', Agendamentos.data_e_hora)).all()
-    # Calcular a receita do mês atual para agendamentos confirmados
+    # Calcular a receita do mês atual para agendamentos pagos
     mes_atual = datetime.now().month
     receita_mes_atual = db.session.query(func.sum(Servicos.valor))\
         .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
         .filter(func.strftime('%m', Agendamentos.data_e_hora) == f"{mes_atual:02d}")\
-        .filter(Agendamentos.status == 'confirmado').scalar() or 0
+        .filter(Agendamentos.status == 'pago').scalar() or 0
 
 
     # Calcular a média mensal

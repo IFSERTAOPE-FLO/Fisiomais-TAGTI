@@ -124,10 +124,12 @@ const VisualizarAgendamentos = () => {
         // Filtro por dia específico
         const adjustedDate = new Date(selectedDate);
         adjustedDate.setHours(adjustedDate.getHours() - 3); // Ajuste de fuso horário
-        filteredAgendamentos = filteredAgendamentos.filter(
-          (agendamento) =>
-            new Date(agendamento.data).toLocaleDateString() === adjustedDate.toLocaleDateString()
-        );
+        const targetTimestamp = adjustedDate.setHours(0, 0, 0, 0); // Definir à meia-noite (00:00:00) para evitar problemas com horários
+
+        filteredAgendamentos = filteredAgendamentos.filter((agendamento) => {
+          const agendamentoDate = new Date(agendamento.data).setHours(0, 0, 0, 0); // Ajuste da data para comparar apenas a data sem considerar o horário
+          return agendamentoDate === targetTimestamp; // Compara os timestamps das datas
+        });
       } else if (selectedDate.type === 'week') {
         // Filtro para semana atual
         const { start } = selectedDate;
@@ -162,6 +164,7 @@ const VisualizarAgendamentos = () => {
 
     return filteredAgendamentos;
   }, [agendamentos, selectedDate]);
+
 
 
 
@@ -314,18 +317,19 @@ const VisualizarAgendamentos = () => {
                       <td>
                         <span
                           className={`badge 
-                        ${agendamento.status === 'confirmado' ? 'badge-success' :
-                            agendamento.status === 'pago' ? 'badge-success' :
-                              agendamento.status === 'negado' ? 'badge-danger' :
-                                agendamento.status === 'cancelado' ? 'badge-secondary' :
-                                  agendamento.status === 'remarcado' ? 'badge-info' :
-                                    agendamento.status === 'nao_compareceu' ? 'badge-dark' :
-                                      'badge-warning'} 
-                        text-dark`}
+                          ${agendamento.status === 'confirmado' ? 'text-success' :
+                              agendamento.status === 'pago' ? 'text-primary' :
+                                agendamento.status === 'negado' ? 'text-danger' :
+                                  agendamento.status === 'cancelado' ? 'text-secondary' :
+                                    agendamento.status === 'remarcado' ? 'text-info' :
+                                      agendamento.status === 'nao_compareceu' ? 'text-dark' :
+                                        'badge-warning'} 
+                          text-dark`}
                         >
                           {agendamento.status.charAt(0).toUpperCase() + agendamento.status.slice(1)} {/* Primeira letra maiúscula */}
                         </span>
                       </td>
+
                       <td>
                         <div>
                           {agendamento.clinica && agendamento.clinica.endereco ? (
@@ -369,44 +373,50 @@ const VisualizarAgendamentos = () => {
                 <p>Escolha uma data específica ou selecione uma das opções abaixo:</p>
                 <Calendar value={selectedDate instanceof Date ? selectedDate : null} onChange={handleDateFilter} />
                 <div className="mt-3 d-flex flex-column gap-2">
-                  
+
                 </div>
               </div>
             </Modal.Body>
             <Modal.Footer>
-            <Button
-                    className='btn btn-login'
-                    onClick={() => {
-                      setSelectedDate(new Date()); // Define o filtro para o dia atual
-                      setShowDateFilterModal(false);
-                    }}
-                  >
-                    Hoje
-                  </Button>
-                  <Button
-                  className='btn btn-login'
-                    variant="primary"
-                    onClick={() => {
-                      const today = new Date();
-                      const startOfWeek = new Date(today);
-                      startOfWeek.setDate(today.getDate() - today.getDay()); // Início da semana
-                      setSelectedDate({ type: 'week', start: startOfWeek }); // Filtro para semana atual
-                      setShowDateFilterModal(false);
-                    }}
-                  >
-                    Esta Semana
-                  </Button>
-                  <Button
-                    className='btn btn-login'
-                    onClick={() => {
-                      const today = new Date();
-                      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // Início do mês
-                      setSelectedDate({ type: 'month', start: startOfMonth }); // Filtro para mês atual
-                      setShowDateFilterModal(false);
-                    }}
-                  >
-                    Este Mês
-                  </Button>
+              <Button
+                className='btn btn-login'
+                onClick={() => {
+                  const currentDate = new Date();
+                  currentDate.setHours(currentDate.getHours() + 3); // Adiciona 3 horas ao horário atual
+                  const adjustedDate = new Date(currentDate.setHours(0, 0, 0, 0)); // Define o horário como meia-noite para comparação apenas da data
+                  setSelectedDate(adjustedDate); // Define o filtro para o dia ajustado com +3 horas
+                  setShowDateFilterModal(false);
+                }}
+              >
+                Hoje
+              </Button>
+
+
+
+              <Button
+                className='btn btn-login'
+                variant="primary"
+                onClick={() => {
+                  const today = new Date();
+                  const startOfWeek = new Date(today);
+                  startOfWeek.setDate(today.getDate() - today.getDay()); // Início da semana
+                  setSelectedDate({ type: 'week', start: startOfWeek }); // Filtro para semana atual
+                  setShowDateFilterModal(false);
+                }}
+              >
+                Esta Semana
+              </Button>
+              <Button
+                className='btn btn-login'
+                onClick={() => {
+                  const today = new Date();
+                  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // Início do mês
+                  setSelectedDate({ type: 'month', start: startOfMonth }); // Filtro para mês atual
+                  setShowDateFilterModal(false);
+                }}
+              >
+                Este Mês
+              </Button>
               <Button
                 variant="danger"
                 onClick={() => {
@@ -416,7 +426,7 @@ const VisualizarAgendamentos = () => {
               >
                 Remover Filtro
               </Button>
-              
+
             </Modal.Footer>
           </Modal>
 
@@ -568,7 +578,7 @@ const VisualizarAgendamentos = () => {
                       )}
                     </Button>
                     <Button
-                      variant="btn btn-success"
+                      variant="btn btn-primary"
                       onClick={async () => {
                         await handleConfirmarNegar(selectedAgendamento.id, 'pago');
                         handleCloseModal(); // Fecha o modal após negar
@@ -591,7 +601,7 @@ const VisualizarAgendamentos = () => {
                       onClick={() => setShowStatusModal(true)} // Abre o modal para definir o novo status
                       disabled={loading}
                     >
-                      Atualizar Status
+                      Outros
                     </Button>
                   </>
                 )}
@@ -644,7 +654,7 @@ const VisualizarAgendamentos = () => {
                 onChange={(e) => setNewStatus(e.target.value)}
               >
                 <option value="">Selecione</option>
-                <option value="pago">pago</option>
+
                 <option value="cancelado">Cancelado</option>
                 <option value="nao_compareceu">Não Compareceu</option>
                 <option value="remarcado">Remarcado</option>

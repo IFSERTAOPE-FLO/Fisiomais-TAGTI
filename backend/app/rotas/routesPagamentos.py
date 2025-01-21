@@ -30,7 +30,7 @@ def gerar_pagamento_fatura(agendamento_id):
         novo_pagamento = Pagamentos(
             id_agendamento=agendamento.id_agendamento,
             valor=valor_servico,
-            metodo_pagamento='cartão',  # Método de pagamento, pode ser ajustado conforme necessário
+            metodo_pagamento='a definir',  # Método de pagamento, pode ser ajustado conforme necessário
             status='pendente',  # O pagamento começa como pendente
             data_pagamento=None,  # A data de pagamento só será preenchida quando o pagamento for realizado
             referencia_pagamento=None  # Pode ser uma referência externa, se necessário
