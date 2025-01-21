@@ -296,8 +296,17 @@ const VisualizarAgendamentos = () => {
                     <tr key={agendamento.id}>
                       <td>{agendamento.id}</td>
                       <td>{agendamento.cliente || 'Cliente não informado'}</td>
-                      <td>{new Date(agendamento.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
-                      <td>{agendamento.hora || 'Hora não informada'}</td>
+                      <td className="text-center">
+                        {agendamento.data && !isNaN(new Date(agendamento.data).getTime())
+                          ? new Date(agendamento.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
+                          : (
+                            <>
+                               Aguardar confirmação
+                            </>
+                          )
+                        }
+                      </td>
+                      <td>{agendamento.hora || ''}</td>
                       <td>{agendamento.servico || 'Serviço não encontrado'}</td>
                       <td>
                         {agendamento.plano?.nome && agendamento.plano?.valor ? (
@@ -550,7 +559,7 @@ const VisualizarAgendamentos = () => {
                         await handleConfirmarNegar(selectedAgendamento.id, 'confirmado');
                         handleCloseModal(); // Fecha o modal após confirmar
                       }}
-                      disabled={loading || selectedAgendamento.status === 'confirmado'}
+                      disabled={loading || selectedAgendamento.status?.toLowerCase() === 'confirmado'}
                     >
                       {loading && selectedAgendamento.status !== 'confirmado' ? (
                         <>
@@ -567,7 +576,7 @@ const VisualizarAgendamentos = () => {
                         await handleConfirmarNegar(selectedAgendamento.id, 'negado');
                         handleCloseModal(); // Fecha o modal após negar
                       }}
-                      disabled={loading || selectedAgendamento.status === 'negado'}
+                      disabled={loading || selectedAgendamento.status?.toLowerCase() === 'negado'}
                     >
                       {loading && selectedAgendamento.status !== 'negado' ? (
                         <>
@@ -583,7 +592,7 @@ const VisualizarAgendamentos = () => {
                         await handleConfirmarNegar(selectedAgendamento.id, 'pago');
                         handleCloseModal(); // Fecha o modal após negar
                       }}
-                      disabled={loading || selectedAgendamento.status === 'pago'}
+                      disabled={loading || selectedAgendamento.status?.toLowerCase() === 'pago'}
                     >
                       {loading && selectedAgendamento.status !== 'Pago' ? (
                         <>
