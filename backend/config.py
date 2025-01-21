@@ -24,7 +24,7 @@ class Config:
     MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER', 'default-sender@example.com')
 
     # Configurações de JWT
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=15)  # Tempo do access token
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=1) # Tempo do access token
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)    # Tempo do refresh token
 
     # Criar pasta de uploads se não existir

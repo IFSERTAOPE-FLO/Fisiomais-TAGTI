@@ -205,6 +205,31 @@ class Agendamentos(db.Model):
     servico = db.relationship('Servicos', backref='agendamentos')
     clinica = db.relationship('Clinicas', backref='agendamentos')  # Relacionamento com clínica
 
+class Pagamentos(db.Model):
+    __tablename__ = 'pagamentos'
+    id_pagamento = db.Column(db.Integer, primary_key=True)  # ID único
+    id_agendamento = db.Column(db.Integer, db.ForeignKey('agendamentos.id_agendamento'), nullable=False)  # Relacionamento com o agendamento
+    valor = db.Column(db.Numeric(10, 2), nullable=False)  # Valor pago
+    metodo_pagamento = db.Column(db.String(50), nullable=False)  # Ex: 'cartão', 'boleto', 'pix'
+    status = db.Column(db.String(20), nullable=False, default='pendente')  # 'pendente', 'pago', 'cancelado'
+    data_pagamento = db.Column(db.DateTime, nullable=True)  # Data de conclusão do pagamento
+    referencia_pagamento = db.Column(db.String(255), nullable=True)  # Referência de terceiros (ex: ID de pagamento externo)
+
+    agendamento = db.relationship('Agendamentos', backref='pagamento')
+
+class Faturas(db.Model):
+    __tablename__ = 'faturas'
+    id_fatura = db.Column(db.Integer, primary_key=True)  # ID único
+    id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False)  # Relacionamento com cliente
+    id_pagamento = db.Column(db.Integer, db.ForeignKey('pagamentos.id_pagamento'), nullable=False)  # Relacionamento com pagamento
+    data_emissao = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)  # Data de emissão da fatura
+    vencimento = db.Column(db.DateTime, nullable=False)  # Data de vencimento
+    valor_total = db.Column(db.Numeric(10, 2), nullable=False)  # Valor total da fatura
+    status = db.Column(db.String(20), default='pendente')  # 'pendente', 'paga', 'atrasada'
+
+    cliente = db.relationship('Clientes', backref='faturas')
+    pagamento = db.relationship('Pagamentos', backref='faturas')
+
 
 class BlacklistedToken(db.Model):
     __tablename__ = 'blacklisted_tokens'

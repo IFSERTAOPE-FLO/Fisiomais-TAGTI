@@ -6,6 +6,7 @@
 #email: fisiomaispilatesefisioterapia@gmail.com  senha: 12345
 
 #DBeaver baixar para trabalhar com o sqlite
+#flask db init
 #flask db migrate -m "mensagem"
 #flask db upgrade
 
