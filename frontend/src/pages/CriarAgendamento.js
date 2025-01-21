@@ -89,10 +89,6 @@ function CriarAgendamento() {
     ]);
   };
 
-
-
-
-
   const fetchClinicas = async () => {
     try {
       const response = await fetch('http://localhost:5000/clinicas');
@@ -152,6 +148,7 @@ function CriarAgendamento() {
       fetchHorariosDisponiveis(colaborador);
 
     }
+    setHora('');    
   }, [colaborador]);
 
 
@@ -175,9 +172,6 @@ function CriarAgendamento() {
     }
   };
 
-
-
-
   const fetchClientes = async () => {
     try {
       const response = await fetch('http://localhost:5000/clientes');
@@ -192,29 +186,34 @@ function CriarAgendamento() {
   const handleSubmit = async (e) => {
     setLoading(true);
     e.preventDefault();
-
+  
+    if (!hora) {
+      alert('Por favor, selecione um horário válido.');
+      setLoading(false);
+      return;
+    }
+  
     // Verifica se o colaborador está definido
     const colaboradorId = role === 'colaborador' ? localStorage.getItem('userId') : colaborador;
-
+  
     const dataEscolhida = new Date(data + 'T' + hora + ':00'); // Combina data e hora
     const dataHoraISO = dataEscolhida.toISOString();
-
+  
     const agendamentoData = {
       servico_id: servico,
       colaborador_id: colaboradorId,
       data: dataHoraISO,
       cliente_id: cliente,
       plano_id: tipoServico === 'pilates' ? planoSelecionado || null : null,
-      
     };
-
+  
     const token = localStorage.getItem('token');
     if (!token) {
       alert('Por favor, faça login para agendar.');
       setLoading(false);
       return;
     }
-
+  
     try {
       const response = await fetch('http://localhost:5000/agendamentos/', {
         method: 'POST',
@@ -224,7 +223,7 @@ function CriarAgendamento() {
         },
         body: JSON.stringify(agendamentoData),
       });
-
+  
       if (response.ok) {
         const successData = await response.json();
         alert(successData.message || 'Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail');
@@ -243,6 +242,7 @@ function CriarAgendamento() {
     }
     setLoading(false);
   };
+  
 
 
 
@@ -304,9 +304,6 @@ function CriarAgendamento() {
       fetchDiasPermitidos(colaborador);
     }
   }, [role, colaborador]);
-
-
-
 
 
   return (

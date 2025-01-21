@@ -245,7 +245,17 @@ const GerenciarUsuarios = () => {
                             </th>
                             <th onClick={toggleTipo} style={{ cursor: "pointer" }}>
                                 Tipo ({tipoAlternado === "cliente" ? "Cliente" : "Colaborador"})
-
+                                <span className="ms-2">
+                                    <i
+                                        className={`bi ${tipoAlternado ? 'bi-arrow-repeat' : 'bi-arrow-repeat'
+                                            }`}
+                                        style={{
+                                            fontSize: "1rem",
+                                            transform: tipoAlternado ? "rotate(0deg)" : "rotate(180deg)",
+                                            transition: "transform 0.2s ease-in-out",
+                                        }}
+                                    ></i>
+                                </span>
                             </th>
                             <th>telefone</th>
                             {tipoAlternado === 'colaborador' && (<th>Clínica</th>)}
@@ -285,7 +295,7 @@ const GerenciarUsuarios = () => {
                                             >
                                                 <i className="bi bi-trash"></i>
                                             </button>
-                                            {tipoAlternado === 'colaborador' &&  (
+                                            {tipoAlternado === 'colaborador' && (
                                                 <button
                                                     className="btn btn-info btn-sm me-2"
                                                     onClick={() => handleEditarHorarios(usuario)}
