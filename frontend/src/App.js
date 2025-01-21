@@ -1,11 +1,8 @@
-//npm install jwt-decode
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Navbar from "./components/Navbar"; // Importa o componente Navbar
-import "./App.css";
+import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-
-
+import PageWrapper from "./components/PageTitulos"; // Importa o wrapper
 
 // Páginas
 import Home from "./pages/Home";
@@ -19,34 +16,107 @@ import Perfil from "./pages/Perfil";
 import VisualizarAgendamentos from "./pages/VisualizarAgendamentos";
 import AdminPage from "./pages/AdminPage"; 
 import Especialidades from "./pages/Especialidades"; 
-import AgendarTeste from "./pages/AgendarTeste"; 
-
 
 
 function App() {
-  return (
-    <Router>
-      <div>
-        <Navbar /> {/* Navbar separada */}
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/addcolaborador" element={<AddColaborador />} />
-          <Route path="/addcliente" element={<AddCliente />} />
-          <Route path="/criaragendamento" element={<CriarAgendamento />} />
-          <Route path="/contato" element={<Contato />} />
-          <Route path="/sobrenos" element={<SobreNos />} />
-          <Route path="/especialidades" element={<Especialidades />} /> 
-          <Route path="/cadastro" element={<Cadastro />} />
-          <Route path="/perfil" element={<Perfil />} />     
-          <Route path="/visualizaragendamentos" element={<VisualizarAgendamentos />} />           
-          <Route path="/adminPage" element={<AdminPage />} /> 
-          <Route path="/agendarteste" element={<AgendarTeste />} /> 
-          
-        </Routes>
-        <Footer />
-      </div>
-    </Router>
-  );
+    return (
+        <Router>
+            <div>
+                <Navbar />
+                <Routes>
+                    <Route 
+                        path="/" 
+                        element={
+                            <PageWrapper title="Início - Fisiomais">
+                                <Home />
+                            </PageWrapper>
+                        } 
+                    />
+                    <Route 
+                        path="/addcolaborador" 
+                        element={
+                            <PageWrapper title="Adicionar Colaborador - Fisiomais">
+                                <AddColaborador />
+                            </PageWrapper>
+                        } 
+                    />
+                    <Route 
+                        path="/addcliente" 
+                        element={
+                            <PageWrapper title="Adicionar Cliente - Fisiomais">
+                                <AddCliente />
+                            </PageWrapper>
+                        } 
+                    />
+                    <Route 
+                        path="/criaragendamento" 
+                        element={
+                            <PageWrapper title="Criar Agendamento - Fisiomais">
+                                <CriarAgendamento />
+                            </PageWrapper>
+                        } 
+                    />
+                    <Route 
+                        path="/contato" 
+                        element={
+                            <PageWrapper title="Contato - Fisiomais">
+                                <Contato />
+                            </PageWrapper>
+                        } 
+                    />
+                    <Route 
+                        path="/sobrenos" 
+                        element={
+                            <PageWrapper title="Sobre Nós - Fisiomais">
+                                <SobreNos />
+                            </PageWrapper>
+                        } 
+                    />
+                    <Route 
+                        path="/especialidades" 
+                        element={
+                            <PageWrapper title="Especialidades - Fisiomais">
+                                <Especialidades />
+                            </PageWrapper>
+                        } 
+                    />
+                    <Route 
+                        path="/cadastro" 
+                        element={
+                            <PageWrapper title="Cadastro - Fisiomais">
+                                <Cadastro />
+                            </PageWrapper>
+                        } 
+                    />
+                    <Route 
+                        path="/perfil" 
+                        element={
+                            <PageWrapper title="Perfil - Fisiomais">
+                                <Perfil />
+                            </PageWrapper>
+                        } 
+                    />
+                    <Route 
+                        path="/visualizaragendamentos" 
+                        element={
+                            <PageWrapper title="Visualizar Agendamentos - Fisiomais">
+                                <VisualizarAgendamentos />
+                            </PageWrapper>
+                        } 
+                    />
+                    <Route 
+                        path="/adminPage" 
+                        element={
+                            <PageWrapper title="Central de Controle - Fisiomais">
+                                <AdminPage />
+                            </PageWrapper>
+                        } 
+                    />
+                </Routes>
+                <Footer />
+            </div>
+        </Router>
+    );
 }
 
 export default App;

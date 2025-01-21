@@ -1,3 +1,4 @@
+
 .agendamento {
   background-color: #36ab9c;
   color: white;
@@ -33,14 +34,15 @@ p {
 }
 
 .btn-plano {
-  font-size: 0.85rem;
-  border-radius: 20px;
-  padding: 8px 12px;
+  font-size: 0.8rem; /* Tamanho de fonte menor */
+  border-radius: 15px; /* Arredondamento reduzido */
+  padding: 4px 8px; /* Menor espaçamento interno */
   transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-  margin-right: 5px; /* Espaço reduzido entre os botões */
+  margin-right: 4px; /* Margem reduzida */
   border: none;
   background-color: #36ab9c;
   color: white;
+  height: auto; /* Remove restrições de altura */
 }
 
 

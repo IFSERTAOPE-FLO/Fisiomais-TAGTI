@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import EditarServicoModal from "./EditarServicoModal";
 import AddColaboradoresServicos from "./AddColaboradoresServicos";
-import { FaUserPlus, FaEdit, FaTrashAlt } from "react-icons/fa";
+import { FaUserPlus, FaTrashAlt } from "react-icons/fa";
+import Paginator from "./Paginator"; // Importe o componente Paginator
+
 
 const GerenciarServicos = () => {
   const [servicos, setServicos] = useState([]);
-  const [colaboradores, setColaboradores] = useState([]);
   const [novoServico, setNovoServico] = useState({
     nome_servico: "",
     descricao: "",
@@ -22,55 +23,37 @@ const GerenciarServicos = () => {
   const [selectedServico, setSelectedServico] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [tipoAlternado, setTipoAlternado] = useState(true);
-  const [pesquisaNome, setPesquisaNome] = useState(""); 
+  const [pesquisaNome, setPesquisaNome] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);  // State for current page
+  const [itemsPerPage] = useState(10);  // Number of items per page
 
-  const buscarServicos = async () => {    
-      try {
-        const token = localStorage.getItem('token');  // Supondo que o token JWT esteja armazenado no localStorage
-        const response = await fetch('http://localhost:5000/servicos/listar_servicos', {
-          headers: {
-            'Authorization': `Bearer ${token}`  // Envia o token JWT no cabeçalho
-          }
-        });
-        
-        if (response.ok) {
-          const servicosData = await response.json();
-          setServicos(servicosData);
-        } else {
-          console.error('Erro ao buscar serviços: ', response.status);
-        }
-      } catch (error) {
-        console.error('Erro ao buscar serviços:', error);
-      }
-    };
-    
 
-  const buscarUsuarios = async () => {
+  const buscarServicos = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/usuarios/listar_usuarios", {
+      const token = localStorage.getItem('token');  // Supondo que o token JWT esteja armazenado no localStorage
+      const response = await fetch('http://localhost:5000/servicos/listar_todos_servicos', {
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+          'Authorization': `Bearer ${token}`  // Envia o token JWT no cabeçalho
+        }
       });
 
-      if (!response.ok) {
-        setErro("Erro ao buscar usuários: " + response.statusText);
-        return;
+      if (response.ok) {
+        const servicosData = await response.json();
+        setServicos(servicosData);
+      } else {
+        console.error('Erro ao buscar serviços: ', response.status);
       }
-
-      const data = await response.json();
-      const colaboradores = data.filter((usuario) => usuario.role === "colaborador");
-      setColaboradores(colaboradores);
-    } catch (err) {
-      setErro("Erro ao buscar usuários.");
+    } catch (error) {
+      console.error('Erro ao buscar serviços:', error);
     }
   };
 
+
+
+
   useEffect(() => {
     buscarServicos();
-    buscarUsuarios();
+
   }, []);
 
   const salvarServico = async () => {
@@ -85,18 +68,37 @@ const GerenciarServicos = () => {
     }
 
     try {
+      // Adiciona um campo 'nome_plano' para cada plano antes de enviar para o backend
+      const planos = novoServico.planos.map(plano => ({
+        nome_plano: plano.Nome_plano,
+        valor: plano.Valor,
+      }));
+
+      // Preparando o objeto para envio
+      const servicoData = {
+        nome_servico: novoServico.nome_servico,
+        descricao: novoServico.descricao,
+        valor: novoServico.valor,  // Fisioterapia vai enviar um valor
+        tipo_servico: novoServico.tipo_servico,
+        colaboradores_ids: novoServico.colaboradores_ids,
+        planos: planos,  // Inclui os planos formatados
+      };
+
       const response = await fetch("http://localhost:5000/servicos/add_servico", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(novoServico),
+        body: JSON.stringify(servicoData),
       });
 
       const data = await response.json();
 
       if (response.ok) {
+        // Atualiza a lista de serviços localmente
         setServicos((prev) => [...prev, data.servico]);
         resetForm();
         setMensagem(data.message);
+        // Recarrega os serviços para garantir que a lista está atualizada
+        buscarServicos();
       } else {
         throw new Error(data.error || "Erro ao salvar serviço.");
       }
@@ -104,6 +106,7 @@ const GerenciarServicos = () => {
       setErro(err.message);
     }
   };
+
 
   const resetForm = () => {
     setNovoServico({
@@ -140,7 +143,7 @@ const GerenciarServicos = () => {
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/deletar_servico/${idServico}`, {
+      const response = await fetch(`http://localhost:5000/servicos/deletar_servico/${idServico}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -150,8 +153,12 @@ const GerenciarServicos = () => {
 
       const data = await response.json();
       if (response.ok) {
-        setServicos((prev) => prev.filter((servico) => servico.ID_Servico !== idServico));
+        // Remove o serviço deletado da lista local
+        setServicos((prev) => prev.filter((servico) => servico.id !== idServico));
+        resetForm();
         setMensagem(data.message);
+        // Recarrega os serviços para garantir que a lista está atualizada
+        buscarServicos();
       } else {
         throw new Error(data.message || "Erro ao deletar serviço.");
       }
@@ -159,6 +166,7 @@ const GerenciarServicos = () => {
       setErro(err.message);
     }
   };
+
 
   const handleTipoServicoChange = (e) => {
     const tipo = e.target.value;
@@ -182,21 +190,21 @@ const GerenciarServicos = () => {
   const fecharModalColaboradores = () => {
     setModalColaboradoresVisible(false);
     setSelectedServico(null);
-    buscarServicos(); 
-    
+    buscarServicos();
+
   };
 
   const fecharModalEditarServico = () => {
     setModalServicoVisible(false);
     setSelectedServico(null);
-    buscarServicos(); 
-    
+    buscarServicos();
+
   };
 
   const toggleTipo = () => {
     setTipoAlternado(!tipoAlternado);
   };
-const sortedServicos = React.useMemo(() => {
+  const sortedServicos = React.useMemo(() => {
     let sorted = [...servicos];
     if (sortConfig.key && sortConfig.direction) {
       sorted.sort((a, b) => {
@@ -227,19 +235,31 @@ const sortedServicos = React.useMemo(() => {
   };
 
   const servicosFiltrados = sortedServicos.filter((servico) => {
+    const nomeServico = servico.Nome_servico || '';  // Fallback para string vazia se undefined ou null
+    const tipos = servico.Tipos || []; // Garante que tipos seja um array
     return (
-      servico.Nome_servico.toLowerCase().includes(pesquisaNome.toLowerCase()) &&
-      (tipoAlternado ? servico.Tipo === "fisioterapia" : servico.Tipo === "pilates")
+      nomeServico.toLowerCase().includes(pesquisaNome.toLowerCase()) &&
+      (tipoAlternado
+        ? tipos.includes('fisioterapia')
+        : tipos.includes('pilates'))
     );
   });
- 
+
+
+
+  // Paginação dos usuários filtrados
+  const servicosPaginados = servicosFiltrados.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
 
   return (
     <div className="container">
-      <h2 className="mb-4 text-secondary">Gerenciar Serviços</h2>
+      <h2 className="mb-4 text-secondary text-center">Gerenciar Serviços</h2>
       {erro && <div className="alert alert-danger">{erro}</div>}
       {mensagem && <div className="alert alert-success">{mensagem}</div>}
-      
+
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -263,7 +283,7 @@ const sortedServicos = React.useMemo(() => {
           required
           className="form-control mb-2"
         />
-        
+
         <select
           value={novoServico.tipo_servico}
           onChange={handleTipoServicoChange}
@@ -274,13 +294,13 @@ const sortedServicos = React.useMemo(() => {
           <option value="pilates">Pilates</option>
         </select>
         {novoServico.tipo_servico === "fisioterapia" && (
-        <input
-          type="number"
-          placeholder="Valor"
-          value={novoServico.valor}
-          onChange={(e) => setNovoServico({ ...novoServico, valor: e.target.value })}
-          className="form-control mb-2"
-        />
+          <input
+            type="number"
+            placeholder="Valor"
+            value={novoServico.valor}
+            onChange={(e) => setNovoServico({ ...novoServico, valor: e.target.value })}
+            className="form-control mb-2"
+          />
         )}
         {novoServico.tipo_servico === "pilates" && (
           <>
@@ -298,117 +318,170 @@ const sortedServicos = React.useMemo(() => {
               onChange={(e) => setNovoPlano({ ...novoPlano, valor: e.target.value })}
               className="form-control mb-2"
             />
-            <button type="button" onClick={adicionarPlano} className="btn btn-signup ">
-              Adicionar Plano
-            </button>
-
+            <div className="d-flex justify-content-center">
+              <button type="button" onClick={adicionarPlano} className="btn btn-signup ">
+                Adicionar Plano
+              </button>
+            </div>
             {novoServico.planos.length > 0 && (
-              <div>
-                <h5 className="text">Planos Adicionados:</h5>
-                <ul className="list-unstyled">
+              <div className="mb-3">
+                <label className="form-label">Planos Adicionados:</label>
+                <div className="row">
                   {novoServico.planos.map((plano, index) => (
-                    <li key={index}>
-                      {plano.Nome_plano} - R${plano.Valor.toFixed(2)}
-                    </li>
+                    <div key={index} className="col-md-4 mb-4">
+                      <div className="d-flex justify-content-between align-items-center p-3 border btn-plano rounded">
+                        <div className="flex-grow-1">
+                          <strong>{plano.Nome_plano}</strong>
+                        </div>
+                        <div className="text-end">
+                          <span className="fw-bold">R$ {plano.Valor.toFixed(2)}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setNovoServico((prev) => ({
+                              ...prev,
+                              planos: prev.planos.filter((_, i) => i !== index),
+                            }))
+                          }
+                          className="btn btn-danger btn-sm ms-2"
+                        >
+                          <i className="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
           </>
         )}
 
-        <button type="submit" className="btn btn-login">
-          Adicionar Serviço
-        </button>
+
+        <div className="d-flex justify-content-center">
+          <button type="submit" className="btn btn-login mt-3">Adicionar Serviço</button>
+        </div>
       </form>
 
       <h3 className="text-primary">Lista de Serviços</h3>
       <div className="input-group mb-3">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Pesquisar por nome do serviço"
-                  value={pesquisaNome}
-                  onChange={(e) => setPesquisaNome(e.target.value)}
-                />
-                <button className="btn btn-secondary" type="button" id="button-addon2">
-                  <i className="bi bi-search"></i>
-                </button>
-              </div>
-      <table className="table ">
-        <thead>
-          <tr>
-          <th
-              onClick={() => handleSort("Nome_servico")}
-              style={{ cursor: "pointer" }}
-            >
-              Nome
-              {sortConfig.key === "Nome_servico" && (sortConfig.direction === "ascending" ? " ↑" : " ↓")}
-            </th>
-            <th>Descrição</th>
-            <th>Valor (R$)</th>
-            <th onClick={toggleTipo} style={{ cursor: "pointer" }}>
-                            Tipo {tipoAlternado ? "*" : "*"}
-                        </th>
-            <th>Planos</th>
-            <th>Colaboradores</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {servicosFiltrados.map((servico) => (
-            <tr key={servico.ID_Servico}>
-              <td>{servico.Nome_servico}</td>
-              <td>{servico.Descricao}</td>
-              <td>{servico.Valor}</td>
-              <td>{servico.Tipo}</td>
-              <td className="text-center">
-                {servico.Tipo === "pilates" && servico.Planos && servico.Planos.length > 0 ? (
-                  <ul className="list-unstyled">
-                    {servico.Planos.map((plano, index) => (
-                      <li key={index}>
-                        {plano.Nome_plano} - R${plano.Valor.toFixed(2)}                        
-                      </li>
-                      
-                    ))}
-                  </ul>
-                ) : (
-                  servico.Tipo === "pilates" ? "Nenhum plano adicionado" : <span className="d-block">-</span>
-                )}
-              </td>
-              <td>
-                {servico.Colaboradores && servico.Colaboradores.length > 0
-                  ? servico.Colaboradores.join(", ")
-                  : "Nenhum colaborador"}
-              </td>
-              <td className="d-flex justify-content-start align-items-center align-middle border-0">
-                
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Pesquisar por nome do serviço"
+          value={pesquisaNome}
+          onChange={(e) => setPesquisaNome(e.target.value)}
+        />
+        <button className="btn btn-secondary" type="button" id="button-addon2">
+          <i className="bi bi-search"></i>
+        </button>
+      </div>
+      <div className="table-responsive ">
+        <table className="table table-striped table-bordered mt-4">
+          <thead>
+            <tr>
+              <th
+                onClick={() => handleSort("Nome_servico")}
+                style={{ cursor: "pointer" }}
+              >
+                Nome
+                {sortConfig.key === "Nome_servico" && (sortConfig.direction === "ascending" ? " ↑" : " ↓")}
+              </th>
+              <th>Descrição</th>
+              <th
+                onClick={toggleTipo}
+                className="text-center fw-semibold position-relative"
+                style={{ cursor: "pointer", userSelect: "none" }}
+              >
+                Tipo
+                <span className="ms-2">
+                  <i
+                    className={`bi ${tipoAlternado ? 'bi-arrow-repeat' : 'bi-arrow-repeat'
+                      }`}
+                    style={{
+                      fontSize: "1rem",
+                      transform: tipoAlternado ? "rotate(0deg)" : "rotate(180deg)",
+                      transition: "transform 0.2s ease-in-out",
+                    }}
+                  ></i>
+                </span>
+                <br />
+                <span className="badge ">{tipoAlternado ? "Fisioterapia" : "Pilates"}</span>
+              </th>
 
-                <button
-                  className="btn btn-primary btn-sm ms "
-                  onClick={() => abrirModalEditarServico(servico)}
-                >
-                  <FaEdit className="fs-7" />
-                </button>
 
-                <button
-                  className="btn btn-info btn-sm ms-2"
-                  onClick={() => abrirModalColaboradores(servico)}
-                >
-                  <FaUserPlus className="fs-7"  />
-                </button>
-                <button
-                  className="btn btn-danger btn-sm ms-2"
-                  onClick={() => deletarServico(servico.ID_Servico)}
-                >
-                  <FaTrashAlt className="fs-7"  />
-                  
-                </button>
-              </td>
+              {tipoAlternado && <th >Valor (R$)</th>} {/* Exibe somente se o tipo for Pilates */}
+              {!tipoAlternado && <th className="text-center">Planos / Valor (R$)</th>}
+              <th>Colaboradores</th>
+              <th>Ações</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {servicosPaginados.map((servico) => (
+              <tr key={servico.ID_Servico}>
+                <td className="fw-semibold ">{servico.Nome_servico}</td>
+                <td>{servico.Descricao}</td>
+                <td className="text-center">{servico.Tipos[0].charAt(0).toUpperCase() + servico.Tipos[0].slice(1)}</td>
+                {tipoAlternado && <td  ><div className="d-flex justify-content-between align-items-center  p-1 "><span className="fw-semibold btn-plano">{servico.Valor ? `${parseFloat(servico.Valor).toFixed(2)}` : '-'} </span></div></td>}
+                {!tipoAlternado && (
+                  <td>
+                    {servico.Planos && servico.Planos.length > 0 ? (
+                      <div className="d-flex flex-column">
+                        {servico.Planos.map((plano, index) => (
+                          <div
+                            key={index}
+                            className="d-flex justify-content-between align-items-center p-1"
+                          >
+                            <span className="text-start fw-semibold ">{plano.Nome_plano}</span>
+                            <span className="text-end fw-bold  btn-plano">{parseFloat(plano.Valor).toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-muted">Nenhum plano disponível</span>
+                    )}
+                  </td>
+                )}
+                <td>
+                  {servico.Colaboradores && servico.Colaboradores.length > 0
+                    ? servico.Colaboradores.join(", ")
+                    : "Nenhum colaborador"}
+                </td>
+                <td>
+                  <div className="d-flex justify-content-start align-items-center align-middle border-0 ">
+                    <button
+                      className="btn btn-warning btn-sm ms "
+                      onClick={() => abrirModalEditarServico(servico)}
+                    >
+                      <i className="bi bi-pencil"></i>
+                    </button>
+                    <button
+                      className="btn btn-info btn-sm ms-2"
+                      onClick={() => abrirModalColaboradores(servico)}
+                    >
+                      <FaUserPlus className="fs-7" />
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm ms-2"
+                      onClick={() => deletarServico(servico.ID_Servico)}
+                    >
+                      <FaTrashAlt className="fs-7" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      <Paginator
+        totalItems={servicosFiltrados.length}
+        itemsPerPage={itemsPerPage}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+      />
 
       {modalServicoVisible && selectedServico && (
         <EditarServicoModal
@@ -419,7 +492,7 @@ const sortedServicos = React.useMemo(() => {
             );
             fecharModalEditarServico();
           }}
-          
+
           onClose={fecharModalEditarServico}
         />
       )}

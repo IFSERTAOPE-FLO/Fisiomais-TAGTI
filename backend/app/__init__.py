@@ -1,10 +1,20 @@
-#python -m venv venv
+#cd backend
+#python -m venv venv(a primeira vez)
 #.\venv\Scripts\activate
 #pip install -r requirements.txt
-#fisiomaispilatesefisioterapia@gmail.com  12345
+#flask run
+#email: fisiomaispilatesefisioterapia@gmail.com  senha: 12345
 
-#flask db migrate -m "mensagem"
+#DBeaver baixar para trabalhar com o sqlite
+#atualização de mudanças no banco de dados
+#flask db init
+#flask db migrate -m "descreva aqui a mudança que voce fez"
 #flask db upgrade
+
+#abra um novo cmd
+#cd frontend
+#npm install (a primeira vez)
+#npm start
 
 
 from flask import Flask
@@ -28,18 +38,21 @@ def create_app():
     db.init_app(app)
     mail.init_app(app)
     migrate.init_app(app, db)
-    CORS(app) # Habilita CORS
+    CORS(app) # Habilita CORS conexão com frontend em react
     jwt = JWTManager(app)
 
     with app.app_context():
         # Importar modelos e rotas aqui dentro para evitar importação circular
-        from app.models import  populate_database
+        from app.services import populate_database
         from app.rotas.routes import main
         from app.rotas.routesClientes import clientes
         from app.rotas.routesColaboradores import colaboradores
         from app.rotas.routesAgendamentos import agendamentos       
         from app.rotas.routesUsers import usuarios
         from app.rotas.routesServicos import servicos
+        from app.rotas.routesClinicas import clinicas
+        from app.rotas.routesDashboards import dashboards
+        from app.rotas.routesPagamentos import pagamentos_faturas
 
         app.register_blueprint(main, url_prefix='/')
         app.register_blueprint(usuarios, url_prefix='/usuarios')
@@ -47,7 +60,9 @@ def create_app():
         app.register_blueprint(clientes, url_prefix='/clientes')
         app.register_blueprint(servicos, url_prefix='/servicos')
         app.register_blueprint(agendamentos, url_prefix='/agendamentos')
-        
+        app.register_blueprint(clinicas, url_prefix='/clinicas')
+        app.register_blueprint(dashboards, url_prefix='/dashboards')
+        app.register_blueprint(pagamentos_faturas, url_prefix='/pagamentos')
 
         # Garantir que a pasta de uploads exista
         if not os.path.exists(app.config['UPLOAD_FOLDER']):
@@ -59,12 +74,5 @@ def create_app():
 
     return app
 
-# Função para agendar a notificação
-def agendar_notificacao(app):  # Agora recebe o app como argumento
-    from backend.app.rotas.routes import notificar_atendimentos  # Importar a função diretamente aqui
-
-    # Usando o contexto da aplicação para garantir que o acesso ao banco de dados seja feito corretamente
-    with app.app_context():
-        notificar_atendimentos()  # Chama a função que envia notificações
 
 

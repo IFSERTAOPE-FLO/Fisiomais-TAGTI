@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
 
-const EditarHorarios = ({ colaboradorId, onClose, onSave }) => {
+const EditarHorarios = ({ colaboradorId, colaboradorNome, onClose, onSave }) => {
   const [horarios, setHorarios] = useState([]);
   const [novoHorario, setNovoHorario] = useState({
     dia_semana: '',
     hora_inicio: '',
     hora_fim: ''
   });
-  
+
   // Função para listar os horários existentes do colaborador
   const listarHorarios = async () => {
     try {
@@ -19,7 +19,8 @@ const EditarHorarios = ({ colaboradorId, onClose, onSave }) => {
           'Authorization': `Bearer ${token}`,
         },
       });
-      
+
+
       const data = await response.json();
       if (response.ok) {
         setHorarios(data.horarios || []);
@@ -30,7 +31,7 @@ const EditarHorarios = ({ colaboradorId, onClose, onSave }) => {
       alert('Erro ao listar os horários');
     }
   };
-  
+
   useEffect(() => {
     listarHorarios();
   }, [colaboradorId]);
@@ -53,12 +54,12 @@ const EditarHorarios = ({ colaboradorId, onClose, onSave }) => {
     }
 
     // Verificar duplicidade de horários
-    const horarioExistente = horarios.find(horario => 
+    const horarioExistente = horarios.find(horario =>
       horario.dia_semana === dia_semana &&
       horario.hora_inicio === hora_inicio &&
       horario.hora_fim === hora_fim
     );
-    
+
     if (horarioExistente) {
       alert("Este horário já está configurado.");
       return;
@@ -97,22 +98,25 @@ const EditarHorarios = ({ colaboradorId, onClose, onSave }) => {
   return (
     <Modal show onHide={onClose}>
       <Modal.Header closeButton>
-        <Modal.Title>Editar Horários</Modal.Title>
+        <Modal.Title>Editar Horários de {colaboradorNome}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <h5>Horários Atuais:</h5>
-        {horarios.length > 0 ? (
-          <ul>
-            {horarios.map((horario, index) => (
-              <li key={index}>
-                {`${horario.dia_semana} - ${horario.hora_inicio} às ${horario.hora_fim}`}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>Nenhum horário configurado.</p>
-        )}
-        
+        {
+          horarios.length > 0 ? (
+            <ul className="list-group">
+              {horarios.map((horario, index) => (
+                <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
+                  <span>{`${horario.dia_semana.charAt(0).toUpperCase()}${horario.dia_semana.slice(1)} - ${horario.hora_inicio} às ${horario.hora_fim}`}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-muted">Nenhum horário configurado.</p>
+          )
+        }
+
+
         <Form>
           <Form.Group controlId="formDiaSemana">
             <Form.Label>Dia da Semana</Form.Label>

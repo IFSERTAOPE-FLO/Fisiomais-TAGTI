@@ -2,25 +2,40 @@ import React, { useState, useEffect } from "react";
 import EditarUsuario from "./EditarUsuario";
 import EditarHorarios from "./EditarHorarios";
 import { Link, } from "react-router-dom";
+import Paginator from "./Paginator"; // Importe o componente Paginator
 
 const GerenciarUsuarios = () => {
     const [usuarios, setUsuarios] = useState([]);
     const [erro, setErro] = useState("");
     const [usuarioEditando, setUsuarioEditando] = useState(null);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
-    const [tipoAlternado, setTipoAlternado] = useState(true);
+    const [tipoAlternado, setTipoAlternado] = useState("cliente");
     const [pesquisaNome, setPesquisaNome] = useState(""); // Estado para armazenar o filtro de nome
     const [horariosEditando, setHorariosEditando] = useState(null);  // Adicionar estado para editar horários
+    const [currentPage, setCurrentPage] = useState(1);
+    const savedRole = localStorage.getItem("role"); // Recupera o role do localStorage
+    const [usuarioLogado, setUsuarioLogado] = useState(null);
+    const [usuariosFiltrados, setUsuariosFiltrados] = useState([]); // Estado para armazenar usuários filtrados
 
-    // Função para buscar usuários
+    const itemsPerPage = 10; // Defina o número de itens por página
+
+    const isRoleValid = savedRole === "admin" || savedRole === "colaborador";
+
+
+
     const buscarUsuarios = async () => {
+        if (!isRoleValid) {
+            setErro("Você não tem permissão para acessar esses dados.");
+            return;
+        }
+
         try {
             const token = localStorage.getItem("token");
             const response = await fetch("http://localhost:5000/usuarios/listar_usuarios", {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`,
                 },
             });
 
@@ -30,19 +45,24 @@ const GerenciarUsuarios = () => {
             }
 
             const data = await response.json();
-
-            if (Array.isArray(data)) {
-                setUsuarios(data);
+            if (data.usuarios && Array.isArray(data.usuarios)) {
+                setUsuarios(data.usuarios);
+                const usuarioLogado = data.usuario_logado_index !== null ? data.usuarios[data.usuario_logado_index] : null;
+                setUsuarioLogado(usuarioLogado);
             } else {
-                setErro("A resposta da API não é um array.");
+                setErro("A resposta da API não é válida.");
             }
         } catch (err) {
             setErro("Erro ao buscar usuários.");
         }
     };
+
+
     const toggleTipo = () => {
-        setTipoAlternado(!tipoAlternado);  // Alterna o valor do estado tipoAlternado
+        // Alterna apenas entre "cliente" e "colaborador"
+        setTipoAlternado((prevTipo) => (prevTipo === "cliente" ? "colaborador" : "cliente"));
     };
+
 
     // Função para deletar usuário
     const deletarUsuario = async (tipo, id) => {
@@ -72,12 +92,15 @@ const GerenciarUsuarios = () => {
 
     const handleEditarUsuario = (usuario) => {
         setUsuarioEditando(usuario);
+        setHorariosEditando(null); // Garantir que o modal de horários seja fechado ao editar o usuário
     };
 
-    const handleEditarHorarios = (usuario) => {
-        setHorariosEditando(usuario);  // Passando o ID correto do colaborador
-    };
 
+    // Função para editar horários
+    const handleEditarHorarios = (usuariohorario) => {
+        setHorariosEditando({ id: usuariohorario.id, nome: usuariohorario.nome });
+        setUsuarioEditando(null); // Garantir que o modal de edição de usuário seja fechado ao editar horários
+    };
 
     const handleCloseModal = () => {
         setUsuarioEditando(null);
@@ -89,13 +112,6 @@ const GerenciarUsuarios = () => {
         setUsuarioEditando(null);
         setHorariosEditando(null);  // Fechar modal
     };
-
-    useEffect(() => {
-        buscarUsuarios(); // Carregar usuários inicialmente
-    }, []);
-
-
-
     // Função para ordenar os usuários
     const handleSort = (key) => {
         let direction = "ascending";
@@ -110,8 +126,8 @@ const GerenciarUsuarios = () => {
         let sorted = [...usuarios];
         if (sortConfig.key && sortConfig.direction) {
             sorted.sort((a, b) => {
-                const aValue = a[sortConfig.key].toLowerCase();
-                const bValue = b[sortConfig.key].toLowerCase();
+                const aValue = a[sortConfig.key] ? a[sortConfig.key].toString().toLowerCase() : "";
+                const bValue = b[sortConfig.key] ? b[sortConfig.key].toString().toLowerCase() : "";
                 if (aValue < bValue) {
                     return sortConfig.direction === "ascending" ? -1 : 1;
                 }
@@ -128,23 +144,36 @@ const GerenciarUsuarios = () => {
         buscarUsuarios(); // Carregar usuários inicialmente
     }, []);
 
-    // Filtragem dos usuários com base no nome
-    const usuariosFiltrados = sortedUsuarios.filter(usuario => {
-        return (
-            usuario.nome.toLowerCase().includes(pesquisaNome.toLowerCase()) &&
-            (tipoAlternado ? usuario.role === "colaborador" : usuario.role === "cliente")
-        );
-    });
+    useEffect(() => {
+        const filtered = sortedUsuarios.filter(usuario => {
+            const nomeMatches = usuario.nome.toLowerCase().includes(pesquisaNome.toLowerCase());
+            if (tipoAlternado === "todos") {
+                return nomeMatches;
+            }
+            return nomeMatches && usuario.role === tipoAlternado;
+        });
+
+        setUsuariosFiltrados(filtered);
+        setCurrentPage(1); // Resetar para a primeira página
+    }, [tipoAlternado, pesquisaNome, sortedUsuarios]);
+
+    const usuariosPaginados = React.useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return usuariosFiltrados.slice(startIndex, endIndex);
+    }, [usuariosFiltrados, currentPage, itemsPerPage]);
+
+
 
     return (
-        <div>
-            <h2 className="mb-3 text-secondary">Gerenciar Usuários</h2>
+        <div className="container">
+            <h2 className="mb-3 text-secondary text-center">Gerenciar Usuários</h2>
 
             {erro && <p className="alert alert-danger">{erro}</p>}
             <div className="container mb-3">
                 <div className="row align-items-center g-2">
                     {/* Coluna para o campo de pesquisa */}
-                    <div className="col-md-6 col-lg-8">
+                    <div className="col-md-6 col-lg-5">
                         <div className="input-group">
                             <input
                                 type="text"
@@ -156,88 +185,145 @@ const GerenciarUsuarios = () => {
                             <button className="btn btn-secondary" type="button" id="button-addon2">
                                 <i className="bi bi-search"></i>
                             </button>
+
                         </div>
                     </div>
 
 
                     <div className="col-auto">
-                        <Link className="btn btn-login " to="/addcliente">
+                        <Link className="btn-login btn-sm me-2 text-decoration-none" to="/addcliente">
                             <i className="bi bi-person-plus"></i> Cliente
                         </Link>
                     </div>
 
 
                     <div className="col-auto">
-                        <Link className="btn btn-login " to="/addcolaborador">
+                        <Link className="btn-login btn-sm me-2 text-decoration-none" to="/addcolaborador">
                             <i className="bi bi-person-workspace"></i> Colaborador
                         </Link>
                     </div>
+                    {savedRole === "colaborador" && (
+                        <>
+                            <div className="col-auto">
+                                <button
+                                    className="btn-login btn-sm me-2"
+                                    onClick={() => handleEditarUsuario(usuarioLogado)}
+                                >
+                                    <i className="bi bi-pencil"></i> Editar Perfil e Clinica
+                                </button>
+                            </div>
+                            <div className="col-auto">
+                                <button
+                                    className="btn-login btn-sm me-2"
+                                    onClick={() => handleEditarHorarios(usuarioLogado)}
+                                >
+                                    <i className="bi bi-clock"></i> Editar seus horários
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
+            <div className="table-responsive">
+                <table className="table table-striped table-bordered mt-4">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th
+                                onClick={() => handleSort("nome")}
+                                style={{ cursor: "pointer" }}
+                            >
+                                Nome
+                                {sortConfig.key === "nome" && (sortConfig.direction === "ascending" ? " ↑" : " ↓")}
+                            </th>
+                            <th
+                                onClick={() => handleSort("email")}
+                                style={{ cursor: "pointer" }}
+                            >
+                                Email
+                                {sortConfig.key === "email" && (sortConfig.direction === "ascending" ? " ↑" : " ↓")}
+                            </th>
+                            <th onClick={toggleTipo} style={{ cursor: "pointer" }}>
+                                Tipo ({tipoAlternado === "cliente" ? "Cliente" : "Colaborador"})
+                                <span className="ms-2">
+                                    <i
+                                        className={`bi ${tipoAlternado ? 'bi-arrow-repeat' : 'bi-arrow-repeat'
+                                            }`}
+                                        style={{
+                                            fontSize: "1rem",
+                                            transform: tipoAlternado ? "rotate(0deg)" : "rotate(180deg)",
+                                            transition: "transform 0.2s ease-in-out",
+                                        }}
+                                    ></i>
+                                </span>
+                            </th>
+                            <th>telefone</th>
+                            {tipoAlternado === 'colaborador' && (<th>Clínica</th>)}
+                            {savedRole === 'admin' && (
+                                <th>Ações</th>
+                            )}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {usuariosPaginados.map((usuario) => (
+                            <tr key={usuario.id}>
+                                <td>{usuario.id}</td>
+                                <td>{usuario.nome}</td>
+                                <td>{usuario.email}</td>
+                                <td>{usuario.role}</td>
+                                <td>{usuario.telefone}</td>
+                                {tipoAlternado === 'colaborador' && (
+                                    <td>{usuario.clinica ? usuario.clinica.nome : "Nenhuma"}</td>
+                                )}
 
-            <table className="table table-striped table-bordered mt-4">
-                <thead>
-                    <tr>
-                        <th
-                            onClick={() => handleSort("nome")}
-                            style={{ cursor: "pointer" }}
-                        >
-                            Nome
-                            {sortConfig.key === "nome" && (sortConfig.direction === "ascending" ? " ↑" : " ↓")}
-                        </th>
-                        <th
-                            onClick={() => handleSort("email")}
-                            style={{ cursor: "pointer" }}
-                        >
-                            Email
-                            {sortConfig.key === "email" && (sortConfig.direction === "ascending" ? " ↑" : " ↓")}
-                        </th>
-                        <th onClick={toggleTipo} style={{ cursor: "pointer" }}>
-                            Tipo ({tipoAlternado ? "Colaborador" : "Cliente"})
-                        </th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {usuariosFiltrados.map((usuario) => (
-                        <tr key={usuario.ID}>
-                            <td>{usuario.nome}</td>
-                            <td>{usuario.email}</td>
-                            <td>{usuario.role}</td>
-                            <td>
-
-                                <button
-                                    className="btn btn-warning btn-sm me-2"
-                                    onClick={() => handleEditarUsuario(usuario)}
-                                >
-                                    <i className="bi bi-pencil"></i> Editar
-                                </button>
+                                {savedRole === 'admin' && (
+                                    <>
+                                        <td>
 
 
-                                <button
-                                    className="btn btn-danger btn-sm me-2"
-                                    onClick={() => deletarUsuario(usuario.role, usuario.ID)}
-                                >
-                                    <i className="bi bi-trash"></i> Excluir
-                                </button>
-                                {usuario.role === "colaborador" && (
-                                    <button
-                                        className="btn btn-info btn-sm me-2"
-                                        onClick={() => handleEditarHorarios(usuario.ID)}  // Chamar a edição de horários
-                                    >
-                                        <i className="bi bi-clock"></i> Editar Horários
-                                    </button>
+                                            <button
+                                                className="btn btn-warning btn-sm me-2"
+                                                onClick={() => handleEditarUsuario(usuario)}
+                                            >
+                                                <i className="bi bi-pencil"></i>
+                                            </button>
+
+
+                                            <button
+                                                className="btn btn-danger btn-sm me-2"
+                                                onClick={() => deletarUsuario(usuario.role, usuario.id)}
+                                            >
+                                                <i className="bi bi-trash"></i>
+                                            </button>
+                                            {tipoAlternado === 'colaborador' && (
+                                                <button
+                                                    className="btn btn-info btn-sm me-2"
+                                                    onClick={() => handleEditarHorarios(usuario)}
+                                                >
+                                                    <i className="bi bi-clock"></i>
+                                                </button>
+                                            )}
+                                        </td>
+                                    </>
                                 )}
 
 
 
 
-                            </td>
 
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            <Paginator
+                totalItems={usuariosFiltrados.length}
+                itemsPerPage={itemsPerPage}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}  // Passando a função para atualizar a página
+            />
+
+
 
             {usuarioEditando && (
                 <EditarUsuario
@@ -249,8 +335,8 @@ const GerenciarUsuarios = () => {
             )}
             {horariosEditando && (
                 <EditarHorarios
-                    colaboradorId={horariosEditando}  // Passando o ID para o modal
-
+                    colaboradorId={horariosEditando.id}  // Passando o ID para o modal
+                    colaboradorNome={horariosEditando.nome} // Passando o nome para o modal
                     onClose={handleCloseModal}
                     onSave={handleSave}
                 />

@@ -10,9 +10,11 @@ function CriarAgendamento() {
   const [servico, setServico] = useState('');
   const [colaborador, setColaborador] = useState('');
   const [cliente, setCliente] = useState('');
+  const [clinica, setClinica] = useState('');  // Estado para armazenar a clínica selecionada
   const [servicos, setServicos] = useState([]);
   const [colaboradores, setColaboradores] = useState([]);
   const [clientes, setClientes] = useState([]);
+  const [clinicas, setClinicas] = useState([]);  // Estado para armazenar as clínicas
   const [role, setRole] = useState('');
   const [planos, setPlanos] = useState([]);
   const [tipoServico, setTipoServico] = useState('');
@@ -41,11 +43,11 @@ function CriarAgendamento() {
 
       }
     }
-
+    fetchClinicas();
     fetchServicos();
     fetchClientes();
     fetchFeriados();
-  }, []);
+  }, [data]);
 
 
   const fetchServicos = async () => {
@@ -67,6 +69,13 @@ function CriarAgendamento() {
       console.error('Erro ao buscar serviços:', error);
     }
   };
+  const handleClinicaChange = (e) => {
+    setClinica(e.target.value);
+    setColaborador(''); // Resetando o colaborador selecionado
+    setColaboradores([]); // Limpando a lista de colaboradores
+  };
+
+
 
 
   const fetchFeriados = () => {
@@ -80,32 +89,55 @@ function CriarAgendamento() {
     ]);
   };
 
-  const fetchColaboradores = useCallback(async () => {
-    if (servico) {
-      try {
-        const response = await fetch(`http://localhost:5000/colaboradores?servico_id=${servico}`);
-        if (response.ok) {
-          setColaboradores(await response.json());
-        }
-      } catch (error) {
-        console.error('Erro ao buscar colaboradores:', error);
+  const fetchClinicas = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/clinicas');
+      if (response.ok) {
+        setClinicas(await response.json());
       }
+    } catch (error) {
+      console.error('Erro ao buscar clínicas:', error);
     }
-  }, [servico]);
+  };
+
+
+  const fetchColaboradores = useCallback(async () => {
+    if (!servico || !clinica) return;
+
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/colaboradores/listar?servico_id=${servico}&clinica_id=${clinica}`
+      );
+      if (response.ok) {
+        const colaboradoresData = await response.json();
+        setColaboradores(colaboradoresData);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar colaboradores:', error);
+    }
+  }, [servico, clinica]); // Apenas quando "servico" ou "clinica" mudarem
+
+  useEffect(() => {
+    if (servico && clinica) {
+      setColaboradores([]); // Limpando a lista antes de buscar novos dados
+      fetchColaboradores(); // Buscando colaboradores
+    }
+  }, [servico, clinica, fetchColaboradores]);
 
   useEffect(() => {
     if (servico) {
       fetchColaboradores();
       const servicoSelecionado = servicos.find((s) => s.ID_Servico === parseInt(servico));
       if (servicoSelecionado) {
-        if (servicoSelecionado.Tipo === 'pilates') {
+        if (servicoSelecionado.Tipos.includes('pilates')) {
           setTipoServico('pilates');
           setPlanos(servicoSelecionado.Planos || []);
-          setValorServico(0);
-        } else if (servicoSelecionado.Tipo === 'fisioterapia') {
+          setValorServico(0); // Valor 0, pois Pilates não tem valor fixo
+        } else if (servicoSelecionado.Tipos.includes('fisioterapia')) {
           setTipoServico('fisioterapia');
           setValorServico(servicoSelecionado.Valor || 0);
-          setPlanos([]);
+          setPlanos([]); // Fisioterapia não tem planos
         }
       }
     }
@@ -116,6 +148,7 @@ function CriarAgendamento() {
       fetchHorariosDisponiveis(colaborador);
 
     }
+    setHora('');    
   }, [colaborador]);
 
 
@@ -139,9 +172,6 @@ function CriarAgendamento() {
     }
   };
 
-
-
-
   const fetchClientes = async () => {
     try {
       const response = await fetch('http://localhost:5000/clientes');
@@ -156,25 +186,34 @@ function CriarAgendamento() {
   const handleSubmit = async (e) => {
     setLoading(true);
     e.preventDefault();
-    const dataEscolhida = new Date(data);
-    const dataFormatada = dataEscolhida.toISOString().split('T')[0];
-    const dataHora = `${dataFormatada} ${hora}:00`;
-
+  
+    if (!hora) {
+      alert('Por favor, selecione um horário válido.');
+      setLoading(false);
+      return;
+    }
+  
+    // Verifica se o colaborador está definido
+    const colaboradorId = role === 'colaborador' ? localStorage.getItem('userId') : colaborador;
+  
+    const dataEscolhida = new Date(data + 'T' + hora + ':00'); // Combina data e hora
+    const dataHoraISO = dataEscolhida.toISOString();
+  
     const agendamentoData = {
       servico_id: servico,
-      colaborador_id: colaborador,
-      data: dataHora,
+      colaborador_id: colaboradorId,
+      data: dataHoraISO,
       cliente_id: cliente,
-      plano_id: tipoServico === 'fisioterapia' ? null : planoSelecionado,  // Send null if it's fisioterapia
+      plano_id: tipoServico === 'pilates' ? planoSelecionado || null : null,
     };
-
+  
     const token = localStorage.getItem('token');
     if (!token) {
       alert('Por favor, faça login para agendar.');
       setLoading(false);
       return;
     }
-
+  
     try {
       const response = await fetch('http://localhost:5000/agendamentos/', {
         method: 'POST',
@@ -184,9 +223,16 @@ function CriarAgendamento() {
         },
         body: JSON.stringify(agendamentoData),
       });
-
+  
       if (response.ok) {
-        alert('Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail');
+        const successData = await response.json();
+        alert(successData.message || 'Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail');
+        const savedUserId = localStorage.getItem('userId');
+        if (savedUserId) {
+          fetchHorariosDisponiveis(savedUserId, data); // Atualiza os horários do colaborador
+        } else if (colaborador) {
+          fetchHorariosDisponiveis(colaborador, data); // Caso o colaborador tenha sido selecionado
+        }
       } else {
         const errorData = await response.json();
         alert(errorData.message || 'Erro ao agendar a sessão.');
@@ -196,6 +242,8 @@ function CriarAgendamento() {
     }
     setLoading(false);
   };
+  
+
 
 
 
@@ -209,36 +257,41 @@ function CriarAgendamento() {
   const handleDateChange = (value) => {
     const dataEscolhida = value.toISOString().split('T')[0];
     setData(dataEscolhida);
-    if (colaborador) {
-      fetchHorariosDisponiveis(colaborador, dataEscolhida);
+
+    // Se for um colaborador logado, buscar os horários disponíveis para a data escolhida
+    if (role === 'colaborador') {
+      const savedUserId = localStorage.getItem('userId'); // Obtém o ID do colaborador logado
+      if (savedUserId) {
+        fetchHorariosDisponiveis(savedUserId, dataEscolhida); // Passa o ID do colaborador logado
+      }
+    } else if (colaborador) {
+      fetchHorariosDisponiveis(colaborador, dataEscolhida); // Caso o colaborador seja selecionado
     }
   };
+
+  // UseEffect to fetch horariosDisponiveis when either colaborador or data changes
+  useEffect(() => {
+    if (colaborador && data) {
+      fetchHorariosDisponiveis(colaborador, data); // Atualiza os horários disponíveis
+    }
+  }, [colaborador, data]);
   const fetchDiasPermitidos = async (colaboradorId) => {
     if (!colaboradorId) {
-      console.error('Colaborador não definido');
-      return; // Prevent the API call if colaborador is not defined
+      console.error('Colaborador não definido. Abortando chamada à API.');
+      return;
     }
-  
     try {
       const response = await fetch(`http://localhost:5000/agendamentos/dias-permitidos/${colaboradorId}`);
       if (response.ok) {
         const data = await response.json();
         setDiasPermitidos(data.dias_permitidos);
       } else {
-        console.error('Erro ao buscar dias permitidos');
+        console.error('Erro ao buscar dias permitidos:', response.status);
       }
     } catch (error) {
       console.error('Erro ao buscar dias permitidos:', error);
     }
   };
-  
-  // Chamada da função no useEffect
-  useEffect(() => {
-    if (colaborador) {
-      fetchDiasPermitidos(colaborador);
-    }
-  }, [colaborador]);
-  
 
 
   useEffect(() => {
@@ -246,13 +299,11 @@ function CriarAgendamento() {
 
     if (role === 'colaborador' && savedUserId) {
       fetchDiasPermitidos(savedUserId); // Use o userId salvo
+
     } else if (colaborador) {
       fetchDiasPermitidos(colaborador);
     }
   }, [role, colaborador]);
-
-
-
 
 
   return (
@@ -271,6 +322,37 @@ function CriarAgendamento() {
             <div className="card-body p-4">
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">
+                  {role === 'colaborador' && role !== 'admin' ? (
+                    <input
+                      type="hidden"
+                      id="clinica"
+                      value={localStorage.getItem('clinicaId')} // Assumindo que 'clinicaId' está armazenado no localStorage
+                      required
+                    />
+                  ) : (
+                    <>
+                      <label htmlFor="clinica" className="form-label">
+                        Clínica
+                      </label>
+                      <select
+                        id="clinica"
+                        className="form-select"
+                        value={clinica}
+                        onChange={handleClinicaChange} // Alterando a função para o novo manipulador
+                        required
+                      >
+                        <option value="">Selecione uma clínica</option>
+                        {clinicas.map((clin) => (
+                          <option key={clin.ID_Clinica} value={clin.ID_Clinica}>
+                            {clin.Nome}
+                          </option>
+                        ))}
+                      </select>
+                    </>
+                  )}
+                </div>
+
+                <div className="mb-3">
                   <label htmlFor="servico" className="form-label">Serviço</label>
                   <select
                     id="servico"
@@ -288,33 +370,35 @@ function CriarAgendamento() {
                   </select>
                 </div>
 
-                {tipoServico === "fisioterapia" && valorServico && (
+                {tipoServico === "fisioterapia" && valorServico > 0 && (
                   <div className="mb-3">
-                    <label htmlFor="valor" className="form-label ">Valor do Serviço</label>
-                    <div className=" flex-column  gap-2">
-                      <span className="fw-bold btn-plano  mb-2  align-items-center p-2 border btn-plano rounded">{`R$ ${valorServico}`}</span>
+                    <label htmlFor="valor" className="form-label">Valor do Serviço</label>
+                    <div className="flex-column gap-2">
+                      <span className="fw-bold btn-plano mb-2 align-items-center p-2 border btn-plano rounded">
+                        {`R$ ${valorServico}`}
+                      </span>
                     </div>
-
-
                   </div>
                 )}
+
 
                 {tipoServico === 'pilates' && (
                   <div className="mb-3">
                     <label className="form-label">Plano de Pilates</label>
-                    <div className="d-flex flex-column  gap-2">
+                    <div className="row">
                       {planos.map((plano) => (
-                        <div
-                          key={plano.ID_Plano}
-                          className={`d-flex justify-content-between align-items-center p-3 border btn-plano rounded ${planoSelecionado === plano.ID_Plano ? 'active' : ''}`}
-                          onClick={() => setPlanoSelecionado(plano.ID_Plano)}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          <div className="flex-grow-1">
-                            <strong>{plano.Nome_plano}</strong>
-                          </div>
-                          <div className="text-end">
-                            <span className="fw-bold  ">R$ {plano.Valor}</span>
+                        <div key={plano.ID_Plano} className="col-md-6 mb-6">
+                          <div
+                            className={`d-flex justify-content-between align-items-center p-3 border btn-plano rounded ${planoSelecionado === plano.ID_Plano ? 'active' : ''}`}
+                            onClick={() => setPlanoSelecionado(plano.ID_Plano)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <div className="flex-grow-1">
+                              <strong>{plano.Nome_plano}</strong>
+                            </div>
+                            <div className="text-end">
+                              <span className="fw-bold">R$ {plano.Valor}</span>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -322,31 +406,39 @@ function CriarAgendamento() {
                   </div>
                 )}
 
+
                 {/* Collaborator Selection */}
                 <div className="mb-3">
                   {role !== 'colaborador' && ( // Exibe a label apenas se o usuário não for colaborador
                     <label htmlFor="colaborador" className="form-label">Colaborador</label>
                   )}
-                  <select
-                    id="colaborador"
-                    className="form-select"
-                    value={colaborador}
-                    onChange={(e) => setColaborador(e.target.value)}
-                    required
 
-                    hidden={role === 'colaborador' && role !== 'admin'} // Esconde para colaboradores não administradores
-                  >
-                    <option value="">Selecione um colaborador</option>
-                    {colaboradores.map((colab) => (
-                      <option key={colab.ID_Colaborador} value={colab.ID_Colaborador}>
-                        {colab.Nome}
-                      </option>
-                    ))}
-                  </select>
+                  {role === 'colaborador' && role !== 'admin' ? (
+                    <input
+                      type="hidden"
+                      id="colaborador"
+                      value={localStorage.getItem('userId')}
+                      required
+                    />
+                  ) : (
+                    <select
+                      id="colaborador"
+                      className="form-select"
+                      value={colaborador}
+                      onChange={(e) => setColaborador(e.target.value)}
+                      required
+                    >
+                      <option value="">Selecione um colaborador</option>
+                      {colaboradores.map((colab) => (
+                        <option key={colab.id_colaborador} value={colab.id_colaborador}>
+                          {colab.nome}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+
+
                 </div>
-
-
-
                 <div className="row ">
                   {/* Calendário */}
                   <div className="col-md-8 mb-3">
@@ -361,21 +453,28 @@ function CriarAgendamento() {
                   {/* Horário */}
                   <div className="col-md-4 mb-3">
                     <label htmlFor="hora" className="form-label">Horário</label>
-                    <select
-                      id="hora"
-                      className="form-select"
-                      value={hora}
-                      onChange={(e) => setHora(e.target.value)}
-                      required
-                    >
-                      <option value="">Escolha o horário</option>
-                      {Array.isArray(horariosDisponiveis) && horariosDisponiveis.map((horario, index) => (
-                        <option key={index} value={horario}>
-                          {horario}
-                        </option>
-                      ))}
-                    </select>
+                    {Array.isArray(horariosDisponiveis) && horariosDisponiveis.length > 0 ? (
+                      <select
+                        id="hora"
+                        className="form-select"
+                        value={hora}
+                        onChange={(e) => setHora(e.target.value)}
+                        required
+                      >
+                        <option value="">Escolha o horário</option>
+                        {horariosDisponiveis.map((horario, index) => (
+                          <option key={index} value={horario}>
+                            {horario}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="alert alert-warning" role="alert">
+                        Nenhum horário disponível!
+                      </div>
+                    )}
                   </div>
+
                 </div>
 
                 <div className="mb-3">
@@ -423,7 +522,7 @@ function CriarAgendamento() {
           </div>
         </div>
 
-        <div className="col-md-6   ">
+        <div className="col-md-6  ">
           <div className="row  justify-content-start ">
 
             <div className="col-md-1 d-flex flex-column flex-md-column flex-sm-row ">
@@ -449,26 +548,17 @@ function CriarAgendamento() {
               <img
                 src="/images/smart.gif"
                 alt="Smart"
-                className="img-fluid"  // Adicionando a classe img-fluid para responsividade
+                className="img-fluid" 
               />
             </div>
 
           </div>
           < br />
           < br />
-
-
-
-
         </div>
-
-
         <div>
-
         </div>
-
       </div>
-
     </div>
   );
 }

@@ -9,9 +9,21 @@ const AddColaboradoresServicos = ({ servicoId, onSave, onClose }) => {
   useEffect(() => {
     const fetchColaboradores = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/colaboradores/colaboradoresdisponiveis?servico_id=${servicoId}`);
+        const token = localStorage.getItem("token");
+  
+        if (!token) {
+          setErro("Usuário não autenticado. Por favor, faça login novamente.");
+          return;
+        }
+  
+        const response = await fetch(`http://localhost:5000/colaboradores/colaboradoresdisponiveis?servico_id=${servicoId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+  
         const data = await response.json();
-
+  
         if (response.ok) {
           setColaboradoresDisponiveis(data.disponiveis);
           setColaboradoresServico(data.alocados);
@@ -22,27 +34,29 @@ const AddColaboradoresServicos = ({ servicoId, onSave, onClose }) => {
         setErro(err.message);
       }
     };
-
+  
     if (servicoId) fetchColaboradores();
   }, [servicoId]);
+  
+  
 
   const adicionarColaborador = (colaboradorId) => {
     setColaboradoresDisponiveis((prev) =>
-      prev.filter((colaborador) => colaborador.ID_Colaborador !== colaboradorId)
+      prev.filter((colaborador) => colaborador.id_colaborador !== colaboradorId)
     );
     setColaboradoresServico((prev) => [
       ...prev,
-      colaboradoresDisponiveis.find((colaborador) => colaborador.ID_Colaborador === colaboradorId)
+      colaboradoresDisponiveis.find((colaborador) => colaborador.id_colaborador === colaboradorId)
     ]);
   };
 
   const removerColaborador = (colaboradorId) => {
     setColaboradoresDisponiveis((prev) => [
       ...prev,
-      colaboradoresServico.find((colaborador) => colaborador.ID_Colaborador === colaboradorId)
+      colaboradoresServico.find((colaborador) => colaborador.id_colaborador === colaboradorId)
     ]);
     setColaboradoresServico((prev) =>
-      prev.filter((colaborador) => colaborador.ID_Colaborador !== colaboradorId)
+      prev.filter((colaborador) => colaborador.id_colaborador !== colaboradorId)
     );
   };
 
@@ -54,12 +68,12 @@ const AddColaboradoresServicos = ({ servicoId, onSave, onClose }) => {
 
     try {
       const adicionarIds = colaboradoresServico
-        .filter((colaborador) => !colaboradoresDisponiveis.find((item) => item.ID_Colaborador === colaborador.ID_Colaborador))
-        .map((colaborador) => colaborador.ID_Colaborador);
+        .filter((colaborador) => !colaboradoresDisponiveis.find((item) => item.id_colaborador === colaborador.id_colaborador))
+        .map((colaborador) => colaborador.id_colaborador);
 
       const removerIds = colaboradoresDisponiveis
-        .filter((colaborador) => !colaboradoresServico.find((item) => item.ID_Colaborador === colaborador.ID_Colaborador))
-        .map((colaborador) => colaborador.ID_Colaborador);
+        .filter((colaborador) => !colaboradoresServico.find((item) => item.id_colaborador === colaborador.id_colaborador))
+        .map((colaborador) => colaborador.id_colaborador);
 
       if (adicionarIds.length > 0) {
         const responseAdicionar = await fetch("http://localhost:5000/servicos/adicionar_colaboradores", {
@@ -115,9 +129,9 @@ const AddColaboradoresServicos = ({ servicoId, onSave, onClose }) => {
                 <h5>Colaboradores Disponíveis</h5>
                 <ul className="list-group">
                   {colaboradoresDisponiveis.map((colaborador) => (
-                    <li key={colaborador.ID_Colaborador} className="list-group-item d-flex justify-content-between align-items-center">
-                      {colaborador.Nome}
-                      <button className="btn btn-success" onClick={() => adicionarColaborador(colaborador.ID_Colaborador)}>
+                    <li key={colaborador.id_colaborador} className="list-group-item d-flex justify-content-between align-items-center">
+                      {colaborador.nome}
+                      <button className="btn btn-success" onClick={() => adicionarColaborador(colaborador.id_colaborador)}>
                         <FaUserPlus />
                       </button>
                     </li>
@@ -130,9 +144,9 @@ const AddColaboradoresServicos = ({ servicoId, onSave, onClose }) => {
                 <h5>Colaboradores do Serviço</h5>
                 <ul className="list-group">
                   {colaboradoresServico.map((colaborador) => (
-                    <li key={colaborador.ID_Colaborador} className="list-group-item d-flex justify-content-between align-items-center">
-                      {colaborador.Nome}
-                      <button className="btn btn-danger" onClick={() => removerColaborador(colaborador.ID_Colaborador)}>
+                    <li key={colaborador.id_colaborador} className="list-group-item d-flex justify-content-between align-items-center">
+                      {colaborador.nome}
+                      <button className="btn btn-danger" onClick={() => removerColaborador(colaborador.id_colaborador)}>
                         <FaUserMinus />
                       </button>
                     </li>

@@ -1,65 +1,37 @@
 import React, { useState, useEffect } from "react";
-import AddColaboradoresServicos from "./AddColaboradoresServicos";
 
 const EditarServicoModal = ({ servico, onSave, onClose }) => {
   const [formData, setFormData] = useState({
-    Nome_servico: "",
-    Descricao: "",
-    Valor: "",
-    Tipo: "",
-    Planos: [],
-    Colaboradores: [],
+    Nome_servico: servico?.Nome_servico || "",
+    Descricao: servico?.Descricao || "",
+    Valor: servico?.Valor || "",
+    Tipo: servico?.Tipo || "", // Certifique-se de usar servico.Tipo corretamente
+    Planos: servico?.Planos || [],
+    Colaboradores: servico?.Colaboradores || [],
   });
-  const [colaboradoresDisponiveis, setColaboradoresDisponiveis] = useState([]);
-  const [colaboradoresServico, setColaboradoresServico] = useState([]);
+
   const [erro, setErro] = useState("");
   const [novoPlano, setNovoPlano] = useState({ nome: "", valor: "" });
 
   useEffect(() => {
     if (servico) {
       setFormData({
-        Nome_servico: servico.Nome_servico || "",
-        Descricao: servico.Descricao || "",
-        Valor: servico.Valor || "",
-        Tipo: servico.Tipo || "",
+        Nome_servico: servico.Nome_servico,
+        Descricao: servico.Descricao,
+        Valor: servico.Valor,
+        Tipo: servico.Tipo,
         Planos: servico.Planos || [],
         Colaboradores: servico.Colaboradores || [],
       });
-
-      const fetchColaboradores = async () => {
-        try {
-          const response = await fetch(
-            `http://localhost:5000/colaboradores/colaboradoresdisponiveis?servico_id=${servico.ID_Servico}`
-          );
-          const data = await response.json();
-          if (response.ok) {
-            setColaboradoresDisponiveis(data.disponiveis);
-            setColaboradoresServico(data.alocados);
-          } else {
-            throw new Error(data.message || "Erro ao buscar colaboradores.");
-          }
-        } catch (err) {
-          setErro(err.message);
-        }
-      };
-
-      fetchColaboradores();
     }
   }, [servico]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const toggleColaborador = (colaborador) => {
-    setFormData((prev) => {
-      const isSelected = prev.Colaboradores.includes(colaborador.ID_Colaborador);
-      const updatedColaboradores = isSelected
-        ? prev.Colaboradores.filter((id) => id !== colaborador.ID_Colaborador)
-        : [...prev.Colaboradores, colaborador.ID_Colaborador];
-      return { ...prev, Colaboradores: updatedColaboradores };
-    });
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleTipoServicoChange = (e) => {
@@ -67,52 +39,49 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
     setFormData((prev) => ({
       ...prev,
       Tipo: value,
-      Planos: value === "pilates" ? prev.Planos : [], // Limpa os planos apenas se o tipo não for Pilates
+      Planos: value === "pilates" ? prev.Planos : [],
     }));
   };
-  
 
   const adicionarPlano = () => {
-    // Determina o próximo ID com base no maior ID existente
-    const novoID = formData.Planos.length > 0
-      ? Math.max(...formData.Planos.map((plano) => plano.ID_Plano)) + 1
-      : 1;
-  
-    // Adiciona o novo plano com o ID gerado
+    const novoID = formData.Planos.length > 0 ? Math.max(...formData.Planos.map((plano) => plano.ID_Plano)) + 1 : 1;
+
+    const novoPlanoComServico = {
+      ID_Plano: novoID,
+      Nome_plano: novoPlano.nome,
+      Valor: parseFloat(novoPlano.valor),
+      Servico_ID: servico.ID_Servico,
+    };
+
     setFormData((prev) => ({
       ...prev,
-      Planos: [
-        ...prev.Planos,
-        { ID_Plano: novoID, Nome_plano: novoPlano.nome, Valor: parseFloat(novoPlano.valor) },
-      ],
+      Planos: [...prev.Planos, novoPlanoComServico],
     }));
-    
-    // Reseta os campos do novo plano
+
     setNovoPlano({ nome: "", valor: "" });
   };
-  
 
   const handleSave = async () => {
-    // Valida o campo Valor antes de enviar
     const valorValido =
       formData.Valor && !isNaN(parseFloat(formData.Valor))
         ? parseFloat(formData.Valor)
         : null;
-  
+
     const dataToSend = {
       ...formData,
-      Valor: valorValido, // Garante que seja um número ou null
+      Valor: valorValido,
+      Tipo: formData.Tipo,
+      Planos: formData.Tipo === "pilates" ? formData.Planos : undefined,
     };
-  
-    // Remove o campo Planos se o tipo for fisioterapia
+
     if (formData.Tipo === "fisioterapia") {
       delete dataToSend.Planos;
     }
-  
+
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:5000/servicos/editar_servico/${formData.Tipo}/${servico.ID_Servico}`,
+        `http://localhost:5000/servicos/editar_servico/${servico.ID_Servico}`,
         {
           method: "PUT",
           headers: {
@@ -122,8 +91,8 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
           body: JSON.stringify(dataToSend),
         }
       );
-  
       const data = await response.json();
+
       if (response.ok) {
         onSave(data);
       } else {
@@ -133,8 +102,6 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
       setErro(err.message);
     }
   };
-  
-  
 
   return (
     <div
@@ -151,7 +118,6 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
           </div>
           <div className="modal-body">
             {erro && <div className="alert alert-danger">{erro}</div>}
-
             <div className="row mb-3">
               <div className="col-6">
                 <label className="form-label">Nome do Serviço:</label>
@@ -169,21 +135,19 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
                   type="number"
                   name="Valor"
                   className="form-control"
-                  value={formData.Tipo === "pilates" ? "" : formData.Valor} // Limpa o campo se for Pilates
+                  value={formData.Tipo === "pilates" ? "" : formData.Valor}
                   onChange={(e) => {
                     if (formData.Tipo === "pilates") {
-                      setFormData((prev) => ({ ...prev, Valor: null })); // Define como null para Pilates
+                      setFormData((prev) => ({ ...prev, Valor: null }));
                     } else {
                       const valor = e.target.value ? parseFloat(e.target.value) : "";
                       setFormData((prev) => ({ ...prev, Valor: valor }));
                     }
                   }}
-                  disabled={formData.Tipo !== "fisioterapia"}
+                  disabled={formData.Tipo === "pilates"}
                 />
               </div>
-
             </div>
-
             <div className="mb-3">
               <label className="form-label">Descrição:</label>
               <textarea
@@ -193,10 +157,14 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
                 onChange={handleChange}
               />
             </div>
-
             <div className="mb-3">
               <label className="form-label">Tipo de Serviço:</label>
-              <select name="Tipo" className="form-select" value={formData.Tipo} onChange={handleTipoServicoChange}>
+              <select
+                name="Tipo"
+                className="form-select"
+                value={formData.Tipo}
+                onChange={handleTipoServicoChange}
+              >
                 <option value="fisioterapia">Fisioterapia</option>
                 <option value="pilates">Pilates</option>
               </select>
@@ -211,7 +179,9 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
                       type="text"
                       placeholder="Nome do Plano"
                       value={novoPlano.nome}
-                      onChange={(e) => setNovoPlano({ ...novoPlano, nome: e.target.value })}
+                      onChange={(e) =>
+                        setNovoPlano({ ...novoPlano, nome: e.target.value })
+                      }
                       className="form-control mb-2"
                     />
                   </div>
@@ -221,42 +191,55 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
                       type="number"
                       placeholder="Valor do Plano"
                       value={novoPlano.valor}
-                      onChange={(e) => setNovoPlano({ ...novoPlano, valor: e.target.value })}
+                      onChange={(e) =>
+                        setNovoPlano({ ...novoPlano, valor: e.target.value })
+                      }
                       className="form-control mb-2"
                     />
                   </div>
                 </div>
-                <button type="button" onClick={adicionarPlano} className="btn btn-primary mb-3">
-                  Adicionar Plano
-                </button>
+                <div className="d-flex justify-content-center">
+                  <button
+                    type="button"
+                    onClick={adicionarPlano}
+                    className="btn btn-signup mb-3"
+                  >
+                    Adicionar Plano
+                  </button>
+                </div>
                 {formData.Planos.length > 0 && (
-                  <div>
+                  <div className="mb-3">
                     <h5>Planos Adicionados:</h5>
-                    <ul className="list-unstyled">
+                    <div className="row">
                       {formData.Planos.map((plano, index) => (
-                        <li key={index}>
-                          {plano.Nome_plano} - R${plano.Valor.toFixed(2)}{" "}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                Planos: prev.Planos.filter((_, i) => i !== index),
-                              }))
-                            }
-                            className="btn btn-danger btn-sm ms-2"
-                          >
-                            <i className="bi bi-trash"></i>
-                          </button>
-                        </li>
+                        <div key={index} className="col-md-4 mb-4">
+                          <div className="d-flex justify-content-between align-items-center p-3 border btn-plano rounded">
+                            <div className="flex-grow-1">
+                              <strong>{plano.Nome_plano}</strong>
+                            </div>
+                            <div className="text-end">
+                              <span className="fw-bold">R$ {plano.Valor}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  Planos: prev.Planos.filter((_, i) => i !== index),
+                                }))
+                              }
+                              className="btn btn-danger btn-sm ms-2"
+                            >
+                              <i className="bi bi-trash"></i>
+                            </button>
+                          </div>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 )}
               </>
             )}
-            
-
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-secondary" onClick={onClose}>

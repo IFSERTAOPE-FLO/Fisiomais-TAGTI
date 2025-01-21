@@ -1,265 +1,324 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
-import '../css/Estilos.css';
-import { Link } from "react-router-dom";
+import { Form, Button, Col, Row, Spinner } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 
-function AddCliente() {
-  const [nome, setNome] = useState('');
-  const [email, setEmail] = useState('');
-  const [confirmarEmail, setConfirmarEmail] = useState('');
-  const [senha, setSenha] = useState('');
-  const [confirmarSenha, setConfirmarSenha] = useState('');
-  const [cpf, setCpf] = useState('');
-  const [telefone, setTelefone] = useState('');
-  const [referencias, setReferencias] = useState('');
-  const [endereco, setEndereco] = useState('');
-  const [rua, setRua] = useState('');
-  const [estado, setEstado] = useState('');
-  const [cidade, setCidade] = useState('');
-  const [bairro, setBairro] = useState('');
-  const [dtNasc, setDtNasc] = useState('');
+const AddCliente = () => {
+  const [formData, setFormData] = useState({
+    nome: '',
+    email: '',
+    cpf: '',
+    senha: '',
+    telefone: '',
+    referencias: '',
+    dt_nasc: '',
+    rua: '',
+    numero: '',
+    complemento: '',
+    bairro: '',
+    cidade: '',
+    estado: '',
+    sexo: '',
+  });
+
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [modalMessage, setModalMessage] = useState('');
+  const [estados, setEstados] = useState([]);
+  const [cidades, setCidades] = useState([]);
 
-  const handleRegister = async () => {
-    if (!nome || !email || !senha || !cpf) {
-      alert('Por favor, preencha os campos obrigatórios.');
-      return;
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  useEffect(() => {
+    const fetchEstados = async () => {
+      try {
+        const response = await axios.get('https://servicodados.ibge.gov.br/api/v1/localidades/estados');
+        setEstados(response.data.map((estado) => ({ sigla: estado.sigla, nome: estado.nome })));
+      } catch (error) {
+        console.error('Erro ao buscar estados:', error);
+      }
+    };
+
+    fetchEstados();
+  }, []);
+
+  useEffect(() => {
+    if (formData.estado) {
+      const fetchCidades = async () => {
+        try {
+          const response = await axios.get(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${formData.estado}/municipios`);
+          setCidades(response.data.map((cidade) => cidade.nome).sort());
+        } catch (error) {
+          console.error('Erro ao buscar cidades:', error);
+        }
+      };
+
+      fetchCidades();
     }
+  }, [formData.estado]);
 
-    if (email !== confirmarEmail) {
-      alert('Os emails não correspondem.');
-      return;
-    }
 
-    if (senha !== confirmarSenha) {
-      alert('As senhas não correspondem.');
-      return;
-    }
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setLoading(true);
-    setErrorMessage('');
+    setModalMessage('');
+    
 
     try {
-      const response = await axios.post("http://localhost:5000/register", {
-        nome,
-        email,
-        cpf, // CPF sendo enviado aqui
-        senha,
-        telefone,
-        referencias,
-        endereco,
-        rua,
-        estado,
-        cidade,
-        bairro,
-        dt_nasc: dtNasc,
+      const token = localStorage.getItem("token");
+      const response = await axios.post('http://localhost:5000/clientes/register', formData, {
+        headers: {          
+          Authorization: `Bearer ${token}`,
+      },
       });
-
-      if (response.status === 201) {
-        alert("Cliente adicionado com sucesso!");
-        // Resetar os campos
-        setNome('');
-        setEmail('');
-        setConfirmarEmail('');
-        setCpf(''); // Resetar o CPF
-        setSenha('');
-        setConfirmarSenha('');
-        setTelefone('');
-        setReferencias('');
-        setEndereco('');
-        setRua('');
-        setEstado('');
-        setCidade('');
-        setBairro('');
-        setDtNasc('');
-      }
-    } catch (error) {
-      console.error("Erro na inscrição:", error);
-      const message = error.response?.data?.message || "Erro ao fazer inscrição. Verifique os dados fornecidos.";
-      setErrorMessage(message);
-    } finally {
       setLoading(false);
+      setModalMessage(response.data.message);
+      
+    } catch (error) {
+      setLoading(false);
+      setModalMessage(error.response?.data?.message || 'Erro ao cadastrar cliente.');
+      
     }
   };
 
   return (
     <div className="container col-md-9 my-5">
-      {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
-      <div className="card shadow ">
-        <div className="card-header ">
+      {modalMessage && <div className="alert alert-info">{modalMessage}</div>}
+      <div className="card shadow">
+        <div className="card-header">
           <h2 className="text-center text-primary">Adicionar Cliente</h2>
         </div>
         <div className="card-body">
-          <form onSubmit={(e) => { e.preventDefault(); handleRegister(); }}>
-            {/* Nome e Email */}
-            <div className="row mb-2">
-              <div className="col-12 col-md-4">
-                <label htmlFor="nome" className="form-label">Nome*</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="nome"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="col-12 col-md-2">
-                <label htmlFor="cpf" className="form-label">CPF*</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="cpf"
-                  value={cpf}
-                  onChange={(e) => setCpf(e.target.value)}
-                  placeholder="123.456.789-00"
-                  required
-                />
-              </div>
-              <div className="col-12 col-md-3">
-                <label htmlFor="email" className="form-label">Email*</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="col-12 col-md-3">
-                <label htmlFor="confirmarEmail" className="form-label">Confirme seu Email*</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  id="confirmarEmail"
-                  value={confirmarEmail}
-                  onChange={(e) => setConfirmarEmail(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
+          <Form onSubmit={handleSubmit}>
+            <Row>
+              <Col md={6}>
+                <Form.Group controlId="nome">
+                  <Form.Label>Nome</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="nome"
+                    value={formData.nome}
+                    onChange={handleChange}
+                    required
+                  />
+                </Form.Group>
+              </Col>
 
-            {/* Senha e Confirmação */}
-            <div className="row mb-3">
-              <div className="col-12 col-md-2">
-                <label htmlFor="senha" className="form-label">Senha*</label>
-                <input
-                  type="password"
-                  className="form-control"
-                  id="senha"
-                  value={senha}
-                  onChange={(e) => setSenha(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="col-12 col-md-2">
-                <label htmlFor="confirmarSenha" className="form-label">Confirme sua Senha*</label>
-                <input
-                  type="password"
-                  className="form-control"
-                  id="confirmarSenha"
-                  value={confirmarSenha}
-                  onChange={(e) => setConfirmarSenha(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="col-12 col-md-2">
-                <label htmlFor="dtNasc" className="form-label">Data de Nascimento</label>
-                <input
-                  type="date"
-                  className="form-control"
-                  id="dtNasc"
-                  value={dtNasc}
-                  onChange={(e) => setDtNasc(e.target.value)}
-                />
-              </div>
-              <div className="col-12 col-md-2">
-                <label htmlFor="telefone" className="form-label">Telefone</label>
-                <input
-                  type="tel"
-                  className="form-control"
-                  id="telefone"
-                  value={telefone}
-                  onChange={(e) => setTelefone(e.target.value)}
-                />
-              </div>
-              <div className="col-12 col-md-3">
-                <label htmlFor="cidade" className="form-label">Cidade</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="cidade"
-                  value={cidade}
-                  onChange={(e) => setCidade(e.target.value)}
-                />
-              </div>
-              <div className="col-12 col-md-1">
-                <label htmlFor="estado" className="form-label">Estado</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="estado"
-                  value={estado}
-                  onChange={(e) => setEstado(e.target.value)}
-                />
-              </div>
-            </div>
+              <Col md={6}>
+                <Form.Group controlId="email">
+                  <Form.Label>Email</Form.Label>
+                  <Form.Control
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
 
-            <div className="row mb-2">
-              <div className="col-12 col-md-5">
-                <label htmlFor="endereco" className="form-label">Endereço</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="endereco"
-                  value={endereco}
-                  onChange={(e) => setEndereco(e.target.value)}
-                />
-              </div>
-              <div className="col-12 col-md-3">
-                <label htmlFor="bairro" className="form-label">Bairro</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="bairro"
-                  value={bairro}
-                  onChange={(e) => setBairro(e.target.value)}
-                />
-              </div>
-              <div className="col-12 col-md-4">
-                <label htmlFor="referencias" className="form-label">Referências</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="referencias"
-                  value={referencias}
-                  onChange={(e) => setReferencias(e.target.value)}
-                />
-              </div>
-            </div>
+            <Row>
+              <Col md={6}>
+                <Form.Group controlId="cpf">
+                  <Form.Label>CPF</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="cpf"
+                    value={formData.cpf}
+                    onChange={handleChange}
+                    required
+                  />
+                </Form.Group>
+              </Col>
 
-            <div className="col-12 text-center">
-              <button type="submit" className="btn btn-login w-auto mx-auto" disabled={loading}>
-                <i className="bi bi-person-plus me-1"></i>
-                {loading ? "Carregando..." : "Cadastrar"}
-              </button>
-              <Link className="btn btn-signup w-auto  mx-auto ms-2" to="/adminpage" disabled={loading}>
-                <i class="bi bi-arrow-return-left me-2"></i>
-                {loading ? "Carregando..." : "Voltar"}
+              <Col md={6}>
+                <Form.Group controlId="senha">
+                  <Form.Label>Senha</Form.Label>
+                  <Form.Control
+                    type="password"
+                    name="senha"
+                    value={formData.senha}
+                    onChange={handleChange}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group controlId="telefone">
+                  <Form.Label>Telefone</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="telefone"
+                    value={formData.telefone}
+                    onChange={handleChange}
+                  />
+                </Form.Group>
+              </Col>
+
+              <Col md={6}>
+                <Form.Group controlId="referencias">
+                  <Form.Label>Referências</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="referencias"
+                    value={formData.referencias}
+                    onChange={handleChange}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group controlId="dt_nasc">
+                  <Form.Label>Data de Nascimento</Form.Label>
+                  <Form.Control
+                    type="date"
+                    name="dt_nasc"
+                    value={formData.dt_nasc}
+                    onChange={handleChange}
+                  />
+                </Form.Group>
+              </Col>
+
+              <Col md={6}>
+                <Form.Group controlId="sexo">
+                  <Form.Label>Sexo</Form.Label>
+                  <Form.Control
+                    as="select"
+                    name="sexo"
+                    value={formData.sexo}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Selecione</option>
+                    <option value="M">Masculino</option>
+                    <option value="F">Feminino</option>
+                    <option value="O">Outro</option>
+                  </Form.Control>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group controlId="rua">
+                  <Form.Label>Rua</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="rua"
+                    value={formData.rua}
+                    onChange={handleChange}
+                  />
+                </Form.Group>
+              </Col>
+
+              <Col md={6}>
+                <Form.Group controlId="numero">
+                  <Form.Label>Número</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="numero"
+                    value={formData.numero}
+                    onChange={handleChange}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group controlId="complemento">
+                  <Form.Label>Complemento</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="complemento"
+                    value={formData.complemento}
+                    onChange={handleChange}
+                  />
+                </Form.Group>
+              </Col>
+
+              <Col md={6}>
+                <Form.Group controlId="bairro">
+                  <Form.Label>Bairro</Form.Label>
+                  <Form.Control
+                    type="text"
+                    name="bairro"
+                    value={formData.bairro}
+                    onChange={handleChange}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group controlId="cidade">
+                  <Form.Label>Cidade</Form.Label>
+                  <Form.Control
+                    as="select"
+                    name="cidade"
+                    value={formData.cidade}
+                    onChange={handleChange}
+                    disabled={!formData.estado}
+                  >
+                    <option value="">Selecione</option>
+                    {cidades.map((cidade, index) => (
+                      <option key={index} value={cidade}>
+                        {cidade}
+                      </option>
+                    ))}
+                  </Form.Control>
+                </Form.Group>
+              </Col>
+
+              <Col md={6}>
+                <Form.Group controlId="estado">
+                  <Form.Label>Estado</Form.Label>
+                  <Form.Control
+                    as="select"
+                    name="estado"
+                    value={formData.estado}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Selecione</option>
+                    {estados.map((estado) => (
+                      <option key={estado.sigla} value={estado.sigla}>
+                        {estado.nome}
+                      </option>
+                    ))}
+                  </Form.Control>
+                </Form.Group>
+              </Col>
+            </Row>
+            <div className="d-flex justify-content-end mt-3">
+            <Button className='btn btn-login' type="submit" disabled={loading}>
+              {loading ? <Spinner animation="border" size="sm" /> : 'Cadastrar'}
+            </Button>
+
+            
+              <Link className="btn btn-signup" to="/adminpage">
+                <i className="bi bi-arrow-return-left me-2"></i> Voltar
               </Link>
-
             </div>
-          </form>
+          </Form>
+
+         
         </div>
       </div>
     </div>
   );
-
-
-}
+};
 
 export default AddCliente;
