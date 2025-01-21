@@ -112,6 +112,14 @@ const GerenciarUsuarios = () => {
         setUsuarioEditando(null);
         setHorariosEditando(null);  // Fechar modal
     };
+    const handleSaveHorarios = () => {
+        buscarUsuarios(); // Atualiza a lista de usuários/horários
+        // Não feche o modal automaticamente
+    };
+    const handleCloseHorariosModal = () => {
+        setHorariosEditando(null); // Fecha o modal de horários
+    };
+    
     // Função para ordenar os usuários
     const handleSort = (key) => {
         let direction = "ascending";
@@ -336,9 +344,9 @@ const GerenciarUsuarios = () => {
             {horariosEditando && (
                 <EditarHorarios
                     colaboradorId={horariosEditando.id}  // Passando o ID para o modal
-                    colaboradorNome={horariosEditando.nome} // Passando o nome para o modal
-                    onClose={handleCloseModal}
-                    onSave={handleSave}
+                    colaboradorNome={horariosEditando.nome} // Passando o nome para o modal                    
+                    onClose={handleCloseHorariosModal}
+                    onSave={handleSaveHorarios} // Salvar sem fecha
                 />
             )}
 

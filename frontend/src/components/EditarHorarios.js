@@ -47,24 +47,23 @@ const EditarHorarios = ({ colaboradorId, colaboradorNome, onClose, onSave }) => 
 
   const handleSave = async () => {
     const { dia_semana, hora_inicio, hora_fim } = novoHorario;
-
+  
     if (!dia_semana || !hora_inicio || !hora_fim) {
       alert("Todos os campos devem ser preenchidos.");
       return;
     }
-
-    // Verificar duplicidade de horários
+  
     const horarioExistente = horarios.find(horario =>
       horario.dia_semana === dia_semana &&
       horario.hora_inicio === hora_inicio &&
       horario.hora_fim === hora_fim
     );
-
+  
     if (horarioExistente) {
       alert("Este horário já está configurado.");
       return;
     }
-
+  
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:5000/colaboradores/horarios/configurar', {
@@ -78,15 +77,17 @@ const EditarHorarios = ({ colaboradorId, colaboradorNome, onClose, onSave }) => 
           horarios: [novoHorario]
         }),
       });
-
+  
       const data = await response.json();
       if (response.ok) {
         alert('Horário configurado com sucesso!');
-        listarHorarios(); // Atualiza a lista de horários        
-        onSave(); // Chama a função de sucesso do componente pai
-        window.location.reload();
-        onClose(); // Fecha o modal
-        
+        listarHorarios(); // Atualiza a lista de horários
+        setNovoHorario({ dia_semana: '', hora_inicio: '', hora_fim: '' }); // Limpa os campos
+  
+        // Apenas notifica o componente pai, sem fechar o modal automaticamente.
+        if (onSave) {
+          onSave(); 
+        }
       } else {
         alert(`Erro: ${data.message}`);
       }
@@ -94,6 +95,7 @@ const EditarHorarios = ({ colaboradorId, colaboradorNome, onClose, onSave }) => 
       alert('Erro ao configurar o horário');
     }
   };
+  
 
   return (
     <Modal show onHide={onClose}>

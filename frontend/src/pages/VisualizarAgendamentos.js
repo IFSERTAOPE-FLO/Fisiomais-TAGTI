@@ -301,7 +301,7 @@ const VisualizarAgendamentos = () => {
                           ? new Date(agendamento.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
                           : (
                             <>
-                               Aguardar confirmação
+                               Aguardar confirmação (pilates)
                             </>
                           )
                         }
