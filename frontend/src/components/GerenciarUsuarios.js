@@ -315,10 +315,6 @@ const GerenciarUsuarios = () => {
                                     </>
                                 )}
 
-
-
-
-
                             </tr>
                         ))}
                     </tbody>
