@@ -79,15 +79,26 @@ function CriarAgendamento() {
 
 
   const fetchFeriados = () => {
+    const year = new Date().getFullYear();
     setFeriados([
-      '2025-01-01',
-      '2024-04-21',
-      '2024-05-01',
-      '2024-09-07',
-      '2024-12-25',
-      '2024-25-12',
+      `${year}-01-01`, // Ano Novo
+      `${year}-03-01`, // Carnaval
+      `${year}-03-02`, // Carnaval
+      `${year}-03-03`, // Carnaval
+      `${year}-03-04`, // Quarta-feira de cinzas      
+      `${year}-03-30`, // Sexta-feira Santa
+      `${year}-04-21`, // Tiradentes
+      `${year}-05-01`, // Dia do Trabalhador
+      `${year}-06-19`, // Corpus Christi (data variável, pode ser necessário ajustar)
+      `${year}-09-07`, // Independência do Brasil
+      `${year}-10-12`, // Nossa Senhora Aparecida
+      `${year}-11-02`, // Finados
+      `${year}-11-15`, // Proclamação da República
+      `${year}-12-24` // Natal
+      `${year}-12-25` // Natal 
     ]);
   };
+  
 
   const fetchClinicas = async () => {
     try {
