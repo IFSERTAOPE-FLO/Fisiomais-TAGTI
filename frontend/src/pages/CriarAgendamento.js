@@ -1,46 +1,45 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import '../css/CriarAgendamento.css';
-import '../css/Estilos.css';
-import Calendar from 'react-calendar';
-import 'react-calendar/dist/Calendar.css';
+import React, { useState, useEffect, useCallback } from "react";
+import "../css/CriarAgendamento.css";
+import "../css/Estilos.css";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 
 function CriarAgendamento() {
-  const [data, setData] = useState('');
-  const [hora, setHora] = useState('');
-  const [servico, setServico] = useState('');
-  const [colaborador, setColaborador] = useState('');
-  const [cliente, setCliente] = useState('');
-  const [clinica, setClinica] = useState('');  // Estado para armazenar a clínica selecionada
+  const [data, setData] = useState("");
+  const [hora, setHora] = useState("");
+  const [servico, setServico] = useState("");
+  const [colaborador, setColaborador] = useState("");
+  const [cliente, setCliente] = useState("");
+  const [clinica, setClinica] = useState(""); // Estado para armazenar a clínica selecionada
   const [servicos, setServicos] = useState([]);
   const [colaboradores, setColaboradores] = useState([]);
   const [clientes, setClientes] = useState([]);
-  const [clinicas, setClinicas] = useState([]);  // Estado para armazenar as clínicas
-  const [role, setRole] = useState('');
+  const [clinicas, setClinicas] = useState([]); // Estado para armazenar as clínicas
+  const [role, setRole] = useState("");
   const [planos, setPlanos] = useState([]);
-  const [tipoServico, setTipoServico] = useState('');
+  const [tipoServico, setTipoServico] = useState("");
   const [valorServico, setValorServico] = useState(0);
   const [horariosDisponiveis, setHorariosDisponiveis] = useState([]);
-  const [planoSelecionado, setPlanoSelecionado] = useState('');
+  const [planoSelecionado, setPlanoSelecionado] = useState("");
   const [loading, setLoading] = useState(false);
   const [diasPermitidos, setDiasPermitidos] = useState([]);
   const [feriados, setFeriados] = useState([]);
 
   useEffect(() => {
-    const savedRole = localStorage.getItem('role');
+    const savedRole = localStorage.getItem("role");
     setRole(savedRole);
 
-    if (savedRole === 'cliente') {
-      const userId = localStorage.getItem('userId');
+    if (savedRole === "cliente") {
+      const userId = localStorage.getItem("userId");
       setCliente(userId);
     }
 
-    if (savedRole === 'colaborador') {
-      const userId = localStorage.getItem('userId');
+    if (savedRole === "colaborador") {
+      const userId = localStorage.getItem("userId");
       setColaborador(userId);
       if (userId) {
         fetchHorariosDisponiveis(userId, data);
         fetchDiasPermitidos(userId); // Chama a função de horários disponíveis com o ID do colaborador
-
       }
     }
     fetchClinicas();
@@ -49,34 +48,33 @@ function CriarAgendamento() {
     fetchFeriados();
   }, [data]);
 
-
   const fetchServicos = async () => {
     try {
-      const token = localStorage.getItem('token');  // Supondo que o token JWT esteja armazenado no localStorage
-      const response = await fetch('http://localhost:5000/servicos/listar_servicos', {
-        headers: {
-          'Authorization': `Bearer ${token}`  // Envia o token JWT no cabeçalho
+      const token = localStorage.getItem("token"); // Supondo que o token JWT esteja armazenado no localStorage
+      const response = await fetch(
+        "http://localhost:5000/servicos/listar_servicos",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Envia o token JWT no cabeçalho
+          },
         }
-      });
+      );
 
       if (response.ok) {
         const servicosData = await response.json();
         setServicos(servicosData);
       } else {
-        console.error('Erro ao buscar serviços: ', response.status);
+        console.error("Erro ao buscar serviços: ", response.status);
       }
     } catch (error) {
-      console.error('Erro ao buscar serviços:', error);
+      console.error("Erro ao buscar serviços:", error);
     }
   };
   const handleClinicaChange = (e) => {
     setClinica(e.target.value);
-    setColaborador(''); // Resetando o colaborador selecionado
+    setColaborador(""); // Resetando o colaborador selecionado
     setColaboradores([]); // Limpando a lista de colaboradores
   };
-
-
-
 
   const fetchFeriados = () => {
     const year = new Date().getFullYear();
@@ -85,7 +83,7 @@ function CriarAgendamento() {
       `${year}-03-01`, // Carnaval
       `${year}-03-02`, // Carnaval
       `${year}-03-03`, // Carnaval
-      `${year}-03-04`, // Quarta-feira de cinzas      
+      `${year}-03-04`, // Quarta-feira de cinzas
       `${year}-03-30`, // Sexta-feira Santa
       `${year}-04-21`, // Tiradentes
       `${year}-05-01`, // Dia do Trabalhador
@@ -94,27 +92,24 @@ function CriarAgendamento() {
       `${year}-10-12`, // Nossa Senhora Aparecida
       `${year}-11-02`, // Finados
       `${year}-11-15`, // Proclamação da República
-      `${year}-12-24` // Natal
-      `${year}-12-25` // Natal 
+      `${year}-12-24`, // Natal
+      `${year}-12-25`, // Natal
     ]);
   };
-  
 
   const fetchClinicas = async () => {
     try {
-      const response = await fetch('http://localhost:5000/clinicas');
+      const response = await fetch("http://localhost:5000/clinicas");
       if (response.ok) {
         setClinicas(await response.json());
       }
     } catch (error) {
-      console.error('Erro ao buscar clínicas:', error);
+      console.error("Erro ao buscar clínicas:", error);
     }
   };
 
-
   const fetchColaboradores = useCallback(async () => {
     if (!servico || !clinica) return;
-
 
     try {
       const response = await fetch(
@@ -125,7 +120,7 @@ function CriarAgendamento() {
         setColaboradores(colaboradoresData);
       }
     } catch (error) {
-      console.error('Erro ao buscar colaboradores:', error);
+      console.error("Erro ao buscar colaboradores:", error);
     }
   }, [servico, clinica]); // Apenas quando "servico" ou "clinica" mudarem
 
@@ -139,14 +134,16 @@ function CriarAgendamento() {
   useEffect(() => {
     if (servico) {
       fetchColaboradores();
-      const servicoSelecionado = servicos.find((s) => s.ID_Servico === parseInt(servico));
+      const servicoSelecionado = servicos.find(
+        (s) => s.ID_Servico === parseInt(servico)
+      );
       if (servicoSelecionado) {
-        if (servicoSelecionado.Tipos.includes('pilates')) {
-          setTipoServico('pilates');
+        if (servicoSelecionado.Tipos.includes("pilates")) {
+          setTipoServico("pilates");
           setPlanos(servicoSelecionado.Planos || []);
           setValorServico(0); // Valor 0, pois Pilates não tem valor fixo
-        } else if (servicoSelecionado.Tipos.includes('fisioterapia')) {
-          setTipoServico('fisioterapia');
+        } else if (servicoSelecionado.Tipos.includes("fisioterapia")) {
+          setTipoServico("fisioterapia");
           setValorServico(servicoSelecionado.Valor || 0);
           setPlanos([]); // Fisioterapia não tem planos
         }
@@ -157,11 +154,9 @@ function CriarAgendamento() {
   useEffect(() => {
     if (colaborador) {
       fetchHorariosDisponiveis(colaborador);
-
     }
-    setHora('');    
+    setHora("");
   }, [colaborador]);
-
 
   const fetchHorariosDisponiveis = async (colaboradorId, dataSelecionada) => {
     if (!colaboradorId || !dataSelecionada) return; // Garante que o ID do colaborador e a data sejam válidos
@@ -171,7 +166,7 @@ function CriarAgendamento() {
       );
       if (response.ok) {
         const horarios = await response.json();
-        console.log('Horários Disponíveis:', horarios); // Verifique o formato da resposta
+        console.log("Horários Disponíveis:", horarios); // Verifique o formato da resposta
         if (Array.isArray(horarios.horarios_disponiveis)) {
           setHorariosDisponiveis(horarios.horarios_disponiveis);
         } else {
@@ -179,66 +174,70 @@ function CriarAgendamento() {
         }
       }
     } catch (error) {
-      console.error('Erro ao buscar horários disponíveis:', error);
+      console.error("Erro ao buscar horários disponíveis:", error);
     }
   };
 
   const fetchClientes = async () => {
     try {
-      const response = await fetch('http://localhost:5000/clientes');
+      const response = await fetch("http://localhost:5000/clientes");
       if (response.ok) {
         setClientes(await response.json());
       }
     } catch (error) {
-      console.error('Erro ao buscar clientes:', error);
+      console.error("Erro ao buscar clientes:", error);
     }
   };
 
   const handleSubmit = async (e) => {
     setLoading(true);
     e.preventDefault();
-  
+
     if (!hora) {
-      alert('Por favor, selecione um horário válido.');
+      alert("Por favor, selecione um horário válido.");
       setLoading(false);
       return;
     }
-  
+
     // Verifica se o colaborador está definido
-    const colaboradorId = role === 'colaborador' ? localStorage.getItem('userId') : colaborador;
-  
-    const dataEscolhida = new Date(data + 'T' + hora + ':00'); // Combina data e hora
+    const colaboradorId =
+      role === "colaborador" ? localStorage.getItem("userId") : colaborador;
+
+    const dataEscolhida = new Date(data + "T" + hora + ":00"); // Combina data e hora
     const dataHoraISO = dataEscolhida.toISOString();
-  
+
     const agendamentoData = {
       servico_id: servico,
       colaborador_id: colaboradorId,
       data: dataHoraISO,
       cliente_id: cliente,
-      plano_id: tipoServico === 'pilates' ? planoSelecionado || null : null,
+      plano_id: tipoServico === "pilates" ? planoSelecionado || null : null,
     };
-  
-    const token = localStorage.getItem('token');
+
+    const token = localStorage.getItem("token");
     if (!token) {
-      alert('Por favor, faça login para agendar.');
+      alert("Por favor, faça login para agendar.");
       setLoading(false);
       return;
     }
-  
+
     try {
-      const response = await fetch('http://localhost:5000/agendamentos/', {
-        method: 'POST',
+      const response = await fetch("http://localhost:5000/agendamentos/", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(agendamentoData),
       });
-  
+
       if (response.ok) {
         const successData = await response.json();
-        alert(successData.message || 'Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail');
-        const savedUserId = localStorage.getItem('userId');
+        alert(
+          successData.message ||
+            "Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail"
+        );
+        const savedUserId = localStorage.getItem("userId");
         if (savedUserId) {
           fetchHorariosDisponiveis(savedUserId, data); // Atualiza os horários do colaborador
         } else if (colaborador) {
@@ -246,32 +245,30 @@ function CriarAgendamento() {
         }
       } else {
         const errorData = await response.json();
-        alert(errorData.message || 'Erro ao agendar a sessão.');
+        alert(errorData.message || "Erro ao agendar a sessão.");
       }
     } catch (error) {
-      console.error('Erro no agendamento:', error);
+      console.error("Erro no agendamento:", error);
     }
     setLoading(false);
   };
-  
-
-
-
 
   const isDateDisabled = (date) => {
     const diaSemana = date.getDay();
-    const dataFormatada = date.toISOString().split('T')[0];
+    const dataFormatada = date.toISOString().split("T")[0];
 
-    return !diasPermitidos.includes(diaSemana) || feriados.includes(dataFormatada);
+    return (
+      !diasPermitidos.includes(diaSemana) || feriados.includes(dataFormatada)
+    );
   };
 
   const handleDateChange = (value) => {
-    const dataEscolhida = value.toISOString().split('T')[0];
+    const dataEscolhida = value.toISOString().split("T")[0];
     setData(dataEscolhida);
 
     // Se for um colaborador logado, buscar os horários disponíveis para a data escolhida
-    if (role === 'colaborador') {
-      const savedUserId = localStorage.getItem('userId'); // Obtém o ID do colaborador logado
+    if (role === "colaborador") {
+      const savedUserId = localStorage.getItem("userId"); // Obtém o ID do colaborador logado
       if (savedUserId) {
         fetchHorariosDisponiveis(savedUserId, dataEscolhida); // Passa o ID do colaborador logado
       }
@@ -288,44 +285,38 @@ function CriarAgendamento() {
   }, [colaborador, data]);
   const fetchDiasPermitidos = async (colaboradorId) => {
     if (!colaboradorId) {
-      console.error('Colaborador não definido. Abortando chamada à API.');
+      console.error("Colaborador não definido. Abortando chamada à API.");
       return;
     }
     try {
-      const response = await fetch(`http://localhost:5000/agendamentos/dias-permitidos/${colaboradorId}`);
+      const response = await fetch(
+        `http://localhost:5000/agendamentos/dias-permitidos/${colaboradorId}`
+      );
       if (response.ok) {
         const data = await response.json();
         setDiasPermitidos(data.dias_permitidos);
       } else {
-        console.error('Erro ao buscar dias permitidos:', response.status);
+        console.error("Erro ao buscar dias permitidos:", response.status);
       }
     } catch (error) {
-      console.error('Erro ao buscar dias permitidos:', error);
+      console.error("Erro ao buscar dias permitidos:", error);
     }
   };
 
-
   useEffect(() => {
-    const savedUserId = localStorage.getItem('userId'); // Obtém o ID do usuário do localStorage
+    const savedUserId = localStorage.getItem("userId"); // Obtém o ID do usuário do localStorage
 
-    if (role === 'colaborador' && savedUserId) {
+    if (role === "colaborador" && savedUserId) {
       fetchDiasPermitidos(savedUserId); // Use o userId salvo
-
     } else if (colaborador) {
       fetchDiasPermitidos(colaborador);
     }
   }, [role, colaborador]);
 
-
   return (
-
     <div className="container py-5 background-gif">
-
-
       <div className="row align-items-center agendamentoback">
-
         <div className="col-md-6">
-
           <div className="card shadow-lg border-0 ">
             <div className="card-header text-center  rounded-top">
               <h3 className="fw-bold  text-primary ">Agendar atendimento</h3>
@@ -333,11 +324,11 @@ function CriarAgendamento() {
             <div className="card-body p-4">
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">
-                  {role === 'colaborador' && role !== 'admin' ? (
+                  {role === "colaborador" && role !== "admin" ? (
                     <input
                       type="hidden"
                       id="clinica"
-                      value={localStorage.getItem('clinicaId')} // Assumindo que 'clinicaId' está armazenado no localStorage
+                      value={localStorage.getItem("clinicaId")} // Assumindo que 'clinicaId' está armazenado no localStorage
                       required
                     />
                   ) : (
@@ -364,7 +355,9 @@ function CriarAgendamento() {
                 </div>
 
                 <div className="mb-3">
-                  <label htmlFor="servico" className="form-label">Serviço</label>
+                  <label htmlFor="servico" className="form-label">
+                    Serviço
+                  </label>
                   <select
                     id="servico"
                     className="form-select"
@@ -383,7 +376,9 @@ function CriarAgendamento() {
 
                 {tipoServico === "fisioterapia" && valorServico > 0 && (
                   <div className="mb-3">
-                    <label htmlFor="valor" className="form-label">Valor do Serviço</label>
+                    <label htmlFor="valor" className="form-label">
+                      Valor do Serviço
+                    </label>
                     <div className="flex-column gap-2">
                       <span className="fw-bold btn-plano mb-2 align-items-center p-2 border btn-plano rounded">
                         {`R$ ${valorServico}`}
@@ -392,17 +387,20 @@ function CriarAgendamento() {
                   </div>
                 )}
 
-
-                {tipoServico === 'pilates' && (
+                {tipoServico === "pilates" && (
                   <div className="mb-3">
                     <label className="form-label">Plano de Pilates</label>
                     <div className="row">
                       {planos.map((plano) => (
                         <div key={plano.ID_Plano} className="col-md-6 mb-6">
                           <div
-                            className={`d-flex justify-content-between align-items-center p-3 border btn-plano rounded ${planoSelecionado === plano.ID_Plano ? 'active' : ''}`}
+                            className={`d-flex justify-content-between align-items-center p-3 border btn-plano rounded ${
+                              planoSelecionado === plano.ID_Plano
+                                ? "active"
+                                : ""
+                            }`}
                             onClick={() => setPlanoSelecionado(plano.ID_Plano)}
-                            style={{ cursor: 'pointer' }}
+                            style={{ cursor: "pointer" }}
                           >
                             <div className="flex-grow-1">
                               <strong>{plano.Nome_plano}</strong>
@@ -417,18 +415,19 @@ function CriarAgendamento() {
                   </div>
                 )}
 
-
                 {/* Collaborator Selection */}
                 <div className="mb-3">
-                  {role !== 'colaborador' && ( // Exibe a label apenas se o usuário não for colaborador
-                    <label htmlFor="colaborador" className="form-label">Colaborador</label>
+                  {role !== "colaborador" && ( // Exibe a label apenas se o usuário não for colaborador
+                    <label htmlFor="colaborador" className="form-label">
+                      Colaborador
+                    </label>
                   )}
 
-                  {role === 'colaborador' && role !== 'admin' ? (
+                  {role === "colaborador" && role !== "admin" ? (
                     <input
                       type="hidden"
                       id="colaborador"
-                      value={localStorage.getItem('userId')}
+                      value={localStorage.getItem("userId")}
                       required
                     />
                   ) : (
@@ -441,19 +440,22 @@ function CriarAgendamento() {
                     >
                       <option value="">Selecione um colaborador</option>
                       {colaboradores.map((colab) => (
-                        <option key={colab.id_colaborador} value={colab.id_colaborador}>
+                        <option
+                          key={colab.id_colaborador}
+                          value={colab.id_colaborador}
+                        >
                           {colab.nome}
                         </option>
                       ))}
                     </select>
                   )}
-
-
                 </div>
                 <div className="row ">
                   {/* Calendário */}
                   <div className="col-md-8 mb-3">
-                    <label htmlFor="data" className="form-label">Data</label>
+                    <label htmlFor="data" className="form-label">
+                      Data
+                    </label>
                     <Calendar
                       onChange={handleDateChange}
                       tileDisabled={({ date }) => isDateDisabled(date)}
@@ -463,8 +465,11 @@ function CriarAgendamento() {
 
                   {/* Horário */}
                   <div className="col-md-4 mb-3">
-                    <label htmlFor="hora" className="form-label">Horário</label>
-                    {Array.isArray(horariosDisponiveis) && horariosDisponiveis.length > 0 ? (
+                    <label htmlFor="hora" className="form-label">
+                      Horário
+                    </label>
+                    {Array.isArray(horariosDisponiveis) &&
+                    horariosDisponiveis.length > 0 ? (
                       <select
                         id="hora"
                         className="form-select"
@@ -485,16 +490,16 @@ function CriarAgendamento() {
                       </div>
                     )}
                   </div>
-
                 </div>
 
                 <div className="mb-3">
-
-                  {role === 'cliente' ? (
+                  {role === "cliente" ? (
                     <br />
                   ) : (
                     <>
-                      <label htmlFor="cliente" className="form-label">Cliente</label>
+                      <label htmlFor="cliente" className="form-label">
+                        Cliente
+                      </label>
                       <select
                         id="cliente"
                         className="form-select"
@@ -511,7 +516,6 @@ function CriarAgendamento() {
                       </select>
                     </>
                   )}
-
                 </div>
 
                 <button
@@ -523,11 +527,9 @@ function CriarAgendamento() {
                     <i className="bi bi-arrow-repeat spinner"></i>
                   ) : (
                     <i className="bi bi-calendar-check"></i>
-                  )}
-                  {' '}
-                  {loading ? 'Carregando...' : 'Agendar sessão'}
+                  )}{" "}
+                  {loading ? "Carregando..." : "Agendar sessão"}
                 </button>
-
               </form>
             </div>
           </div>
@@ -535,7 +537,6 @@ function CriarAgendamento() {
 
         <div className="col-md-6  ">
           <div className="row  justify-content-start ">
-
             <div className="col-md-1 d-flex flex-column flex-md-column flex-sm-row ">
               {/* Imagem Logo 3 */}
               <img
@@ -556,19 +557,13 @@ function CriarAgendamento() {
             </div>
 
             <div className="col-md-11  justify-content-start text-align ">
-              <img
-                src="/images/smart.gif"
-                alt="Smart"
-                className="img-fluid" 
-              />
+              <img src="/images/smart.gif" alt="Smart" className="img-fluid" />
             </div>
-
           </div>
-          < br />
-          < br />
+          <br />
+          <br />
         </div>
-        <div>
-        </div>
+        <div></div>
       </div>
     </div>
   );
