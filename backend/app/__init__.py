@@ -24,6 +24,11 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_mail import Mail
+from flask import request, current_app
+from datetime import datetime
+
+import logging
+from logging.handlers import RotatingFileHandler
 import os
 
 # Instâncias do SQLAlchemy, Mail e JWTManager
@@ -34,7 +39,33 @@ migrate = Migrate()
 def create_app():
     app = Flask(__name__)
     app.config.from_object('config.Config')  # Carrega as configurações do arquivo config.py
+    # Configurar logging centralizado
+    if not app.debug:  # Evita logs duplicados em modo debug
+        log_file = "app.log"
+        max_size = 10 * 1024 * 1024  # Tamanho máximo do arquivo (10 MB)
+        backup_count = 5  # Número máximo de backups
 
+        # Configura o handler para rotacionar os arquivos de log
+        file_handler = RotatingFileHandler(log_file, maxBytes=max_size, backupCount=backup_count)
+        file_handler.setLevel(logging.INFO)  # Nível de log
+
+        # Formato das mensagens de log
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+        file_handler.setFormatter(formatter)
+
+        # Adicionar o handler ao logger principal da aplicação
+        app.logger.addHandler(file_handler)
+
+    # Registrar o before_request para logging em todas as rotas
+    @app.before_request
+    def log_request_info():
+        """Log de informações de cada requisição recebida."""
+        current_app.logger.info(
+            f"[{datetime.now()}] Requisição recebida: {request.method} {request.path} | "
+            f"IP: {request.remote_addr} | Dados: {request.get_json(silent=True)}"
+        )
     # Inicializa a aplicação com as extensões
     db.init_app(app)
     mail.init_app(app)
