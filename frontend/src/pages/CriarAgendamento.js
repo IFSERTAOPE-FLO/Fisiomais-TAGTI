@@ -94,8 +94,8 @@ function CriarAgendamento() {
       `${year}-10-12`, // Nossa Senhora Aparecida
       `${year}-11-02`, // Finados
       `${year}-11-15`, // Proclamação da República
-      `${year}-12-24` // Natal
-      `${year}-12-25` // Natal 
+      `${year}-12-24`, // Natal
+      `${year}-12-25`, // Natal 
     ]);
   };
   
