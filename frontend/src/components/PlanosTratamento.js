@@ -11,7 +11,7 @@ function PlanosTratamento() {
   useEffect(() => {
     const fetchPlanos = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/planos_de_tratamen/');
+        const response = await axios.get('http://localhost:5000/planos_de_tratamento/');
         setPlanos(response.data);
         setLoading(false);
       } catch (error) {
