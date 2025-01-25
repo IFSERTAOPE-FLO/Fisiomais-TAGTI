@@ -1,95 +1,162 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+import '../css/Planosdetratamento.css';
+function CriarPlanoTratamento() {
+  const [formData, setFormData] = useState({
+    id_cliente: '',
+    id_colaborador: '',
+    id_servico: '',
+    diagnostico: '',
+    objetivos: '',
+    metodologia: '',
+    duracao_prevista: '',
+    data_inicio: '',
+    data_fim: '',
+  });
 
-function PlanosTratamento() {
-  const [planos, setPlanos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    const fetchPlanos = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/planos_de_tratamento/');
-        setPlanos(response.data);
-        setLoading(false);
-      } catch (error) {
-        setErrorMessage('Erro ao carregar os planos de tratamento.');
-        setLoading(false);
-      }
-    };
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
 
-    fetchPlanos();
-  }, []);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post('http://localhost:5000/planos_de_tratamento/criar_planos_de_tratamento', formData);
+      setMessage(response.data.message);
+      setError('');
+    } catch (error) {
+      setError('Erro ao criar plano de tratamento.');
+      setMessage('');
+    }
+  };
 
   return (
     <div className="container my-5">
-      {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
       <div className="card shadow">
         <div className="card-header bg-primary text-white text-center">
-          <h2>Planos de Tratamento</h2>
+          <h2>Criar Novo Plano de Tratamento</h2>
         </div>
         <div className="card-body">
-          {loading ? (
-            <div className="text-center">Carregando...</div>
-          ) : (
-            <>
-              {planos.length > 0 ? (
-                <table className="table table-striped">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Nome do Paciente</th>
-                      <th>Descrição do Plano</th>
-                      <th>Data de Início</th>
-                      <th>Data de Término</th>
-                      <th>Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {planos.map((plano) => (
-                      <tr key={plano.id}>
-                        <td>{plano.id}</td>
-                        <td>{plano.pacienteNome}</td>
-                        <td>{plano.descricao}</td>
-                        <td>{plano.dataInicio}</td>
-                        <td>{plano.dataTermino}</td>
-                        <td>
-                          <button
-                            className="btn btn-info btn-sm me-2"
-                            onClick={() => alert(`Visualizar plano ${plano.id}`)}
-                          >
-                            Visualizar
-                          </button>
-                          <button
-                            className="btn btn-danger btn-sm"
-                            onClick={() => alert(`Excluir plano ${plano.id}`)}
-                          >
-                            Excluir
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="text-center">Nenhum plano de tratamento encontrado.</div>
-              )}
-            </>
-          )}
-        </div>
-        <div className="card-footer text-center">
-          <button
-            className="btn btn-success"
-            onClick={() => alert('Redirecionar para adicionar novo plano')}
-          >
-            Adicionar Novo Plano
-          </button>
+          {message && <div className="alert alert-success">{message}</div>}
+          {error && <div className="alert alert-danger">{error}</div>}
+
+          <form onSubmit={handleSubmit}>
+            <div className="mb-3">
+              <label htmlFor="id_cliente" className="form-label">ID do Cliente</label>
+              <input
+                type="text"
+                className="form-control"
+                id="id_cliente"
+                name="id_cliente"
+                value={formData.id_cliente}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label htmlFor="id_colaborador" className="form-label">ID do Colaborador</label>
+              <input
+                type="text"
+                className="form-control"
+                id="id_colaborador"
+                name="id_colaborador"
+                value={formData.id_colaborador}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label htmlFor="id_servico" className="form-label">ID do Serviço</label>
+              <input
+                type="text"
+                className="form-control"
+                id="id_servico"
+                name="id_servico"
+                value={formData.id_servico}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label htmlFor="diagnostico" className="form-label">Diagnóstico</label>
+              <textarea
+                className="form-control"
+                id="diagnostico"
+                name="diagnostico"
+                value={formData.diagnostico}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label htmlFor="objetivos" className="form-label">Objetivos</label>
+              <textarea
+                className="form-control"
+                id="objetivos"
+                name="objetivos"
+                value={formData.objetivos}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label htmlFor="metodologia" className="form-label">Metodologia</label>
+              <textarea
+                className="form-control"
+                id="metodologia"
+                name="metodologia"
+                value={formData.metodologia}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="mb-3">
+              <label htmlFor="duracao_prevista" className="form-label">Duração Prevista (semanas)</label>
+              <input
+                type="number"
+                className="form-control"
+                id="duracao_prevista"
+                name="duracao_prevista"
+                value={formData.duracao_prevista}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label htmlFor="data_inicio" className="form-label">Data de Início</label>
+              <input
+                type="date"
+                className="form-control"
+                id="data_inicio"
+                name="data_inicio"
+                value={formData.data_inicio}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label htmlFor="data_fim" className="form-label">Data de Término</label>
+              <input
+                type="date"
+                className="form-control"
+                id="data_fim"
+                name="data_fim"
+                value={formData.data_fim}
+                onChange={handleChange}
+              />
+            </div>
+            <button type="submit" className="btn btn-success">Criar Plano</button>
+          </form>
         </div>
       </div>
     </div>
   );
 }
 
-export default PlanosTratamento;
+export default CriarPlanoTratamento;

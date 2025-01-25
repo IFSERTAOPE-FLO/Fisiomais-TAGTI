@@ -79,7 +79,7 @@ function CriarAgendamento() {
 
 
   const fetchFeriados = () => {
-    const year = new Date().getFullYear();
+    const year = new Date().getFullYear(); // Obtendo o ano atual
     setFeriados([
       `${year}-01-01`, // Ano Novo
       `${year}-03-01`, // Carnaval
@@ -94,10 +94,11 @@ function CriarAgendamento() {
       `${year}-10-12`, // Nossa Senhora Aparecida
       `${year}-11-02`, // Finados
       `${year}-11-15`, // Proclamação da República
-      `${year}-12-24` // Natal
-      `${year}-12-25` // Natal 
+      `${year}-12-24`, // Natal
+      `${year}-12-25`  // Natal
     ]);
   };
+  
   
 
   const fetchClinicas = async () => {

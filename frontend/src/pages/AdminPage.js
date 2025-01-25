@@ -6,7 +6,7 @@ import GerenciarServicos from "../components/GerenciarServicos";
 import GerenciarClinicas from "../components/GerenciarClinicas";
 import CriarAgendamento from "./CriarAgendamento";
 import VisualizarAgendamentos from "./VisualizarAgendamentos";
-import PlanosTratamento from "../components/PlanosTratamento";
+import CriarPlanoTratamento from "../components/PlanosTratamento";
 import Dashboard from "./Dashboard";
 
 
@@ -72,6 +72,15 @@ const AdminPage = () => {
       </li>
       <li className="nav-item">
         <a
+          href="#planostratamento"
+          className={`nav-link ${opcaoSelecionada === "planostratamento" ? "active" : ""}`}
+          onClick={() => handleOpcaoChange("planostratamento")}
+        >
+          Planos de Tratamento
+        </a>
+      </li>
+      <li className="nav-item">
+        <a
           href="#criarAgendamento"
           className={`nav-link ${opcaoSelecionada === "criarAgendamento" ? "active" : ""}`}
           onClick={() => handleOpcaoChange("criarAgendamento")}
@@ -103,7 +112,7 @@ const AdminPage = () => {
       {opcaoSelecionada === "usuarios" && <GerenciarUsuarios />}
       {opcaoSelecionada === "servicos" && <GerenciarServicos />}
       {opcaoSelecionada === "clinicas" && <GerenciarClinicas />}
-      {opcaoSelecionada === "Planos Tratamento" && <PlanosTratamento />}
+      {opcaoSelecionada === "planostratamento" && <CriarPlanoTratamento />}
       {opcaoSelecionada === "criarAgendamento" && <CriarAgendamento />}
       {opcaoSelecionada === "visualizarAgendamentos" && <VisualizarAgendamentos />}
       {opcaoSelecionada === "dashboard" && <Dashboard />}
