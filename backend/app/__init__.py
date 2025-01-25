@@ -24,9 +24,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_mail import Mail
-from flask_admin import Admin
-
-from flask_admin.contrib.sqla import ModelView
 import os
 
 # Instâncias do SQLAlchemy, Mail e JWTManager
@@ -44,18 +41,9 @@ def create_app():
     migrate.init_app(app, db)
     CORS(app) # Habilita CORS conexão com frontend em react
     jwt = JWTManager(app)
-    from app.models import Enderecos, Clinicas, Colaboradores, Clientes, Servicos, Planos, Pagamentos, Faturas
-        
-    admin = Admin(app, name="Painel Administrativo", template_mode="bootstrap4")
-    # Registra os modelos no Flask-Admin
-    admin.add_view(ModelView(Enderecos, db.session))
-    admin.add_view(ModelView(Clinicas, db.session))
-    admin.add_view(ModelView(Colaboradores, db.session))
-    admin.add_view(ModelView(Clientes, db.session))
-    admin.add_view(ModelView(Servicos, db.session))
-    admin.add_view(ModelView(Planos, db.session))
-    admin.add_view(ModelView(Pagamentos, db.session))
-    admin.add_view(ModelView(Faturas, db.session))
+    # Chama a função para registrar o painel admin
+    from app.admin import init_admin
+    init_admin(app)
 
     with app.app_context():
         # Importar modelos e rotas aqui dentro para evitar importação circular
