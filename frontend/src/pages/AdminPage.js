@@ -6,6 +6,7 @@ import GerenciarServicos from "../components/GerenciarServicos";
 import GerenciarClinicas from "../components/GerenciarClinicas";
 import CriarAgendamento from "./CriarAgendamento";
 import VisualizarAgendamentos from "./VisualizarAgendamentos";
+import PlanosTratamento from "../components/PlanosTratamento";
 import Dashboard from "./Dashboard";
 
 
@@ -102,6 +103,7 @@ const AdminPage = () => {
       {opcaoSelecionada === "usuarios" && <GerenciarUsuarios />}
       {opcaoSelecionada === "servicos" && <GerenciarServicos />}
       {opcaoSelecionada === "clinicas" && <GerenciarClinicas />}
+      {opcaoSelecionada === "Planos Tratamento" && <PlanosTratamento />}
       {opcaoSelecionada === "criarAgendamento" && <CriarAgendamento />}
       {opcaoSelecionada === "visualizarAgendamentos" && <VisualizarAgendamentos />}
       {opcaoSelecionada === "dashboard" && <Dashboard />}

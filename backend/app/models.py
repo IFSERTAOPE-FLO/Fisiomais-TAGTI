@@ -230,6 +230,38 @@ class Faturas(db.Model):
     cliente = db.relationship('Clientes', backref='faturas')
     pagamento = db.relationship('Pagamentos', backref='faturas')
 
+class PlanosTratamento(db.Model):
+    __tablename__ = 'planos_tratamento'
+    id_plano_tratamento = db.Column(db.Integer, primary_key=True)  # ID único do plano de tratamento
+    id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False)  # Relacionamento com Cliente
+    id_colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.id_colaborador'), nullable=False)  # Relacionamento com Colaborador
+    id_servico = db.Column(db.Integer, db.ForeignKey('servicos.id_servico'), nullable=False)  # Relacionamento com Serviço
+    diagnostico = db.Column(db.Text, nullable=False)  # Diagnóstico inicial do paciente
+    objetivos = db.Column(db.Text, nullable=False)  # Objetivos do plano de tratamento
+    metodologia = db.Column(db.Text, nullable=True)  # Métodos propostos para o tratamento
+    duracao_prevista = db.Column(db.Integer, nullable=False)  # Duração prevista em semanas
+    data_inicio = db.Column(db.Date, nullable=False, default=datetime.utcnow)  # Data de início do plano
+    data_fim = db.Column(db.Date, nullable=True)  # Data de término do plano (opcional)
+
+    # Relacionamentos
+    cliente = db.relationship('Clientes', backref='planos_tratamento')
+    colaborador = db.relationship('Colaboradores', backref='planos_tratamento')
+    servico = db.relationship('Servicos', backref='planos_tratamento')
+
+class HistoricoSessao(db.Model):
+    __tablename__ = 'historico_sessao'
+    id_sessao = db.Column(db.Integer, primary_key=True)  # ID único da sessão
+    id_plano_tratamento = db.Column(db.Integer, db.ForeignKey('planos_tratamento.id_plano_tratamento'), nullable=False)  # Relacionamento com PlanoTratamento
+    data_sessao = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)  # Data e hora da sessão
+    detalhes = db.Column(db.Text, nullable=True)  # Detalhes das atividades da sessão
+    observacoes = db.Column(db.Text, nullable=True)  # Observações feitas pelo colaborador
+    avaliacao_cliente = db.Column(db.Text, nullable=True)  # Avaliação ou feedback do cliente
+    ficha_anamnese = db.Column(db.String(255), nullable=True)  # Caminho ou nome do arquivo da ficha de anamnese
+
+    # Relacionamento
+    plano_tratamento = db.relationship('PlanosTratamento', backref='historico_sessao')
+
+
 
 class BlacklistedToken(db.Model):
     __tablename__ = 'blacklisted_tokens'

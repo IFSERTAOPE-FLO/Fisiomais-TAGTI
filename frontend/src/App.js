@@ -16,6 +16,7 @@ import Perfil from "./pages/Perfil";
 import VisualizarAgendamentos from "./pages/VisualizarAgendamentos";
 import AdminPage from "./pages/AdminPage"; 
 import Especialidades from "./pages/Especialidades"; 
+import PlanosTratamento from "./components/PlanosTratamento"; 
 
 
 function App() {
@@ -112,7 +113,12 @@ function App() {
                             </PageWrapper>
                         } 
                     />
+                    
                 </Routes>
+               
+                
+                
+                
                 <Footer />
             </div>
         </Router>
