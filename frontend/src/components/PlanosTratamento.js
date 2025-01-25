@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+
 import axios from 'axios';
+import React, { useState, useEffect } from 'react'; 
 import '../css/Planosdetratamento.css';
 function CriarPlanoTratamento() {
+  const [cliente, setCliente] = useState('');
+  const [clientes, setClientes] = useState([]);
   const [formData, setFormData] = useState({
     id_cliente: '',
     id_colaborador: '',
@@ -24,6 +27,19 @@ function CriarPlanoTratamento() {
       [name]: value,
     });
   };
+  const fetchClientes = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/clientes');
+      if (response.ok) {
+        setClientes(await response.json());
+      }
+    } catch (error) {
+      console.error('Erro ao buscar clientes:', error);
+    }
+  };
+  useEffect(() => {
+    fetchClientes();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -49,17 +65,23 @@ function CriarPlanoTratamento() {
 
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
-              <label htmlFor="id_cliente" className="form-label">ID do Cliente</label>
-              <input
-                type="text"
-                className="form-control"
-                id="id_cliente"
-                name="id_cliente"
-                value={formData.id_cliente}
-                onChange={handleChange}
-                required
-              />
-            </div>
+            <label htmlFor="cliente" className="form-label">Cliente</label>
+                      <select
+                        id="cliente"
+                        className="form-select"
+                        value={cliente}
+                        onChange={(e) => setCliente(e.target.value)}
+                        required
+                      >
+                        <option value="">Selecione um cliente</option>
+                        {clientes.map((cli) => (
+                          <option key={cli.ID_Cliente} value={cli.ID_Cliente}>
+                            {cli.Nome}
+                          </option>
+                        ))}
+                      </select>
+             
+                      </div>                  
             <div className="mb-3">
               <label htmlFor="id_colaborador" className="form-label">ID do Colaborador</label>
               <input
@@ -151,7 +173,8 @@ function CriarPlanoTratamento() {
                 onChange={handleChange}
               />
             </div>
-            <button type="submit" className="btn btn-success">Criar Plano</button>
+            <button type="submit" className="btn btn-signup">Criar Plano</button>
+            <button type="submit" className="btn btn-login">Criar Plano</button>
           </form>
         </div>
       </div>
