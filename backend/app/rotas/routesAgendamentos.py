@@ -1,5 +1,5 @@
 from flask import Blueprint, current_app, send_from_directory, request, jsonify
-from app.models import Colaboradores, Agendamentos, Clientes, Servicos, Horarios, Clinicas,Planos, db
+from app.models import Colaboradores, Agendamentos, Clientes, Servicos, Horarios, Clinicas,Planos, Pagamentos, db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_mail import Message
 from flask import current_app
@@ -99,7 +99,7 @@ def agendamento():
         plano_id = data.get('plano_id')
         plano_selecionado = None
 
-        # Se o serviço for de pilates, a mensagem de retorno muda
+        # Verificar se o serviço é Pilates
         if 'pilates' in [tipo.tipo for tipo in servico.tipo_servicos]:
             if not plano_id:
                 print("Plano não fornecido para Pilates.")  # Mensagem de erro
@@ -122,7 +122,8 @@ def agendamento():
                 id_colaborador=colaborador.id_colaborador,
                 id_servico=servico.id_servico,
                 status="Pendente",  # Solicitação pendente
-                id_clinica=colaborador.clinica_id
+                id_clinica=colaborador.clinica_id,
+                dias_e_horarios=data.get('dias_e_horarios')  # Recebendo o campo se enviado
             )
             if plano_selecionado:
                 novo_agendamento.id_plano = plano_selecionado.id_plano
@@ -130,8 +131,24 @@ def agendamento():
             db.session.add(novo_agendamento)
             db.session.commit()
 
-            # Enviar mensagem indicando que o cliente deve entrar em contato
-            return jsonify({'message': 'Agendamento criado. Entre em contato na data agendada para averiguar os dias das aulas de Pilates.'}), 201
+            # Criar pagamento relacionado
+            pagamento = Pagamentos(
+                id_agendamento=novo_agendamento.id_agendamento,
+                id_cliente=cliente.id_cliente,
+                id_servico=servico.id_servico,
+                id_colaborador=colaborador.id_colaborador,
+                id_plano=plano_selecionado.id_plano if plano_selecionado else None,
+                valor=plano_selecionado.valor if plano_selecionado else None,
+                metodo_pagamento=None,  # A ser definido mais tarde
+                status="Pendente",
+                data_pagamento=None,
+                referencia_pagamento=None
+            )
+            db.session.add(pagamento)
+            db.session.commit()
+
+            # Mensagem de sucesso
+            return jsonify({'message': 'Agendamento criado. Para confirmar os dias das aulas de Pilates.'}), 201
 
         else:
             # Para serviços de fisioterapia, a data e o horário são verificados
@@ -155,10 +172,6 @@ def agendamento():
 
             if agendamento_existente:
                 return jsonify({'message': 'Já existe um agendamento para esse colaborador neste horário.'}), 400
-
-            # Debug: Verificar o tipo de usuário
-            print(f"Cliente encontrado: {cliente}")
-            print(f"Colaborador encontrado: {colaborador}")
             cliente2 = Clientes.query.filter_by(email=usuario_email).first()
             colaborador2 = Colaboradores.query.filter_by(email=usuario_email).first()
             if cliente2 is None:
@@ -182,16 +195,29 @@ def agendamento():
 
             db.session.add(novo_agendamento)
             db.session.commit()
-
+            
+            # Criar pagamento relacionado
+            pagamento = Pagamentos(
+                id_agendamento=novo_agendamento.id_agendamento,
+                id_cliente=cliente.id_cliente,
+                id_servico=servico.id_servico,
+                id_colaborador=colaborador.id_colaborador,
+                id_plano=plano_selecionado.id_plano if plano_selecionado else None,
+                valor=servico.valor ,
+                metodo_pagamento=None,  # A ser definido mais tarde
+                status="Pendente",
+                data_pagamento=None,
+                referencia_pagamento=None
+            )
+            db.session.add(pagamento)
+            db.session.commit()
             # Enviar e-mail de agendamento (opcional)
             # enviar_email_agendamento(novo_agendamento.id_agendamento)
 
-            # Determinar mensagem com base no status do agendamento
         if status_agendamento == "Confirmado":
             mensagem = "Agendamento confirmado com sucesso!"
         else:
             mensagem = "Agendamento solicitado. Aguarde confirmação por e-mail!"
-
         # Enviar e-mail de agendamento (opcional)
         # enviar_email_agendamento(novo_agendamento.id_agendamento)
 
@@ -203,53 +229,67 @@ def agendamento():
         db.session.rollback()
         return jsonify({'message': f'Erro ao criar agendamento: {str(e)}', 'error_details': error_details}), 500
 
+from sqlalchemy.orm import joinedload
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask import jsonify
+from datetime import datetime
+
+import logging
+
+# Configurando o logger
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 @agendamentos.route('/listar_agendamentos', methods=['GET'])
 @jwt_required()
 def listar_agendamentos():
     try:
         usuario_email = get_jwt_identity()
-        print(f"Usuário autenticado: {usuario_email}")
+        logger.debug(f'Usuário autenticado: {usuario_email}')
 
         colaborador = Colaboradores.query.filter_by(email=usuario_email).first()
-        print(f"Colaborador encontrado: {colaborador}")
-
         admin = Colaboradores.query.filter_by(is_admin=True, email=usuario_email).first()
-        print(f"Admin encontrado: {admin}")
-
         cliente = Clientes.query.filter_by(email=usuario_email).first()
-        print(f"Cliente encontrado: {cliente}")
 
         if not colaborador and not admin and not cliente:
+            logger.warning(f'Usuário não autorizado: {usuario_email}')
             return jsonify({'message': 'Usuário não autorizado'}), 403
+
+        logger.debug(f'Colaborador: {colaborador}, Admin: {admin}, Cliente: {cliente}')
 
         query = db.session.query(Agendamentos).options(
             joinedload(Agendamentos.servico),
             joinedload(Agendamentos.colaborador),
             joinedload(Agendamentos.cliente),
-            joinedload(Agendamentos.clinica).joinedload(Clinicas.endereco)
+            joinedload(Agendamentos.clinica).joinedload(Clinicas.endereco),
+            joinedload(Agendamentos.pagamento)  # Incluindo o pagamento na consulta
         )
 
         if admin:
             agendamentos = query.all()
-            print(f"Agendamentos encontrados para admin: {len(agendamentos)}")
+            logger.debug('Consultando todos os agendamentos para admin.')
         elif colaborador:
             agendamentos = query.filter(Agendamentos.id_colaborador == colaborador.id_colaborador).all()
-            print(f"Agendamentos encontrados para o colaborador: {len(agendamentos)}")
+            logger.debug(f'Consultando agendamentos para colaborador ID {colaborador.id_colaborador}.')
         elif cliente:
             agendamentos = query.filter(Agendamentos.id_cliente == cliente.id_cliente).all()
-            print(f"Agendamentos encontrados para o cliente: {len(agendamentos)}")
+            logger.debug(f'Consultando agendamentos para cliente ID {cliente.id_cliente}.')
 
         resultado = []
         for agendamento in agendamentos:
+            logger.debug(f'Processando agendamento ID {agendamento.id_agendamento}')
+
             clinica = agendamento.clinica
             endereco_clinica = clinica.endereco if clinica else None
             cliente = agendamento.cliente
             colaborador = agendamento.colaborador
             servico = agendamento.servico
+            pagamento = agendamento.pagamento  # Acesso ao pagamento
 
             plano_servico = None
             if servico and servico.valor is None:
                 plano_servico = Planos.query.filter_by(servico_id=servico.id_servico).first()
+                logger.debug(f'Plano de serviço encontrado: {plano_servico}')
 
             # Verificar se a data do agendamento não é nula
             if agendamento.data_e_hora:
@@ -259,6 +299,11 @@ def listar_agendamentos():
             else:
                 data_str = "Data a ser definida"
                 hora_str = None
+
+            # Adicionando apenas o status de pagamento
+            pagamento_dados = {
+                'status': pagamento.status if pagamento else None
+            }
 
             resultado.append({
                 'id': agendamento.id_agendamento,
@@ -286,13 +331,18 @@ def listar_agendamentos():
                         'cidade': endereco_clinica.cidade if endereco_clinica else None,
                         'estado': endereco_clinica.estado if endereco_clinica else None
                     } if endereco_clinica else None
-                }
+                },
+                'pagamento': pagamento_dados  # Incluindo apenas o status de pagamento
             })
 
+        logger.debug('Retornando a lista de agendamentos.')
         return jsonify(resultado), 200
 
     except Exception as e:
+        logger.error(f'Erro ao listar agendamentos: {str(e)}')
         return jsonify({'error': str(e)}), 500
+
+
 
 @agendamentos.route('/dias-permitidos/<int:colaborador_id>', methods=['GET'])
 def dias_permitidos(colaborador_id):

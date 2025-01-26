@@ -3,6 +3,7 @@ import '../css/CriarAgendamento.css';
 import '../css/Estilos.css';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
+import EscolherDiasHorariosClientesModal from '../components/EscolherDiasHorariosClientesModal';
 
 function CriarAgendamento() {
   const [data, setData] = useState('');
@@ -24,6 +25,12 @@ function CriarAgendamento() {
   const [loading, setLoading] = useState(false);
   const [diasPermitidos, setDiasPermitidos] = useState([]);
   const [feriados, setFeriados] = useState([]);
+
+  const [modalShow, setModalShow] = useState(false);
+  const [diasHorariosModal, setDiasHorariosModal] = useState([]);
+  const [diasHorariosTexto, setDiasHorariosTexto] = useState(''); // Estado para armazenar o texto dos dias e horários
+
+
 
   useEffect(() => {
     const savedRole = localStorage.getItem('role');
@@ -98,7 +105,7 @@ function CriarAgendamento() {
       `${year}-12-25`, // Natal 
     ]);
   };
-  
+
 
   const fetchClinicas = async () => {
     try {
@@ -110,6 +117,7 @@ function CriarAgendamento() {
       console.error('Erro ao buscar clínicas:', error);
     }
   };
+
 
 
   const fetchColaboradores = useCallback(async () => {
@@ -159,7 +167,7 @@ function CriarAgendamento() {
       fetchHorariosDisponiveis(colaborador);
 
     }
-    setHora('');    
+    setHora('');
   }, [colaborador]);
 
 
@@ -194,37 +202,42 @@ function CriarAgendamento() {
     }
   };
 
+  const handleOpenModal = () => {
+    // Lógica para abrir o modal
+    setModalShow(true); // Supondo que você esteja usando `setModalShow` para gerenciar a exibição do modal.
+  };
+
+
   const handleSubmit = async (e) => {
     setLoading(true);
     e.preventDefault();
-  
-    if (!hora) {
+
+    if (tipoServico !== 'pilates' && !hora) {
       alert('Por favor, selecione um horário válido.');
       setLoading(false);
       return;
     }
-  
-    // Verifica se o colaborador está definido
+
     const colaboradorId = role === 'colaborador' ? localStorage.getItem('userId') : colaborador;
-  
-    const dataEscolhida = new Date(data + 'T' + hora + ':00'); // Combina data e hora
+    const dataEscolhida = new Date(data + 'T' + hora + ':00');
     const dataHoraISO = dataEscolhida.toISOString();
-  
+
     const agendamentoData = {
       servico_id: servico,
       colaborador_id: colaboradorId,
       data: dataHoraISO,
       cliente_id: cliente,
       plano_id: tipoServico === 'pilates' ? planoSelecionado || null : null,
+      dias_e_horarios: diasHorariosTexto, // Incluindo os dias e horários
     };
-  
+
     const token = localStorage.getItem('token');
     if (!token) {
       alert('Por favor, faça login para agendar.');
       setLoading(false);
       return;
     }
-  
+
     try {
       const response = await fetch('http://localhost:5000/agendamentos/', {
         method: 'POST',
@@ -234,16 +247,11 @@ function CriarAgendamento() {
         },
         body: JSON.stringify(agendamentoData),
       });
-  
+
       if (response.ok) {
         const successData = await response.json();
         alert(successData.message || 'Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail');
-        const savedUserId = localStorage.getItem('userId');
-        if (savedUserId) {
-          fetchHorariosDisponiveis(savedUserId, data); // Atualiza os horários do colaborador
-        } else if (colaborador) {
-          fetchHorariosDisponiveis(colaborador, data); // Caso o colaborador tenha sido selecionado
-        }
+        fetchHorariosDisponiveis(colaborador || localStorage.getItem('userId'), data);
       } else {
         const errorData = await response.json();
         alert(errorData.message || 'Erro ao agendar a sessão.');
@@ -253,8 +261,6 @@ function CriarAgendamento() {
     }
     setLoading(false);
   };
-  
-
 
 
 
@@ -414,9 +420,37 @@ function CriarAgendamento() {
                         </div>
                       ))}
                     </div>
+                    <div className='mb-3 mt-2'>
+                    <label className="form-label">Qual é a sua disponibilidade?</label>
+                    <div className="mb-6 d-flex align-items-center gap-3">
+                    <input
+                        type="text"
+                        className="form-control py-2 rounded"
+                        value={diasHorariosTexto}
+                        readOnly
+                        placeholder="Nenhum horário selecionado"
+                        style={{                          
+                          whiteSpace: 'nowrap', // Impede a quebra de linha
+                          overflowX: 'auto', // Permite rolagem horizontal
+                          textOverflow: 'ellipsis', // Adiciona "..." caso o texto ultrapasse
+                        }}
+                      />
+                      <button onClick={handleOpenModal} className=" btn-plano rounded">
+                        Escolher Dias e Horários
+                      </button>
+                      </div>
+                    </div>
                   </div>
                 )}
-
+                <EscolherDiasHorariosClientesModal
+                  show={modalShow}
+                  onHide={() => setModalShow(false)}
+                  onSubmit={(diasEHoras) => {
+                    setDiasHorariosModal(diasEHoras); // Atualiza o estado com os dados do modal
+                    setDiasHorariosTexto(diasEHoras); // Atualiza o texto exibido no input
+                    setModalShow(false); // Fecha o modal
+                  }}
+                />
 
                 {/* Collaborator Selection */}
                 <div className="mb-3">
@@ -450,44 +484,47 @@ function CriarAgendamento() {
 
 
                 </div>
-                <div className="row ">
-                  {/* Calendário */}
-                  <div className="col-md-8 mb-3">
-                    <label htmlFor="data" className="form-label">Data</label>
-                    <Calendar
-                      onChange={handleDateChange}
-                      tileDisabled={({ date }) => isDateDisabled(date)}
-                      minDate={new Date()} // Desabilita datas anteriores ao dia atual
-                    />
+                {tipoServico !== 'pilates' && (
+
+                  <div className="row ">
+                    {/* Calendário */}
+                    <div className="col-md-8 mb-3">
+                      <label htmlFor="data" className="form-label">Data</label>
+                      <Calendar
+                        onChange={handleDateChange}
+                        tileDisabled={({ date }) => isDateDisabled(date)}
+                        minDate={new Date()} // Desabilita datas anteriores ao dia atual
+                      />
+                    </div>
+
+                    {/* Horário */}
+                    <div className="col-md-4 mb-3">
+                      <label htmlFor="hora" className="form-label">Horário</label>
+                      {Array.isArray(horariosDisponiveis) && horariosDisponiveis.length > 0 ? (
+                        <select
+                          id="hora"
+                          className="form-select"
+                          value={hora}
+                          onChange={(e) => setHora(e.target.value)}
+                          required
+                        >
+                          <option value="">Escolha o horário</option>
+                          {horariosDisponiveis.map((horario, index) => (
+                            <option key={index} value={horario}>
+                              {horario}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <div className="alert alert-warning" role="alert">
+                          Nenhum horário disponível!
+                        </div>
+                      )}
+                    </div>
+
+
                   </div>
-
-                  {/* Horário */}
-                  <div className="col-md-4 mb-3">
-                    <label htmlFor="hora" className="form-label">Horário</label>
-                    {Array.isArray(horariosDisponiveis) && horariosDisponiveis.length > 0 ? (
-                      <select
-                        id="hora"
-                        className="form-select"
-                        value={hora}
-                        onChange={(e) => setHora(e.target.value)}
-                        required
-                      >
-                        <option value="">Escolha o horário</option>
-                        {horariosDisponiveis.map((horario, index) => (
-                          <option key={index} value={horario}>
-                            {horario}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <div className="alert alert-warning" role="alert">
-                        Nenhum horário disponível!
-                      </div>
-                    )}
-                  </div>
-
-                </div>
-
+                )}
                 <div className="mb-3">
 
                   {role === 'cliente' ? (
@@ -559,7 +596,7 @@ function CriarAgendamento() {
               <img
                 src="/images/smart.gif"
                 alt="Smart"
-                className="img-fluid" 
+                className="img-fluid"
               />
             </div>
 

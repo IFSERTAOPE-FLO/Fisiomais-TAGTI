@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+
 import { Modal, Button } from 'react-bootstrap';
 import { FaCalendarAlt } from 'react-icons/fa'; // Ícone de calendário
 import '../css/Estilos.css';
 import Calendar from 'react-calendar'; // Para exibir o calendário
 import Paginator from '../components/Paginator';
+
 
 
 const VisualizarAgendamentos = () => {
@@ -18,7 +20,6 @@ const VisualizarAgendamentos = () => {
   const [showDateFilterModal, setShowDateFilterModal] = useState(false); // Para controlar o novo modal de filtro de data
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-
   const itemsPerPage = 10;
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [newStatus, setNewStatus] = useState('');
@@ -285,8 +286,9 @@ const VisualizarAgendamentos = () => {
                   <th>Serviço</th>
                   <th>Valor (R$)</th>
                   <th>Colaborador</th>
-                  <th>Status</th> {/* Coluna para exibir o status */}
-                  <th>Endereço da Clínica</th> {/* Nova coluna para exibir o endereço da clínica */}
+                  <th>Status</th> 
+                  <th>Pagamento</th> 
+                  <th>Endereço da Clínica</th> 
                   <th>Detalhes</th>
                 </tr>
               </thead>
@@ -338,6 +340,23 @@ const VisualizarAgendamentos = () => {
                           {agendamento.status.charAt(0).toUpperCase() + agendamento.status.slice(1)} {/* Primeira letra maiúscula */}
                         </span>
                       </td>
+                      <td>
+                        <span
+                          className={`badge 
+                          ${
+                              agendamento.pagamento.status === 'pago' ? 'text-primary' :
+                                agendamento.pagamento.status === 'atrasado' ? 'text-danger' :
+                                  agendamento.pagamento.status === 'pendente' ? 'text-secondary' :                                    
+                                      agendamento.status === 'nao_compareceu' ? 'text-dark' :
+                                        'badge-warning'} 
+                          text-dark`}
+                        >
+                          {agendamento.pagamento && agendamento.pagamento.status ? 
+  agendamento.pagamento.status.charAt(0).toUpperCase() + agendamento.pagamento.status.slice(1) : 
+  'Sem pagamento'}
+
+                        </span>
+                      </td>
 
                       <td>
                         <div>
@@ -362,7 +381,7 @@ const VisualizarAgendamentos = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="10" className="text-center">
+                    <td colSpan="12" className="text-center">
                       Nenhum agendamento encontrado
                     </td>
                   </tr>
@@ -544,8 +563,6 @@ const VisualizarAgendamentos = () => {
 
                   )}
 
-
-
                 </div>
               </Modal.Body>
 
@@ -585,23 +602,8 @@ const VisualizarAgendamentos = () => {
                       ) : (
                         'Negar'
                       )}
-                    </Button>
-                    <Button
-                      variant="btn btn-primary"
-                      onClick={async () => {
-                        await handleConfirmarNegar(selectedAgendamento.id, 'pago');
-                        handleCloseModal(); // Fecha o modal após negar
-                      }}
-                      disabled={loading || selectedAgendamento.status?.toLowerCase() === 'pago'}
-                    >
-                      {loading && selectedAgendamento.status !== 'Pago' ? (
-                        <>
-                          <i className="bi bi-arrow-repeat spinner"></i> Carregando...
-                        </>
-                      ) : (
-                        'Pago'
-                      )}
-                    </Button>
+                    </Button>                    
+                    
 
 
 

@@ -148,3 +148,24 @@ footer {
   color: white !important; /* Cor do texto ao hover/focus */
 }
 
+input[type="time"] {
+  -webkit-appearance: none; /* Remove ícone no Chrome/Safari */
+  -moz-appearance: textfield; /* Remove ícone no Firefox */
+  appearance: textfield; /* Remove ícone no Edge */
+  width: 120px; /* Ajuste o tamanho do campo */
+  padding: 5px; /* Ajuste o padding para melhor visualização */
+  font-size: 16px; /* Tamanho da fonte */
+  text-align: center; /* Alinha o texto ao centro */
+  border: 1px solid #ccc; /* Adiciona uma borda simples */
+  border-radius: 4px; /* Bordas arredondadas */
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 10px; /* Ajusta a posição horizontal */
+  top: 50%; /* Ajusta a posição vertical */
+  transform: translateY(-50%); /* Centraliza verticalmente */
+  width: 20px; /* Ajuste o tamanho conforme necessário */
+  height: 20px; /* Ajuste o tamanho conforme necessário */
+ 
+}

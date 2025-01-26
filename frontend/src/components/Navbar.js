@@ -29,7 +29,7 @@ function Navbar() {
     try {
       const response = await axios.post("http://localhost:5000/login", { email, senha });
       const { access_token, name, role, userId, photo, email_confirmado, admin_nivel } = response.data;
-  
+
       // Armazenar os dados no estado e no localStorage
       setIsLoggedIn(true);
       setUserName(name);
@@ -37,7 +37,7 @@ function Navbar() {
       setUserId(userId);
       setUserPhoto(photo || "");
       setEmailConfirmed(email_confirmado);
-  
+
       // Armazenar as informações no localStorage
       localStorage.setItem("token", access_token);
       localStorage.setItem("userName", name);
@@ -46,24 +46,24 @@ function Navbar() {
       localStorage.setItem("userPhoto", photo || "");
       localStorage.setItem("email_confirmado", email_confirmado.toString());
       localStorage.setItem("isLoggedIn", "true"); // Armazenar isLoggedIn
-  
+
       // Armazenar o nível de admin se o usuário for admin
       if (role === "admin" && admin_nivel) {
         localStorage.setItem("admin_nivel", admin_nivel);
       }
-  
+
       // Fecha o modal de login
       const modalElement = document.getElementById("loginModal");
       const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
       if (modalInstance) modalInstance.hide();
       document.querySelectorAll(".modal-backdrop").forEach((backdrop) => backdrop.remove());
-  
+
       // Redireciona com base no papel do usuário
       setTimeout(() => {
         navigate(role === "admin" ? "/adminpage" : "/");
         window.location.reload();
       }, 300);
-  
+
       // Inicia a renovação automática do token
       autoRefreshToken();
     } catch (error) {
@@ -71,7 +71,7 @@ function Navbar() {
       alert("Erro ao fazer login. Verifique suas credenciais.");
     }
   };
-  
+
 
   const handleCadastroSuccess = (data) => {
     console.log('Dados recebidos no cadastro:', data);
@@ -251,9 +251,12 @@ function Navbar() {
                 <Link className="nav-link" to="/contato">Fale conosco</Link>
               </li>
               {isLoggedIn && role !== "cliente" && (
-                <li className="nav-item">
-                  <Link className="nav-link" to="/adminPage">Central de Controle</Link>
-                </li>
+                <>
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/adminPage">Central de Controle</Link>
+                  </li>
+
+                </>
               )}
 
             </ul>
@@ -310,18 +313,27 @@ function Navbar() {
                     <li>
                       <Link className="dropdown-item" to="/criaragendamento">Agendar Atendimento</Link>
                     </li>
+                    <li>
+                      <Link className="dropdown-item" to="/gerenciarPagamentos">Gerenciar Pagamentos</Link>
+                    </li>
 
                     {role === "admin" && (
                       <>
                         <li>
                           <Link className="dropdown-item" to="/adminPage">Pagina Administrador</Link>
                         </li>
+
+
                       </>
                     )}
                     {role === "colaborador" && (
-                      <li>
-                        <Link className="dropdown-item" to="/adminPage">Central de Controle</Link>
-                      </li>
+                      <>
+                        <li>
+                          <Link className="dropdown-item" to="/adminPage">Central de Controle</Link>
+                        </li>
+
+
+                      </>
                     )
                     }
 
@@ -379,6 +391,13 @@ function Navbar() {
                   {sidebarVisible && " Agendar Atendimento"}
                 </Link>
               </li >
+              <li className="mt-3">
+                <Link to="/gerenciarPagamentos" className="sidebar-item gap-2">
+                  <i className="bi bi-credit-card"></i> {/* Ícone de pagamento */}
+                  {sidebarVisible && " Gerenciar Pagamentos"}
+                </Link>
+              </li>
+
               {role === "admin" && (
                 <li className=" mt-3 ">
                   <Link to="/adminPage" className="sidebar-item">

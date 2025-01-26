@@ -16,6 +16,7 @@ import Perfil from "./pages/Perfil";
 import VisualizarAgendamentos from "./pages/VisualizarAgendamentos";
 import AdminPage from "./pages/AdminPage"; 
 import Especialidades from "./pages/Especialidades"; 
+import GerenciarPagamentos from "./pages/GerenciarPagamentos"; 
 
 
 function App() {
@@ -109,6 +110,14 @@ function App() {
                         element={
                             <PageWrapper title="Central de Controle - Fisiomais">
                                 <AdminPage />
+                            </PageWrapper>
+                        } 
+                    />
+                    <Route 
+                        path="/gerenciarPagamentos" 
+                        element={
+                            <PageWrapper title="Gerenciar Pagamentos - Fisiomais">
+                                <GerenciarPagamentos />
                             </PageWrapper>
                         } 
                     />

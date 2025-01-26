@@ -40,32 +40,69 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object('config.Config')  # Carrega as configurações do arquivo config.py
     # Configurar logging centralizado
-    if not app.debug:  # Evita logs duplicados em modo debug
-        log_file = "app.log"
-        max_size = 10 * 1024 * 1024  # Tamanho máximo do arquivo (10 MB)
-        backup_count = 5  # Número máximo de backups
+    # Definir o diretório de logs
+    log_dir = "logs"
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)  # Cria o diretório se não existir
 
-        # Configura o handler para rotacionar os arquivos de log
-        file_handler = RotatingFileHandler(log_file, maxBytes=max_size, backupCount=backup_count)
-        file_handler.setLevel(logging.INFO)  # Nível de log
+    # Definir o caminho completo para o arquivo de log
+    log_file = os.path.join(log_dir, "app.log")
 
-        # Formato das mensagens de log
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
-        file_handler.setFormatter(formatter)
+    # Mantenha a configuração do logger independentemente do modo de depuração
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)  # Cria o diretório se não existir
 
-        # Adicionar o handler ao logger principal da aplicação
-        app.logger.addHandler(file_handler)
+    log_file = os.path.join(log_dir, "app.log")
+    max_size = 10 * 1024 * 1024  # Tamanho máximo do arquivo (10 MB)
+    backup_count = 5  # Número máximo de backups 
+
+    file_handler = RotatingFileHandler(log_file, maxBytes=max_size, backupCount=backup_count)
+    file_handler.setLevel(logging.DEBUG) if app.debug else file_handler.setLevel(logging.INFO)
+
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    file_handler.setFormatter(formatter)
+
+    app.logger.addHandler(file_handler)
+    
+    from flask_jwt_extended import get_jwt_identity
+    from flask import request, current_app
+    from datetime import datetime
 
     # Registrar o before_request para logging em todas as rotas
     @app.before_request
     def log_request_info():
         """Log de informações de cada requisição recebida."""
+        # Ignorar requisições GET para reduzir a poluição nos logs
+        if request.method == 'GET':
+            return  # Não faz nada e não registra logs para GET
+
+        # Copiar os dados da requisição
+        log_data = request.get_json(silent=True) or {}
+
+        # Obter o email do usuário logado, se disponível, a partir do JWT
+        email_logado = None
+        try:
+            email_logado = get_jwt_identity()  # Obtém a identidade do usuário do token JWT
+        except Exception as e:
+            # Se não conseguir obter o email, pode ser que não esteja logado
+            email_logado = "Não logado"  # Pode registrar "Não logado" ou outra indicação
+
+        # Guardar a senha para posterior log, sem alterar a requisição
+        senha = log_data.get('senha', None)
+
+        # Criar uma cópia da requisição sem a senha
+        log_data_for_logging = log_data.copy()
+
+        # Substituir a senha no log por asteriscos
+        if senha:
+            log_data_for_logging['senha'] = "***"
+        
+        # Registrar o log com o email do usuário logado
         current_app.logger.info(
             f"[{datetime.now()}] Requisição recebida: {request.method} {request.path} | "
-            f"IP: {request.remote_addr} | Dados: {request.get_json(silent=True)}"
+            f"IP: {request.remote_addr} | Email Logado: {email_logado} | Dados: {log_data_for_logging}"
         )
+
     # Inicializa a aplicação com as extensões
     db.init_app(app)
     mail.init_app(app)
