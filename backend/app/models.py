@@ -262,7 +262,6 @@ class HistoricoSessao(db.Model):
     plano_tratamento = db.relationship('PlanosTratamento', backref='historico_sessao')
 
 
-
 class BlacklistedToken(db.Model):
     __tablename__ = 'blacklisted_tokens'
 

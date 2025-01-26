@@ -363,3 +363,44 @@ def alterar_clinica():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Erro ao alterar clínica: {str(e)}"}), 500
+
+
+#rota para exibir todos os colaboradores
+@colaboradores.route('/todos', methods=['GET'])
+def listar_todos_colaboradores():
+    try:
+        # Buscar todos os colaboradores no banco de dados
+        colaboradores = Colaboradores.query.all()
+
+        if not colaboradores:
+            return jsonify({"message": "Nenhum colaborador encontrado."}), 404
+
+        # Converter os dados em uma lista de dicionários
+        colaboradores_list = [
+            {
+                "id_colaborador": colaborador.id_colaborador,
+                "nome": colaborador.nome,
+                "email": colaborador.email,
+                "telefone": colaborador.telefone,
+                "cpf": colaborador.cpf,
+                "cargo": colaborador.cargo,
+                "clinica_id": colaborador.clinica_id,
+                "dt_nasc": colaborador.dt_nasc.strftime('%Y-%m-%d') if colaborador.dt_nasc else None,
+                "sexo": colaborador.sexo,
+                "is_admin": colaborador.is_admin,
+                "endereco": {
+                    "rua": colaborador.endereco.rua if colaborador.endereco else None,
+                    "numero": colaborador.endereco.numero if colaborador.endereco else None,
+                    "bairro": colaborador.endereco.bairro if colaborador.endereco else None,
+                    "cidade": colaborador.endereco.cidade if colaborador.endereco else None,
+                    "estado": colaborador.endereco.estado if colaborador.endereco else None,
+                },
+            }
+            for colaborador in colaboradores
+        ]
+
+        # Retornar a lista de colaboradores
+        return jsonify(colaboradores_list), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Erro ao listar colaboradores: {str(e)}"}), 500
