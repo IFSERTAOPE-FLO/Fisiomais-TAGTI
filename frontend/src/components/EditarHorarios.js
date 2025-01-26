@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 
 const EditarHorarios = ({
@@ -16,8 +16,8 @@ const EditarHorarios = ({
   const [showDeleteModal, setShowDeleteModal] = useState(false); // Controle do modal de exclusão
   const [selectedHorario, setSelectedHorario] = useState(null); // Horário selecionado para exclusão
 
-  // Função para listar os horários existentes do colaborador
-  const listarHorarios = async () => {
+  // Função para listar os horários existentes do colaborador (novo)
+  const listarHorarios = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
@@ -39,11 +39,43 @@ const EditarHorarios = ({
     } catch (error) {
       alert("Erro ao listar os horários");
     }
-  };
+  }, [colaboradorId]); // Depende apenas de colaboradorId
 
   useEffect(() => {
     listarHorarios();
-  }, [colaboradorId]);
+  }, [listarHorarios]);
+
+  /* FUNÇÃO ANTERIOR
+
+  const listarHorarios = async () => {
+    try {
+    const token = localStorage.getItem("token");
+    const response = await fetch(
+      `http://localhost:5000/colaboradores/horarios/listar/${colaboradorId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    
+    const data = await response.json();
+    if (response.ok) {
+      setHorarios(data.horarios || []);
+    } else {
+      alert(`Erro: ${data.message}`);
+    }
+  } catch (error) {
+    alert("Erro ao listar os horários");
+  }
+};
+
+useEffect(() => {
+  listarHorarios();
+}, [colaboradorId]);
+
+*/
 
   // Função para lidar com a alteração dos dados de um horário
   const handleNovoHorarioChange = (e) => {

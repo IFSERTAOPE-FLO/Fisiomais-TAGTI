@@ -197,7 +197,6 @@ def get_colaboradores():
 
 
 
-
 @colaboradores.route('/colaboradoresdisponiveis', methods=['GET'])  # Aceitando apenas 'GET'
 @jwt_required()
 def get_colaboradoresdisponiveis():
@@ -248,11 +247,6 @@ def get_colaboradoresdisponiveis():
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
-
-
-
 
 
 
