@@ -54,16 +54,21 @@ const EscolherDiasHorariosClientesModal = ({ show, onHide, onSubmit }) => {
         if (periodos.length === 3) {
           return `${dia}: qualquer horário`;
         } else if (periodos.length > 0) {
-          return `${dia}: ${periodos.join(', ')}`;
+          const horarios =
+            (inicio && fim)
+              ? ` (${inicio} às ${fim})`
+              : (inicio ? ` (a partir das ${inicio})` : fim ? ` (até ${fim})` : '');
+          return `${dia}: ${periodos.join(', ')}${horarios}`;
         }
         return `${dia}: a partir das ${inicio || '00:00'} até ${fim || '00:00'}`;
       })
       .join(', ');
-
+  
     onSubmit(diasHorariosTexto);
     setDiasSelecionados({});
     onHide();
   };
+  
 
   return (
     <Modal show={show} onHide={onHide} centered>
