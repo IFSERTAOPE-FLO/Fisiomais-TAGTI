@@ -73,18 +73,18 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
   // Função para manipular o arraste de eventos
   const handleEventDrop = async (info) => {
     const { id, start } = info.event;
-
+  
     // Ajusta o horário para o fuso horário BR (UTC -3)
     const startBR = new Date(start);
     startBR.setHours(startBR.getHours() - 3); // Subtrai 3 horas para converter para o horário BR
-
+  
     const novaData = startBR.toISOString().split("T")[0];
-    const novoHorario = startBR.toISOString().split("T")[1].slice(0, 8);
-
+    const novoHorario = startBR.toISOString().split("T")[1].slice(0, 5); // Extrai apenas HH:mm
+  
     // Abre o modal para o usuário escolher o novo horário
     setNovoHorario(novoHorario); // Define o horário inicial
     setShowModal(true); // Exibe o modal
-
+  
     // Atualiza o evento selecionado
     setEventoSelecionado({
       id,
@@ -92,6 +92,7 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
       novoHorario,
     });
   };
+  
   
 
   const handleSalvarHorario = async () => {
