@@ -216,7 +216,7 @@ const VisualizarAgendamentos = () => {
     <div className="container  my-2">
       <div className="card shadow">
         <div className="card-header ">
-          <h2 className="text-center text-primary fw-bold">Visualizar Agendamentos</h2>
+          <h1 className="text-center text-primary fw-bold">Visualizar Agendamentos</h1>
         </div>
 
 
@@ -286,13 +286,14 @@ const VisualizarAgendamentos = () => {
                   <th>Serviço</th>
                   <th>Valor (R$)</th>
                   <th>Colaborador</th>
-                  <th>Status</th> 
-                  <th>Pagamento</th> 
-                  <th>Endereço da Clínica</th> 
+                  <th>Status</th>
+                  <th>Pagamento</th>
+                  <th>Endereço da Clínica</th>
+
                   <th>Detalhes</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className='text-center'>
                 {sortedAgendamentos.length > 0 ? (
                   currentAgendamentos.map((agendamento, index) => (
                     <tr key={agendamento.id}>
@@ -303,10 +304,11 @@ const VisualizarAgendamentos = () => {
                           ? new Date(agendamento.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
                           : (
                             <>
-                               Aguardar confirmação (pilates)
+                              Aguardar confirmação. Intenção de aulas: {agendamento.dias_e_horarios || 'não informada'}
                             </>
                           )
                         }
+
                       </td>
                       <td>{agendamento.hora || ''}</td>
                       <td>{agendamento.servico || 'Serviço não encontrado'}</td>
@@ -343,17 +345,16 @@ const VisualizarAgendamentos = () => {
                       <td>
                         <span
                           className={`badge 
-                          ${
-                              agendamento.pagamento.status === 'pago' ? 'text-primary' :
-                                agendamento.pagamento.status === 'atrasado' ? 'text-danger' :
-                                  agendamento.pagamento.status === 'pendente' ? 'text-secondary' :                                    
-                                      agendamento.status === 'nao_compareceu' ? 'text-dark' :
-                                        'badge-warning'} 
+                          ${agendamento.pagamento.status === 'pago' ? 'text-primary' :
+                              agendamento.pagamento.status === 'atrasado' ? 'text-danger' :
+                                agendamento.pagamento.status === 'pendente' ? 'text-secondary' :
+                                  agendamento.status === 'nao_compareceu' ? 'text-dark' :
+                                    'badge-warning'} 
                           text-dark`}
                         >
-                          {agendamento.pagamento && agendamento.pagamento.status ? 
-  agendamento.pagamento.status.charAt(0).toUpperCase() + agendamento.pagamento.status.slice(1) : 
-  'Sem pagamento'}
+                          {agendamento.pagamento && agendamento.pagamento.status ?
+                            agendamento.pagamento.status.charAt(0).toUpperCase() + agendamento.pagamento.status.slice(1) :
+                            'Sem pagamento'}
 
                         </span>
                       </td>
@@ -369,12 +370,12 @@ const VisualizarAgendamentos = () => {
                           ) : 'Endereço não disponível'}
                         </div>
                       </td>
-                      <td>
+                      <td >
                         <button
-                          className="btn btn-outline-info btn-sm"
+                          className="btn btn-outline-info btn-sm "
                           onClick={() => handleShowDetails(agendamento)}
                         >
-                          Ver Detalhes
+                          <i className="bi bi-info-circle "></i>
                         </button>
                       </td>
                     </tr>
@@ -602,8 +603,8 @@ const VisualizarAgendamentos = () => {
                       ) : (
                         'Negar'
                       )}
-                    </Button>                    
-                    
+                    </Button>
+
 
 
 

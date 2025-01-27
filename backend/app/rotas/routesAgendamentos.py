@@ -148,7 +148,7 @@ def agendamento():
             db.session.commit()
 
             # Mensagem de sucesso
-            return jsonify({'message': 'Agendamento criado. Para confirmar os dias das aulas de Pilates.'}), 201
+            return jsonify({'message': 'Agendamento criado. Aguarde para confirmarmos os dias das suas aulas de Pilates.'}), 201
 
         else:
             # Para serviços de fisioterapia, a data e o horário são verificados
@@ -312,6 +312,7 @@ def listar_agendamentos():
                 'status': agendamento.status,
                 'servico': agendamento.servico.nome if agendamento.servico else None,
                 'valor': servico.valor if servico.valor else (plano_servico.valor if plano_servico else None),
+                'dias_e_horarios': agendamento.dias_e_horarios,
                 'plano': {
                     'nome': plano_servico.nome if plano_servico else None,
                     'descricao': plano_servico.descricao if plano_servico else None,
@@ -341,7 +342,132 @@ def listar_agendamentos():
     except Exception as e:
         logger.error(f'Erro ao listar agendamentos: {str(e)}')
         return jsonify({'error': str(e)}), 500
+    
+@agendamentos.route('/editar_dia_horario', methods=['PUT'])
+@jwt_required()
+def editar_dia_horario():
+    try:
+        data = request.get_json()
+        print(f"Dados recebidos para edição: {data}")
 
+        usuario_email = get_jwt_identity()
+        print(f"E-mail do usuário autenticado: {usuario_email}")
+
+        # Obter informações do frontend
+        id_agendamento = data.get('id_agendamento')
+        nova_data = data.get('data')
+        novo_horario = data.get('horario')
+
+        if not id_agendamento or not nova_data or not novo_horario:
+            return jsonify({'message': 'ID do agendamento, data e horário são obrigatórios.'}), 400
+
+        # Buscar o agendamento pelo ID
+        agendamento = Agendamentos.query.get(id_agendamento)
+        if not agendamento:
+            return jsonify({'message': 'Agendamento não encontrado.'}), 404
+
+        # Verificar quem está solicitando a alteração
+        cliente = Clientes.query.filter_by(email=usuario_email).first()
+        colaborador = Colaboradores.query.filter_by(email=usuario_email).first()
+
+        # Se for um cliente, solicitar remarcação
+        if cliente:
+            # Atualizar o status do agendamento para indicar pedido de remarcação
+            agendamento.status = 'Pedido de Remarcação'
+            
+            # Salvar a nova data e horário solicitados no campo 'dias_e_horarios'
+            agendamento.dias_e_horarios = f"{nova_data} {novo_horario}"
+
+            # Persistir as alterações no banco de dados
+            db.session.commit()
+
+            # Notificar o administrador sobre a solicitação
+            agendamento_id = agendamento.id_agendamento
+            notificar_admin_remarcacao(agendamento_id, nova_data, novo_horario)
+
+            return jsonify({
+                'message': 'Solicitação de remarcação enviada ao administrador. Você será notificado quando a remarcação for confirmada.'
+            }), 200
+
+
+
+        # Se não for cliente nem colaborador, acesso não autorizado
+        if not colaborador:
+            return jsonify({'message': 'Usuário não autorizado a editar este agendamento.'}), 403
+
+        # Verificar se a nova data e horário são válidos
+        try:
+            nova_data_horario_str = f"{nova_data} {novo_horario}"
+            nova_data_horario = datetime.strptime(nova_data_horario_str, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            return jsonify({'message': 'Formato de data ou horário inválido.'}), 400
+
+        # Verificar conflitos de horário
+        conflito = Agendamentos.query.filter(
+            Agendamentos.id_colaborador == agendamento.id_colaborador,
+            Agendamentos.data_e_hora == nova_data_horario,
+            Agendamentos.id_agendamento != id_agendamento
+        ).first()
+
+        if conflito:
+            return jsonify({'message': 'Já existe um agendamento para este colaborador no horário especificado.'}), 400
+
+        # Atualizar o dia e horário do agendamento
+        agendamento.data_e_hora = nova_data_horario
+        db.session.commit()
+
+        return jsonify({'message': 'Dia e horário do agendamento atualizados com sucesso.'}), 200
+
+    except Exception as e:
+        print(f"Erro: {str(e)}")
+        return jsonify({'message': 'Erro interno no servidor.'}), 500
+
+
+def notificar_admin_remarcacao(agendamento_id, nova_data, novo_horario):
+    try:
+        # Buscar o agendamento pelo ID
+        agendamento = Agendamentos.query.get(agendamento_id)
+
+        if not agendamento:
+            return
+
+        # Dados do agendamento
+        cliente_nome = agendamento.cliente.nome
+        servico_nome = agendamento.servico.nome
+        data_agendamento_atual = agendamento.data_e_hora.strftime('%d/%m/%Y %H:%M')  # Data e hora atuais
+        nova_data_horario = f"{nova_data} {novo_horario}"  # Nova data e horário solicitados
+
+        # Criar o e-mail para o administrador
+        subject = f'Solicitação de Remarcação - {cliente_nome}'
+        body = f'''
+        Olá FisioMais,
+
+        O cliente {cliente_nome} solicitou a remarcação de um agendamento.
+
+        Detalhes do agendamento:
+        - Agendamento ID: {agendamento_id}
+        - Cliente: {cliente_nome}
+        - Serviço: {servico_nome}
+        - Data e Horário Atual: {data_agendamento_atual}
+        - Nova Data e Horário Solicitados: {nova_data_horario}
+
+        Por favor, analise a solicitação e tome as medidas necessárias.
+
+        Atenciosamente,
+        Sistema de Agendamentos
+        '''
+
+        msg_admin = Message(subject=subject, recipients=['fisiomaispilatesefisioterapia@gmail.com'], body=body)
+
+        # Enviar o e-mail
+        mail.send(msg_admin)
+        print("Notificação enviada ao administrador com sucesso.")
+
+    except Exception as e:
+        # Log detalhado do erro
+        error_details = traceback.format_exc()
+        print(f"Erro ao enviar notificação ao administrador: {e}")
+        print(f"Detalhes do erro: {error_details}")
 
 
 @agendamentos.route('/dias-permitidos/<int:colaborador_id>', methods=['GET'])

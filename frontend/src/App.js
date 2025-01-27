@@ -16,7 +16,8 @@ import Perfil from "./pages/Perfil";
 import VisualizarAgendamentos from "./pages/VisualizarAgendamentos";
 import AdminPage from "./pages/AdminPage"; 
 import Especialidades from "./pages/Especialidades"; 
-import GerenciarPagamentos from "./pages/GerenciarPagamentos"; 
+import GerenciarPagamentos from "./pages/GerenciarPagamentos";
+import CalendarioInterativo from "./pages/CalendarioInterativo";  
 
 
 function App() {
@@ -49,14 +50,7 @@ function App() {
                             </PageWrapper>
                         } 
                     />
-                    <Route 
-                        path="/criaragendamento" 
-                        element={
-                            <PageWrapper title="Criar Agendamento - Fisiomais">
-                                <CriarAgendamento />
-                            </PageWrapper>
-                        } 
-                    />
+                    
                     <Route 
                         path="/contato" 
                         element={
@@ -97,14 +91,7 @@ function App() {
                             </PageWrapper>
                         } 
                     />
-                    <Route 
-                        path="/visualizaragendamentos" 
-                        element={
-                            <PageWrapper title="Visualizar Agendamentos - Fisiomais">
-                                <VisualizarAgendamentos />
-                            </PageWrapper>
-                        } 
-                    />
+                    
                     <Route 
                         path="/adminPage" 
                         element={
@@ -118,6 +105,30 @@ function App() {
                         element={
                             <PageWrapper title="Gerenciar Pagamentos - Fisiomais">
                                 <GerenciarPagamentos />
+                            </PageWrapper>
+                        } 
+                    />
+                    <Route 
+                        path="/visualizaragendamentos" 
+                        element={
+                            <PageWrapper title="Visualizar Agendamentos - Fisiomais">
+                                <VisualizarAgendamentos />
+                            </PageWrapper>
+                        } 
+                    />
+                    <Route 
+                        path="/criaragendamento" 
+                        element={
+                            <PageWrapper title="Criar Agendamento - Fisiomais">
+                                <CriarAgendamento />
+                            </PageWrapper>
+                        } 
+                    />
+                    <Route 
+                        path="/calendario_agendamentos" 
+                        element={
+                            <PageWrapper title=" Agendamentos | Calendário - Fisiomais">
+                                <CalendarioInterativo />
                             </PageWrapper>
                         } 
                     />

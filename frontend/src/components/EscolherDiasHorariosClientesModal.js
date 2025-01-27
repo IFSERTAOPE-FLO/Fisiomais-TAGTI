@@ -108,7 +108,7 @@ const EscolherDiasHorariosClientesModal = ({ show, onHide, onSubmit }) => {
                 {diasSelecionados[dia] && (
                   <>
                     {/* Campo de horário de início */}
-                    <div className="d-flex align-items-center gap-2 mt-2">
+                    <div className="d-flex align-items-center gap-2 mt-2 relogioclientes">
                       <InputGroup size="sm" className="w-auto ms-auto">
                         <InputGroup.Text>Início</InputGroup.Text>
                         <FormControl

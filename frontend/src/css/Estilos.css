@@ -148,7 +148,7 @@ footer {
   color: white !important; /* Cor do texto ao hover/focus */
 }
 
-input[type="time"] {
+.relogioclientes input[type="time"] {
   -webkit-appearance: none; /* Remove ícone no Chrome/Safari */
   -moz-appearance: textfield; /* Remove ícone no Firefox */
   appearance: textfield; /* Remove ícone no Edge */
@@ -160,12 +160,12 @@ input[type="time"] {
   border-radius: 4px; /* Bordas arredondadas */
 }
 
-input[type="time"]::-webkit-calendar-picker-indicator {
+.relogioclientes input[type="time"]::-webkit-calendar-picker-indicator {
   position: absolute;
   right: 10px; /* Ajusta a posição horizontal */
   top: 50%; /* Ajusta a posição vertical */
   transform: translateY(-50%); /* Centraliza verticalmente */
   width: 20px; /* Ajuste o tamanho conforme necessário */
   height: 20px; /* Ajuste o tamanho conforme necessário */
- 
 }
+

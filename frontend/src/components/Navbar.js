@@ -258,6 +258,10 @@ function Navbar() {
 
                 </>
               )}
+              <li className="nav-item">
+                <Link className="nav-link" to="/calendario_agendamentos">Agendamentos</Link>
+              </li>
+
 
             </ul>
 
@@ -285,14 +289,13 @@ function Navbar() {
                 </>
               ) : (
 
-                <li className="nav-item dropdown  btn-user">
+                <li className="nav-item dropdown btn-user" >
                   <a
-                    className="nav-link dropdown-toggle   btn-user"
+                    className="nav-link dropdown-toggle  btn-user"
                     href="#"
-                    id="navbarDropdown"
+
                     role="button"
                     data-bs-toggle="dropdown"
-
                     aria-expanded="false"
                   >
                     {userPhoto && userPhoto.trim() !== "" ? (
@@ -306,7 +309,7 @@ function Navbar() {
                     )}
                     <span>{userName}</span>
                   </a>
-                  <ul className="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <ul className="dropdown-menu dropdownLogado" aria-labelledby="navbarDropdownUser">
                     <li>
                       <Link className="dropdown-item" to="/perfil">Meu Perfil</Link>
                     </li>
@@ -316,28 +319,16 @@ function Navbar() {
                     <li>
                       <Link className="dropdown-item" to="/gerenciarPagamentos">Gerenciar Pagamentos</Link>
                     </li>
-
                     {role === "admin" && (
-                      <>
-                        <li>
-                          <Link className="dropdown-item" to="/adminPage">Pagina Administrador</Link>
-                        </li>
-
-
-                      </>
+                      <li>
+                        <Link className="dropdown-item" to="/adminPage">Pagina Administrador</Link>
+                      </li>
                     )}
                     {role === "colaborador" && (
-                      <>
-                        <li>
-                          <Link className="dropdown-item" to="/adminPage">Central de Controle</Link>
-                        </li>
-
-
-                      </>
-                    )
-                    }
-
-
+                      <li>
+                        <Link className="dropdown-item" to="/adminPage">Central de Controle</Link>
+                      </li>
+                    )}
                     <li>
                       <Link className="dropdown-item" to="/visualizaragendamentos">Agendamentos</Link>
                     </li>
@@ -346,14 +337,14 @@ function Navbar() {
                         className="dropdown-item"
                         onClick={handleLogout}
                         type="button"
-
                       >
                         Sair
                       </button>
                     </li>
-
                   </ul>
+
                 </li>
+
 
               )}
             </ul>
@@ -385,12 +376,40 @@ function Navbar() {
                   {sidebarVisible && " Meu Perfil"}
                 </Link>
               </li>
-              <li className=" mt-3 ">
-                <Link to="/criaragendamento" className="sidebar-item">
-                  <i className="bi bi-calendar-plus"></i> {/* Ícone de agendamento */}
-                  {sidebarVisible && " Agendar Atendimento"}
-                </Link>
-              </li >
+              <li className="mt-3 dropdown">
+                <a
+                  className="sidebar-item dropdown-toggle"
+                  href="#"
+                  id="agendamentosDropdown"
+                  role="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  <i className="bi bi-calendar-check"></i> {/* Ícone de agendamentos */}
+                  {sidebarVisible && " Agendamentos"}
+                </a>
+                <ul className="dropdown-menu" aria-labelledby="agendamentosDropdown">
+                  <li>
+                    <Link to="/criaragendamento" className="dropdown-item">
+                      <i className="bi bi-calendar-plus"></i> {/* Ícone de criar agendamento */}
+                      {sidebarVisible && " Criar Agendamento"}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/visualizaragendamentos" className="dropdown-item">
+                      <i className="bi bi-calendar-check"></i> {/* Ícone de visualizar agendamentos */}
+                      {sidebarVisible && " Visualizar Agendamentos"}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/calendario_agendamentos" className="dropdown-item">
+                      <i className="bi bi-calendar-event"></i> {/* Ícone de calendário */}
+                      {sidebarVisible && " Calendário de Agendamentos"}
+                    </Link>
+                  </li>
+                </ul>
+              </li>
+
               <li className="mt-3">
                 <Link to="/gerenciarPagamentos" className="sidebar-item gap-2">
                   <i className="bi bi-credit-card"></i> {/* Ícone de pagamento */}
@@ -414,12 +433,7 @@ function Navbar() {
                   </Link>
                 </li>
               )}
-              <li className=" mt-3 ">
-                <Link to="/visualizaragendamentos" className="sidebar-item">
-                  <i className="bi bi-calendar-check"></i> {/* Ícone de agendamentos */}
-                  {sidebarVisible && " Agendamentos"}
-                </Link>
-              </li>
+              
               <li className=" mt-3 ">
                 <button onClick={handleLogout} className="sidebar-item logout-btn">
                   <i className="bi bi-box-arrow-right"></i> {/* Ícone de logout */}

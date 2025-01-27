@@ -134,7 +134,7 @@ const GerenciarPagamentos = () => {
                           className="btn btn-warning btn-sm"
                           onClick={() => handleShowEditModal(pagamento)}
                         >
-                          <i className="bi bi-pencil-square"></i> Editar
+                          <i className="bi bi-pencil-square"></i>  
                         </button>
                       )}
                       <button
