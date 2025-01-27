@@ -7,7 +7,7 @@
 /* Sub-navbar */
 .bg-subnavbar {
   background-color: #36ab9c !important; /* Cor de fundo diferenciada */
-  padding: 5px 0; /* Ajuste de padding para barra mais fina */
+  padding: 0.5px 0; /* Ajuste de padding para barra mais fina */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra sutil */
 }
 

@@ -49,23 +49,47 @@ const GerenciarPagamentos = () => {
 
   const handleSalvarAlteracoes = async () => {
     setLoading(true);
+    setSucesso('');
     try {
-      await axios.put(`http://localhost:5000/pagamentos/editar/${selectedPagamento.id_pagamento}`, selectedPagamento, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
-      setShowModal(false);
-      setLoading(false);
-      setSucesso('Pagamento atualizado com sucesso!');
-      const response = await axios.get('http://localhost:5000/pagamentos/listar', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
-      setPagamentos(response.data.pagamentos);
+      // Envia a requisição PUT para o backend
+      const response = await axios.put(
+        `http://localhost:5000/pagamentos/editar/${selectedPagamento.id_pagamento}`,
+        selectedPagamento,
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        }
+      );
+
+      // Verifica se a resposta do backend foi de sucesso
+      if (response.status === 200) {
+        setShowModal(false); // Fecha o modal
+        setLoading(false); // Desativa o carregamento
+        setSucesso(response.data.message); // Exibe a mensagem de sucesso recebida do backend
+
+        // Atualiza a lista de pagamentos
+        const pagamentosResponse = await axios.get('http://localhost:5000/pagamentos/listar', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+        setPagamentos(pagamentosResponse.data.pagamentos);
+        setErro('');
+      } else {
+        // Caso não seja sucesso, exibe a mensagem de erro
+        setErro(response.data.message || 'Erro desconhecido. Tente novamente.');
+        setLoading(false);
+      }
     } catch (error) {
       console.error('Erro ao atualizar pagamento:', error);
-      setErro('Erro ao atualizar pagamento. Tente novamente.');
+      setErro(error.response?.data?.message || 'Erro ao atualizar pagamento. Tente novamente.');
       setLoading(false);
     }
   };
+  // Função para formatar data UTC para o formato datetime-local
+  const formatDateToLocal = (date) => {
+    if (!date) return '';
+    const localDate = new Date(date);
+    return localDate.toISOString().slice(0, 16); // 'YYYY-MM-DDTHH:mm'
+  };
+
 
   return (
     <div className="container my-2">
@@ -116,7 +140,28 @@ const GerenciarPagamentos = () => {
                       }).format(pagamento.valor)}
                     </td>
                     <td>{pagamento.metodo_pagamento}</td>
-                    <td>{pagamento.status}</td>
+                    <td>
+                      {
+                        pagamento.status === "Pendente" ? (
+                          <>
+                            <i className="bi bi-hourglass-split" style={{ color: 'gray' }}></i>
+                            <span style={{ color: 'gray' }}> </span>
+                          </>
+                        ) : pagamento.status === "Pago" ? (
+                          <>
+                            <i className="bi bi-check-circle" style={{ color: 'green' }}></i>
+                            <span style={{ color: 'green' }}></span>
+                          </>
+                        ) : pagamento.status === "Cancelado" ? (
+                          <>
+                            <i className="bi bi-x-circle" style={{ color: 'red' }}></i>
+                            <span style={{ color: 'red' }}></span>
+                          </>
+                        ) : null
+                      }
+                    </td>
+                    
+
                     <td>
                       {pagamento.data_pagamento && new Date(pagamento.data_pagamento).toLocaleString('pt-BR', {
                         day: '2-digit',
@@ -134,7 +179,7 @@ const GerenciarPagamentos = () => {
                           className="btn btn-warning btn-sm"
                           onClick={() => handleShowEditModal(pagamento)}
                         >
-                          <i className="bi bi-pencil-square"></i>  
+                          <i className="bi bi-pencil-square"></i>
                         </button>
                       )}
                       <button
@@ -215,9 +260,9 @@ const GerenciarPagamentos = () => {
                       setSelectedPagamento({ ...selectedPagamento, status: e.target.value })
                     }
                   >
-                    <option value="pendente">Pendente</option>
-                    <option value="pago">Pago</option>
-                    <option value="cancelado">Cancelado</option>
+                    <option value="Pendente">Pendente</option>
+                    <option value="Pago">Pago</option>
+                    <option value="Cancelado">Cancelado</option>
                   </select>
                 </div>
               )}
@@ -229,11 +274,13 @@ const GerenciarPagamentos = () => {
                   type="datetime-local"
                   className="form-control"
                   id="data_pagamento"
-                  value={selectedPagamento.data_pagamento || ''}
+                  value={formatDateToLocal(selectedPagamento.data_pagamento)}
                   onChange={(e) => {
+                    // Converte a data para o formato UTC ao enviar para o backend
+                    const localDate = new Date(e.target.value);
                     setSelectedPagamento((prevState) => ({
                       ...prevState,
-                      data_pagamento: e.target.value,
+                      data_pagamento: localDate.toISOString(), // Envia para o backend no formato UTC
                     }));
                   }}
                   disabled={isCliente}

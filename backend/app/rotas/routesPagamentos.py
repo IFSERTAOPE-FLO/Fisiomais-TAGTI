@@ -93,6 +93,9 @@ from flask import current_app
 
 from datetime import datetime
 
+from datetime import datetime
+from pytz import timezone
+
 @pagamentos_faturas.route('/editar/<int:id_pagamento>', methods=['PUT'])
 @jwt_required()
 def editar_pagamento(id_pagamento):
@@ -144,9 +147,9 @@ def editar_pagamento(id_pagamento):
             current_app.logger.debug(f'Alterando referência de pagamento para: {dados["referencia_pagamento"]}')
             pagamento.referencia_pagamento = dados['referencia_pagamento']
         if 'data_pagamento' in dados:
-            # Converte a data de pagamento para o tipo datetime
+            # Converte a data de pagamento para o tipo datetime com o formato adequado
             try:
-                pagamento.data_pagamento = datetime.strptime(dados['data_pagamento'], '%Y-%m-%dT%H:%M')
+                pagamento.data_pagamento = datetime.strptime(dados['data_pagamento'], '%Y-%m-%dT%H:%M:%S.%fZ')
                 current_app.logger.debug(f'Alterando data de pagamento para: {dados["data_pagamento"]}')
             except ValueError as e:
                 current_app.logger.error(f'Erro ao converter a data de pagamento: {str(e)}')
@@ -164,6 +167,7 @@ def editar_pagamento(id_pagamento):
             return jsonify({'message': 'Erro ao atualizar pagamento', 'error': str(e)}), 500
 
     return jsonify({'message': 'Método não permitido'}), 405
+
 
 
 

@@ -341,23 +341,30 @@ const VisualizarAgendamentos = () => {
                         >
                           {agendamento.status.charAt(0).toUpperCase() + agendamento.status.slice(1)} {/* Primeira letra maiúscula */}
                         </span>
-                      </td>
+                      </td>                      
                       <td>
-                        <span
-                          className={`badge 
-                          ${agendamento.pagamento.status === 'pago' ? 'text-primary' :
-                              agendamento.pagamento.status === 'atrasado' ? 'text-danger' :
-                                agendamento.pagamento.status === 'pendente' ? 'text-secondary' :
-                                  agendamento.status === 'nao_compareceu' ? 'text-dark' :
-                                    'badge-warning'} 
-                          text-dark`}
-                        >
-                          {agendamento.pagamento && agendamento.pagamento.status ?
-                            agendamento.pagamento.status.charAt(0).toUpperCase() + agendamento.pagamento.status.slice(1) :
-                            'Sem pagamento'}
-
-                        </span>
-                      </td>
+                      {
+                        agendamento.pagamento.status === "Pendente" ? (
+                          <>
+                            <i className="bi bi-hourglass-split" style={{ color: 'gray' }}></i>
+                            <span style={{ color: 'gray' }}> </span>
+                          </>
+                        ) : agendamento.pagamento.status === "Pago" ? (
+                          <>
+                            <i className="bi bi-check-circle" style={{ color: 'green' }}></i>
+                            <span style={{ color: 'green' }}></span>
+                          </>
+                        ) : agendamento.pagamento.status === "Cancelado" ? (
+                          <>
+                            <i className="bi bi-x-circle" style={{ color: 'red' }}></i>
+                            <span style={{ color: 'red' }}></span>
+                          </>
+                        ) :  <>
+                        <i className="bi bi-hourglass-split" style={{ color: 'gray' }}></i>
+                        <span style={{ color: 'gray' }}> </span>
+                      </>
+                      }
+                    </td>
 
                       <td>
                         <div>

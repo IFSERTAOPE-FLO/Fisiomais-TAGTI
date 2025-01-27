@@ -8,6 +8,8 @@ import CriarAgendamento from "./CriarAgendamento";
 import VisualizarAgendamentos from "./VisualizarAgendamentos";
 import CalendarioInterativo from "./CalendarioInterativo";
 import Dashboard from "./Dashboard";
+import GerenciarPagamentos from "./GerenciarPagamentos";
+
 
 const AdminPage = () => {
   const savedRole = localStorage.getItem("role");
@@ -69,6 +71,15 @@ const AdminPage = () => {
                 <i className="bi bi-hospital"></i> Gerenciar Clínicas
               </a>
             </li>
+            <li className="nav-item">
+                <a
+                  href="#gerenciarPagamentos"
+                  className={`nav-link ${opcaoSelecionada === "gerenciarPagamentos" ? "active" : ""}`}
+                  onClick={() => handleOpcaoChange("gerenciarPagamentos")}
+                >
+                  <i className="bi bi-wallet2"></i> Gerenciar Pagamentos
+                </a>
+              </li>
             <li className="nav-item dropdown">
               <a
                 className={`nav-link dropdown-toggle ${opcaoSelecionada === "criarAgendamento" || opcaoSelecionada === "visualizarAgendamentos" || opcaoSelecionada === "CalendarioInterativo" ? "active" : ""}`}
@@ -80,6 +91,8 @@ const AdminPage = () => {
               >
                 <i className="bi bi-calendar-check"></i> Agendamentos
               </a>
+              
+
               <ul className="dropdown-menu dropdownAgendamentos" aria-labelledby="agendamentoDropdown">
                 <li className="agendamentoDropdown">
                   <a
@@ -123,6 +136,8 @@ const AdminPage = () => {
       {opcaoSelecionada === "visualizarAgendamentos" && <VisualizarAgendamentos />}
       {opcaoSelecionada === "CalendarioInterativo" && <CalendarioInterativo />}
       {opcaoSelecionada === "dashboard" && <Dashboard />}
+      {opcaoSelecionada === "gerenciarPagamentos" && <GerenciarPagamentos />}
+
     </div>
   );
 };

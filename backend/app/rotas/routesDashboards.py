@@ -1,6 +1,6 @@
 from flask import Blueprint, current_app, send_from_directory, request, jsonify
 from datetime import datetime, timedelta
-from app.models import Agendamentos, Clientes, Colaboradores, Servicos, Clinicas, db
+from app.models import Agendamentos, Clientes, Colaboradores, Servicos, Clinicas, Pagamentos, db
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from sqlalchemy import func  # Add this import
 import os
@@ -31,61 +31,53 @@ def dashboard_overview():
     total_servicos = Servicos.query.count()    
     total_clinicas = Clinicas.query.count()
 
+    # Contar agendamentos por status de pagamento
+    total_cancelados = Pagamentos.query.filter(Pagamentos.status.ilike('cancelado')).count()
+    total_pendentes = Pagamentos.query.filter(Pagamentos.status.ilike('pendente')).count()
+    total_pagos = Pagamentos.query.filter(Pagamentos.status.ilike('pago')).count()
 
-    # Contar agendamentos por status
-    total_cancelados = Agendamentos.query.filter_by(status='cancelado').count()
-    total_pendentes = Agendamentos.query.filter_by(status='pendente').count()
-    total_outros = Agendamentos.query.filter(Agendamentos.status.notin_(['confirmado', 'cancelado', 'pendente'])).count()
+    # Calcular a receita total dos pagamentos "pago"
+    total_receita = db.session.query(func.sum(Pagamentos.valor))\
+        .filter(Pagamentos.status.ilike('pago')).scalar() or 0
 
-    # Calcular a receita total dos agendamentos pagos
-    total_receita = db.session.query(func.sum(Servicos.valor))\
-        .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
-        .filter(Agendamentos.status == 'pago').scalar() or 0
-
-    # Calcular a receita do último ano para agendamentos pagos
+    # Calcular a receita do último ano para pagamentos "pago"
     ano_atual = datetime.now().year
-    receita_ultimo_ano = db.session.query(func.sum(Servicos.valor))\
-        .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
-        .filter(func.strftime('%Y', Agendamentos.data_e_hora) == str(ano_atual - 1))\
-        .filter(Agendamentos.status == 'pago').scalar() or 0
+    receita_ultimo_ano = db.session.query(func.sum(Pagamentos.valor))\
+        .filter(func.strftime('%Y', Pagamentos.data_pagamento) == str(ano_atual - 1))\
+        .filter(Pagamentos.status.ilike('pago')).scalar() or 0
 
-    # Calcular a receita do último mês para agendamentos pagos
+    # Calcular a receita do último mês para pagamentos "pago"
     ultimo_mes = datetime.now().month - 1 if datetime.now().month > 1 else 12
-    receita_ultimo_mes = db.session.query(func.sum(Servicos.valor))\
-        .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
-        .filter(func.strftime('%m', Agendamentos.data_e_hora) == f"{ultimo_mes:02d}")\
-        .filter(Agendamentos.status == 'pago').scalar() or 0
+    receita_ultimo_mes = db.session.query(func.sum(Pagamentos.valor))\
+        .filter(func.strftime('%m', Pagamentos.data_pagamento) == f"{ultimo_mes:02d}")\
+        .filter(Pagamentos.status.ilike('pago')).scalar() or 0
 
-    # Calcular a receita de todos os anos para agendamentos pagos
-    receita_todos_anos = db.session.query(func.strftime('%Y', Agendamentos.data_e_hora), func.sum(Servicos.valor))\
-        .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
-        .filter(Agendamentos.status == 'pago')\
-        .group_by(func.strftime('%Y', Agendamentos.data_e_hora)).all()
+    # Calcular a receita de todos os anos para pagamentos "pago"
+    receita_todos_anos = db.session.query(func.strftime('%Y', Pagamentos.data_pagamento), func.sum(Pagamentos.valor))\
+        .filter(Pagamentos.status.ilike('pago'))\
+        .group_by(func.strftime('%Y', Pagamentos.data_pagamento)).all()
 
     # Converte a lista de tuplas para um formato JSON serializável
     receita_todos_anos = [
         {"ano": row[0], "receita": row[1]} for row in receita_todos_anos
     ]
 
-    # Calcular a receita anual do ano atual para agendamentos pagos
-    receita_ano_atual = db.session.query(func.sum(Servicos.valor))\
-        .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
-        .filter(func.strftime('%Y', Agendamentos.data_e_hora) == str(ano_atual))\
-        .filter(Agendamentos.status == 'pago').scalar() or 0
+    # Calcular a receita anual do ano atual para pagamentos "pago"
+    receita_ano_atual = db.session.query(func.sum(Pagamentos.valor))\
+        .filter(func.strftime('%Y', Pagamentos.data_pagamento) == str(ano_atual))\
+        .filter(Pagamentos.status.ilike('pago')).scalar() or 0
 
-    # Calcular a média mensal do ano atual para agendamentos pagos
-    receita_mensal_ano_atual = db.session.query(func.strftime('%m', Agendamentos.data_e_hora), func.sum(Servicos.valor))\
-        .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
-        .filter(func.strftime('%Y', Agendamentos.data_e_hora) == str(ano_atual))\
-        .filter(Agendamentos.status == 'pago')\
-        .group_by(func.strftime('%m', Agendamentos.data_e_hora)).all()
-    # Calcular a receita do mês atual para agendamentos pagos
+    # Calcular a média mensal do ano atual para pagamentos "pago"
+    receita_mensal_ano_atual = db.session.query(func.strftime('%m', Pagamentos.data_pagamento), func.sum(Pagamentos.valor))\
+        .filter(func.strftime('%Y', Pagamentos.data_pagamento) == str(ano_atual))\
+        .filter(Pagamentos.status.ilike('pago'))\
+        .group_by(func.strftime('%m', Pagamentos.data_pagamento)).all()
+
+    # Calcular a receita do mês atual para pagamentos "pago"
     mes_atual = datetime.now().month
-    receita_mes_atual = db.session.query(func.sum(Servicos.valor))\
-        .join(Agendamentos, Agendamentos.id_servico == Servicos.id_servico)\
-        .filter(func.strftime('%m', Agendamentos.data_e_hora) == f"{mes_atual:02d}")\
-        .filter(Agendamentos.status == 'pago').scalar() or 0
-
+    receita_mes_atual = db.session.query(func.sum(Pagamentos.valor))\
+        .filter(func.strftime('%m', Pagamentos.data_pagamento) == f"{mes_atual:02d}")\
+        .filter(Pagamentos.status.ilike('pago')).scalar() or 0
 
     # Calcular a média mensal
     total_mes = len(receita_mensal_ano_atual)
@@ -97,19 +89,18 @@ def dashboard_overview():
         "total_clientes": total_clientes,
         "total_colaboradores": total_colaboradores,
         "total_servicos": total_servicos,
-        "total_clinicas": total_clinicas,  # Incluindo o total de clínicas
+        "total_clinicas": total_clinicas,
         "total_receita": str(total_receita),
         "receita_ultimo_ano": str(receita_ultimo_ano),
         "receita_ultimo_mes": str(receita_ultimo_mes),
-        "receita_mes_atual": str(receita_mes_atual),  # Adicionando receita do mês atual
+        "receita_mes_atual": str(receita_mes_atual),
         "receita_todos_anos": receita_todos_anos,
         "receita_ano_atual": str(receita_ano_atual),
         "media_mensal_ano_atual": str(media_mensal_ano_atual),
         "total_cancelados": total_cancelados,
         "total_pendentes": total_pendentes,
-        "total_outros": total_outros
+        "total_pagos": total_pagos  # Total de pagamentos pagos
     })
-
 
 
 

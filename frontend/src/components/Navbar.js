@@ -258,9 +258,7 @@ function Navbar() {
 
                 </>
               )}
-              <li className="nav-item">
-                <Link className="nav-link" to="/calendario_agendamentos">Agendamentos</Link>
-              </li>
+
 
 
             </ul>
@@ -313,24 +311,24 @@ function Navbar() {
                     <li>
                       <Link className="dropdown-item" to="/perfil">Meu Perfil</Link>
                     </li>
+                    {(role === "admin" || role === "colaborador") && (
+                      <li>
+                        <Link className="dropdown-item" to="/adminPage">Central de Controle</Link>
+                      </li>
+                    )}
+
                     <li>
                       <Link className="dropdown-item" to="/criaragendamento">Agendar Atendimento</Link>
                     </li>
                     <li>
                       <Link className="dropdown-item" to="/gerenciarPagamentos">Gerenciar Pagamentos</Link>
                     </li>
-                    {role === "admin" && (
-                      <li>
-                        <Link className="dropdown-item" to="/adminPage">Pagina Administrador</Link>
-                      </li>
-                    )}
-                    {role === "colaborador" && (
-                      <li>
-                        <Link className="dropdown-item" to="/adminPage">Central de Controle</Link>
-                      </li>
-                    )}
+
                     <li>
                       <Link className="dropdown-item" to="/visualizaragendamentos">Agendamentos</Link>
+                    </li>
+                    <li >
+                      <Link className="dropdown-item" to="/calendario_agendamentos">Calendário</Link>
                     </li>
                     <li>
                       <button
@@ -433,7 +431,7 @@ function Navbar() {
                   </Link>
                 </li>
               )}
-              
+
               <li className=" mt-3 ">
                 <button onClick={handleLogout} className="sidebar-item logout-btn">
                   <i className="bi bi-box-arrow-right"></i> {/* Ícone de logout */}
