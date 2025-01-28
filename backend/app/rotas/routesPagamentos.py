@@ -135,8 +135,17 @@ def editar_pagamento(id_pagamento):
             current_app.logger.debug(f'Alterando valor para: {dados["valor"]}')
             pagamento.valor = dados['valor']
         if 'status' in dados:
-            current_app.logger.debug(f'Alterando status para: {dados["status"]}')
-            pagamento.status = dados['status']
+            novo_status = dados['status']
+            current_app.logger.debug(f'Alterando status para: {novo_status}')
+            pagamento.status = novo_status
+
+            # Se o status do pagamento for 'cancelado', altera o status do agendamento também
+            if novo_status == 'Cancelado':
+                current_app.logger.debug(f'Alterando status do agendamento para: cancelado')
+                agendamento = pagamento.agendamento  # Obtém o agendamento relacionado ao pagamento
+                if agendamento:
+                    agendamento.status = 'cancelado'
+                    current_app.logger.debug(f'Status do agendamento alterado para: cancelado')
             
         if 'metodo_pagamento' in dados:
             current_app.logger.debug(f'Alterando método de pagamento para: {dados["metodo_pagamento"]}')
