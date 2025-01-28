@@ -95,7 +95,7 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
     // Se for menor que zero (movido para trás), volta um mês
     if (delta) {
       if (delta.x > 0) {
-        // Evento movido para a direita (próximo mês)
+        // Evento movido para a direita (próximo mês) não está funcionando ainda
         info.view.calendar.next(); // Muda para o próximo mês
       } else if (delta.x < 0) {
         // Evento movido para a esquerda (volta um mês)
