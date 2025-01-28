@@ -90,9 +90,6 @@ def listar_pagamentos():
 
 
 from flask import current_app
-
-from datetime import datetime
-
 from datetime import datetime
 from pytz import timezone
 
@@ -140,6 +137,7 @@ def editar_pagamento(id_pagamento):
         if 'status' in dados:
             current_app.logger.debug(f'Alterando status para: {dados["status"]}')
             pagamento.status = dados['status']
+            
         if 'metodo_pagamento' in dados:
             current_app.logger.debug(f'Alterando método de pagamento para: {dados["metodo_pagamento"]}')
             pagamento.metodo_pagamento = dados['metodo_pagamento']

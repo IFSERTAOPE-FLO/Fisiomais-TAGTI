@@ -157,10 +157,16 @@ const GerenciarPagamentos = () => {
                             <i className="bi bi-x-circle" style={{ color: 'red' }}></i>
                             <span style={{ color: 'red' }}></span>
                           </>
+                        ) : pagamento.status === "Atrasado" ? (
+                          <>
+                            <i className="bi bi-clock" style={{ color: 'orange' }}></i> {/* Ícone de relógio */}
+                            <span style={{ color: 'orange' }}>Atrasado</span>
+                          </>
                         ) : null
                       }
                     </td>
-                    
+
+
 
                     <td>
                       {pagamento.data_pagamento && new Date(pagamento.data_pagamento).toLocaleString('pt-BR', {
@@ -233,8 +239,7 @@ const GerenciarPagamentos = () => {
 
               <div className="mb-3">
                 <label htmlFor="metodo_pagamento" className="form-label">Método de Pagamento</label>
-                <input
-                  type="text"
+                <select
                   className="form-control"
                   id="metodo_pagamento"
                   value={selectedPagamento.metodo_pagamento || ''}
@@ -245,8 +250,17 @@ const GerenciarPagamentos = () => {
                     }));
                   }}
                   disabled={isCliente}
-                />
+                >
+                  <option value="">Selecione o método de pagamento</option>
+                  <option value="boleto">Boleto Bancário</option>
+                  <option value="cartao_credito">Cartão de Crédito</option>
+                  <option value="cartao_debito">Cartão de Débito</option>
+                  <option value="pix">Pix</option>
+                  <option value="transferencia_bancaria">Transferência Bancária</option>
+                  <option value="dinheiro">Dinheiro</option>
+                </select>
               </div>
+
 
               {/* Status */}
               {(isAdmin || isColaborador) && (
@@ -263,6 +277,7 @@ const GerenciarPagamentos = () => {
                     <option value="Pendente">Pendente</option>
                     <option value="Pago">Pago</option>
                     <option value="Cancelado">Cancelado</option>
+                    <option value="Atrasado">Atrasado</option>
                   </select>
                 </div>
               )}

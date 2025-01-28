@@ -517,6 +517,9 @@ const VisualizarAgendamentos = () => {
                     </>
                   )}
                   <div className="col-12 col-md-6">
+                    <strong>Pagamento: </strong> {selectedAgendamento.pagamento.status || 'pendente'}
+                  </div>
+                  <div className="col-12 col-md-6">
                     <strong>Status: </strong>
                     <span
                       className={` fw-bold
@@ -598,22 +601,19 @@ const VisualizarAgendamentos = () => {
                     <Button
                       variant="btn btn-danger"
                       onClick={async () => {
-                        await handleConfirmarNegar(selectedAgendamento.id, 'negado');
+                        await handleConfirmarNegar(selectedAgendamento.id, 'cancelado');
                         handleCloseModal(); // Fecha o modal após negar
                       }}
-                      disabled={loading || selectedAgendamento.status?.toLowerCase() === 'negado'}
+                      disabled={loading || selectedAgendamento.status?.toLowerCase() === 'cancelado'}
                     >
-                      {loading && selectedAgendamento.status !== 'negado' ? (
+                      {loading && selectedAgendamento.status !== 'cancelado' ? (
                         <>
                           <i className="bi bi-arrow-repeat spinner"></i> Carregando...
                         </>
                       ) : (
-                        'Negar'
+                        'Cancelar'
                       )}
                     </Button>
-
-
-
 
                     <Button
                       variant="btn btn-warning"
@@ -643,7 +643,7 @@ const VisualizarAgendamentos = () => {
 
 
 
-                {role !== 'admin' && (
+                {role === 'cliente' && (
                   <Button variant="btn btn-warning" onClick={() => handleNotifyAdmin()} disabled={loading}>
                     {loading ? (
                       <i className="bi bi-arrow-repeat spinner"></i>
@@ -674,7 +674,7 @@ const VisualizarAgendamentos = () => {
               >
                 <option value="">Selecione</option>
 
-                <option value="cancelado">Cancelado</option>
+                <option value="negar">Negar</option>
                 <option value="nao_compareceu">Não Compareceu</option>
                 <option value="remarcado">Remarcado</option>
               </select>

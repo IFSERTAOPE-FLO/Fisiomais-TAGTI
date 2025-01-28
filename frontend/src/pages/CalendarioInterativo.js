@@ -7,13 +7,17 @@ import axios from "axios";
 import "../css/fullcalendar.css";
 import ptLocale from "@fullcalendar/core/locales/pt-br";
 import { Modal, Button, Form } from "react-bootstrap"; // Importando os componentes do react-bootstrap
-
+import { Link } from "react-router-dom";
 const CalendarioInterativo = () => {
   const [eventos, setEventos] = useState([]);
   const [eventoSelecionado, setEventoSelecionado] = useState(null);
-  const [showModal, setShowModal] = useState(false); // Controla a exibição do modal
+  const [showModalHorario, setShowModalHorario] = useState(false); // Controla o modal de edição de horário
+  const [showModalDetalhes, setShowModalDetalhes] = useState(false); // Controla o modal de detalhes do agendamento
+
   const [novoHorario, setNovoHorario] = useState(""); // Armazena o novo horário selecionado
   const [loading, setLoading] = useState(false);
+
+  const role = localStorage.getItem('role'); // Obtém o papel do usuário logado
 
   const formatarDataBrasileira = (dataHora) => {
     const data = new Date(dataHora); // Converte a string para um objeto Date
@@ -22,13 +26,12 @@ const CalendarioInterativo = () => {
     const mes = String(data.getMonth() + 1).padStart(2, '0'); // Meses começam do 0
     const ano = data.getFullYear();
 
+
     const hora = String(data.getHours()).padStart(2, '0');
     const minutos = String(data.getMinutes()).padStart(2, '0');
 
     return `${dia}/${mes}/${ano} ${hora}:${minutos}`; // Retorna a data e o horário no formato DD/MM/AAAA HH:mm
   };
-
-
 
   // Função para buscar agendamentos do backend
   const fetchAgendamentos = async () => {
@@ -57,7 +60,12 @@ const CalendarioInterativo = () => {
         description: `Agendamento: ${agendamento.id_agendamento}\nServiço: ${agendamento.servico}\nCliente: ${agendamento.cliente || "Não informado"}
 Colaborador: ${agendamento.colaborador || "Não informado"}\nStatus: ${agendamento.status}
 Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e horário pretendido: ${formatarDataBrasileira(agendamento.dias_e_horarios)}` : ''}`,
-
+        extendedProps: {
+          cliente: agendamento.cliente || "Não informado",
+          colaborador: agendamento.colaborador || "Não informado",
+          status: agendamento.status || "Não informado", // Garantindo que o status seja passado corretamente
+          dias_e_horarios: agendamento.dias_e_horarios, // Garantindo que a nova data de remarcação seja passada corretamente
+        },
       }));
 
       setEventos(agendamentos);
@@ -70,30 +78,24 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
     fetchAgendamentos();
   }, []);
 
-  // Função para manipular o arraste de eventos
   const handleEventDrop = async (info) => {
     const { id, start } = info.event;
-  
-    // Ajusta o horário para o fuso horário BR (UTC -3)
+
     const startBR = new Date(start);
-    startBR.setHours(startBR.getHours() - 3); // Subtrai 3 horas para converter para o horário BR
-  
+    startBR.setHours(startBR.getHours() - 3);
+
     const novaData = startBR.toISOString().split("T")[0];
-    const novoHorario = startBR.toISOString().split("T")[1].slice(0, 5); // Extrai apenas HH:mm
-  
-    // Abre o modal para o usuário escolher o novo horário
-    setNovoHorario(novoHorario); // Define o horário inicial
-    setShowModal(true); // Exibe o modal
-  
-    // Atualiza o evento selecionado
+    const novoHorario = startBR.toISOString().split("T")[1].slice(0, 5);
+
+    setNovoHorario(novoHorario);
+    setShowModalHorario(true); // Abre o modal de edição de horário
+
     setEventoSelecionado({
       id,
       novaData,
       novoHorario,
     });
   };
-  
-  
 
   const handleSalvarHorario = async () => {
     setLoading(true); // Ativa o carregamento
@@ -118,7 +120,7 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
           response.data?.message || "Agendamento atualizado com sucesso!";
         alert(successMessage);
         fetchAgendamentos(); // Atualiza a lista de agendamentos
-        setShowModal(false); // Fecha o modal
+        setShowModalHorario(false); // Fecha o modal
       }
     } catch (error) {
       console.error("Erro ao atualizar agendamento:", error);
@@ -131,23 +133,20 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
     }
   };
 
-
-
-
-  // Função para exibir os detalhes ao clicar no evento
   const handleEventClick = (info) => {
-    const evento = info.event.extendedProps;
-
-    // Ajusta o horário para o fuso horário BR (UTC -3)
-    const startBR = new Date(evento.start);
-    startBR.setHours(startBR.getHours() - 3); // Subtrai 3 horas para converter para o horário BR
-
-    // Atualiza o evento com a hora ajustada
+    const evento = info.event;
     setEventoSelecionado({
-      ...evento,
-      hora: startBR.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+      title: evento.title,
+      cliente: evento.extendedProps.cliente,
+      colaborador: evento.extendedProps.colaborador,
+      status: evento.extendedProps.status,
+      start: evento.start,
+      descricao: evento.extendedProps.description,
+      dias_e_horarios: evento.extendedProps.dias_e_horarios, // Adicionando a nova data de remarcação
     });
+    setShowModalDetalhes(true); // Exibe o modal
   };
+
 
 
   return (
@@ -177,9 +176,13 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
             locale={ptLocale}
             events={eventos}
             editable={true}
-            eventDrop={handleEventDrop}
+            eventClick={handleEventClick} // Evento de clique simples
+            eventDrop={handleEventDrop} // Evento de arrastar (drag)
             height="auto"
             eventContent={(eventInfo) => {
+              const { title, extendedProps } = eventInfo.event;
+              const cliente = extendedProps.cliente || "Cliente não informado";
+              const colaborador = extendedProps.colaborador || "Colaborador não informado";
               return (
                 <div
                   title={eventInfo.event.extendedProps.description}
@@ -190,14 +193,14 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
                     color: eventInfo.event.textColor,
                     padding: "5px",
                     borderRadius: "5px",
-                    fontSize: "clamp(0.8rem, 2vw, 1rem)", // Responsivo com a função clamp
+                    fontSize: "clamp(0.4rem, 2vw, 0.8rem)",
                     lineHeight: "1.2",
-                    textOverflow: "ellipsis", // Impede texto longo de ultrapassar o limite
-                    overflow: "hidden", // Esconde o texto extra
-                    whiteSpace: "nowrap", // Impede quebras de linha
+                    textOverflow: "ellipsis",
+                    overflow: "hidden",
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  <strong>{eventInfo.event.title}</strong>
+                  <strong>{title}</strong>
                   <br />
                   <span>
                     {new Date(eventInfo.event.start).toLocaleTimeString("pt-BR", {
@@ -205,20 +208,19 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
                       minute: "2-digit",
                     })}
                   </span>
+                  {role !== 'cliente' && (<><br /> <span> Cliente: {cliente}</span> </>)}
+                  <br />
+                  {role === 'admin' && <span>Colaborador: {colaborador}</span>}
+                  {role === 'cliente' && <span>Colaborador: {colaborador}</span>}
                 </div>
               );
             }}
-
-            eventClick={handleEventClick}
-            
           />
         </div>
       </div>
 
-
-
       {/* Modal de edição de horário */}
-      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+      <Modal show={showModalHorario} onHide={() => setShowModalHorario(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>Escolher Novo Horário</Modal.Title>
         </Modal.Header>
@@ -235,22 +237,52 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
+          <Button variant="secondary" onClick={() => setShowModalHorario(false)}>
             Fechar
           </Button>
           <Button
             variant="primary"
             onClick={handleSalvarHorario}
-            disabled={loading} // Desabilita o botão enquanto carrega
+            disabled={loading}
           >
             {loading ? (
-              <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> // Ícone de carregamento
+              <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             ) : (
               "Salvar"
             )}
           </Button>
         </Modal.Footer>
+      </Modal>
 
+      {/* Modal de detalhes do agendamento */}
+      <Modal show={showModalDetalhes} onHide={() => setShowModalDetalhes(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Detalhes do Agendamento</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {eventoSelecionado && (
+            <>
+              <p><strong>Serviço:</strong> {eventoSelecionado.title}</p>
+              <p><strong>Cliente:</strong> {eventoSelecionado.cliente}</p>
+              <p><strong>Colaborador:</strong> {eventoSelecionado.colaborador}</p>
+              <p><strong>Horário:</strong> {formatarDataBrasileira(eventoSelecionado.start)}</p>
+              <p><strong>Status:</strong> {eventoSelecionado.status || "Não informado"}</p>
+              {eventoSelecionado.extendedProps?.descricao && (
+                <p><strong>Descrição:</strong> {eventoSelecionado.extendedProps.descricao}</p>
+              )}
+            </>
+          )}
+          
+        </Modal.Body>
+        <Modal.Footer>
+        <Link to="/visualizaragendamentos" className="btn btn-info text-decoration-none">
+            <i className="bi bi-calendar-check"></i> {/* Ícone de visualizar agendamentos */}
+            Visualizar
+          </Link>
+          <Button variant="secondary" onClick={() => setShowModalDetalhes(false)}>
+            Fechar
+          </Button>
+        </Modal.Footer>
       </Modal>
     </div>
   );

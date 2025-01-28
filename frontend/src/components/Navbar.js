@@ -264,7 +264,7 @@ function Navbar() {
             </ul>
 
 
-            <ul className={`navbar-nav ms-auto ${isLoggedIn ? 'z-top' : ''}`}>
+            <ul className={`navbar-nav ms-auto ${isLoggedIn ? 'z-top d-none d-md-block ' : ''}`}>
               {!isLoggedIn ? (
                 <>
                   <li className="nav-item  ">
@@ -352,7 +352,7 @@ function Navbar() {
 
       {/* Remove a logo do navbar */}
       {isLoggedIn && (
-        <div className="sidebar-container d-none d-md-block ">
+        <div className="sidebar-container  ">
           <button
             className={`sidebar-toggle ${sidebarVisible ? 'toggle-open' : ''}`}
             onClick={() => setSidebarVisible(!sidebarVisible)}
