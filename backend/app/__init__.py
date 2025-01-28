@@ -1,8 +1,10 @@
 #cd backend
 #python -m venv venv(a primeira vez)
 
-#pip freeze > requirements.txt (caso adicionem uma nova importação)
+
 #pip install -r requirements.txt
+
+#pip freeze > requirements.txt (Apenas caso adicionem uma nova importação do flask)
 #flask run
 #email: fisiomaispilatesefisioterapia@gmail.com  senha: 12345
 
