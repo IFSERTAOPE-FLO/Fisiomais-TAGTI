@@ -79,23 +79,44 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
   }, []);
 
   const handleEventDrop = async (info) => {
-    const { id, start } = info.event;
-
+    const { id, start, end, delta } = info.event;
+  
+    // Verificando se o evento foi movido para outro mês
     const startBR = new Date(start);
-    startBR.setHours(startBR.getHours() - 3);
-
+    const endBR = new Date(end);
+  
+    startBR.setHours(startBR.getHours() - 3); // Ajuste de fuso horário
+    endBR.setHours(endBR.getHours() - 3); // Ajuste de fuso horário
+  
     const novaData = startBR.toISOString().split("T")[0];
     const novoHorario = startBR.toISOString().split("T")[1].slice(0, 5);
-
+  
+    // Se o delta de deslocamento for maior que zero (movido para frente), vai para o próximo mês
+    // Se for menor que zero (movido para trás), volta um mês
+    if (delta) {
+      if (delta.x > 0) {
+        // Evento movido para a direita (próximo mês)
+        info.view.calendar.next(); // Muda para o próximo mês
+      } else if (delta.x < 0) {
+        // Evento movido para a esquerda (volta um mês)
+        info.view.calendar.prev(); // Muda para o mês anterior
+      }
+    }
+  
     setNovoHorario(novoHorario);
     setShowModalHorario(true); // Abre o modal de edição de horário
-
+  
     setEventoSelecionado({
       id,
       novaData,
       novoHorario,
+      novaDataFim: endBR.toISOString().split("T")[0], // Atualiza a data de fim do evento
+      novoHorarioFim: endBR.toISOString().split("T")[1].slice(0, 5), // Atualiza o horário de fim
     });
   };
+  
+  
+
 
   const handleSalvarHorario = async () => {
     setLoading(true); // Ativa o carregamento
@@ -237,7 +258,10 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModalHorario(false)}>
+          <Button variant="secondary" onClick={() => {
+            setShowModalHorario(false);  // Fecha o modal
+            fetchAgendamentos();          // Chama a função para buscar os agendamentos
+          }}>
             Fechar
           </Button>
           <Button
@@ -267,15 +291,20 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
               <p><strong>Colaborador:</strong> {eventoSelecionado.colaborador}</p>
               <p><strong>Horário:</strong> {formatarDataBrasileira(eventoSelecionado.start)}</p>
               <p><strong>Status:</strong> {eventoSelecionado.status || "Não informado"}</p>
+              {eventoSelecionado.status === 'Pedido de Remarcação' && eventoSelecionado.dias_e_horarios && (
+                <p><strong>Pedido de Remarcação:</strong> {formatarDataBrasileira(eventoSelecionado.dias_e_horarios)}</p>
+              )}
+
               {eventoSelecionado.extendedProps?.descricao && (
                 <p><strong>Descrição:</strong> {eventoSelecionado.extendedProps.descricao}</p>
               )}
             </>
           )}
-          
+
+
         </Modal.Body>
         <Modal.Footer>
-        <Link to="/visualizaragendamentos" className="btn btn-info text-decoration-none">
+          <Link to="/visualizaragendamentos" className="btn btn-info text-decoration-none">
             <i className="bi bi-calendar-check"></i> {/* Ícone de visualizar agendamentos */}
             Visualizar
           </Link>

@@ -27,7 +27,19 @@ const VisualizarAgendamentos = () => {
   const [pesquisaTipo, setPesquisaTipo] = useState('Número do Agendamento'); // Estado para o tipo de pesquisa
   const [pesquisaValor, setPesquisaValor] = useState(''); // Estado para o valor da pesquisa
 
+  const formatarDataBrasileira = (dataHora) => {
+    const data = new Date(dataHora); // Converte a string para um objeto Date
 
+    const dia = String(data.getDate()).padStart(2, '0');
+    const mes = String(data.getMonth() + 1).padStart(2, '0'); // Meses começam do 0
+    const ano = data.getFullYear();
+
+
+    const hora = String(data.getHours()).padStart(2, '0');
+    const minutos = String(data.getMinutes()).padStart(2, '0');
+
+    return `${dia}/${mes}/${ano} ${hora}:${minutos}`; // Retorna a data e o horário no formato DD/MM/AAAA HH:mm
+  };
 
   // A tabela agora vai exibir agendamentos filtrados
 
@@ -301,15 +313,23 @@ const VisualizarAgendamentos = () => {
                       <td>{agendamento.cliente || 'Cliente não informado'}</td>
                       <td className="text-center">
                         {agendamento.data && !isNaN(new Date(agendamento.data).getTime())
-                          ? new Date(agendamento.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
+                          ? (
+                            <>
+                              {new Date(agendamento.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                              {agendamento.dias_e_horarios && agendamento.dias_e_horarios !== 'não informada'
+                                ? ` - Solicitação de remarcação: ${formatarDataBrasileira(agendamento.dias_e_horarios)}`
+                                : ''
+                              }
+                            </>
+                          )
                           : (
                             <>
                               Aguardar confirmação. Intenção de aulas: {agendamento.dias_e_horarios || 'não informada'}
                             </>
                           )
                         }
-
                       </td>
+
                       <td>{agendamento.hora || ''}</td>
                       <td>{agendamento.servico || 'Serviço não encontrado'}</td>
                       <td>
@@ -341,30 +361,30 @@ const VisualizarAgendamentos = () => {
                         >
                           {agendamento.status.charAt(0).toUpperCase() + agendamento.status.slice(1)} {/* Primeira letra maiúscula */}
                         </span>
-                      </td>                      
+                      </td>
                       <td>
-                      {
-                        agendamento.pagamento.status === "Pendente" ? (
-                          <>
+                        {
+                          agendamento.pagamento.status === "Pendente" ? (
+                            <>
+                              <i className="bi bi-hourglass-split" style={{ color: 'gray' }}></i>
+                              <span style={{ color: 'gray' }}> </span>
+                            </>
+                          ) : agendamento.pagamento.status === "Pago" ? (
+                            <>
+                              <i className="bi bi-check-circle" style={{ color: 'green' }}></i>
+                              <span style={{ color: 'green' }}></span>
+                            </>
+                          ) : agendamento.pagamento.status === "Cancelado" ? (
+                            <>
+                              <i className="bi bi-x-circle" style={{ color: 'red' }}></i>
+                              <span style={{ color: 'red' }}></span>
+                            </>
+                          ) : <>
                             <i className="bi bi-hourglass-split" style={{ color: 'gray' }}></i>
                             <span style={{ color: 'gray' }}> </span>
                           </>
-                        ) : agendamento.pagamento.status === "Pago" ? (
-                          <>
-                            <i className="bi bi-check-circle" style={{ color: 'green' }}></i>
-                            <span style={{ color: 'green' }}></span>
-                          </>
-                        ) : agendamento.pagamento.status === "Cancelado" ? (
-                          <>
-                            <i className="bi bi-x-circle" style={{ color: 'red' }}></i>
-                            <span style={{ color: 'red' }}></span>
-                          </>
-                        ) :  <>
-                        <i className="bi bi-hourglass-split" style={{ color: 'gray' }}></i>
-                        <span style={{ color: 'gray' }}> </span>
-                      </>
-                      }
-                    </td>
+                        }
+                      </td>
 
                       <td>
                         <div>
