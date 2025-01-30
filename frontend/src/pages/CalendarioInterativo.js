@@ -91,17 +91,7 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
     const novaData = startBR.toISOString().split("T")[0];
     const novoHorario = startBR.toISOString().split("T")[1].slice(0, 5);
   
-    // Se o delta de deslocamento for maior que zero (movido para frente), vai para o próximo mês
-    // Se for menor que zero (movido para trás), volta um mês
-    if (delta) {
-      if (delta.x > 0) {
-        // Evento movido para a direita (próximo mês) não está funcionando ainda
-        info.view.calendar.next(); // Muda para o próximo mês
-      } else if (delta.x < 0) {
-        // Evento movido para a esquerda (volta um mês)
-        info.view.calendar.prev(); // Muda para o mês anterior
-      }
-    }
+    
   
     setNovoHorario(novoHorario);
     setShowModalHorario(true); // Abre o modal de edição de horário
