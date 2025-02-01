@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+
 import { Modal, Button } from 'react-bootstrap';
 import { FaCalendarAlt } from 'react-icons/fa'; // Ícone de calendário
 import '../css/Estilos.css';
 import Calendar from 'react-calendar'; // Para exibir o calendário
 import Paginator from '../components/Paginator';
+
 
 
 const VisualizarAgendamentos = () => {
@@ -18,7 +20,6 @@ const VisualizarAgendamentos = () => {
   const [showDateFilterModal, setShowDateFilterModal] = useState(false); // Para controlar o novo modal de filtro de data
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-
   const itemsPerPage = 10;
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [newStatus, setNewStatus] = useState('');
@@ -26,7 +27,19 @@ const VisualizarAgendamentos = () => {
   const [pesquisaTipo, setPesquisaTipo] = useState('Número do Agendamento'); // Estado para o tipo de pesquisa
   const [pesquisaValor, setPesquisaValor] = useState(''); // Estado para o valor da pesquisa
 
+  const formatarDataBrasileira = (dataHora) => {
+    const data = new Date(dataHora); // Converte a string para um objeto Date
 
+    const dia = String(data.getDate()).padStart(2, '0');
+    const mes = String(data.getMonth() + 1).padStart(2, '0'); // Meses começam do 0
+    const ano = data.getFullYear();
+
+
+    const hora = String(data.getHours()).padStart(2, '0');
+    const minutos = String(data.getMinutes()).padStart(2, '0');
+
+    return `${dia}/${mes}/${ano} ${hora}:${minutos}`; // Retorna a data e o horário no formato DD/MM/AAAA HH:mm
+  };
 
   // A tabela agora vai exibir agendamentos filtrados
 
@@ -215,7 +228,7 @@ const VisualizarAgendamentos = () => {
     <div className="container  my-2">
       <div className="card shadow">
         <div className="card-header ">
-          <h2 className="text-center text-primary fw-bold">Visualizar Agendamentos</h2>
+          <h1 className="text-center text-primary fw-bold">Visualizar Agendamentos</h1>
         </div>
 
 
@@ -285,12 +298,14 @@ const VisualizarAgendamentos = () => {
                   <th>Serviço</th>
                   <th>Valor (R$)</th>
                   <th>Colaborador</th>
-                  <th>Status</th> {/* Coluna para exibir o status */}
-                  <th>Endereço da Clínica</th> {/* Nova coluna para exibir o endereço da clínica */}
+                  <th>Status</th>
+                  <th>Pagamento</th>
+                  <th>Endereço da Clínica</th>
+
                   <th>Detalhes</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className='text-center'>
                 {sortedAgendamentos.length > 0 ? (
                   currentAgendamentos.map((agendamento, index) => (
                     <tr key={agendamento.id}>
@@ -298,14 +313,23 @@ const VisualizarAgendamentos = () => {
                       <td>{agendamento.cliente || 'Cliente não informado'}</td>
                       <td className="text-center">
                         {agendamento.data && !isNaN(new Date(agendamento.data).getTime())
-                          ? new Date(agendamento.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })
+                          ? (
+                            <>
+                              {new Date(agendamento.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                              {agendamento.dias_e_horarios && agendamento.dias_e_horarios !== 'não informada'
+                                ? ` - Solicitação de remarcação: ${formatarDataBrasileira(agendamento.dias_e_horarios)}`
+                                : ''
+                              }
+                            </>
+                          )
                           : (
                             <>
-                               Aguardar confirmação (pilates)
+                              Aguardar confirmação. Intenção de aulas: {agendamento.dias_e_horarios || 'não informada'}
                             </>
                           )
                         }
                       </td>
+
                       <td>{agendamento.hora || ''}</td>
                       <td>{agendamento.servico || 'Serviço não encontrado'}</td>
                       <td>
@@ -338,6 +362,29 @@ const VisualizarAgendamentos = () => {
                           {agendamento.status.charAt(0).toUpperCase() + agendamento.status.slice(1)} {/* Primeira letra maiúscula */}
                         </span>
                       </td>
+                      <td>
+                        {
+                          agendamento.pagamento.status === "Pendente" ? (
+                            <>
+                              <i className="bi bi-hourglass-split" style={{ color: 'gray' }}></i>
+                              <span style={{ color: 'gray' }}> </span>
+                            </>
+                          ) : agendamento.pagamento.status === "Pago" ? (
+                            <>
+                              <i className="bi bi-check-circle" style={{ color: 'green' }}></i>
+                              <span style={{ color: 'green' }}></span>
+                            </>
+                          ) : agendamento.pagamento.status === "Cancelado" ? (
+                            <>
+                              <i className="bi bi-x-circle" style={{ color: 'red' }}></i>
+                              <span style={{ color: 'red' }}></span>
+                            </>
+                          ) : <>
+                            <i className="bi bi-hourglass-split" style={{ color: 'gray' }}></i>
+                            <span style={{ color: 'gray' }}> </span>
+                          </>
+                        }
+                      </td>
 
                       <td>
                         <div>
@@ -350,19 +397,19 @@ const VisualizarAgendamentos = () => {
                           ) : 'Endereço não disponível'}
                         </div>
                       </td>
-                      <td>
+                      <td >
                         <button
-                          className="btn btn-outline-info btn-sm"
+                          className="btn btn-outline-info btn-sm "
                           onClick={() => handleShowDetails(agendamento)}
                         >
-                          Ver Detalhes
+                          <i className="bi bi-info-circle "></i>
                         </button>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="10" className="text-center">
+                    <td colSpan="12" className="text-center">
                       Nenhum agendamento encontrado
                     </td>
                   </tr>
@@ -490,6 +537,9 @@ const VisualizarAgendamentos = () => {
                     </>
                   )}
                   <div className="col-12 col-md-6">
+                    <strong>Pagamento: </strong> {selectedAgendamento.pagamento.status || 'pendente'}
+                  </div>
+                  <div className="col-12 col-md-6">
                     <strong>Status: </strong>
                     <span
                       className={` fw-bold
@@ -544,8 +594,6 @@ const VisualizarAgendamentos = () => {
 
                   )}
 
-
-
                 </div>
               </Modal.Body>
 
@@ -573,37 +621,19 @@ const VisualizarAgendamentos = () => {
                     <Button
                       variant="btn btn-danger"
                       onClick={async () => {
-                        await handleConfirmarNegar(selectedAgendamento.id, 'negado');
+                        await handleConfirmarNegar(selectedAgendamento.id, 'cancelado');
                         handleCloseModal(); // Fecha o modal após negar
                       }}
-                      disabled={loading || selectedAgendamento.status?.toLowerCase() === 'negado'}
+                      disabled={loading || selectedAgendamento.status?.toLowerCase() === 'cancelado'}
                     >
-                      {loading && selectedAgendamento.status !== 'negado' ? (
+                      {loading && selectedAgendamento.status !== 'cancelado' ? (
                         <>
                           <i className="bi bi-arrow-repeat spinner"></i> Carregando...
                         </>
                       ) : (
-                        'Negar'
+                        'Cancelar'
                       )}
                     </Button>
-                    <Button
-                      variant="btn btn-primary"
-                      onClick={async () => {
-                        await handleConfirmarNegar(selectedAgendamento.id, 'pago');
-                        handleCloseModal(); // Fecha o modal após negar
-                      }}
-                      disabled={loading || selectedAgendamento.status?.toLowerCase() === 'pago'}
-                    >
-                      {loading && selectedAgendamento.status !== 'Pago' ? (
-                        <>
-                          <i className="bi bi-arrow-repeat spinner"></i> Carregando...
-                        </>
-                      ) : (
-                        'Pago'
-                      )}
-                    </Button>
-
-
 
                     <Button
                       variant="btn btn-warning"
@@ -633,7 +663,7 @@ const VisualizarAgendamentos = () => {
 
 
 
-                {role !== 'admin' && (
+                {role === 'cliente' && (
                   <Button variant="btn btn-warning" onClick={() => handleNotifyAdmin()} disabled={loading}>
                     {loading ? (
                       <i className="bi bi-arrow-repeat spinner"></i>
@@ -664,7 +694,7 @@ const VisualizarAgendamentos = () => {
               >
                 <option value="">Selecione</option>
 
-                <option value="cancelado">Cancelado</option>
+                <option value="negar">Negar</option>
                 <option value="nao_compareceu">Não Compareceu</option>
                 <option value="remarcado">Remarcado</option>
               </select>

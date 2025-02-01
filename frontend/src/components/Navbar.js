@@ -29,7 +29,7 @@ function Navbar() {
     try {
       const response = await axios.post("http://localhost:5000/login", { email, senha });
       const { access_token, name, role, userId, photo, email_confirmado, admin_nivel } = response.data;
-  
+
       // Armazenar os dados no estado e no localStorage
       setIsLoggedIn(true);
       setUserName(name);
@@ -37,7 +37,7 @@ function Navbar() {
       setUserId(userId);
       setUserPhoto(photo || "");
       setEmailConfirmed(email_confirmado);
-  
+
       // Armazenar as informações no localStorage
       localStorage.setItem("token", access_token);
       localStorage.setItem("userName", name);
@@ -46,24 +46,24 @@ function Navbar() {
       localStorage.setItem("userPhoto", photo || "");
       localStorage.setItem("email_confirmado", email_confirmado.toString());
       localStorage.setItem("isLoggedIn", "true"); // Armazenar isLoggedIn
-  
+
       // Armazenar o nível de admin se o usuário for admin
       if (role === "admin" && admin_nivel) {
         localStorage.setItem("admin_nivel", admin_nivel);
       }
-  
+
       // Fecha o modal de login
       const modalElement = document.getElementById("loginModal");
       const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
       if (modalInstance) modalInstance.hide();
       document.querySelectorAll(".modal-backdrop").forEach((backdrop) => backdrop.remove());
-  
+
       // Redireciona com base no papel do usuário
       setTimeout(() => {
         navigate(role === "admin" ? "/adminpage" : "/");
         window.location.reload();
       }, 300);
-  
+
       // Inicia a renovação automática do token
       autoRefreshToken();
     } catch (error) {
@@ -71,7 +71,7 @@ function Navbar() {
       alert("Erro ao fazer login. Verifique suas credenciais.");
     }
   };
-  
+
 
   const handleCadastroSuccess = (data) => {
     console.log('Dados recebidos no cadastro:', data);
@@ -251,15 +251,20 @@ function Navbar() {
                 <Link className="nav-link" to="/contato">Fale conosco</Link>
               </li>
               {isLoggedIn && role !== "cliente" && (
-                <li className="nav-item">
-                  <Link className="nav-link" to="/adminPage">Central de Controle</Link>
-                </li>
+                <>
+                  <li className="nav-item">
+                    <Link className="nav-link" to="/adminPage">Central de Controle</Link>
+                  </li>
+
+                </>
               )}
+
+
 
             </ul>
 
 
-            <ul className={`navbar-nav ms-auto ${isLoggedIn ? 'z-top' : ''}`}>
+            <ul className={`navbar-nav ms-auto ${isLoggedIn ? 'z-top d-none d-md-block ' : ''}`}>
               {!isLoggedIn ? (
                 <>
                   <li className="nav-item  ">
@@ -282,14 +287,13 @@ function Navbar() {
                 </>
               ) : (
 
-                <li className="nav-item dropdown  btn-user">
+                <li className="nav-item dropdown btn-user" >
                   <a
-                    className="nav-link dropdown-toggle   btn-user"
+                    className="nav-link dropdown-toggle  btn-user"
                     href="#"
-                    id="navbarDropdown"
+
                     role="button"
                     data-bs-toggle="dropdown"
-
                     aria-expanded="false"
                   >
                     {userPhoto && userPhoto.trim() !== "" ? (
@@ -303,45 +307,42 @@ function Navbar() {
                     )}
                     <span>{userName}</span>
                   </a>
-                  <ul className="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <ul className="dropdown-menu dropdownLogado" aria-labelledby="navbarDropdownUser">
                     <li>
                       <Link className="dropdown-item" to="/perfil">Meu Perfil</Link>
                     </li>
-                    <li>
-                      <Link className="dropdown-item" to="/criaragendamento">Agendar Atendimento</Link>
-                    </li>
-
-                    {role === "admin" && (
-                      <>
-                        <li>
-                          <Link className="dropdown-item" to="/adminPage">Pagina Administrador</Link>
-                        </li>
-                      </>
-                    )}
-                    {role === "colaborador" && (
+                    {(role === "admin" || role === "colaborador") && (
                       <li>
                         <Link className="dropdown-item" to="/adminPage">Central de Controle</Link>
                       </li>
-                    )
-                    }
+                    )}
 
+                    <li>
+                      <Link className="dropdown-item" to="/criaragendamento">Agendar Atendimento</Link>
+                    </li>
+                    <li>
+                      <Link className="dropdown-item" to="/gerenciarPagamentos">Gerenciar Pagamentos</Link>
+                    </li>
 
                     <li>
                       <Link className="dropdown-item" to="/visualizaragendamentos">Agendamentos</Link>
+                    </li>
+                    <li >
+                      <Link className="dropdown-item" to="/calendario_agendamentos">Calendário</Link>
                     </li>
                     <li>
                       <button
                         className="dropdown-item"
                         onClick={handleLogout}
                         type="button"
-
                       >
                         Sair
                       </button>
                     </li>
-
                   </ul>
+
                 </li>
+
 
               )}
             </ul>
@@ -351,7 +352,7 @@ function Navbar() {
 
       {/* Remove a logo do navbar */}
       {isLoggedIn && (
-        <div className="sidebar-container d-none d-md-block ">
+        <div className="sidebar-container  ">
           <button
             className={`sidebar-toggle ${sidebarVisible ? 'toggle-open' : ''}`}
             onClick={() => setSidebarVisible(!sidebarVisible)}
@@ -373,12 +374,47 @@ function Navbar() {
                   {sidebarVisible && " Meu Perfil"}
                 </Link>
               </li>
-              <li className=" mt-3 ">
-                <Link to="/criaragendamento" className="sidebar-item">
-                  <i className="bi bi-calendar-plus"></i> {/* Ícone de agendamento */}
-                  {sidebarVisible && " Agendar Atendimento"}
+              <li className="mt-3 dropdown">
+                <a
+                  className="sidebar-item dropdown-toggle"
+                  href="#"
+                  id="agendamentosDropdown"
+                  role="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  <i className="bi bi-calendar-check"></i> {/* Ícone de agendamentos */}
+                  {sidebarVisible && " Agendamentos"}
+                </a>
+                <ul className="dropdown-menu" aria-labelledby="agendamentosDropdown">
+                  <li>
+                    <Link to="/criaragendamento" className="dropdown-item">
+                      <i className="bi bi-calendar-plus"></i> {/* Ícone de criar agendamento */}
+                      {sidebarVisible && " Criar Agendamento"}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/visualizaragendamentos" className="dropdown-item">
+                      <i className="bi bi-calendar-check"></i> {/* Ícone de visualizar agendamentos */}
+                      {sidebarVisible && " Visualizar Agendamentos"}
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/calendario_agendamentos" className="dropdown-item">
+                      <i className="bi bi-calendar-event"></i> {/* Ícone de calendário */}
+                      {sidebarVisible && " Calendário de Agendamentos"}
+                    </Link>
+                  </li>
+                </ul>
+              </li>
+
+              <li className="mt-3">
+                <Link to="/gerenciarPagamentos" className="sidebar-item gap-2">
+                  <i className="bi bi-credit-card"></i> {/* Ícone de pagamento */}
+                  {sidebarVisible && " Gerenciar Pagamentos"}
                 </Link>
-              </li >
+              </li>
+
               {role === "admin" && (
                 <li className=" mt-3 ">
                   <Link to="/adminPage" className="sidebar-item">
@@ -395,12 +431,7 @@ function Navbar() {
                   </Link>
                 </li>
               )}
-              <li className=" mt-3 ">
-                <Link to="/visualizaragendamentos" className="sidebar-item">
-                  <i className="bi bi-calendar-check"></i> {/* Ícone de agendamentos */}
-                  {sidebarVisible && " Agendamentos"}
-                </Link>
-              </li>
+
               <li className=" mt-3 ">
                 <button onClick={handleLogout} className="sidebar-item logout-btn">
                   <i className="bi bi-box-arrow-right"></i> {/* Ícone de logout */}

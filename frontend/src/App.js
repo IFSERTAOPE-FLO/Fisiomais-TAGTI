@@ -16,6 +16,8 @@ import Perfil from "./pages/Perfil";
 import VisualizarAgendamentos from "./pages/VisualizarAgendamentos";
 import AdminPage from "./pages/AdminPage"; 
 import Especialidades from "./pages/Especialidades"; 
+import GerenciarPagamentos from "./pages/GerenciarPagamentos";
+import CalendarioInterativo from "./pages/CalendarioInterativo";  
 
 
 function App() {
@@ -48,14 +50,7 @@ function App() {
                             </PageWrapper>
                         } 
                     />
-                    <Route 
-                        path="/criaragendamento" 
-                        element={
-                            <PageWrapper title="Criar Agendamento - Fisiomais">
-                                <CriarAgendamento />
-                            </PageWrapper>
-                        } 
-                    />
+                    
                     <Route 
                         path="/contato" 
                         element={
@@ -96,6 +91,23 @@ function App() {
                             </PageWrapper>
                         } 
                     />
+                    
+                    <Route 
+                        path="/adminPage" 
+                        element={
+                            <PageWrapper title="Central de Controle - Fisiomais">
+                                <AdminPage />
+                            </PageWrapper>
+                        } 
+                    />
+                    <Route 
+                        path="/gerenciarPagamentos" 
+                        element={
+                            <PageWrapper title="Gerenciar Pagamentos - Fisiomais">
+                                <GerenciarPagamentos />
+                            </PageWrapper>
+                        } 
+                    />
                     <Route 
                         path="/visualizaragendamentos" 
                         element={
@@ -105,10 +117,18 @@ function App() {
                         } 
                     />
                     <Route 
-                        path="/adminPage" 
+                        path="/criaragendamento" 
                         element={
-                            <PageWrapper title="Central de Controle - Fisiomais">
-                                <AdminPage />
+                            <PageWrapper title="Criar Agendamento - Fisiomais">
+                                <CriarAgendamento />
+                            </PageWrapper>
+                        } 
+                    />
+                    <Route 
+                        path="/calendario_agendamentos" 
+                        element={
+                            <PageWrapper title=" Agendamentos | Calendário - Fisiomais">
+                                <CalendarioInterativo />
                             </PageWrapper>
                         } 
                     />

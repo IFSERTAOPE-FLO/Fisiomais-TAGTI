@@ -198,24 +198,36 @@ class Agendamentos(db.Model):
     id_colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.id_colaborador'), nullable=False)
     id_servico = db.Column(db.Integer, db.ForeignKey('servicos.id_servico'), nullable=False)
     status = db.Column(db.String(20), default="pendente")
-    id_clinica = db.Column(db.Integer, db.ForeignKey('clinicas.id_clinica'), nullable=False)  # Novo campo para a clínica
+    id_clinica = db.Column(db.Integer, db.ForeignKey('clinicas.id_clinica'), nullable=False)  
+    dias_e_horarios = db.Column(db.String(255), nullable=True)  # Novo campo para dias e horários
 
     cliente = db.relationship('Clientes', backref='agendamentos')
     colaborador = db.relationship('Colaboradores', backref='agendamentos')
     servico = db.relationship('Servicos', backref='agendamentos')
-    clinica = db.relationship('Clinicas', backref='agendamentos')  # Relacionamento com clínica
+    clinica = db.relationship('Clinicas', backref='agendamentos')  
+    pagamento = db.relationship('Pagamentos', back_populates='agendamento', uselist=False) 
 
-class Pagamentos(db.Model):
+class Pagamentos(db.Model): 
     __tablename__ = 'pagamentos'
     id_pagamento = db.Column(db.Integer, primary_key=True)  # ID único
     id_agendamento = db.Column(db.Integer, db.ForeignKey('agendamentos.id_agendamento'), nullable=False)  # Relacionamento com o agendamento
-    valor = db.Column(db.Numeric(10, 2), nullable=False)  # Valor pago
-    metodo_pagamento = db.Column(db.String(50), nullable=False)  # Ex: 'cartão', 'boleto', 'pix'
+    id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False)  # Relacionamento com o cliente
+    id_servico = db.Column(db.Integer, db.ForeignKey('servicos.id_servico'), nullable=False)  # Relacionamento com o serviço
+    id_colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.id_colaborador'), nullable=True)  # Relacionamento com o colaborador
+    id_plano = db.Column(db.Integer, db.ForeignKey('planos.id_plano'), nullable=True)  # Relacionamento com o plano
+    valor = db.Column(db.Numeric(10, 2), nullable=True)  # Valor pago
+    metodo_pagamento = db.Column(db.String(50), nullable=False, default='a definir')  # Ex: 'cartão', 'boleto', 'pix'
     status = db.Column(db.String(20), nullable=False, default='pendente')  # 'pendente', 'pago', 'cancelado'
     data_pagamento = db.Column(db.DateTime, nullable=True)  # Data de conclusão do pagamento
     referencia_pagamento = db.Column(db.String(255), nullable=True)  # Referência de terceiros (ex: ID de pagamento externo)
 
-    agendamento = db.relationship('Agendamentos', backref='pagamento')
+    # Relacionamentos
+    agendamento = db.relationship('Agendamentos', back_populates='pagamento', uselist=False)
+    cliente = db.relationship('Clientes', backref='pagamentos')  # Relacionamento com Clientes
+    servico = db.relationship('Servicos', backref='pagamentos')  # Relacionamento com Servicos
+    colaborador = db.relationship('Colaboradores', backref='pagamentos')  # Relacionamento com Colaboradores
+    plano = db.relationship('Planos', backref='pagamentos')  # Relacionamento com Planos (opcional, caso o pagamento seja associado a um plano específico)
+
 
 class Faturas(db.Model):
     __tablename__ = 'faturas'

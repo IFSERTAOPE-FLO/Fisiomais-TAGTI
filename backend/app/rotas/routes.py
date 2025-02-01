@@ -22,13 +22,18 @@ Rotas POST:
 
 
 
+import logging
+
 @main.route('/login', methods=['POST'])
 def login():
-    data = request.get_json()
+    data = request.get_json() 
+   
+
+    # Obter dados do request e garantir que a senha não seja registrada
     email = data.get('email', '')
     senha = data.get('senha', '')
 
-    # Verificar se o email pertence a um colaborador
+    # Verificação de login do colaborador
     colaborador = Colaboradores.query.filter_by(email=email).first()
     if colaborador and colaborador.check_password(senha):
         access_token = create_access_token(identity=email)
@@ -44,15 +49,22 @@ def login():
             "admin_nivel": colaborador.admin_nivel if colaborador.is_admin else None,
             "email_confirmado": True  # Colaboradores sempre têm email confirmado
         }
+
+        # Log da requisição, sem exibir senha
+        current_app.logger.info(f"Login realizado com sucesso para o colaborador: {email} | Role: {'admin' if colaborador.is_admin else 'colaborador'}")
+
         return jsonify(response), 200
 
-    # Verificar se o email pertence a um cliente
+    # Verificação de login do cliente
     cliente = Clientes.query.filter_by(email=email).first()
     if cliente:
         # Se o cliente ainda não confirmou o email
         if not cliente.email_confirmado and cliente.check_password(senha):
             access_token = create_access_token(identity=email)
             refresh_token = create_access_token(identity=email, fresh=False)  # Criação do refresh_token
+
+            # Log sem senha
+            current_app.logger.info(f"Cliente {email} tentando login, precisa confirmar email.")
 
             return jsonify({
                 "message": "Seu cadastro foi realizado com sucesso! Verifique seu email para confirmação.",
@@ -69,6 +81,10 @@ def login():
         if cliente.check_password(senha):
             access_token = create_access_token(identity=email)
             refresh_token = create_access_token(identity=email, fresh=False)  # Criação do refresh_token
+            
+            # Log sem senha
+            current_app.logger.info(f"Login realizado com sucesso para o cliente: {email}")
+
             return jsonify({
                 "access_token": access_token,
                 "refresh_token": refresh_token,  # Inclui o refresh_token
@@ -80,7 +96,9 @@ def login():
             }), 200
 
     # Se o email ou senha estiverem incorretos
+    current_app.logger.warning(f"Tentativa de login falhada para o email: {email}")
     return jsonify(message="Credenciais inválidas"), 401
+
 
 
 

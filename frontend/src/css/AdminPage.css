@@ -7,7 +7,7 @@
 /* Sub-navbar */
 .bg-subnavbar {
   background-color: #36ab9c !important; /* Cor de fundo diferenciada */
-  padding: 5px 0; /* Ajuste de padding para barra mais fina */
+  padding: 0.5px 0; /* Ajuste de padding para barra mais fina */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra sutil */
 }
 
@@ -20,6 +20,7 @@
   margin: 0 15px; /* Espaço entre os itens */
   
 }
+
 
 .navadminpaglink {
   color: white;
@@ -39,3 +40,46 @@
   
 }
 
+/* Estilos do dropdown personalizado */
+.dropdownAgendamentos {
+  background-color: #36ab9c; /* Cor da barra de navegação */
+  border-radius: 0.25rem; /* Bordas arredondadas */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Sombra suave */
+  border: none; /* Remove borda */
+  margin-top: 5px; /* Espaço entre a barra de navegação e o dropdown */
+  padding: 0;
+  transition: all 0.3s ease; /* Transição suave */
+}
+
+/* Estilo para os itens do dropdown */
+.dropdownAgendamentos .dropdown-item {
+  color: white; /* Cor do texto igual ao da navegação */
+  font-size: 0.9rem; /* Fonte um pouco menor */
+  padding: 8px 16px; /* Espaçamento interno ajustado */
+  transition: background-color 0.3s ease, transform 0.2s ease; /* Transição suave */
+}
+
+/* Efeito de hover nos itens do dropdown */
+.dropdownAgendamentos .dropdown-item:hover {
+  background-color: #2d9485; /* Cor de fundo mais escura no hover */
+  transform: scale(1.02); /* Aumento suave */
+  transition: transform 0.2s ease; /* Transição do aumento de tamanho */
+}
+
+/* Efeito de item ativo */
+.dropdownAgendamentos .dropdown-item.active {
+  background-color: #2d9485; /* Cor do item ativo */
+  font-weight: bold; /* Negrito para item ativo */
+}
+
+/* Animação suave ao abrir o dropdown */
+.dropdownAgendamentos .dropdown-menu.show {
+  opacity: 0;
+  transform: translateY(-10px); /* Inicia um pouco acima */
+  transition: opacity 0.3s ease, transform 0.3s ease; /* Animação suave de entrada */
+}
+
+.dropdownAgendamentos .dropdown-menu.show {
+  opacity: 1;
+  transform: translateY(0); /* Movimento suave para baixo */
+}
