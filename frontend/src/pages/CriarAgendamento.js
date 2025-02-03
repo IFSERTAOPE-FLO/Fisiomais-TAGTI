@@ -227,8 +227,7 @@ function CriarAgendamento() {
       colaborador_id: colaboradorId,
       data: dataHoraISO,
       cliente_id: cliente,
-      plano_id: tipoServico === 'pilates' ? planoSelecionado || null : null,
-      dias_e_horarios: diasHorariosTexto, // Incluindo os dias e horários
+      plano_id: tipoServico === 'pilates' ? planoSelecionado || null : null, // Incluindo os dias e horários
     };
 
     const token = localStorage.getItem('token');

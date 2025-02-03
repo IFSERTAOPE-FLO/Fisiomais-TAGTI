@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import PageWrapper from "./components/PageTitulos"; // Importa o wrapper
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 
 // Páginas
 import Home from "./pages/Home";
@@ -18,6 +20,8 @@ import AdminPage from "./pages/AdminPage";
 import Especialidades from "./pages/Especialidades"; 
 import GerenciarPagamentos from "./pages/GerenciarPagamentos";
 import CalendarioInterativo from "./pages/CalendarioInterativo";  
+import GerenciarPilates from './pages/GerenciarPilates';
+
 
 
 function App() {
@@ -132,6 +136,16 @@ function App() {
                             </PageWrapper>
                         } 
                     />
+
+                    <Route 
+                    path="/pilates" 
+                    element={
+                        <PageWrapper title="Gerenciar Pilates - Fisiomais">
+                        <GerenciarPilates />
+                        </PageWrapper>
+                    } 
+                    />
+
                 </Routes>
                 <Footer />
             </div>

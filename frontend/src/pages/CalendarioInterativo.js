@@ -57,9 +57,9 @@ const CalendarioInterativo = () => {
                 ? "#17a2b8"
                 : "#dc3545",
         textColor: "#ffffff",
-        description: `Agendamento: ${agendamento.id_agendamento}\nServiço: ${agendamento.servico}\nCliente: ${agendamento.cliente || "Não informado"}
+        description: `Agendamento: ${agendamento.id_agendamento}\nServiço: ${agendamento.servico}\nCliente: ${agendamento.cliente || "Não informado"} 
 Colaborador: ${agendamento.colaborador || "Não informado"}\nStatus: ${agendamento.status}
-Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e horário pretendido: ${formatarDataBrasileira(agendamento.dias_e_horarios)}` : ''}`,
+Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e horário pretendido: ${formatarDataBrasileira(agendamento.dias_e_horarios)}` : ''}`, 
         extendedProps: {
           cliente: agendamento.cliente || "Não informado",
           colaborador: agendamento.colaborador || "Não informado",
