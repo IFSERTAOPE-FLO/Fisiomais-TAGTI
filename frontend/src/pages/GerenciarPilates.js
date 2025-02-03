@@ -18,12 +18,12 @@ function GerenciarPilates() {
         aula.id === idAula ? { ...aula, name: novoNomeAula } : aula
       )
     );
-    setShowModal(false);  // Fechar o modal após salvar
+    setShowModal(false);
   };
 
   const handleEditarClick = (aula) => {
     setEditarAula(aula);
-    setNovoNomeAula(aula.name);
+    setNovoNomeAula(" ");
     setShowModal(true);
   };
 

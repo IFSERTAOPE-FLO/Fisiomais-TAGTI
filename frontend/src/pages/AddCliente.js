@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Form, Button, Col, Row, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
-const AddCliente = () => {
+const AddCliente = () => { 
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
@@ -26,18 +26,18 @@ const AddCliente = () => {
   const [estados, setEstados] = useState([]);
   const [cidades, setCidades] = useState([]);
 
-  const handleChange = (e) => {
+  const handleChange = (e) => { // Função para lidar com alterações nos campos
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
 
-  useEffect(() => {
+  useEffect(() => { // Busca os estados ao carregar o componente
     const fetchEstados = async () => {
       try {
         const response = await axios.get('https://servicodados.ibge.gov.br/api/v1/localidades/estados');
-        setEstados(response.data.map((estado) => ({ sigla: estado.sigla, nome: estado.nome })));
+        setEstados(response.data.map((estado) => ({ sigla: estado.sigla, nome: estado.nome }))); // Cria um objeto com as siglas e nomes dos estados
       } catch (error) {
         console.error('Erro ao buscar estados:', error);
       }
@@ -46,12 +46,12 @@ const AddCliente = () => {
     fetchEstados();
   }, []);
 
-  useEffect(() => {
+  useEffect(() => { // Busca as cidades quando o estado muda
     if (formData.estado) {
       const fetchCidades = async () => {
         try {
-          const response = await axios.get(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${formData.estado}/municipios`);
-          setCidades(response.data.map((cidade) => cidade.nome).sort());
+          const response = await axios.get(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${formData.estado}/municipios`); // Busca as cidades pelo estado
+          setCidades(response.data.map((cidade) => cidade.nome).sort()); // Ordena as cidades
         } catch (error) {
           console.error('Erro ao buscar cidades:', error);
         }
@@ -63,14 +63,14 @@ const AddCliente = () => {
 
 
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => { // Função para lidar com o envio do formulário
     e.preventDefault();
     setLoading(true);
     setModalMessage('');
     
 
-    try {
-      const token = localStorage.getItem("token");
+    try { // Envia a requisição POST para o backend
+      const token = localStorage.getItem("token"); 
       const response = await axios.post('http://localhost:5000/clientes/register', formData, {
         headers: {          
           Authorization: `Bearer ${token}`,
@@ -86,7 +86,7 @@ const AddCliente = () => {
     }
   };
 
-  return (
+  return ( 
     <div className="container col-md-9 my-5">
       {modalMessage && <div className="alert alert-info">{modalMessage}</div>}
       <div className="card shadow">
