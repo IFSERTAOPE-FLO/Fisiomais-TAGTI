@@ -613,6 +613,7 @@
 
 .logout-btn:hover {
   background-color: #9c0845;
+  color:white;
 }
 
 /* Remove os marcadores da lista */

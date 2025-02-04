@@ -182,6 +182,7 @@ function Navbar() {
 
       // Limpar o localStorage e estados
       localStorage.clear();
+      setAgendamentosOpen(false);
       setSidebarVisible(false);
       setIsLoggedIn(false);
       setUserName("Usuário");
@@ -410,7 +411,7 @@ function Navbar() {
                   <li>
                     <Link to="/calendario_agendamentos" className="sidebar-item">
                       <i className="bi bi-calendar-event"></i>
-                      {sidebarVisible && " Calendário de Agendamentos"}
+                      {sidebarVisible && " Calendário "}
                     </Link>
                   </li>
                 </ul>
@@ -443,7 +444,7 @@ function Navbar() {
             )}
 
             <li className="mt-3">
-              <button onClick={handleLogout} className="sidebar-item logout-btn">
+              <button onClick={handleLogout} className="logout-btn">
                 <i className="bi bi-box-arrow-right"></i>
                 {sidebarVisible && " Sair"}
               </button>

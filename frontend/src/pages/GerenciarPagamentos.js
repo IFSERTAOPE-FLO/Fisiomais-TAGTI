@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Modal, Button, Card } from 'react-bootstrap';
-import { FaDollarSign } from 'react-icons/fa';
+import { Modal } from 'react-bootstrap';
+
 import Paginator from '../components/Paginator';
 
 const GerenciarPagamentos = () => {
