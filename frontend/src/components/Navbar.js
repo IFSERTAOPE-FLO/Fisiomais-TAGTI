@@ -20,7 +20,7 @@ function Navbar() {
   const [isEmailConfirmed, setIsEmailConfirmed] = useState(false); // Inicialmente assumimos que não está confirmado
   const [showCadastroModal, setShowCadastroModal] = useState(false);
   const [sidebarVisible, setSidebarVisible] = React.useState(false);
-
+  const [agendamentosOpen, setAgendamentosOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -162,7 +162,6 @@ function Navbar() {
 
 
 
-  // Função para realizar logout
   const handleLogout = async () => {
     try {
       const savedToken = localStorage.getItem("token");
@@ -174,8 +173,16 @@ function Navbar() {
     } catch (error) {
       console.error("Erro no logout:", error);
     } finally {
+      // Fechar o modal de login, se estiver aberto
+      const modalElement = document.getElementById("loginModal");
+      if (modalElement) {
+        const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
+        if (modalInstance) modalInstance.hide();
+      }
+
+      // Limpar o localStorage e estados
       localStorage.clear();
-      setSidebarVisible(false)
+      setSidebarVisible(false);
       setIsLoggedIn(false);
       setUserName("Usuário");
       setRole("");
@@ -221,7 +228,11 @@ function Navbar() {
 
       <nav className="navbar navbar-expand-lg navbar-light bg-light">
         <div className="container-fluid">
-          <Link className={`navbar-brand ${sidebarVisible ? 'd-none' : ''}`} to="/">
+          <Link
+            className="navbar-brand"
+            to="/"
+            style={{ visibility: sidebarVisible ? 'hidden' : 'visible' }}
+          >
             <img src="/fisiomais.png" alt="Logo" className="navbar-logo" />
           </Link>
           <button
@@ -264,7 +275,7 @@ function Navbar() {
             </ul>
 
 
-            <ul className={`navbar-nav ms-auto ${isLoggedIn ? 'z-top d-none d-md-block ' : ''}`}>
+            <ul className={`navbar-nav ms-auto ${isLoggedIn ? 'z-top  ' : ''}`}>
               {!isLoggedIn ? (
                 <>
                   <li className="nav-item  ">
@@ -343,7 +354,6 @@ function Navbar() {
 
                 </li>
 
-
               )}
             </ul>
           </div>
@@ -352,95 +362,95 @@ function Navbar() {
 
       {/* Remove a logo do navbar */}
       {isLoggedIn && (
-        <div className="sidebar-container  ">
-          <button
-            className={`sidebar-toggle ${sidebarVisible ? 'toggle-open' : ''}`}
-            onClick={() => setSidebarVisible(!sidebarVisible)}
-          >
-            <i className="bi bi-list"></i> {/* Ícone de menu */}
-          </button>
-          <div className={`sidebar ${sidebarVisible ? 'show' : ''}`}>
-            <img src="/fisiomais.png" alt="Logo" className="sidebar-logo" />
-            <div className="sidebar-header">
-              {/* Logo na parte superior da sidebar */}
+        <div className="sidebar-container d-none d-md-block">
+        <button
+          className={`sidebar-toggle ${sidebarVisible ? "toggle-open" : ""}`}
+          onClick={() => setSidebarVisible(!sidebarVisible)}
+        >
+          <i className="bi bi-list"></i> {/* Ícone de menu */}
+        </button>
+        <div className={`sidebar ${sidebarVisible ? "show bg-light" : "bg-light"}`}>
+          <img src="/fisiomais.png" alt="Logo" className="sidebar-logo" />
+          <div className="sidebar-header">
+            {sidebarVisible && <h4>Bem-vindo, {userName.split(" ")[0]}</h4>}
+            {!sidebarVisible && <br />}
+          </div>
+          <ul className="sidebar-menu bg-light">
+            <li className="mt-3">
+              <Link to="/perfil" className="sidebar-item gap-2">
+                <i className="bi bi-person"></i>
+                {sidebarVisible && " Meu Perfil"}
+              </Link>
+            </li>
 
-              {sidebarVisible && <h4>Bem-vindo, {userName.split(' ')[0]}</h4>}
-              {!sidebarVisible && <br />}
-            </div>
-            <ul className="sidebar-menu bg-light ">
-              <li className=" mt-3 ">
-                <Link to="/perfil" className="sidebar-item gap-2">
-                  <i className="bi bi-person"></i> {/* Ícone de perfil */}
-                  {sidebarVisible && " Meu Perfil"}
-                </Link>
-              </li>
-              <li className="mt-3 dropdown">
-                <a
-                  className="sidebar-item dropdown-toggle"
-                  href="#"
-                  id="agendamentosDropdown"
-                  role="button"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
-                >
-                  <i className="bi bi-calendar-check"></i> {/* Ícone de agendamentos */}
-                  {sidebarVisible && " Agendamentos"}
-                </a>
-                <ul className="dropdown-menu" aria-labelledby="agendamentosDropdown">
+            {/* Seção de Agendamentos */}
+            <li className="mt-3">
+              <button
+                className="sidebar-item d-flex align-items-center w-100"
+                onClick={() => setAgendamentosOpen(!agendamentosOpen)}
+              >
+                <i className="bi bi-calendar-check"></i>
+                {sidebarVisible && " Agendamentos"}
+                <i className={`ms-auto bi ${agendamentosOpen ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
+              </button>
+              {agendamentosOpen && (
+                <ul className="submenu">
                   <li>
-                    <Link to="/criaragendamento" className="dropdown-item">
-                      <i className="bi bi-calendar-plus"></i> {/* Ícone de criar agendamento */}
+                    <Link to="/criaragendamento" className="sidebar-item">
+                      <i className="bi bi-calendar-plus"></i>
                       {sidebarVisible && " Criar Agendamento"}
                     </Link>
                   </li>
                   <li>
-                    <Link to="/visualizaragendamentos" className="dropdown-item">
-                      <i className="bi bi-calendar-check"></i> {/* Ícone de visualizar agendamentos */}
+                    <Link to="/visualizaragendamentos" className="sidebar-item">
+                      <i className="bi bi-calendar-check"></i>
                       {sidebarVisible && " Visualizar Agendamentos"}
                     </Link>
                   </li>
                   <li>
-                    <Link to="/calendario_agendamentos" className="dropdown-item">
-                      <i className="bi bi-calendar-event"></i> {/* Ícone de calendário */}
+                    <Link to="/calendario_agendamentos" className="sidebar-item">
+                      <i className="bi bi-calendar-event"></i>
                       {sidebarVisible && " Calendário de Agendamentos"}
                     </Link>
                   </li>
                 </ul>
-              </li>
+              )}
+            </li>
 
+            <li className="mt-3">
+              <Link to="/gerenciarPagamentos" className="sidebar-item gap-2">
+                <i className="bi bi-credit-card"></i>
+                {sidebarVisible && " Gerenciar Pagamentos"}
+              </Link>
+            </li>
+
+            {role === "admin" && (
               <li className="mt-3">
-                <Link to="/gerenciarPagamentos" className="sidebar-item gap-2">
-                  <i className="bi bi-credit-card"></i> {/* Ícone de pagamento */}
-                  {sidebarVisible && " Gerenciar Pagamentos"}
+                <Link to="/adminPage" className="sidebar-item">
+                  <i className="bi bi-shield-lock"></i>
+                  {sidebarVisible && " Página Administrador"}
                 </Link>
               </li>
+            )}
 
-              {role === "admin" && (
-                <li className=" mt-3 ">
-                  <Link to="/adminPage" className="sidebar-item">
-                    <i className="bi bi-shield-lock"></i> {/* Ícone de administração */}
-                    {sidebarVisible && " Página Administrador"}
-                  </Link>
-                </li>
-              )}
-              {role === "colaborador" && (
-                <li className=" mt-3 ">
-                  <Link to="/adminPage" className="sidebar-item">
-                    <i className="bi bi-person-workspace"></i> {/* Ícone de colaborador */}
-                    {sidebarVisible && " Central de Controle"}
-                  </Link>
-                </li>
-              )}
-
-              <li className=" mt-3 ">
-                <button onClick={handleLogout} className="sidebar-item logout-btn">
-                  <i className="bi bi-box-arrow-right"></i> {/* Ícone de logout */}
-                  {sidebarVisible && " Sair"}
-                </button>
+            {role === "colaborador" && (
+              <li className="mt-3">
+                <Link to="/adminPage" className="sidebar-item">
+                  <i className="bi bi-person-workspace"></i>
+                  {sidebarVisible && " Central de Controle"}
+                </Link>
               </li>
-            </ul>
-          </div>
+            )}
+
+            <li className="mt-3">
+              <button onClick={handleLogout} className="sidebar-item logout-btn">
+                <i className="bi bi-box-arrow-right"></i>
+                {sidebarVisible && " Sair"}
+              </button>
+            </li>
+          </ul>
         </div>
+      </div>
       )}
 
       {isLoggedIn && !isEmailConfirmed && (

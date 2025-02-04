@@ -587,8 +587,12 @@
 
 /* Hover para os itens da sidebar */
 .sidebar-item:hover {
-  background-color: #2d9485;
-  color: #ffffff;
+  background-color: #2d9485 !important;;
+  color: #ffffff !important;;
+}
+.sidebar-item:active {
+  background-color: #2d9485 !important;
+  color: #ffffff !important;;
 }
 
 .sidebar-item i {
@@ -611,4 +615,37 @@
   background-color: #9c0845;
 }
 
+/* Remove os marcadores da lista */
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Remove qualquer borda preta da sidebar e itens */
+.sidebar, .sidebar-item {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove os marcadores da lista */
+.sidebar-menu,
+.sidebar-menu ul,
+.submenu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.sidebar.show .submenu {
+  margin-left: 10px; /* Ajuste conforme necessário */
+}
+
+/* Ajuste nos itens do submenu */
+.sidebar.show .submenu li {
+  padding-left: 10px; /* Dá um recuo visual */
+}
+.sidebar-item i.ms-auto {
+  display: none;
+}
 

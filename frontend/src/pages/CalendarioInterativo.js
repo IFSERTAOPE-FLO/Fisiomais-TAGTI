@@ -219,10 +219,10 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
                       minute: "2-digit",
                     })}
                   </span>
-                  {role !== 'cliente' && (<><br /> <span> Cliente: {cliente}</span> </>)}
+                  {role !== 'cliente' && (<><br /> <span> {cliente}</span> </>)}
                   <br />
-                  {role === 'admin' && <span>Colaborador: {colaborador}</span>}
-                  {role === 'cliente' && <span>Colaborador: {colaborador}</span>}
+                  {role === 'admin' && <span> {colaborador}</span>}
+                  {role === 'cliente' && <span> {colaborador}</span>}
                 </div>
               );
             }}
