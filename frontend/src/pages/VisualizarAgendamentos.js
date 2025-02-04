@@ -291,7 +291,7 @@ const VisualizarAgendamentos = () => {
                 <option value="cancelado">Cancelado</option>
                 <option value="remarcado">Remarcado</option>
                 <option value="nao_compareceu">Não Compareceu</option>
-                <option value="pago">Pago</option>
+                <option value="concluido">Concluido</option>                
               </select>
             </div>
           </div>
@@ -732,6 +732,7 @@ const VisualizarAgendamentos = () => {
                 <option value="negar">Negar</option>
                 <option value="nao_compareceu">Não Compareceu</option>
                 <option value="remarcado">Remarcado</option>
+                <option value="concluido">Concluido</option>
               </select>
             </Modal.Body>
             <Modal.Footer>

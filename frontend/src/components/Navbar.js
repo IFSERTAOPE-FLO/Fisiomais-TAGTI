@@ -435,7 +435,7 @@ function Navbar() {
             </li>
 
             <li className="mt-3">
-              <Link to="/gerenciarPagamentos" className="sidebar-item gap-2">
+              <Link to="/gerenciarPagamentos" className="sidebar-item ">
                 <i className="bi bi-credit-card"></i>
                 {sidebarVisible && " Gerenciar Pagamentos"}
               </Link>

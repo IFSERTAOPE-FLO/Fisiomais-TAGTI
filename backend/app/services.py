@@ -233,12 +233,12 @@ def populate_database():
 
     # Criar planos para serviços de Pilates
     planos_pilates = [
-        {"nome": "Plano Plates Clinico", "valor": 500.00, "servico_nome": "Pilates Clínico"},
-        {"nome": "Plano Mensal", "valor": 300.00, "servico_nome": "Pilates Clínico"},
-        {"nome": "Plano Mensal", "valor": 300.00, "servico_nome": "Pilates Tradicional"},          
-        {"nome": "Plano Anual", "valor": 3000.00, "servico_nome": "Pilates Tradicional"},
-        {"nome": "Plano Trimestral", "valor": 849.99, "servico_nome": "Pilates Tradicional"},
-        {"nome": "Plano Semestral", "valor": 1549.99, "servico_nome": "Pilates Tradicional"},
+        {"nome": "Plano Plates Clinico - 2 dias por semana", "valor": 500.00, "servico_nome": "Pilates Clínico"},
+        {"nome": "Plano Mensal - 2 dias por semana", "valor": 600.00, "servico_nome": "Pilates Clínico"},
+        {"nome": "Plano Mensal - 2 dias por semana", "valor": 600.00, "servico_nome": "Pilates Tradicional"},          
+        {"nome": "Plano Anual - 2 dias por semana", "valor": 3000.00, "servico_nome": "Pilates Tradicional"},
+        {"nome": "Plano Trimestral - 3 dias por semana", "valor": 849.99, "servico_nome": "Pilates Tradicional"},
+        {"nome": "Plano Semestral - 3 dias por semana", "valor": 1549.99, "servico_nome": "Pilates Tradicional"},
         
     ]
 
