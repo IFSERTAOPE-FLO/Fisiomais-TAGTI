@@ -256,29 +256,27 @@ def remover_horario():
     try:
         data = request.get_json()
         colaborador_id = data.get('colaboradorId')
-        horario = data.get('horario')
-        
-        print("Data recebida:", data)
-        print("Colaborador ID:", colaborador_id)
-        print("Horário recebido:", horario)
+        horarios = data.get('horarios')  # Agora recebendo um array de horários
 
-        hora_inicio = datetime.strptime(str(horario["hora_inicio"]), '%H:%M').time()
-        hora_fim = datetime.strptime(str(horario["hora_fim"]), '%H:%M').time()
+        if not horarios:
+            return jsonify({"message": "Nenhum horário fornecido."}), 400
         
-        horario_existente = Horarios.query.filter_by(
-            id_colaborador = colaborador_id,
-            dia_semana = horario["dia_semana"],
-            hora_inicio = hora_inicio,
-            hora_fim = hora_fim
-        ).first()
+        for horario in horarios:
+            hora_inicio = datetime.strptime(str(horario["hora_inicio"]), '%H:%M').time()
+            hora_fim = datetime.strptime(str(horario["hora_fim"]), '%H:%M').time()
+            
+            horario_existente = Horarios.query.filter_by(
+                id_colaborador=colaborador_id,
+                dia_semana=horario["dia_semana"],
+                hora_inicio=hora_inicio,
+                hora_fim=hora_fim
+            ).first()
 
-        if not horario_existente:
-            return jsonify({"message": "Horário não encontrado."}), 404
-        
-        db.session.delete(horario_existente)
+            if horario_existente:
+                db.session.delete(horario_existente)
+
         db.session.commit()
-
-        return jsonify({"message": "Horário excluído com sucesso!"}), 200
+        return jsonify({"message": "Horários excluídos com sucesso!"}), 200
     except Exception as e:
         print(e)
         return jsonify({"message": f"Erro ao excluir horário: {str(e)}"}), 500

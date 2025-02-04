@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Modal, Button, Form } from "react-bootstrap";
+import {
+  Modal,
+  Button,
+  Form,
+  Alert,
+  Spinner,
+  ListGroup,
+  Dropdown,
+} from "react-bootstrap";
+import { format, parseISO } from "date-fns";
 
 const EditarHorarios = ({
   colaboradorId,
@@ -8,25 +17,40 @@ const EditarHorarios = ({
   onSave,
 }) => {
   const [horarios, setHorarios] = useState([]);
-  const [novoHorario, setNovoHorario] = useState({
-    dia_semana: "",
-    hora_inicio: "",
-    hora_fim: "",
+  const [novoHorarios, setNovoHorarios] = useState([]);
+  const [selectedHorarios, setSelectedHorarios] = useState([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [loading, setLoading] = useState({
+    save: false,
+    delete: false,
+    list: true,
+    bulkDelete: false,
   });
-  const [showDeleteModal, setShowDeleteModal] = useState(false); // Controle do modal de exclusão
-  const [selectedHorario, setSelectedHorario] = useState(null); // Horário selecionado para exclusão
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
-  // Função para listar os horários existentes do colaborador (novo)
+  // Estados para o modal de preenchimento de horários
+  const [fillHoraInicio, setFillHoraInicio] = useState("");
+  const [fillHoraFim, setFillHoraFim] = useState("");
+  const [showFillModal, setShowFillModal] = useState(false);
+
+  const diasSemana = [
+    "Segunda-feira",
+    "Terça-feira",
+    "Quarta-feira",
+    "Quinta-feira",
+    "Sexta-feira",
+    "Sábado",
+    "Domingo",
+  ];
+
   const listarHorarios = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
         `http://localhost:5000/colaboradores/horarios/listar/${colaboradorId}`,
         {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
@@ -34,77 +58,45 @@ const EditarHorarios = ({
       if (response.ok) {
         setHorarios(data.horarios || []);
       } else {
-        alert(`Erro: ${data.message}`);
+        setError(data.message || "Erro ao carregar horários");
       }
     } catch (error) {
-      alert("Erro ao listar os horários");
+      setError("Falha na conexão com o servidor");
+    } finally {
+      setLoading((prev) => ({ ...prev, list: false }));
     }
-  }, [colaboradorId]); // Depende apenas de colaboradorId
+  }, [colaboradorId]);
 
   useEffect(() => {
     listarHorarios();
   }, [listarHorarios]);
 
-  /* FUNÇÃO ANTERIOR
-
-  const listarHorarios = async () => {
-    try {
-    const token = localStorage.getItem("token");
-    const response = await fetch(
-      `http://localhost:5000/colaboradores/horarios/listar/${colaboradorId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    
-    const data = await response.json();
-    if (response.ok) {
-      setHorarios(data.horarios || []);
-    } else {
-      alert(`Erro: ${data.message}`);
-    }
-  } catch (error) {
-    alert("Erro ao listar os horários");
-  }
-};
-
-useEffect(() => {
-  listarHorarios();
-}, [colaboradorId]);
-
-*/
-
-  // Função para lidar com a alteração dos dados de um horário
-  const handleNovoHorarioChange = (e) => {
-    const { name, value } = e.target;
-    setNovoHorario((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
+  const handleNovoHorarioChange = (index, field, value) => {
+    const updated = [...novoHorarios];
+    updated[index] = { ...updated[index], [field]: value };
+    setNovoHorarios(updated);
+    setError(null);
   };
 
-  const handleSave = async () => {
-    const { dia_semana, hora_inicio, hora_fim } = novoHorario;
-
-    if (!dia_semana || !hora_inicio || !hora_fim) {
-      alert("Todos os campos devem ser preenchidos.");
-      return;
+  const validarHorarios = () => {
+    for (const horario of novoHorarios) {
+      if (!horario.dia_semana || !horario.hora_inicio || !horario.hora_fim) {
+        setError("Todos os campos são obrigatórios");
+        return false;
+      }
+      if (horario.hora_inicio >= horario.hora_fim) {
+        setError("Hora final deve ser após a hora inicial");
+        return false;
+      }
     }
+    return true;
+  };
 
-    const horarioExistente = horarios.find(
-      (horario) =>
-        horario.dia_semana === dia_semana &&
-        horario.hora_inicio === hora_inicio &&
-        horario.hora_fim === hora_fim
-    );
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validarHorarios()) return;
 
-    if (horarioExistente) {
-      alert("Este horário já está configurado.");
-      return;
-    }
+    setLoading((prev) => ({ ...prev, save: true }));
 
     try {
       const token = localStorage.getItem("token");
@@ -118,40 +110,34 @@ useEffect(() => {
           },
           body: JSON.stringify({
             colaborador_id: colaboradorId,
-            horarios: [novoHorario],
+            horarios: novoHorarios,
           }),
         }
       );
 
       const data = await response.json();
       if (response.ok) {
-        alert("Horário configurado com sucesso!");
-        listarHorarios(); // Atualiza a lista de horários
-        setNovoHorario({ dia_semana: "", hora_inicio: "", hora_fim: "" }); // Limpa os campos
-
-        if (onSave) {
-          onSave();
-        }
+        setSuccess("Horários configurados com sucesso!");
+        listarHorarios();
+        setNovoHorarios([]);
+        onSave?.();
       } else {
-        alert(`Erro: ${data.message}`);
+        setError(data.message || "Erro ao salvar horários");
       }
     } catch (error) {
-      alert("Erro ao configurar o horário");
+      setError("Erro na comunicação com o servidor");
+    } finally {
+      setLoading((prev) => ({ ...prev, save: false }));
     }
   };
 
-  // Função para abrir o modal de exclusão
-  const handleDeleteClick = (horario) => {
-    setSelectedHorario(horario); // Define o horário selecionado
-    setShowDeleteModal(true); // Mostra o modal de exclusão
-  };
+  const handleBulkDelete = async () => {
+    setLoading((prev) => ({ ...prev, bulkDelete: true }));
 
-  // Função para confirmar a exclusão
-  const confirmDelete = async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `http://localhost:5000/colaboradores/horarios/remover`,
+        "http://localhost:5000/colaboradores/horarios/remover",
         {
           method: "DELETE",
           headers: {
@@ -160,117 +146,288 @@ useEffect(() => {
           },
           body: JSON.stringify({
             colaboradorId,
-            horario: selectedHorario,
+            horarios: selectedHorarios,
           }),
         }
       );
 
       const data = await response.json();
       if (response.ok) {
-        alert("Horário excluído com sucesso!");
-        listarHorarios(); // Atualiza a lista de horários
-        setShowDeleteModal(false); // Fecha o modal de exclusão
+        setSuccess("Horários removidos com sucesso!");
+        listarHorarios();
+        setSelectedHorarios([]);
+        setShowDeleteModal(false);
       } else {
-        alert(`Erro: ${data.message}`);
+        setError(data.message || "Erro ao excluir horários");
       }
     } catch (error) {
-      console.log(error);
-      alert("Erro ao excluir o horário");
+      setError("Erro na comunicação com o servidor");
+    } finally {
+      setLoading((prev) => ({ ...prev, bulkDelete: false }));
+    }
+  };
+
+  const adicionarHorariosParaTodosOsDias = () => {
+    const novos = diasSemana.map((dia) => ({
+      dia_semana: dia,
+      hora_inicio: "",
+      hora_fim: "",
+    }));
+    setNovoHorarios((prev) => [...prev, ...novos]);
+  };
+
+  const preencherTodosHorarios = (hora_inicio, hora_fim) => {
+    const updated = novoHorarios.map((horario) => ({
+      ...horario,
+      hora_inicio,
+      hora_fim,
+    }));
+    setNovoHorarios(updated);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedHorarios.length === horarios.length) {
+      setSelectedHorarios([]);
+    } else {
+      setSelectedHorarios([...horarios]);
     }
   };
 
   return (
     <>
-      <Modal show onHide={onClose}>
+      <Modal show onHide={onClose} size="lg">
         <Modal.Header closeButton>
-          <Modal.Title>Editar Horários de {colaboradorNome}</Modal.Title>
+          <Modal.Title>Horários de {colaboradorNome}</Modal.Title>
         </Modal.Header>
+
         <Modal.Body>
-          <h5>Horários Atuais:</h5>
-          {horarios.length > 0 ? (
-            <ul className="list-group">
-              {horarios.map((horario, index) => (
-                <li
-                  key={index}
-                  className="list-group-item d-flex justify-content-between align-items-center"
-                >
-                  <span>{`${horario.dia_semana
-                    .charAt(0)
-                    .toUpperCase()}${horario.dia_semana.slice(1)} - ${
-                    horario.hora_inicio
-                  } às ${horario.hora_fim}`}</span>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() =>
-                      handleDeleteClick({
-                        dia_semana: horario.dia_semana,
-                        hora_inicio: horario.hora_inicio,
-                        hora_fim: horario.hora_fim,
-                      })
-                    }
-                  >
-                    Excluir
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-muted">Nenhum horário configurado.</p>
+          {error && (
+            <Alert variant="danger" dismissible onClose={() => setError(null)}>
+              {error}
+            </Alert>
+          )}
+          {success && (
+            <Alert
+              variant="success"
+              dismissible
+              onClose={() => setSuccess(null)}
+            >
+              {success}
+            </Alert>
           )}
 
-          <Form>
-            <Form.Group controlId="formDiaSemana">
-              <Form.Label>Dia da Semana</Form.Label>
-              <Form.Control
-                as="select"
-                name="dia_semana"
-                value={novoHorario.dia_semana}
-                onChange={handleNovoHorarioChange}
+          <div className="d-flex gap-2 mb-3">
+            <Dropdown>
+              <Dropdown.Toggle variant="primary">
+                Adicionar Horário
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                <Dropdown.Item
+                  onClick={() =>
+                    setNovoHorarios([
+                      ...novoHorarios,
+                      { dia_semana: "", hora_inicio: "", hora_fim: "" },
+                    ])
+                  }
+                >
+                  Novo horário único
+                </Dropdown.Item>
+                <Dropdown.Item onClick={adicionarHorariosParaTodosOsDias}>
+                  Novo horário semanal
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
+
+          {novoHorarios.map((horario, index) => (
+            <div key={index} className="d-flex gap-2 mb-3">
+              <Form.Select
+                value={horario.dia_semana}
+                onChange={(e) =>
+                  handleNovoHorarioChange(index, "dia_semana", e.target.value)
+                }
+                className="flex-grow-1"
               >
                 <option value="">Selecione o dia</option>
-                <option value="segunda-feira">Segunda-feira</option>
-                <option value="terca-feira">Terça-feira</option>
-                <option value="quarta-feira">Quarta-feira</option>
-                <option value="quinta-feira">Quinta-feira</option>
-                <option value="sexta-feira">Sexta-feira</option>
-                <option value="sabado">Sábado</option>
-                <option value="domingo">Domingo</option>
-              </Form.Control>
-            </Form.Group>
-
-            <Form.Group controlId="formHoraInicio">
-              <Form.Label>Hora Início</Form.Label>
+                {diasSemana.map((dia) => (
+                  <option key={dia} value={dia}>
+                    {dia}
+                  </option>
+                ))}
+              </Form.Select>
               <Form.Control
                 type="time"
-                name="hora_inicio"
-                value={novoHorario.hora_inicio}
-                onChange={handleNovoHorarioChange}
+                value={horario.hora_inicio}
+                onChange={(e) =>
+                  handleNovoHorarioChange(index, "hora_inicio", e.target.value)
+                }
               />
-            </Form.Group>
-
-            <Form.Group controlId="formHoraFim">
-              <Form.Label>Hora Fim</Form.Label>
               <Form.Control
                 type="time"
-                name="hora_fim"
-                value={novoHorario.hora_fim}
-                onChange={handleNovoHorarioChange}
+                value={horario.hora_fim}
+                onChange={(e) =>
+                  handleNovoHorarioChange(index, "hora_fim", e.target.value)
+                }
               />
-            </Form.Group>
-          </Form>
+              <Button
+                variant="outline-danger"
+                onClick={() =>
+                  setNovoHorarios(novoHorarios.filter((_, i) => i !== index))
+                }
+              >
+                ×
+              </Button>
+            </div>
+          ))}
+
+          {novoHorarios.length > 0 && (
+            <div className="d-flex justify-content-between mt-3">
+              <div>
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => {
+                    setFillHoraInicio("");
+                    setFillHoraFim("");
+                    setShowFillModal(true);
+                  }}
+                >
+                  Preencher horários (Todos)
+                </Button>
+              </div>
+              <div className="d-flex gap-2">
+                <Button
+                  variant="success"
+                  onClick={handleSubmit}
+                  disabled={loading.save}
+                >
+                  {loading.save ? (
+                    <Spinner animation="border" size="sm" />
+                  ) : (
+                    "Salvar Todos"
+                  )}
+                </Button>
+                <Button variant="danger" onClick={() => setNovoHorarios([])}>
+                  Cancelar Todos
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <h5 className="mt-4 mb-3">Horários Cadastrados</h5>
+
+          {loading.list ? (
+            <div className="text-center">
+              <Spinner animation="border" />
+            </div>
+          ) : (
+            <ListGroup className="mb-4">
+              {horarios.length > 0 && (
+                <ListGroup.Item className="d-flex align-items-center">
+                  <Form.Check
+                    className="me-3"
+                    checked={selectedHorarios.length === horarios.length}
+                    onChange={toggleSelectAll}
+                  />
+                  <strong>Marcar Todos</strong>
+                </ListGroup.Item>
+              )}
+
+              {diasSemana.map((dia) => {
+                const horariosDoDia = horarios.filter(
+                  (h) => h.dia_semana === dia
+                );
+                if (horariosDoDia.length === 0) return null;
+
+                return (
+                  <React.Fragment key={dia}>
+                    <ListGroup.Item className="fw-bold bg-light">
+                      {dia}
+                    </ListGroup.Item>
+
+                    {horariosDoDia.map((horario, index) => (
+                      <ListGroup.Item
+                        key={`${dia}-${index}`}
+                        className="d-flex align-items-center"
+                      >
+                        <Form.Check
+                          className="me-3"
+                          checked={selectedHorarios.some(
+                            (h) => JSON.stringify(h) === JSON.stringify(horario)
+                          )}
+                          onChange={() =>
+                            setSelectedHorarios((prev) =>
+                              prev.some(
+                                (h) =>
+                                  JSON.stringify(h) === JSON.stringify(horario)
+                              )
+                                ? prev.filter(
+                                    (h) =>
+                                      JSON.stringify(h) !==
+                                      JSON.stringify(horario)
+                                  )
+                                : [...prev, horario]
+                            )
+                          }
+                        />
+                        <div className="flex-grow-1">
+                          {format(
+                            parseISO(`1970-01-01T${horario.hora_inicio}`),
+                            "HH:mm"
+                          )}
+                          {" às "}
+                          {format(
+                            parseISO(`1970-01-01T${horario.hora_fim}`),
+                            "HH:mm"
+                          )}
+                        </div>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedHorarios([horario]);
+                            setShowDeleteModal(true);
+                          }}
+                        >
+                          Excluir
+                        </Button>
+                      </ListGroup.Item>
+                    ))}
+                  </React.Fragment>
+                );
+              })}
+
+              {horarios.length === 0 && (
+                <Alert variant="info" className="mb-0">
+                  Nenhum horário cadastrado
+                </Alert>
+              )}
+            </ListGroup>
+          )}
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={onClose}>
-            Fechar
-          </Button>
-          <Button variant="primary" onClick={handleSave}>
-            Salvar horário
-          </Button>
+
+        <Modal.Footer className="d-flex justify-content-between">
+          <div>
+            <Button
+              variant="danger"
+              onClick={handleBulkDelete}
+              disabled={selectedHorarios.length === 0 || loading.bulkDelete}
+            >
+              {loading.bulkDelete ? (
+                <Spinner animation="border" size="sm" />
+              ) : (
+                `Excluir Seleção (${selectedHorarios.length})`
+              )}
+            </Button>
+          </div>
+          <div>
+            <Button variant="secondary" onClick={onClose}>
+              Fechar
+            </Button>
+          </div>
         </Modal.Footer>
       </Modal>
 
-      {/* Modal de exclusão */}
+      {/* Modal de confirmação para exclusão única */}
       <Modal
         show={showDeleteModal}
         onHide={() => setShowDeleteModal(false)}
@@ -280,21 +437,74 @@ useEffect(() => {
           <Modal.Title>Confirmar Exclusão</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>Você realmente deseja excluir esse horário?</p>
-          {selectedHorario && (
-            <p>
-              <strong>{selectedHorario.dia_semana}</strong>, das{" "}
-              <strong>{selectedHorario.hora_inicio}</strong> às{" "}
-              <strong>{selectedHorario.hora_fim}</strong>
-            </p>
+          Tem certeza que deseja excluir este horário?
+          {selectedHorarios[0] && (
+            <div className="mt-2">
+              <strong>{selectedHorarios[0].dia_semana}</strong>
+              <br />
+              {format(
+                parseISO(`1970-01-01T${selectedHorarios[0].hora_inicio}`),
+                "HH:mm"
+              )}{" "}
+              -{" "}
+              {format(
+                parseISO(`1970-01-01T${selectedHorarios[0].hora_fim}`),
+                "HH:mm"
+              )}
+            </div>
           )}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
             Cancelar
           </Button>
-          <Button variant="danger" onClick={confirmDelete}>
-            Excluir
+          <Button variant="danger" onClick={handleBulkDelete}>
+            Confirmar Exclusão
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal para escolha de horário antes de preencher todos */}
+      <Modal
+        show={showFillModal}
+        onHide={() => setShowFillModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Escolha o Horário</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group controlId="fillHoraInicio" className="mb-3">
+              <Form.Label>Hora Início</Form.Label>
+              <Form.Control
+                type="time"
+                value={fillHoraInicio}
+                onChange={(e) => setFillHoraInicio(e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group controlId="fillHoraFim">
+              <Form.Label>Hora Fim</Form.Label>
+              <Form.Control
+                type="time"
+                value={fillHoraFim}
+                onChange={(e) => setFillHoraFim(e.target.value)}
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowFillModal(false)}>
+            Cancelar
+          </Button>
+          <Button
+            variant="outline-secondary"
+            onClick={() => {
+              preencherTodosHorarios(fillHoraInicio, fillHoraFim);
+              setShowFillModal(false);
+            }}
+          >
+            Confirmar
           </Button>
         </Modal.Footer>
       </Modal>
