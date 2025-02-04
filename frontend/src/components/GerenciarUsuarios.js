@@ -266,7 +266,11 @@ const GerenciarUsuarios = () => {
                                 </span>
                             </th>
                             <th>telefone</th>
-                            {tipoAlternado === 'colaborador' && (<th>Clínica</th>)}
+                            {tipoAlternado === 'colaborador' && (<><th>Cargo</th>
+                            <th>Clínica</th>
+                            </>
+                        
+                        )}
                             {savedRole === 'admin' && (
                                 <th>Ações</th>
                             )}
@@ -281,7 +285,10 @@ const GerenciarUsuarios = () => {
                                 <td>{usuario.role}</td>
                                 <td>{usuario.telefone}</td>
                                 {tipoAlternado === 'colaborador' && (
+                                    <>
+                                    <td>{usuario.cargo ? usuario.cargo : 'Sem Cargo'}</td>
                                     <td>{usuario.clinica ? usuario.clinica.nome : "Nenhuma"}</td>
+                                    </>
                                 )}
 
                                 {savedRole === 'admin' && (
@@ -290,7 +297,7 @@ const GerenciarUsuarios = () => {
 
 
                                             <button
-                                                className="btn btn-warning btn-sm me-2"
+                                                className="btn btn-warning btn-sm me-1"
                                                 onClick={() => handleEditarUsuario(usuario)}
                                             >
                                                 <i className="bi bi-pencil"></i>
@@ -298,14 +305,14 @@ const GerenciarUsuarios = () => {
 
 
                                             <button
-                                                className="btn btn-danger btn-sm me-2"
+                                                className="btn btn-danger btn-sm me-1"
                                                 onClick={() => deletarUsuario(usuario.role, usuario.id)}
                                             >
                                                 <i className="bi bi-trash"></i>
                                             </button>
                                             {tipoAlternado === 'colaborador' && (
                                                 <button
-                                                    className="btn btn-info btn-sm me-2"
+                                                    className="btn btn-info btn-sm me-1"
                                                     onClick={() => handleEditarHorarios(usuario)}
                                                 >
                                                     <i className="bi bi-clock"></i>

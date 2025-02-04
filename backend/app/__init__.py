@@ -1,6 +1,6 @@
 #cd backend
 #python -m venv venv(a primeira vez)
-
+#.\venv\scripts\activate
 
 #pip install -r requirements.txt
 

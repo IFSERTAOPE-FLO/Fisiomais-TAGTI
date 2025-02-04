@@ -282,8 +282,19 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
                       </option>
                     ))}
                   </Form.Control>
+                  
                 </Form.Group>
               </div>
+              <div className="col-md-6">
+                    <Form.Group controlId="formCargo">
+                      <Form.Label>Cargo</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={cargo}
+                        onChange={(e) => setCargo(e.target.value)}
+                      />
+                    </Form.Group>
+                  </div>
             </div>
           )}
         </Form>
