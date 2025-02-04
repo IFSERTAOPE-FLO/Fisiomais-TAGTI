@@ -399,13 +399,13 @@ function Navbar() {
                   <li>
                     <Link to="/criaragendamento" className="sidebar-item">
                       <i className="bi bi-calendar-plus"></i>
-                      {sidebarVisible && " Criar Agendamento"}
+                      {sidebarVisible && " Agendar "}
                     </Link>
                   </li>
                   <li>
                     <Link to="/visualizaragendamentos" className="sidebar-item">
                       <i className="bi bi-calendar-check"></i>
-                      {sidebarVisible && " Visualizar Agendamentos"}
+                      {sidebarVisible && " Lista "}
                     </Link>
                   </li>
                   <li>

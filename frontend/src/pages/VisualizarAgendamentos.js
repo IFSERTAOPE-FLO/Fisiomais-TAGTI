@@ -23,7 +23,7 @@ const VisualizarAgendamentos = () => {
   const itemsPerPage = 10;
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [newStatus, setNewStatus] = useState('');
-
+  const [pesquisaStatus, setPesquisaStatus] = useState(''); // Estado para o status da pesquisa
   const [pesquisaTipo, setPesquisaTipo] = useState('Número do Agendamento'); // Estado para o tipo de pesquisa
   const [pesquisaValor, setPesquisaValor] = useState(''); // Estado para o valor da pesquisa
 
@@ -203,19 +203,29 @@ const VisualizarAgendamentos = () => {
   };
   // Função de filtragem
   const agendamentosFiltrados = sortedAgendamentos.filter((agendamento) => {
-    switch (pesquisaTipo) {
-      case 'agendamento':
-        return agendamento.id.toString().includes(pesquisaValor);
-      case 'cliente':
-        return agendamento.cliente.toLowerCase().includes(pesquisaValor.toLowerCase());
-      case 'colaborador':
-        return agendamento.colaborador.toLowerCase().includes(pesquisaValor.toLowerCase());
+    // Filtro por tipo de pesquisa (agendamento, cliente, colaborador, etc.)
+    const matchesPesquisaTipo = () => {
+      switch (pesquisaTipo) {
+        case 'agendamento':
+          return agendamento.id.toString().includes(pesquisaValor);
+        case 'cliente':
+          return agendamento.cliente.toLowerCase().includes(pesquisaValor.toLowerCase());
+        case 'colaborador':
+          return agendamento.colaborador.toLowerCase().includes(pesquisaValor.toLowerCase());
+        case 'clinica':
+          return agendamento.clinica?.nome.toLowerCase().includes(pesquisaValor.toLowerCase());
+        default:
+          return true;
+      }
+    };
 
-      case 'clinica':
-        return agendamento.clinica?.nome.toLowerCase().includes(pesquisaValor.toLowerCase());
-      default:
-        return true;
-    }
+    // Filtro por status
+    const matchesPesquisaStatus = () => {
+      if (pesquisaStatus === '') return true; // Se nenhum status for selecionado, retorna todos
+      return agendamento.status === pesquisaStatus;
+    };
+
+    return matchesPesquisaTipo() && matchesPesquisaStatus();
   });
 
   // Paginação
@@ -233,33 +243,59 @@ const VisualizarAgendamentos = () => {
 
 
         <div className="card-body">
-          <div className="col-md-2 col-lg-12 d-flex justify-content-center align-items-center">
-            <div className="input-group z-bot">
+          <div className="col-12 d-flex flex-wrap justify-content-center align-items-center gap-2">
+            {/* Grupo de Pesquisa */}
+            <div className="input-group z-bot" style={{ maxWidth: "500px" }}>
+              <span className="input-group-text">
+                <i className="bi bi-funnel"></i>
+              </span>
               <select
                 className="form-select"
                 value={pesquisaTipo}
                 onChange={(e) => setPesquisaTipo(e.target.value)}
               >
                 <option value="agendamento">Nº do Agendamento</option>
-                {role !== 'cliente' && (
-                  <option value="cliente">Cliente</option>
-                )
-                }
+                {role !== "cliente" && <option value="cliente">Cliente</option>}
                 <option value="colaborador">Colaborador</option>
                 <option value="clinica">Clínica</option>
               </select>
+            </div>
+
+            {/* Campo de Entrada */}
+            <div className="input-group z-bot" style={{ maxWidth: "400px" }}>
               <input
                 type="text"
-                className="form-control"
-                placeholder={`Pesquisar por ${pesquisaTipo === 'agendamento' ? 'ID' : pesquisaTipo}`}
+                className="form-control py-1"
+                placeholder={`Pesquisar por ${pesquisaTipo === "agendamento" ? "ID" : pesquisaTipo}`}
                 value={pesquisaValor}
                 onChange={(e) => setPesquisaValor(e.target.value)}
               />
-              <button className="btn btn-secondary z-bot " type="button">
-                <i className="bi bi-search z-bot"></i>
+              <button className="btn btn-secondary" type="button">
+                <i className="bi bi-search"></i>
               </button>
             </div>
+
+            {/* Filtro de Status */}
+            <div className="input-group z-bot" style={{ maxWidth: "300px" }}>
+              <span className="input-group-text">
+                <i className="bi bi-filter-circle"></i>
+              </span>
+              <select
+                className="form-select"
+                value={pesquisaStatus}
+                onChange={(e) => setPesquisaStatus(e.target.value)}
+              >
+                <option value="">Todos os Status</option>
+                <option value="confirmado">Confirmado</option>
+                <option value="negado">Negado</option>
+                <option value="cancelado">Cancelado</option>
+                <option value="remarcado">Remarcado</option>
+                <option value="nao_compareceu">Não Compareceu</option>
+                <option value="pago">Pago</option>
+              </select>
+            </div>
           </div>
+
           <div className="table-responsive">
 
             {erro && agendamentos.length > 0 && <div className="alert alert-danger">{erro}</div>}
@@ -426,7 +462,6 @@ const VisualizarAgendamentos = () => {
             </Modal.Header>
             <Modal.Body>
               <div className="d-flex flex-column justify-content-center align-items-center">
-                <p>Escolha uma data específica ou selecione uma das opções abaixo:</p>
                 <Calendar value={selectedDate instanceof Date ? selectedDate : null} onChange={handleDateFilter} />
                 <div className="mt-3 d-flex flex-column gap-2">
 
