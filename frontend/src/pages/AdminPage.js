@@ -100,7 +100,7 @@ const AdminPage = () => {
                     href="#criarAgendamento"
                     onClick={() => handleOpcaoChange("criarAgendamento")}
                   >
-                    <i className="bi bi-calendar-plus"></i> Adicionar Agendamento
+                    <i className="bi bi-calendar-plus"></i> Agendar
                   </a>
                 </li>
                 <li>
@@ -109,7 +109,7 @@ const AdminPage = () => {
                     href="#visualizarAgendamentos"
                     onClick={() => handleOpcaoChange("visualizarAgendamentos")}
                   >
-                    <i className="bi bi-calendar-check"></i> Visualizar Agendamentos
+                    <i className="bi bi-calendar-check"></i> Lista
                   </a>
                 </li>
                 <li>
@@ -118,7 +118,7 @@ const AdminPage = () => {
                     href="#CalendarioAgendamentos"
                     onClick={() => handleOpcaoChange("CalendarioInterativo")}
                   >
-                    <i className="bi bi-calendar-event"></i> Calendário de Agendamentos
+                    <i className="bi bi-calendar-event"></i> Calendário 
                   </a>
                 </li>
               </ul>

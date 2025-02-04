@@ -383,6 +383,22 @@ function Navbar() {
                 {sidebarVisible && " Meu Perfil"}
               </Link>
             </li>
+            {role === "admin" && (
+              <li className="mt-3">
+                <Link to="/adminPage" className="sidebar-item">
+                  <i className="bi bi-shield-lock"></i>
+                  {sidebarVisible && " Página Administrador"}
+                </Link>
+              </li>
+            )}
+            {role === "colaborador" && (
+              <li className="mt-3">
+                <Link to="/adminPage" className="sidebar-item">
+                  <i className="bi bi-person-workspace"></i>
+                  {sidebarVisible && " Central de Controle"}
+                </Link>
+              </li>
+            )}
 
             {/* Seção de Agendamentos */}
             <li className="mt-3">
@@ -425,23 +441,9 @@ function Navbar() {
               </Link>
             </li>
 
-            {role === "admin" && (
-              <li className="mt-3">
-                <Link to="/adminPage" className="sidebar-item">
-                  <i className="bi bi-shield-lock"></i>
-                  {sidebarVisible && " Página Administrador"}
-                </Link>
-              </li>
-            )}
+            
 
-            {role === "colaborador" && (
-              <li className="mt-3">
-                <Link to="/adminPage" className="sidebar-item">
-                  <i className="bi bi-person-workspace"></i>
-                  {sidebarVisible && " Central de Controle"}
-                </Link>
-              </li>
-            )}
+            
 
             <li className="mt-3">
               <button onClick={handleLogout} className="logout-btn">
