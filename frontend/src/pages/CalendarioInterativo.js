@@ -80,22 +80,22 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
 
   const handleEventDrop = async (info) => {
     const { id, start, end, delta } = info.event;
-  
+
     // Verificando se o evento foi movido para outro mês
     const startBR = new Date(start);
     const endBR = new Date(end);
-  
+
     startBR.setHours(startBR.getHours() - 3); // Ajuste de fuso horário
     endBR.setHours(endBR.getHours() - 3); // Ajuste de fuso horário
-  
+
     const novaData = startBR.toISOString().split("T")[0];
     const novoHorario = startBR.toISOString().split("T")[1].slice(0, 5);
-  
-    
-  
+
+
+
     setNovoHorario(novoHorario);
     setShowModalHorario(true); // Abre o modal de edição de horário
-  
+
     setEventoSelecionado({
       id,
       novaData,
@@ -104,8 +104,8 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
       novoHorarioFim: endBR.toISOString().split("T")[1].slice(0, 5), // Atualiza o horário de fim
     });
   };
-  
-  
+
+
 
 
   const handleSalvarHorario = async () => {
@@ -147,16 +147,19 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
   const handleEventClick = (info) => {
     const evento = info.event;
     setEventoSelecionado({
+      id: evento.id,
       title: evento.title,
       cliente: evento.extendedProps.cliente,
       colaborador: evento.extendedProps.colaborador,
       status: evento.extendedProps.status,
       start: evento.start,
       descricao: evento.extendedProps.description,
-      dias_e_horarios: evento.extendedProps.dias_e_horarios, // Adicionando a nova data de remarcação
+      dias_e_horarios: evento.extendedProps.dias_e_horarios,
     });
-    setShowModalDetalhes(true); // Exibe o modal
+    console.log("Evento Selecionado ID: ", evento.id);  // Verifique o ID aqui
+    setShowModalDetalhes(true);
   };
+  
 
 
 
@@ -294,10 +297,15 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
 
         </Modal.Body>
         <Modal.Footer>
-          <Link to="/visualizaragendamentos" className="btn btn-info text-decoration-none">
-            <i className="bi bi-calendar-check"></i> {/* Ícone de visualizar agendamentos */}
-            Visualizar
+          <Link
+            to={eventoSelecionado && eventoSelecionado.id ? `/visualizaragendamentos?agendamentoId=${eventoSelecionado.id}` : "#"}
+            className="btn btn-info text-decoration-none"
+          >
+            <i className="bi bi-calendar-check"></i> Visualizar
           </Link>
+
+
+
           <Button variant="secondary" onClick={() => setShowModalDetalhes(false)}>
             Fechar
           </Button>
