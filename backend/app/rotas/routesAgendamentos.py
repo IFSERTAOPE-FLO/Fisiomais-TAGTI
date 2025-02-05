@@ -302,6 +302,7 @@ def listar_agendamentos():
 
             # Adicionando apenas o status de pagamento
             pagamento_dados = {
+                'id': pagamento.id_pagamento,
                 'status': pagamento.status if pagamento else None
             }
 
@@ -785,7 +786,7 @@ def deletar_agendamento(agendamento_id):
         mail.send(msg_cliente)
         mail.send(msg_colaborador)
         print("E-mails enviados com sucesso.")  # Log de e-mails enviados
-
+        Pagamentos.query.filter_by(id_agendamento=agendamento.id_agendamento).delete()
         # Deleta o agendamento
         db.session.delete(agendamento)
         db.session.commit()

@@ -7,7 +7,7 @@ import '../css/Estilos.css';
 import Calendar from 'react-calendar'; // Para exibir o calendário
 import Paginator from '../components/Paginator';
 
-import { useLocation } from 'react-router-dom'; // Importe o useLocation
+import { useLocation, Link } from 'react-router-dom'; // Importe o useLocation
 
 const VisualizarAgendamentos = () => {
   const [agendamentos, setAgendamentos] = useState([]);
@@ -26,9 +26,11 @@ const VisualizarAgendamentos = () => {
   const [pesquisaStatus, setPesquisaStatus] = useState(''); // Estado para o status da pesquisa
   const [pesquisaTipo, setPesquisaTipo] = useState('Número do Agendamento'); // Estado para o tipo de pesquisa
   const [pesquisaValor, setPesquisaValor] = useState(''); // Estado para o valor da pesquisa
+
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const agendamentoId = queryParams.get('agendamentoId'); // Captura o parâmetro da URL
+
   const formatarDataBrasileira = (dataHora) => {
     const data = new Date(dataHora); // Converte a string para um objeto Date
 
@@ -83,8 +85,8 @@ const VisualizarAgendamentos = () => {
     setShowModal(false);
     setSelectedAgendamento(null);
   };
-   // Efeito para aplicar o filtro automaticamente ao carregar a página
-   useEffect(() => {
+  // Efeito para aplicar o filtro automaticamente ao carregar a página
+  useEffect(() => {
     if (agendamentoId) {
       setPesquisaTipo('agendamento'); // Define o tipo de pesquisa como "agendamento"
       setPesquisaValor(agendamentoId); // Define o valor da pesquisa como o ID do agendamento
@@ -300,7 +302,7 @@ const VisualizarAgendamentos = () => {
                 <option value="cancelado">Cancelado</option>
                 <option value="remarcado">Remarcado</option>
                 <option value="nao_compareceu">Não Compareceu</option>
-                <option value="concluido">Concluido</option>                
+                <option value="concluido">Concluido</option>
               </select>
             </div>
           </div>
@@ -346,7 +348,6 @@ const VisualizarAgendamentos = () => {
                   <th>Status</th>
                   <th>Pagamento</th>
                   <th>Endereço da Clínica</th>
-
                   <th>Detalhes</th>
                 </tr>
               </thead>
@@ -717,6 +718,17 @@ const VisualizarAgendamentos = () => {
                     {loading ? ' Carregando...' : ''}
                   </Button>
                 )}
+                <Link
+                  to={
+                    selectedAgendamento && selectedAgendamento.pagamento
+                      ? `/gerenciarPagamentos?pagamentoId=${selectedAgendamento.pagamento.id}`
+                      : "#"
+                  }
+                  className="btn btn-info text-decoration-none"
+                >
+                  <i className="bi bi-calendar-check"></i> Gerenciar Pagamento
+                </Link>
+
 
                 <Button variant="btn btn-secondary" onClick={handleCloseModal}>
                   Fechar

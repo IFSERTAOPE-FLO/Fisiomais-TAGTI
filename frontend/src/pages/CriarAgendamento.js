@@ -252,6 +252,7 @@ function CriarAgendamento() {
         const successData = await response.json();
         alert(successData.message || 'Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail');
         fetchHorariosDisponiveis(colaborador || localStorage.getItem('userId'), data);
+        
       } else {
         const errorData = await response.json();
         alert(errorData.message || 'Erro ao agendar a sessão.');

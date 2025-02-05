@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Modal } from 'react-bootstrap';
-
+import { useLocation } from 'react-router-dom'; // Importe o useLocation
 import Paginator from '../components/Paginator';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSearch, faFilter, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
+
 
 const GerenciarPagamentos = () => {
   const [pagamentos, setPagamentos] = useState([]);
@@ -13,12 +16,31 @@ const GerenciarPagamentos = () => {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  // Estados para filtros
+  const [pesquisaTipo, setPesquisaTipo] = useState('id_pagamento'); // Tipo de pesquisa (ID, cliente, serviço, etc.)
+  const [pesquisaValor, setPesquisaValor] = useState(''); // Valor da pesquisa
+  const [pesquisaStatus, setPesquisaStatus] = useState(''); // Status do pagamento
+
 
   const role = localStorage.getItem('role');  // 'cliente', 'colaborador', 'admin'
 
   const isCliente = role === 'cliente';
   const isColaborador = role === 'colaborador';
   const isAdmin = role === 'admin';
+
+  // Captura o ID do agendamento da URL
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const pagamentoId = queryParams.get('pagamentoId');
+  // Efeito para aplicar o filtro automaticamente ao carregar a página
+  useEffect(() => {
+    if (pagamentoId) {
+      setPesquisaTipo('id_pagamento'); // Define o tipo de pesquisa como "agendamento"
+      setPesquisaValor(pagamentoId); // Define o valor da pesquisa como o ID do agendamento
+    }
+  }, [pagamentoId]);
+
+
 
   useEffect(() => {
     const fetchPagamentos = async () => {
@@ -89,6 +111,42 @@ const GerenciarPagamentos = () => {
     const localDate = new Date(date);
     return localDate.toISOString().slice(0, 16); // 'YYYY-MM-DDTHH:mm'
   };
+  // Filtra os pagamentos com base nos critérios selecionados
+  const pagamentosFiltrados = pagamentos.filter((pagamento) => {
+    // Filtro por tipo de pesquisa
+    const matchesPesquisaTipo = () => {
+      switch (pesquisaTipo) {
+        case 'id_pagamento':
+          if (pagamentoId) {
+            return pagamento.id_pagamento.toString() === pesquisaValor; // Busca exata
+          }
+          return pagamento.id_pagamento.toString().includes(pesquisaValor); // Busca por inclusão em outros casos
+        case 'cliente':
+          return pagamento.cliente.nome.toLowerCase().includes(pesquisaValor.toLowerCase());
+        case 'servico':
+          return pagamento.servico.nome.toLowerCase().includes(pesquisaValor.toLowerCase());
+        case 'clinica':
+          return pagamento.clinica?.nome.toLowerCase().includes(pesquisaValor.toLowerCase());
+        default:
+          return true;
+      }
+    };
+
+    // Filtro por status
+    const matchesPesquisaStatus = () => {
+      if (pesquisaStatus === '') return true; // Se nenhum status for selecionado, retorna todos
+      return pagamento.status === pesquisaStatus;
+    };
+
+
+    return matchesPesquisaTipo() && matchesPesquisaStatus();
+  });
+  const resetPesquisa = () => {
+    setPesquisaTipo(''); // Limpa o tipo de pesquisa
+    setPesquisaValor(''); // Limpa o valor da pesquisa
+  };
+
+
 
 
   return (
@@ -101,6 +159,70 @@ const GerenciarPagamentos = () => {
         <div className="card-body">
           {erro && <div className="alert alert-danger">{erro}</div>}
           {sucesso && <div className="alert alert-success">{sucesso}</div>}
+          <div className="row g-3 align-items-center mb-3">
+            {/* Tipo de pesquisa */}
+            <div className="col-md-3">
+              <div className="input-group">
+                <span className="input-group-text">
+                  <FontAwesomeIcon icon={faFilter} />
+                </span>
+                <select
+                  className="form-select"
+                  value={pesquisaTipo}
+                  onChange={(e) => setPesquisaTipo(e.target.value)}
+                >
+                  <option value="id_pagamento">ID do Pagamento</option>
+                  <option value="cliente">Cliente</option>
+                  <option value="servico">Serviço</option>
+                  <option value="clinica">Clínica</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Campo de pesquisa */}
+            <div className="col-md-5">
+              <div className="input-group">
+                <span className="input-group-text">
+                  <FontAwesomeIcon icon={faSearch} />
+                </span>
+                <input
+                  type="text"
+                  className="form-control py-2"
+                  placeholder="Pesquisar..."
+                  value={pesquisaValor}
+                  onChange={(e) => setPesquisaValor(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Status do pagamento */}
+            <div className="col-md-3">
+              <div className="input-group">
+                <span className="input-group-text">
+                  <FontAwesomeIcon icon={faCheckCircle} />
+                </span>
+                <select
+                  className="form-select"
+                  value={pesquisaStatus}
+                  onChange={(e) => setPesquisaStatus(e.target.value)}
+                >
+                  <option value="">Todos os Status</option>
+                  <option value="Pendente">Pendente</option>
+                  <option value="Pago">Pago</option>
+                  <option value="Cancelado">Cancelado</option>
+                  <option value="Atrasado">Atrasado</option>
+                </select>
+              </div>
+
+            </div>
+            <div className="col-md-1">
+              <button onClick={resetPesquisa} className="btn btn-secondary py-1 d-flex align-items-center">
+                <i className="bi bi-x-circle me-2"></i> Limpar
+              </button>
+            </div>
+
+
+          </div>;
 
           <div className="table-responsive">
             <table className="table table-striped table-bordered mt-4 agendamento-header">
@@ -118,7 +240,7 @@ const GerenciarPagamentos = () => {
                 </tr>
               </thead>
               <tbody className="text-center">
-                {pagamentos.map((pagamento) => (
+                {pagamentosFiltrados.map((pagamento) => (
                   <tr key={pagamento.id_pagamento}>
                     <td>{pagamento.id_pagamento}</td>
                     <td>{pagamento.cliente.nome}</td>
