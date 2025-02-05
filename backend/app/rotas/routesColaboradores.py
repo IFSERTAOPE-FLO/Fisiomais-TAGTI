@@ -253,13 +253,6 @@ def get_colaboradoresdisponiveis():
 
 
 
-
-
-    
-
-
-
-
 @colaboradores.route('/horarios/configurar', methods=['POST'])
 @jwt_required()
 def configurar_horarios():

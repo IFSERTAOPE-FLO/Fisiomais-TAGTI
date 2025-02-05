@@ -19,6 +19,11 @@ import Especialidades from "./pages/Especialidades";
 import GerenciarPagamentos from "./pages/GerenciarPagamentos";
 import CalendarioInterativo from "./pages/CalendarioInterativo";  
 
+// Componentes de Pilates
+import AdicionarAulaPilates from "./components/pilates/AdicionarAulaPilates";
+import AdicionarClienteAulaColaborador from "./components/pilates/AdicionarClienteAulaColaborador";
+import CadastrarAulaCliente from "./components/pilates/CadastrarAulaCliente";
+
 
 function App() {
     return (
@@ -129,6 +134,30 @@ function App() {
                         element={
                             <PageWrapper title=" Agendamentos | Calendário - Fisiomais">
                                 <CalendarioInterativo />
+                            </PageWrapper>
+                        } 
+                    />
+                     <Route 
+                        path="/adicionar-aula-pilates" 
+                        element={
+                            <PageWrapper title="Adicionar Aula de Pilates - Fisiomais">
+                                <AdicionarAulaPilates />
+                            </PageWrapper>
+                        } 
+                    />
+                    <Route 
+                        path="/adicionar-cliente-aula-colaborador" 
+                        element={
+                            <PageWrapper title="Adicionar Cliente à Aula - Fisiomais">
+                                <AdicionarClienteAulaColaborador />
+                            </PageWrapper>
+                        } 
+                    />
+                    <Route 
+                        path="/cadastrar-aula-cliente" 
+                        element={
+                            <PageWrapper title="Cadastrar Aula para Cliente - Fisiomais">
+                                <CadastrarAulaCliente />
                             </PageWrapper>
                         } 
                     />

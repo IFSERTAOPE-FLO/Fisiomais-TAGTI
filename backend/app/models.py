@@ -59,6 +59,7 @@ class Colaboradores(db.Model):
     clinica = db.relationship('Clinicas', back_populates='colaboradores')  # Relacionamento com Clínica
     servicos = db.relationship('Servicos', secondary='colaboradores_servicos', back_populates='colaboradores')
     horarios = db.relationship('Horarios', back_populates='colaborador')
+    aulas = db.relationship('Aulas', back_populates='colaborador')
 
     # Métodos de senha
     def set_password(self, password):
@@ -103,6 +104,7 @@ class Clientes(db.Model):
     # Novos campos para verificação de email
     email_confirmado = db.Column(db.Boolean, default=False, nullable=False)
     token_confirmacao = db.Column(db.String(128), nullable=True)
+    aulas = db.relationship('AulasClientes', back_populates='cliente')
 
     # Relacionamentos
     endereco = db.relationship('Enderecos', back_populates='clientes')
@@ -241,6 +243,35 @@ class Faturas(db.Model):
 
     cliente = db.relationship('Clientes', backref='faturas')
     pagamento = db.relationship('Pagamentos', backref='faturas')
+
+class Aulas(db.Model):
+    __tablename__ = 'aulas'
+    id_aula = db.Column(db.Integer, primary_key=True)
+    id_colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.id_colaborador'), nullable=False)
+    dia_semana = db.Column(db.String(50), nullable=False)  # Ex: "Segunda-feira"
+    hora_inicio = db.Column(db.Time, nullable=False)
+    hora_fim = db.Column(db.Time, nullable=False)
+    limite_alunos = db.Column(db.Integer, nullable=False)  # Número máximo de alunos na aula
+
+    # Relacionamentos
+    colaborador = db.relationship('Colaboradores', back_populates='aulas')
+    alunos = db.relationship('AulasClientes', back_populates='aula')  # Associações com clientes
+
+    def __repr__(self):
+        return f'<Aula {self.dia_semana} - {self.hora_inicio} até {self.hora_fim}>'
+
+class AulasClientes(db.Model):
+    __tablename__ = 'aulas_clientes'
+    id_aula_cliente = db.Column(db.Integer, primary_key=True)
+    id_aula = db.Column(db.Integer, db.ForeignKey('aulas.id_aula'), nullable=False)
+    id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False)
+
+    # Relacionamentos
+    aula = db.relationship('Aulas', back_populates='alunos')
+    cliente = db.relationship('Clientes')
+
+    def __repr__(self):
+        return f'<AulaCliente Aula: {self.id_aula} Cliente: {self.id_cliente}>'
 
 
 class BlacklistedToken(db.Model):
