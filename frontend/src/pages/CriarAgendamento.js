@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import '../css/CriarAgendamento.css';
 import '../css/Estilos.css';
 import Calendar from 'react-calendar';
@@ -209,11 +210,18 @@ function CriarAgendamento() {
 
 
   const handleSubmit = async (e) => {
+    e.preventDefault();  // Garantir que o evento não se propague automaticamente
     setLoading(true);
-    e.preventDefault();
 
+    // Validações
     if (tipoServico !== 'pilates' && !hora) {
       alert('Por favor, selecione um horário válido.');
+      setLoading(false);
+      return;
+    }
+
+    if (!cliente || !colaborador || !servico) {
+      alert('Por favor, preencha todos os campos obrigatórios.');
       setLoading(false);
       return;
     }
@@ -252,7 +260,6 @@ function CriarAgendamento() {
         const successData = await response.json();
         alert(successData.message || 'Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail');
         fetchHorariosDisponiveis(colaborador || localStorage.getItem('userId'), data);
-        
       } else {
         const errorData = await response.json();
         alert(errorData.message || 'Erro ao agendar a sessão.');
@@ -262,6 +269,7 @@ function CriarAgendamento() {
     }
     setLoading(false);
   };
+
 
 
 
@@ -400,7 +408,7 @@ function CriarAgendamento() {
                 )}
 
 
-                {tipoServico === 'pilates' && (
+                {(tipoServico === 'pilates' && role === 'cliente') ? (
                   <div className="mb-3">
                     <label className="form-label">Plano de Pilates</label>
                     <div className="row">
@@ -412,7 +420,8 @@ function CriarAgendamento() {
                             style={{ cursor: 'pointer' }}
                           >
                             <div className="flex-grow-1">
-                              <strong>{plano.Nome_plano}</strong>
+                              <strong>{plano.Nome_plano} </strong>
+                              - {plano.Quantidade_Aulas_Por_Semana} aulas por semana
                             </div>
                             <div className="text-end">
                               <span className="fw-bold">R$ {plano.Valor}</span>
@@ -422,27 +431,42 @@ function CriarAgendamento() {
                       ))}
                     </div>
                     <div className='mb-3 mt-2'>
-                    <label className="form-label">Qual é a sua disponibilidade?</label>
-                    <div className="mb-6 d-flex align-items-center gap-3">
-                    <input
-                        type="text"
-                        className="form-control py-2 rounded"
-                        value={diasHorariosTexto}
-                        readOnly
-                        placeholder="Nenhum horário selecionado"
-                        style={{                          
-                          whiteSpace: 'nowrap', // Impede a quebra de linha
-                          overflowX: 'auto', // Permite rolagem horizontal
-                          textOverflow: 'ellipsis', // Adiciona "..." caso o texto ultrapasse
-                        }}
-                      />
-                      <button onClick={handleOpenModal} className=" btn-plano rounded">
-                        Escolher Dias e Horários
-                      </button>
+                      <label className="form-label">Qual é a sua disponibilidade?</label>
+                      <div className="mb-6 d-flex align-items-center gap-3">
+                        <input
+                          type="text"
+                          className="form-control py-2 rounded"
+                          value={diasHorariosTexto}
+                          readOnly
+                          placeholder="Nenhum horário selecionado"
+                          style={{
+                            whiteSpace: 'nowrap', // Impede a quebra de linha
+                            overflowX: 'auto', // Permite rolagem horizontal
+                            textOverflow: 'ellipsis', // Adiciona "..." caso o texto ultrapasse
+                          }}
+                        />
+                        <button
+                          type="button" // Adicione isso para evitar o submit
+                          onClick={handleOpenModal}
+                          className="btn-plano rounded"
+                        >
+                          Escolher Dias e Horários
+                        </button>
                       </div>
                     </div>
                   </div>
+                ) : (tipoServico === 'pilates' && (
+                  <div className="mb-3">
+                    <Link
+                      to={{ pathname: "/adminPage", state: { opcaoSelecionada: "aulasPilates" } }}
+                    >
+                      <button className="btn btn-login">
+                        Ir para Gerenciar Aulas de Pilates
+                      </button>
+                    </Link>
+                  </div>)
                 )}
+
                 <EscolherDiasHorariosClientesModal
                   show={modalShow}
                   onHide={() => setModalShow(false)}
@@ -452,6 +476,7 @@ function CriarAgendamento() {
                     setModalShow(false); // Fecha o modal
                   }}
                 />
+
 
                 {/* Collaborator Selection */}
                 <div className="mb-3">
@@ -555,7 +580,7 @@ function CriarAgendamento() {
                 <button
                   type="submit"
                   className="btn btn-signup w-100 text-uppercase fw-bold"
-                  disabled={loading}
+                  disabled={loading || (tipoServico === 'pilates' && (role === 'admin' || role === 'colaborador'))}
                 >
                   {loading ? (
                     <i className="bi bi-arrow-repeat spinner"></i>

@@ -49,9 +49,10 @@ const CalendarioInterativo = () => {
         title: agendamento.servico,
         start: `${agendamento.data}T${agendamento.hora}`,
         backgroundColor:
-          agendamento.status === "Confirmado"
-            ? "#2d9184"
-            : agendamento.status === "Pendente"
+        agendamento.status === "confirmado" || agendamento.status === "Confirmado"
+        ? "#2d9184"    
+      
+            : agendamento.status === "Pendente" || agendamento.status === "pendente"
               ? "#6c757d"
               : agendamento.status === "Pedido de Remarcação"
                 ? "#17a2b8"

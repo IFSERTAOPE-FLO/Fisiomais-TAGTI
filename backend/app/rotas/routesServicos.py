@@ -59,7 +59,8 @@ def get_list_servicos():
                             "ID_Plano": plano.id_plano,
                             "Nome_plano": plano.nome,
                             "Descricao": plano.descricao,
-                            "Valor": str(plano.valor)
+                            "Valor": str(plano.valor),
+                            "Quantidade_Aulas_Por_Semana": plano.quantidade_aulas_por_semana  # Novo campo
                         })
             
             servico_data = {
@@ -105,7 +106,8 @@ def listar_todos_servicos():
                             "ID_Plano": plano.id_plano,
                             "Nome_plano": plano.nome,
                             "Descricao": plano.descricao,
-                            "Valor": str(plano.valor)
+                            "Valor": str(plano.valor),
+                            "Quantidade_Aulas_Por_Semana": plano.quantidade_aulas_por_semana  # Novo campo
                         })
 
             servico_data = {
@@ -197,7 +199,8 @@ def add_servico():
                     nome=plano_data.get('nome_plano'),
                     descricao=plano_data.get('descricao', ''),
                     valor=plano_data.get('valor'),
-                    servico=novo_servico  # Associando o plano ao serviço
+                    servico=novo_servico,  # Associando o plano ao serviço
+                    quantidade_aulas_por_semana=plano_data.get('quantidade_aulas_por_semana', 1)  # Novo campo
                 )
                 db.session.add(novo_plano)
 
@@ -215,6 +218,7 @@ def add_servico():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Erro ao adicionar serviço: {str(e)}"}), 500
+
 
  
 @servicos.route('/editar_servico/<int:id_servico>', methods=['PUT'])
@@ -265,7 +269,13 @@ def editar_servico(id_servico):
             
             # Adiciona os novos planos
             for plano_data in data['Planos']:
-                novo_plano = Planos(nome=plano_data['Nome_plano'], valor=plano_data['Valor'], servico_id=servico.id_servico)
+                novo_plano = Planos(
+                    nome=plano_data['Nome_plano'],
+                    valor=plano_data['Valor'],
+                    servico_id=servico.id_servico,
+                    descricao=plano_data.get('Descricao', ''),
+                    quantidade_aulas_por_semana=plano_data.get('quantidade_aulas_por_semana', 1)  # Novo campo
+                )
                 db.session.add(novo_plano)
 
         # Salva as alterações no banco
@@ -274,9 +284,6 @@ def editar_servico(id_servico):
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Erro ao atualizar o serviço: {str(e)}"}), 500
-
-
-
 
 
 

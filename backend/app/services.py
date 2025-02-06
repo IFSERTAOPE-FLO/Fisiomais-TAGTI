@@ -233,14 +233,14 @@ def populate_database():
 
     # Criar planos para serviços de Pilates
     planos_pilates = [
-        {"nome": "Plano Plates Clinico - 2 dias por semana", "valor": 500.00, "servico_nome": "Pilates Clínico"},
-        {"nome": "Plano Mensal - 2 dias por semana", "valor": 600.00, "servico_nome": "Pilates Clínico"},
-        {"nome": "Plano Mensal - 2 dias por semana", "valor": 600.00, "servico_nome": "Pilates Tradicional"},          
-        {"nome": "Plano Anual - 2 dias por semana", "valor": 3000.00, "servico_nome": "Pilates Tradicional"},
-        {"nome": "Plano Trimestral - 3 dias por semana", "valor": 849.99, "servico_nome": "Pilates Tradicional"},
-        {"nome": "Plano Semestral - 3 dias por semana", "valor": 1549.99, "servico_nome": "Pilates Tradicional"},
-        
+        {"nome": "Plano Plates Clinico ", "valor": 500.00, "servico_nome": "Pilates Clínico", "quantidade_aulas_por_semana": 2},
+        {"nome": "Plano Mensal ", "valor": 600.00, "servico_nome": "Pilates Clínico", "quantidade_aulas_por_semana": 2},
+        {"nome": "Plano Mensal ", "valor": 600.00, "servico_nome": "Pilates Tradicional", "quantidade_aulas_por_semana": 2},
+        {"nome": "Plano Anual ", "valor": 3000.00, "servico_nome": "Pilates Tradicional", "quantidade_aulas_por_semana": 2},
+        {"nome": "Plano Trimestral ", "valor": 849.99, "servico_nome": "Pilates Tradicional", "quantidade_aulas_por_semana": 3},
+        {"nome": "Plano Semestral ", "valor": 1549.99, "servico_nome": "Pilates Tradicional", "quantidade_aulas_por_semana": 3},
     ]
+
 
     # Criar planos para os serviços de pilates
     for plano in planos_pilates:
@@ -252,7 +252,8 @@ def populate_database():
                     nome=plano["nome"],
                     descricao=f"Plano para {plano['servico_nome']}",
                     valor=plano["valor"],
-                    servico_id=servico.id_servico
+                    servico_id=servico.id_servico,
+                    quantidade_aulas_por_semana=plano["quantidade_aulas_por_semana"]
                 )
                 db.session.add(new_plano)
 

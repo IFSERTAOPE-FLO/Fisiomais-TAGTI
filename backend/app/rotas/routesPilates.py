@@ -33,7 +33,7 @@ def adicionar_aula_pilates():
         colaborador = Colaboradores.query.filter_by(email=colaborador_email).first()
         if not colaborador:
             print(f"Colaborador com email {colaborador_email} não encontrado.")  # Debug
-            return jsonify({"message": "Colaborador não encontrado."}), 404
+            return jsonify({"message": "Colaborador nao encontrado."}), 404
         
         print(f"Colaborador encontrado: {colaborador.nome}, Admin: {colaborador.is_admin}")  # Debug
 
@@ -42,11 +42,11 @@ def adicionar_aula_pilates():
             # Se for admin, o admin pode usar o ID de colaborador fornecido no frontend
             id_colaborador = data.get('id_colaborador')  # ID do colaborador no frontend
             if not id_colaborador:
-                return jsonify({"message": "O campo 'id_colaborador' é obrigatório para administradores."}), 400
+                return jsonify({"message": "O campo 'id_colaborador' é obrigatorio para administradores."}), 400
             
             colaborador_destino = Colaboradores.query.filter_by(id_colaborador=id_colaborador).first()
             if not colaborador_destino:
-                return jsonify({"message": "Colaborador não encontrado para o ID fornecido."}), 404
+                return jsonify({"message": "Colaborador nao encontrado para o ID fornecido."}), 404
             id_colaborador = colaborador_destino.id_colaborador  # Usa o id do colaborador enviado
         else:
             # Se não for admin, usamos o id do colaborador logado
@@ -55,7 +55,7 @@ def adicionar_aula_pilates():
         # Verificando se o serviço é Pilates
         servico = Servicos.query.filter_by(id_servico=servico_id).first()
         if not servico or 'pilates' not in [tipo.tipo for tipo in servico.tipo_servicos]:
-            return jsonify({"message": "Serviço inválido ou não é Pilates."}), 400
+            return jsonify({"message": "Serviço invalido ou nao e Pilates."}), 400
 
         # Criando novas aulas para cada dia na lista de dias
         for dia in dias_semana:
@@ -90,22 +90,22 @@ def adicionar_cliente_aula_colaborador():
     # Verificando se a aula existe
     aula = Aulas.query.get(aula_id)
     if not aula:
-        return jsonify({"message": "Aula não encontrada!"}), 404
+        return jsonify({"message": "Aula nao encontrada!"}), 404
 
     # Verificando se o colaborador está associado à aula
     colaborador = aula.colaborador
     if not colaborador:
-        return jsonify({"message": "Colaborador não encontrado para esta aula!"}), 404
+        return jsonify({"message": "Colaborador nao encontrado para esta aula!"}), 404
 
     # Verificando se o cliente existe
     cliente = Clientes.query.get(id_cliente)
     if not cliente:
-        return jsonify({"message": "Cliente não encontrado!"}), 404
+        return jsonify({"message": "Cliente nao encontrado!"}), 404
 
     # Verificando se o cliente já está inscrito
     aluno_existente = AulasClientes.query.filter_by(id_cliente=id_cliente, id_aula=aula_id).first()
     if aluno_existente:
-        return jsonify({"message": "Cliente já inscrito nesta aula!"}), 400
+        return jsonify({"message": "Cliente ja inscrito nesta aula!"}), 400
 
     # Contando o número de alunos na aula
     total_alunos = AulasClientes.query.filter_by(id_aula=aula_id).count()
@@ -119,7 +119,7 @@ def adicionar_cliente_aula_colaborador():
     db.session.add(nova_inscricao)
     db.session.commit()
 
-    return jsonify({"message": "Cliente adicionado com sucesso à aula!"}), 201
+    return jsonify({"message": "Cliente adicionado com sucesso a aula!"}), 201
     
 @pilates.route('/cliente/cadastrar_aula', methods=['POST'])
 def cadastrar_aula_cliente():
@@ -131,17 +131,17 @@ def cadastrar_aula_cliente():
     # Verificando se o cliente existe
     cliente = Clientes.query.get(cliente_id)
     if not cliente:
-        return jsonify({"message": "Cliente não encontrado!"}), 404
+        return jsonify({"message": "Cliente nao encontrado!"}), 404
 
     # Verificando se a aula existe
     aula = Aulas.query.get(aula_id)
     if not aula:
-        return jsonify({"message": "Aula não encontrada!"}), 404
+        return jsonify({"message": "Aula nao encontrada!"}), 404
 
     # Verificando se o cliente já está inscrito
     aluno_existente = AulasClientes.query.filter_by(cliente_id=cliente_id, aula_id=aula_id).first()
     if aluno_existente:
-        return jsonify({"message": "Cliente já inscrito nesta aula!"}), 400
+        return jsonify({"message": "Cliente ja inscrito nesta aula!"}), 400
 
     # Adicionando a inscrição
     novo_inscricao = AulasClientes(cliente_id=cliente_id, aula_id=aula_id)

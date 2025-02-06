@@ -39,7 +39,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
     setFormData((prev) => ({
       ...prev,
       Tipo: value,
-      Planos: value === "pilates" ? prev.Planos : [],
+      Planos: value === "pilates" ? prev.Planos : [], // Reset planos if Tipo is not "pilates"
     }));
   };
 
@@ -51,6 +51,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
       Nome_plano: novoPlano.nome,
       Valor: parseFloat(novoPlano.valor),
       Servico_ID: servico.ID_Servico,
+      quantidade_aulas_por_semana: novoPlano.quantidade_aulas_por_semana,
     };
 
     setFormData((prev) => ({
@@ -71,11 +72,11 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
       ...formData,
       Valor: valorValido,
       Tipo: formData.Tipo,
-      Planos: formData.Tipo === "pilates" ? formData.Planos : undefined,
+      Planos: formData.Tipo === "pilates" ? formData.Planos : undefined, // Include planos if Tipo is "pilates"
     };
 
     if (formData.Tipo === "fisioterapia") {
-      delete dataToSend.Planos;
+      delete dataToSend.Planos; // Remove Planos for "fisioterapia"
     }
 
     try {
@@ -173,7 +174,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
             {formData.Tipo === "pilates" && (
               <>
                 <div className="row mb-3">
-                  <div className="col-6">
+                  <div className="col-4">
                     <label className="form-label">Nome do Plano:</label>
                     <input
                       type="text"
@@ -185,7 +186,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
                       className="form-control mb-2"
                     />
                   </div>
-                  <div className="col-6">
+                  <div className="col-4">
                     <label className="form-label">Valor do Plano:</label>
                     <input
                       type="number"
@@ -197,6 +198,22 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
                       className="form-control mb-2"
                     />
                   </div>
+                  
+                  <div className="col-4">
+                  <label className="form-label fs-6">Quantidade de Aulas por Semana:</label>
+                    <input
+                      type="number"
+                      value={novoPlano.quantidade_aulas_por_semana}
+                      onChange={(e) =>
+                        setNovoPlano({
+                          ...novoPlano,
+                          quantidade_aulas_por_semana: e.target.value,
+                        })
+                      }
+                      className="form-control mb-2"
+                    />
+                  
+                </div>
                 </div>
                 <div className="d-flex justify-content-center">
                   <button
@@ -219,6 +236,7 @@ const EditarServicoModal = ({ servico, onSave, onClose }) => {
                             </div>
                             <div className="text-end">
                               <span className="fw-bold">R$ {plano.Valor}</span>
+                              <span className="fw-bold">{plano.Quantidade_Aulas_Por_Semana}</span>
                             </div>
                             <button
                               type="button"

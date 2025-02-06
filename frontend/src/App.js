@@ -23,6 +23,7 @@ import CalendarioInterativo from "./pages/CalendarioInterativo";
 import AdicionarAulaPilates from "./components/pilates/AdicionarAulaPilates";
 import AdicionarClienteAulaColaborador from "./components/pilates/AdicionarClienteAulaColaborador";
 import CadastrarAulaCliente from "./components/pilates/CadastrarAulaCliente";
+import GerenciarAulasPilates from "./components/pilates/GerenciarAulasPilates";
 
 
 function App() {
@@ -158,6 +159,14 @@ function App() {
                         element={
                             <PageWrapper title="Cadastrar Aula para Cliente - Fisiomais">
                                 <CadastrarAulaCliente />
+                            </PageWrapper>
+                        } 
+                    />
+                    <Route 
+                        path="/gerenciar-pilates" 
+                        element={
+                            <PageWrapper title="Gerenciar Aulas de Pilates - Fisiomais">
+                                <GerenciarAulasPilates />
                             </PageWrapper>
                         } 
                     />

@@ -432,8 +432,22 @@ const GerenciarServicos = () => {
                             key={index}
                             className="d-flex justify-content-between align-items-center p-1"
                           >
-                            <span className="text-start fw-semibold ">{plano.Nome_plano}</span>
-                            <span className="text-end fw-bold  btn-plano">{parseFloat(plano.Valor).toFixed(2)}</span>
+                            {/* Nome do Plano */}
+                            <div className="flex-grow-1 text-start fw-semibold">
+                              {plano.Nome_plano}
+                              
+                            </div>
+                            {/* Quantidade de Aulas por Semana */}
+                            <div className="text-end fw-semibold me-3" style={{ minWidth: '150px' }}>
+                            {plano.Quantidade_Aulas_Por_Semana} aulas/semana
+                            </div>
+
+                            {/* Valor do Plano */}
+                            <div className="text-center fw-bold btn-plano" style={{ minWidth: '100px' }}>
+                              R$ {parseFloat(plano.Valor).toFixed(2)}
+                            </div>
+
+                            
                           </div>
                         ))}
                       </div>

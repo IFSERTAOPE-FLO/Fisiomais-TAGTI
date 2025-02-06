@@ -157,21 +157,23 @@ const GerenciarAulasPilates = () => {
                             </button>
                         </div>
                     </div>
-                    <div className="col-md-3">
+                    <div className="col-md-2">
                         <select
                             className="form-select"
                             value={filtroDia}
                             onChange={(e) => setFiltroDia(e.target.value)}
                         >
                             <option value="">Dia da Semana</option>
-                            <option value="segunda">Segunda-feira</option>
-                            <option value="terca">Terça-feira</option>
-                            <option value="quarta">Quarta-feira</option>
-                            <option value="quinta">Quinta-feira</option>
-                            <option value="sexta">Sexta-feira</option>
+                            <option value="Segunda-feira">Segunda-feira</option>
+                            <option value="Terça-feira">Terça-feira</option>
+                            <option value="Quarta-feira">Quarta-feira</option>
+                            <option value="Quinta-feira">Quinta-feira</option>
+                            <option value="Sexta-feira">Sexta-feira</option>
+                            <option value="Sábado">Sábado</option>
+                            <option value="Domingo">Domingo</option>
                         </select>
                     </div>
-                    <div className="col-md-3">
+                    <div className="col-md-2">
                         <select
                             className="form-select"
                             value={filtroColaborador}
@@ -188,7 +190,7 @@ const GerenciarAulasPilates = () => {
                                 ))}
                         </select>
                     </div>
-                    <div className="col-md-3">
+                    <div className="col-md-2">
                         <select
                             className="form-select"
                             value={filtroClinica}
@@ -205,22 +207,23 @@ const GerenciarAulasPilates = () => {
                                 ))}
                         </select>
                     </div>
-
-                </div>
-
-                {!adicionandoAula ? (
-                    <div className="col-md-4 d-flex justify-content-md-end mt-2 mt-md-0">
+                    {!adicionandoAula ? (
+                    <div className="col-md-2 d-flex justify-content-md-end mt-2 mt-md-0">
                         <button className="btn btn-login" onClick={() => setAdicionandoAula(true)}>
                             <i className="bi bi-plus-circle"></i> Adicionar Aula de Pilates
                         </button>
                     </div>
                 ) : (
-                    <div className="col-md-4 d-flex justify-content-md-end mt-2 mt-md-0">
-                        <button className="btn btn-secondary" onClick={() => setAdicionandoAula(false)}>
+                    <div className="col-md-2 d-flex  mt-2 mt-md-0">
+                        <button className="btn btn-signup" onClick={() => setAdicionandoAula(false)}>
                             <i className="bi bi-arrow-left"></i> Voltar
                         </button>
                     </div>
                 )}
+
+                </div>
+
+               
 
                 {adicionandoAula && (
                     <AdicionarAulaPilates onAulaAdicionada={handleAulaAdicionada} />

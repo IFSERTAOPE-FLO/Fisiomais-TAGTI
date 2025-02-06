@@ -365,21 +365,13 @@ const VisualizarAgendamentos = () => {
                               agendamento.dias_e_horarios && agendamento.dias_e_horarios !== 'não informada'
                                 ? ` - Solicitação de remarcação: ${formatarDataBrasileira(agendamento.dias_e_horarios)}`
                                 : ''
-                            ) : agendamento.status === 'Confirmado' ? (
-                              agendamento.servico === 'Pilates' ? (
-                                // Defina a mensagem personalizada para o status "Confirmado" e serviço "Pilates"
-                                ` - Confirmado para Pilates: ${agendamento.dias_e_horarios || 'não informada'}`
-                              ) : (
-                                // Defina o texto padrão para outros serviços no status "Confirmado"
-                                ` `
-                              )
-                            ) : (
-                              `  : ${agendamento.dias_e_horarios || 'não informada'}`
+                            )  : (
+                              `  `
                             )}
                           </>
                         ) : (
                           <>
-                            Aguardar confirmação. Intenção de aulas: {agendamento.dias_e_horarios || 'não informada'}
+                            Aguardar confirmação.< br/> Intenção de aulas: < br/> {agendamento.dias_e_horarios || 'não informada'}
                           </>
                         )}
 
@@ -397,7 +389,7 @@ const VisualizarAgendamentos = () => {
                       <td>
                         {agendamento.plano?.nome && agendamento.plano?.valor ? (
                           <div>
-                            <strong>{agendamento.plano.nome}:</strong> {' '}
+                            <strong>{agendamento.plano.nome}:</strong> {' '}  {agendamento.plano.quantidade_aulas_por_semana} aulas por semana < br/>
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.plano.valor)}
                           </div>
                         ) : (
@@ -579,7 +571,7 @@ const VisualizarAgendamentos = () => {
                   {selectedAgendamento.plano?.nome && selectedAgendamento.plano?.valor ? (
                     <>
                       <div className="col-12 col-md-6">
-                        <strong>Plano:</strong> {selectedAgendamento.plano.nome}
+                        <strong>Plano:</strong> {selectedAgendamento.plano.nome} < br/> {selectedAgendamento.plano.quantidade_aulas_por_semana} aulas por semana
                       </div>
                       <div className="col-12 col-md-6">
                         <strong>Valor do Plano:</strong>{' '}
@@ -742,7 +734,7 @@ const VisualizarAgendamentos = () => {
                   }
                   className="btn btn-info text-decoration-none"
                 >
-                  <i className="bi bi-calendar-check"></i> Gerenciar Pagamento
+                  <i className="bi bi-wallet2"></i> Pagamento
                 </Link>
 
 

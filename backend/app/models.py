@@ -152,9 +152,11 @@ class Planos(db.Model):
     descricao = db.Column(db.Text)
     valor = db.Column(db.Numeric(10, 2), nullable=False)  # Valor definido no plano
     servico_id = db.Column(db.Integer, db.ForeignKey('servicos.id_servico'), nullable=False)
-    
+    quantidade_aulas_por_semana = db.Column(db.Integer, nullable=False, default=1)  # Novo campo
+
     # Relacionamento com o serviço
     servico = db.relationship('Servicos', backref='planos')
+
 
 
 # Modelo: TipoServico

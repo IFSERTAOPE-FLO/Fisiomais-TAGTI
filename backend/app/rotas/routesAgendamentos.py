@@ -317,7 +317,8 @@ def listar_agendamentos():
                 'plano': {
                     'nome': plano_servico.nome if plano_servico else None,
                     'descricao': plano_servico.descricao if plano_servico else None,
-                    'valor': plano_servico.valor if plano_servico else None
+                    'valor': plano_servico.valor if plano_servico else None,
+                    'quantidade_aulas_por_semana': plano_servico.quantidade_aulas_por_semana if plano_servico else None
                 } if plano_servico else None,
                 'colaborador': agendamento.colaborador.nome if agendamento.colaborador else None,
                 'cliente': agendamento.cliente.nome if agendamento.cliente else None,
