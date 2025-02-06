@@ -222,7 +222,7 @@ const GerenciarPagamentos = () => {
             </div>
 
 
-          </div>;
+          </div>
 
           <div className="table-responsive">
             <table className="table table-striped table-bordered mt-4 agendamento-header">

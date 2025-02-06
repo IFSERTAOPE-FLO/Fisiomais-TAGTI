@@ -358,25 +358,41 @@ const VisualizarAgendamentos = () => {
                       <td>{agendamento.id}</td>
                       <td>{agendamento.cliente || 'Cliente não informado'}</td>
                       <td className="text-center">
-                        {agendamento.data && !isNaN(new Date(agendamento.data).getTime())
-                          ? (
-                            <>
-                              {new Date(agendamento.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
-                              {agendamento.dias_e_horarios && agendamento.dias_e_horarios !== 'não informada'
+                        {agendamento.data && !isNaN(new Date(agendamento.data).getTime()) ? (
+                          <>
+                            {new Date(agendamento.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
+                            {agendamento.status === 'Pedido de Remarcação' ? (
+                              agendamento.dias_e_horarios && agendamento.dias_e_horarios !== 'não informada'
                                 ? ` - Solicitação de remarcação: ${formatarDataBrasileira(agendamento.dias_e_horarios)}`
                                 : ''
-                              }
-                            </>
-                          )
-                          : (
-                            <>
-                              Aguardar confirmação. Intenção de aulas: {agendamento.dias_e_horarios || 'não informada'}
-                            </>
-                          )
-                        }
+                            ) : agendamento.status === 'Confirmado' ? (
+                              agendamento.servico === 'Pilates' ? (
+                                // Defina a mensagem personalizada para o status "Confirmado" e serviço "Pilates"
+                                ` - Confirmado para Pilates: ${agendamento.dias_e_horarios || 'não informada'}`
+                              ) : (
+                                // Defina o texto padrão para outros serviços no status "Confirmado"
+                                ` `
+                              )
+                            ) : (
+                              `  : ${agendamento.dias_e_horarios || 'não informada'}`
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            Aguardar confirmação. Intenção de aulas: {agendamento.dias_e_horarios || 'não informada'}
+                          </>
+                        )}
+
+
                       </td>
 
-                      <td>{agendamento.hora || ''}</td>
+                      <td>
+                        {agendamento.status === 'confirmado' && agendamento.servico.toLowerCase().includes('pilates')
+                          ? agendamento.dias_e_horarios || ''
+                          : agendamento.hora || ''}
+
+                      </td>
+
                       <td>{agendamento.servico || 'Serviço não encontrado'}</td>
                       <td>
                         {agendamento.plano?.nome && agendamento.plano?.valor ? (

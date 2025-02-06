@@ -281,9 +281,6 @@ def editar_servico(id_servico):
 
 
 
-
-
-
     
 @servicos.route('/adicionar_colaboradores', methods=['POST'])
 def adicionar_colaboradores():

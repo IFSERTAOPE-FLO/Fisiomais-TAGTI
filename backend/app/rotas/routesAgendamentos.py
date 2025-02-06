@@ -302,7 +302,7 @@ def listar_agendamentos():
 
             # Adicionando apenas o status de pagamento
             pagamento_dados = {
-                'id': pagamento.id_pagamento,
+                'id': pagamento.id_pagamento if pagamento else None,
                 'status': pagamento.status if pagamento else None
             }
 

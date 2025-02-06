@@ -1,94 +1,77 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { useNavigate, Link } from "react-router-dom";
-import { FaPlusCircle, FaTimesCircle } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { FaPlusCircle } from "react-icons/fa";
 
-
-const AdicionarAulaPilates = () => {
+const AdicionarAulaPilates = ({ onAulaAdicionada }) => {
     const [servicoId, setServicoId] = useState("");
+    const [servicos, setServicos] = useState([]);
     const [diaSemana, setDiaSemana] = useState("");
     const [horaInicio, setHoraInicio] = useState("");
     const [horaFim, setHoraFim] = useState("");
     const [limiteAlunos, setLimiteAlunos] = useState("");
     const [colaboradores, setColaboradores] = useState([]);
-    const [colaboradoresSelecionados, setColaboradoresSelecionados] = useState([]);
+    const [colaboradorSelecionado, setColaboradorSelecionado] = useState("");
     const [erro, setErro] = useState("");
     const [sucesso, setSucesso] = useState("");
     const navigate = useNavigate();
-    const [servicos, setServicos] = useState([]);
     const token = localStorage.getItem("token");
     const apiBaseUrl = "http://localhost:5000/pilates/";
+    const [diasSemana, setDiasSemana] = useState([]);
+    const [diasUteis, setDiasUteis] = useState(false);
 
-    // Função para buscar os serviços de pilates
-    const fetchServicos = async () => {
-        try {
-            const response = await fetch(`http://localhost:5000/servicos/listar_servicos`, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-            });
-            const data = await response.json();
-            if (response.ok) {
-                setServicos(data.filter(servico => servico.Tipos.includes("pilates")));
-            } else {
-                setErro(data.message || "Erro ao carregar os serviços.");
-            }
-        } catch (err) {
-            setErro(err.message);
-        }
-    };
-
-    const fetchColaboradores = async (servicoId) => {
-        try {
-            const response = await fetch(
-                `http://localhost:5000/colaboradores/colaboradoresdisponiveis?servico_id=${servicoId}`,
-                {
+    useEffect(() => {
+        const fetchServicos = async () => {
+            try {
+                const response = await fetch(`http://localhost:5000/servicos/listar_servicos`, {
                     method: "GET",
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
                     },
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    setServicos(data.filter(servico => servico.Tipos.includes("pilates")));
+                } else {
+                    setErro(data.message || "Erro ao carregar os serviços.");
                 }
-            );
-            const data = await response.json();
-            if (response.ok) {
-                setColaboradores(data.disponiveis);
-            } else {
-                setErro(data.message || "Erro ao carregar colaboradores.");
+            } catch (err) {
+                setErro("Falha ao buscar serviços. Verifique sua conexão.");
             }
-        } catch (err) {
-            setErro(err.message);
-        }
-    };
-
-    useEffect(() => {
+        };
         fetchServicos();
-    }, []);
+    }, [token]);
 
     useEffect(() => {
         if (servicoId) {
-            fetchColaboradores(servicoId);
+            const fetchColaboradores = async () => {
+                try {
+                    const response = await fetch(
+                        `http://localhost:5000/colaboradores/colaboradoresdisponiveis?servico_id=${servicoId}`,
+                        {
+                            method: "GET",
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                                "Content-Type": "application/json",
+                            },
+                        }
+                    );
+                    const data = await response.json();
+                    if (response.ok) {
+                        setColaboradores(data.alocados);
+                    } else {
+                        setErro(data.message || "Erro ao carregar colaboradores.");
+                    }
+                } catch (err) {
+                    setErro("Falha ao buscar colaboradores.");
+                }
+            };
+            fetchColaboradores();
         }
-    }, [servicoId]);
+    }, [servicoId, token]);
 
-    const handleAddColaborador = (id, nome) => {
-        if (!colaboradoresSelecionados.find(colab => colab.id === id)) {
-            setColaboradoresSelecionados([
-                ...colaboradoresSelecionados,
-                { id, nome }
-            ]);
-        }
-    };
-
-    const handleRemoveColaborador = (id) => {
-        setColaboradoresSelecionados(
-            colaboradoresSelecionados.filter(colab => colab.id !== id)
-        );
-    };
-
-    const handleSubmit = async (e) => {
+    const handleSubmitAula = async (e) => {
         e.preventDefault();
         try {
             const response = await fetch(`${apiBaseUrl}adicionar_aula_pilates`, {
@@ -99,10 +82,10 @@ const AdicionarAulaPilates = () => {
                 },
                 body: JSON.stringify({
                     servico_id: servicoId,
-                    dia_semana: diaSemana,
+                    dias_semana: diasSemana, // Agora envia um array
                     hora_inicio: horaInicio,
                     hora_fim: horaFim,
-                    colaboradores: colaboradoresSelecionados.map(colab => colab.id),
+                    id_colaborador: colaboradorSelecionado,
                     limite_alunos: limiteAlunos,
                 }),
             });
@@ -111,150 +94,129 @@ const AdicionarAulaPilates = () => {
 
             if (response.ok) {
                 setSucesso("Aula criada com sucesso!");
+                setErro("");
                 setServicoId("");
                 setDiaSemana("");
                 setHoraInicio("");
                 setHoraFim("");
-                setColaboradoresSelecionados([]);                
+                setLimiteAlunos("");
+                setColaboradorSelecionado("");
+                if (onAulaAdicionada) {
+                    onAulaAdicionada();
+                }
             } else {
                 setErro(data.message || "Erro ao criar aula.");
+                setSucesso("");
             }
         } catch (err) {
-            setErro(err.message);
+            setErro("Falha ao criar aula. Tente novamente.");
+            setSucesso("");
         }
     };
 
     return (
-        <div className="container">
+        <div className="container mt-4">
             <h2 className="mb-4 text-center">Adicionar Aula de Pilates</h2>
+            {erro && <div className="alert alert-danger">{erro}</div>}
+            {sucesso && <div className="alert alert-success">{sucesso}</div>}
 
-            {erro && <p className="alert alert-danger">{erro}</p>}
-            {sucesso && <p className="alert alert-success">{sucesso}</p>}
-
-            <form onSubmit={handleSubmit}>
-                <div className="row mb-3">
+            <form onSubmit={handleSubmitAula} className="card p-4 shadow-sm">
+                <div className="row g-3">
                     <div className="col-md-6">
-                        <div className="form-group mb-3">
-                            <label>Serviço de Pilates</label>
+                        <label className="form-label">Serviço de Pilates</label>
+                        <select className="form-select" value={servicoId} onChange={(e) => setServicoId(e.target.value)} required>
+                            <option value="">Selecione um serviço</option>
+                            {servicos.map((servico) => (
+                                <option key={servico.ID_Servico} value={servico.ID_Servico}>{servico.Nome_servico}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="col-md-6">
+                        <label className="form-label">Dias da Semana</label>
+                        <div className="form-check mb-2">
+                            <input
+                                className="form-check-input"
+                                type="checkbox"
+                                checked={diasUteis}
+                                onChange={(e) => {
+                                    const isChecked = e.target.checked;
+                                    setDiasUteis(isChecked);
+                                    setDiasSemana(
+                                        isChecked
+                                            ? [
+                                                "Segunda-feira",
+                                                "Terça-feira",
+                                                "Quarta-feira",
+                                                "Quinta-feira",
+                                                "Sexta-feira",
+                                            ]
+                                            : []
+                                    );
+                                }}
+                                id="diasUteisCheckbox"
+                            />
+                            <label className="form-check-label text-primary" htmlFor="diasUteisCheckbox">
+                                Dias Úteis (Segunda a Sexta)
+                            </label>
+                        </div>
+                        {!diasUteis && (
                             <select
-                                className="form-control"
-                                value={servicoId}
-                                onChange={(e) => setServicoId(e.target.value)}
-                                required
+                                className="form-select"
+                                multiple
+                                value={diasSemana}
+                                onChange={(e) => {
+                                    const selected = Array.from(e.target.selectedOptions).map(
+                                        (opt) => opt.value
+                                    );
+                                    setDiasSemana(selected);
+                                }}
+                                required={!diasUteis}
                             >
-                                <option value="">Selecione um serviço</option>
-                                {servicos.map((servico) => (
-                                    <option key={servico.ID_Servico} value={servico.ID_Servico}>
-                                        {servico.Nome_servico}
-                                    </option>
-                                ))}
+                                {["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"].map(
+                                    (dia, index) => (
+                                        <option key={index} value={dia}>
+                                            {dia}
+                                        </option>
+                                    )
+                                )}
                             </select>
-                        </div>
+                        )}
                     </div>
-                    <div className="col-md-6">
-                        <div className="col-md-6">
-                            <div className="form-group">
-                                <label>Dia da Semana</label>
-                                <select
-                                    className="form-control"
-                                    value={diaSemana}
-                                    onChange={(e) => setDiaSemana(e.target.value)}
-                                    required
-                                >
-                                    <option value="">Selecione um dia</option>
-                                    <option value="Segunda-feira">Segunda-feira</option>
-                                    <option value="Terça-feira">Terça-feira</option>
-                                    <option value="Quarta-feira">Quarta-feira</option>
-                                    <option value="Quinta-feira">Quinta-feira</option>
-                                    <option value="Sexta-feira">Sexta-feira</option>
-                                    <option value="Sabado">Sábado</option>
-                                    <option value="Domingo">Domingo</option>
-                                </select>
-                            </div>
-                        </div>
 
+                    <div className="col-md-3">
+                        <label className="form-label">Hora de Início</label>
+                        <input type="time" className="form-control" value={horaInicio} onChange={(e) => setHoraInicio(e.target.value)} required />
                     </div>
-                </div>
 
-                <div className="row mb-3">
-                    <div className="col-md-6">
-                        <div className="form-group">
-                            <label>Hora de Início</label>
-                            <input
-                                type="time"
-                                className="form-control"
-                                value={horaInicio}
-                                onChange={(e) => setHoraInicio(e.target.value)}
-                                required
-                            />
-                        </div>
+                    <div className="col-md-3">
+                        <label className="form-label">Hora de Fim</label>
+                        <input type="time" className="form-control" value={horaFim} onChange={(e) => setHoraFim(e.target.value)} required />
                     </div>
-                    <div className="col-md-6">
-                        <div className="form-group">
-                            <label>Hora de Fim</label>
-                            <input
-                                type="time"
-                                className="form-control"
-                                value={horaFim}
-                                onChange={(e) => setHoraFim(e.target.value)}
-                                required
-                            />
-                        </div>
+
+                    <div className="col-md-3">
+                        <label className="form-label">Limite de Alunos</label>
+                        <input type="number" className="form-control" value={limiteAlunos} onChange={(e) => setLimiteAlunos(e.target.value)} required />
                     </div>
                     <div className="col-md-3">
-                        <div className="form-group">
-                            <label>limite_alunos</label>
-                            <input
-                                type="number"
-                                className="form-control"
-                                value={limiteAlunos}
-                                onChange={(e) => setLimiteAlunos(e.target.value)}
-                                required
-                            />
-                        </div>
+                        <label className="form-label">Selecione o Colaborador</label>
+                        <select
+                            className="form-control"
+                            value={colaboradorSelecionado}
+                            onChange={(e) => setColaboradorSelecionado(e.target.value)}
+                            required
+                        >
+                            <option value="">Selecione um colaborador</option>
+                            {colaboradores.map((colaborador) => (
+                                <option key={colaborador.id_colaborador} value={colaborador.id_colaborador}>
+                                    {colaborador.nome}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 
-                <div className="form-group mb-3">
-                    <label>Colaboradores Associados</label>
-                    <div className="d-flex flex-wrap">
-                        {colaboradores.map((colab) => (
-                            <button
-                                key={colab.id_colaborador}
-                                type="button"
-                                className="btn btn-info m-1"
-                                onClick={() => handleAddColaborador(colab.id_colaborador, colab.nome)}
-                            >
-                                {colab.nome}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div>
-                    <h5>Colaboradores Selecionados</h5>
-                    <ul>
-                        {colaboradoresSelecionados.map((colab) => (
-                            <li key={colab.id}>
-                                {colab.nome}
-                                <FaTimesCircle
-                                    className="ml-2"
-                                    style={{ cursor: "pointer" }}
-                                    onClick={() => handleRemoveColaborador(colab.id)}
-                                />
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-
-                <div className="d-flex justify-content-between mt-3">
-                    <button type="submit" className="btn btn-primary">
-                        Criar Aula <FaPlusCircle className="ml-2" />
-                    </button>
-                    <Link to="/adicionar-cliente-aula-colaborador" className="btn btn-login">
-                    Cadastrar Cliente na aula
-                    </Link>
-                </div>
+                <button type="submit" className="btn btn-login mt-3 w-100">Adicionar Aula</button>
             </form>
         </div>
     );
