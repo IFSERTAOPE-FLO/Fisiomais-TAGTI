@@ -136,7 +136,11 @@ const GerenciarAulasPilates = () => {
 
     return (
         <div className="container">
-            <h2 className="mb-4 text-secondary text-center">Gerenciar Aulas de Pilates</h2>
+            
+            
+          <h2 className=" mb-4 text-center text-secondary ">Gerenciar Aulas de Pilates</h2>
+        
+            
 
             <div className="card-body">
                 {erro && <p className="alert alert-danger">{erro}</p>}
@@ -284,7 +288,7 @@ const GerenciarAulasPilates = () => {
                     </table>
                 </div>
             </div>
-
+            
             {/* Modal para confirmação de exclusão */}
             <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)}>
                 <Modal.Header closeButton>

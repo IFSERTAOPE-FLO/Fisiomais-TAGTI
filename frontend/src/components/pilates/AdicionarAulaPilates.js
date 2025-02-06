@@ -116,7 +116,8 @@ const AdicionarAulaPilates = ({ onAulaAdicionada }) => {
 
     return (
         <div className="container mt-4">
-            <h2 className="mb-4 text-center">Adicionar Aula de Pilates</h2>
+            
+            <h2 className="mb-4 text-secondary text-cente">Adicionar Aula de Pilates</h2>
             {erro && <div className="alert alert-danger">{erro}</div>}
             {sucesso && <div className="alert alert-success">{sucesso}</div>}
 

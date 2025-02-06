@@ -151,10 +151,10 @@ const GerenciarPagamentos = () => {
 
   return (
     <div className="container my-2">
-      <div className="card shadow">
-        <div className="card-header">
-          <h2 className="text-center text-primary fw-bold">Gerenciar Pagamentos</h2>
-        </div>
+      
+        
+      <h2 className=" mb-4 text-center text-secondary ">Gerenciar Pagamentos</h2>
+        
 
         <div className="card-body">
           {erro && <div className="alert alert-danger">{erro}</div>}
@@ -329,7 +329,7 @@ const GerenciarPagamentos = () => {
             setCurrentPage={setCurrentPage}
           />
         </div>
-      </div>
+      
 
       {/* Modal de Edição de Pagamento */}
       <Modal show={showModal} onHide={handleCloseModal}>

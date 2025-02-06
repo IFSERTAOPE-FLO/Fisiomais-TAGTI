@@ -327,10 +327,7 @@ function Navbar() {
                       <>
                         <li>
                           <Link className="dropdown-item" to="/adminPage">Central de Controle</Link>
-                        </li>
-                        <li>
-                          <Link className="dropdown-item" to="/adicionar-aula-pilates">Adicionar Aula de Pilates</Link>
-                        </li>
+                        </li>                        
                       </>
                     )}
 
@@ -445,18 +442,13 @@ function Navbar() {
                   {sidebarVisible && " Gerenciar Pagamentos"}
                 </Link>
               </li>
+              {role === "admin" && (
               <li className="mt-3">
-                <Link to="/adicionar-aula-pilates" className="sidebar-item">
-                  <i className="bi bi-wallet"></i>
-                  {sidebarVisible && " Adicionar Aula de Pilates"}
+                <Link to={{ pathname: "/adminPage", state: { opcaoSelecionada: "aulasPilates" } }} className="sidebar-item">
+                  <i className="bi bi-person-arms-up"></i>
+                  {sidebarVisible && " Aulas de Pilates"}
                 </Link>
-              </li>
-
-
-
-
-
-
+              </li>)}
               <li className="mt-3">
                 <button onClick={handleLogout} className="logout-btn">
                   <i className="bi bi-box-arrow-right"></i>
@@ -481,10 +473,6 @@ function Navbar() {
           </div>
         </>
       )}
-
-
-
-
 
 
       {/* Modal de Cadastro */}

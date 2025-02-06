@@ -249,7 +249,7 @@ const VisualizarAgendamentos = () => {
     <div className="container  my-2">
       <div className="card shadow">
         <div className="card-header ">
-          <h1 className="text-center text-primary fw-bold">Visualizar Agendamentos</h1>
+          <h1 className="text-center text-primary ">Visualizar Agendamentos</h1>
         </div>
 
 

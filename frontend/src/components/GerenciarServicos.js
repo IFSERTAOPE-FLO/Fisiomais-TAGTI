@@ -15,7 +15,7 @@ const GerenciarServicos = () => {
     planos: [],
     colaboradores_ids: [],
   });
-  const [novoPlano, setNovoPlano] = useState({ nome: "", valor: "" });
+  const [novoPlano, setNovoPlano] = useState({ nome: "", valor: "", quantidade_aulas: 1 });
   const [erro, setErro] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [modalColaboradoresVisible, setModalColaboradoresVisible] = useState(false);
@@ -68,10 +68,11 @@ const GerenciarServicos = () => {
     }
 
     try {
-      // Adiciona um campo 'nome_plano' para cada plano antes de enviar para o backend
+      // Adiciona os campos necessários para cada plano antes de enviar para o backend
       const planos = novoServico.planos.map(plano => ({
         nome_plano: plano.Nome_plano,
         valor: plano.Valor,
+        quantidade_aulas_por_semana: plano.quantidade_aulas_por_semana,
       }));
 
       // Preparando o objeto para envio
@@ -128,10 +129,14 @@ const GerenciarServicos = () => {
 
     setNovoServico((prev) => ({
       ...prev,
-      planos: [...prev.planos, { Nome_plano: novoPlano.nome, Valor: parseFloat(novoPlano.valor) }],
+      planos: [...prev.planos, {
+        Nome_plano: novoPlano.nome,
+        Valor: parseFloat(novoPlano.valor),
+        quantidade_aulas_por_semana: parseInt(novoPlano.quantidade_aulas)
+      }],
     }));
 
-    setNovoPlano({ nome: "", valor: "" });
+    setNovoPlano({ nome: "", valor: "", quantidade_aulas: 1 });
     setErro("");
   };
 
@@ -261,107 +266,137 @@ const GerenciarServicos = () => {
       {mensagem && <div className="alert alert-success">{mensagem}</div>}
 
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          salvarServico();
-        }}
-        className="mb-4"
-      >
-        <input
-          type="text"
-          placeholder="Nome do Serviço"
-          value={novoServico.nome_servico}
-          onChange={(e) => setNovoServico({ ...novoServico, nome_servico: e.target.value })}
-          required
-          className="form-control mb-2"
-        />
-        <input
-          type="text"
-          placeholder="Descrição"
-          value={novoServico.descricao}
-          onChange={(e) => setNovoServico({ ...novoServico, descricao: e.target.value })}
-          required
-          className="form-control mb-2"
-        />
+  onSubmit={(e) => {
+    e.preventDefault();
+    salvarServico();
+  }}
+  className="mb-4"
+>
+  <div className="row">
+    <div className="col-md-6">
+      <input
+        type="text"
+        placeholder="Nome do Serviço"
+        value={novoServico.nome_servico}
+        onChange={(e) => setNovoServico({ ...novoServico, nome_servico: e.target.value })}
+        required
+        className="form-control mb-2"
+      />
+    </div>
+    <div className="col-md-6">
+      <input
+        type="text"
+        placeholder="Descrição"
+        value={novoServico.descricao}
+        onChange={(e) => setNovoServico({ ...novoServico, descricao: e.target.value })}
+        required
+        className="form-control mb-2"
+      />
+    </div>
+  </div>
 
-        <select
-          value={novoServico.tipo_servico}
-          onChange={handleTipoServicoChange}
+  <div className="row">
+    <div className="col-md-6">
+      <select
+        value={novoServico.tipo_servico}
+        onChange={handleTipoServicoChange}
+        className="form-control mb-2"
+      >
+        <option value="">Selecione o Tipo de Serviço</option>
+        <option value="fisioterapia">Fisioterapia</option>
+        <option value="pilates">Pilates</option>
+      </select>
+    </div>
+    {novoServico.tipo_servico === "fisioterapia" && (
+      <div className="col-md-6">
+        <input
+          type="number"
+          placeholder="Valor"
+          value={novoServico.valor}
+          onChange={(e) => setNovoServico({ ...novoServico, valor: e.target.value })}
           className="form-control mb-2"
-        >
-          <option value="">Selecione o Tipo de Serviço</option>
-          <option value="fisioterapia">Fisioterapia</option>
-          <option value="pilates">Pilates</option>
-        </select>
-        {novoServico.tipo_servico === "fisioterapia" && (
+        />
+      </div>
+    )}
+  </div>
+
+  {novoServico.tipo_servico === "pilates" && (
+    <>
+      <div className="row">
+        <div className="col-md-4">
           <input
-            type="number"
-            placeholder="Valor"
-            value={novoServico.valor}
-            onChange={(e) => setNovoServico({ ...novoServico, valor: e.target.value })}
+            type="text"
+            placeholder="Nome do Plano"
+            value={novoPlano.nome}
+            onChange={(e) => setNovoPlano({ ...novoPlano, nome: e.target.value })}
             className="form-control mb-2"
           />
-        )}
-        {novoServico.tipo_servico === "pilates" && (
-          <>
-            <input
-              type="text"
-              placeholder="Nome do Plano"
-              value={novoPlano.nome}
-              onChange={(e) => setNovoPlano({ ...novoPlano, nome: e.target.value })}
-              className="form-control mb-2"
-            />
-            <input
-              type="number"
-              placeholder="Valor do Plano"
-              value={novoPlano.valor}
-              onChange={(e) => setNovoPlano({ ...novoPlano, valor: e.target.value })}
-              className="form-control mb-2"
-            />
-            <div className="d-flex justify-content-center">
-              <button type="button" onClick={adicionarPlano} className="btn btn-signup ">
-                Adicionar Plano
-              </button>
-            </div>
-            {novoServico.planos.length > 0 && (
-              <div className="mb-3">
-                <label className="form-label">Planos Adicionados:</label>
-                <div className="row">
-                  {novoServico.planos.map((plano, index) => (
-                    <div key={index} className="col-md-4 mb-4">
-                      <div className="d-flex justify-content-between align-items-center p-3 border btn-plano rounded">
-                        <div className="flex-grow-1">
-                          <strong>{plano.Nome_plano}</strong>
-                        </div>
-                        <div className="text-end">
-                          <span className="fw-bold">R$ {plano.Valor.toFixed(2)}</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setNovoServico((prev) => ({
-                              ...prev,
-                              planos: prev.planos.filter((_, i) => i !== index),
-                            }))
-                          }
-                          className="btn btn-danger btn-sm ms-2"
-                        >
-                          <i className="bi bi-trash"></i>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+        </div>
+        <div className="col-md-4">
+          <input
+            type="number"
+            placeholder="Valor do Plano"
+            value={novoPlano.valor}
+            onChange={(e) => setNovoPlano({ ...novoPlano, valor: e.target.value })}
+            className="form-control mb-2"
+          />
+        </div>
+        <div className="col-md-4">
+          <input
+            type="number"
+            placeholder="Aulas por Semana"
+            value={novoPlano.quantidade_aulas}
+            onChange={(e) => setNovoPlano({ ...novoPlano, quantidade_aulas: e.target.value })}
+            className="form-control mb-2"
+            min="1"
+          />
+        </div>
+      </div>
+
+      <div className="d-flex justify-content-center">
+        <button type="button" onClick={adicionarPlano} className="btn btn-signup">
+          Adicionar Plano
+        </button>
+      </div>
+
+      {novoServico.planos.length > 0 && (
+        <div className="mb-3">
+          <label className="form-label">Planos Adicionados:</label>
+          <div className="row">
+            {novoServico.planos.map((plano, index) => (
+              <div key={index} className="col-md-4">
+                <div className="d-flex justify-content-between align-items-center p-2 border btn-plano rounded">
+                  <div className="flex-grow-1">
+                    <strong>{plano.Nome_plano}</strong>
+                    <div className="text-muted small">{plano.quantidade_aulas_por_semana} aulas/semana</div>
+                  </div>
+                  <span className="fw-bold">R$ {plano.Valor.toFixed(2)}</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setNovoServico((prev) => ({
+                        ...prev,
+                        planos: prev.planos.filter((_, i) => i !== index),
+                      }))
+                    }
+                    className="btn btn-danger btn-sm ms-2"
+                  >
+                    <i className="bi bi-trash"></i>
+                  </button>
                 </div>
               </div>
-            )}
-          </>
-        )}
-
-
-        <div className="d-flex justify-content-center">
-          <button type="submit" className="btn btn-login mt-3">Adicionar Serviço</button>
+            ))}
+          </div>
         </div>
-      </form>
+      )}
+    </>
+  )}
+
+  <div className="d-flex justify-content-center">
+    <button type="submit" className="btn btn-login mt-3">Adicionar Serviço</button>
+  </div>
+</form>
+
 
       <h3 className="text-primary">Lista de Serviços</h3>
       <div className="input-group mb-3">
@@ -435,11 +470,11 @@ const GerenciarServicos = () => {
                             {/* Nome do Plano */}
                             <div className="flex-grow-1 text-start fw-semibold">
                               {plano.Nome_plano}
-                              
+
                             </div>
                             {/* Quantidade de Aulas por Semana */}
                             <div className="text-end fw-semibold me-3" style={{ minWidth: '150px' }}>
-                            {plano.Quantidade_Aulas_Por_Semana} aulas/semana
+                              {plano.Quantidade_Aulas_Por_Semana} aulas/semana
                             </div>
 
                             {/* Valor do Plano */}
@@ -447,7 +482,7 @@ const GerenciarServicos = () => {
                               R$ {parseFloat(plano.Valor).toFixed(2)}
                             </div>
 
-                            
+
                           </div>
                         ))}
                       </div>

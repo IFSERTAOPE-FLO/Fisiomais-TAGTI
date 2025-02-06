@@ -168,7 +168,7 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
     <div className="container  my-2">
       <div className="card shadow">
         <div className="card-header">
-          <h1 className="text-center text-primary fw-bold">
+          <h1 className="text-center text-primary ">
             Calendário de Agendamentos
           </h1>
         </div>
