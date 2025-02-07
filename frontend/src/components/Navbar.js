@@ -449,6 +449,17 @@ function Navbar() {
                   {sidebarVisible && " Aulas de Pilates"}
                 </Link>
               </li>)}
+              {role === "cliente" && (
+              <li className="mt-3">
+                <Link to="/cadastrar-aula-cliente"  className="sidebar-item">
+                  <i className="bi bi-person-arms-up"></i>
+                  {sidebarVisible && " Aulas de Pilates"}
+                </Link>
+                <Link to="/aulas-disponiveis-colaborador"  className="sidebar-item">
+                  <i className="bi bi-person-arms-up"></i>
+                  {sidebarVisible && " Aulas de Pilates"}
+                </Link>
+              </li>)}
               <li className="mt-3">
                 <button onClick={handleLogout} className="logout-btn">
                   <i className="bi bi-box-arrow-right"></i>

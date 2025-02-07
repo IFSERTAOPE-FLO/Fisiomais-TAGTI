@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Modal, Button, Form, ListGroup, Alert } from "react-bootstrap";
+import { Modal, Button, Alert } from "react-bootstrap";
 import Select from "react-select";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
-const CadastrarAulaCliente = ({ showModal, handleClose, clienteId }) => {
-    const [aulas, setAulas] = useState([]);
+const AulasDisponiveisColaborador = ({ showModal, handleClose, clienteId }) => {
     const [colaboradores, setColaboradores] = useState([]);
     const [colaboradorSelecionado, setColaboradorSelecionado] = useState(null);
     const [aulasDisponiveis, setAulasDisponiveis] = useState([]);
@@ -16,7 +15,7 @@ const CadastrarAulaCliente = ({ showModal, handleClose, clienteId }) => {
     const token = localStorage.getItem("token");
     const apiBaseUrl = "http://localhost:5000/";
 
-    // Buscar colaboradores e aulas disponíveis
+    // Buscar colaboradores e plano do cliente
     useEffect(() => {
         const fetchColaboradores = async () => {
             try {
@@ -134,7 +133,7 @@ const CadastrarAulaCliente = ({ showModal, handleClose, clienteId }) => {
             <Modal.Header closeButton className="bg-primary text-white">
                 <Modal.Title>
                     <FaCheckCircle className="me-2" />
-                    Inscrever-se em Aulas de Pilates
+                    Aulas Disponíveis do Colaborador
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body>
@@ -157,41 +156,43 @@ const CadastrarAulaCliente = ({ showModal, handleClose, clienteId }) => {
 
                 {/* Lista de Aulas Disponíveis */}
                 {colaboradorSelecionado && (
-                    <div>
-                        <h5 className="text-secondary">Aulas Disponíveis:</h5>
-                        <ListGroup>
-                            {aulasDisponiveis.map((aula) => (
-                                <ListGroup.Item
-                                    key={aula.id_aula}
-                                    className="d-flex justify-content-between align-items-center"
-                                >
-                                    <div>
-                                        <strong>{aula.dia_semana}</strong> - {aula.hora_inicio} às{" "}
-                                        {aula.hora_fim}
-                                        <br />
-                                        <small className="text-muted">
-                                            Vagas disponíveis: {aula.limite_alunos - aula.num_alunos}
-                                        </small>
+                    <div className="row">
+                        {aulasDisponiveis.map((aula) => (
+                            <div key={aula.id_aula} className="col-md-6 mb-3">
+                                <div className="card h-100 shadow-sm">
+                                    <div className="card-body">
+                                        <h5 className="card-title">{aula.dia_semana}</h5>
+                                        <p className="card-text">
+                                            <strong>Horário:</strong> {aula.hora_inicio} às {aula.hora_fim}
+                                        </p>
+                                        <p className="card-text">
+                                            <strong>Vagas:</strong> {aula.limite_alunos - aula.num_alunos} de {aula.limite_alunos}
+                                        </p>
+                                        <p className="card-text">
+                                            <strong>Colaborador:</strong> {aula.colaborador?.nome}
+                                        </p>
+                                        <div className="d-grid gap-2">
+                                            {estaInscrito(aula.id_aula) ? (
+                                                <Button variant="success" disabled>
+                                                    <FaCheckCircle /> Inscrito
+                                                </Button>
+                                            ) : atingiuLimiteAulas() ? (
+                                                <Button variant="warning" disabled>
+                                                    Limite de aulas atingido
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    variant="primary"
+                                                    onClick={() => inscreverNaAula(aula.id_aula)}
+                                                >
+                                                    Inscrever-se
+                                                </Button>
+                                            )}
+                                        </div>
                                     </div>
-                                    {estaInscrito(aula.id_aula) ? (
-                                        <Button variant="success" disabled>
-                                            <FaCheckCircle /> Inscrito
-                                        </Button>
-                                    ) : atingiuLimiteAulas() ? (
-                                        <Button variant="warning" disabled>
-                                            Limite de aulas atingido
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            variant="primary"
-                                            onClick={() => inscreverNaAula(aula.id_aula)}
-                                        >
-                                            Inscrever-se
-                                        </Button>
-                                    )}
-                                </ListGroup.Item>
-                            ))}
-                        </ListGroup>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 )}
             </Modal.Body>
@@ -204,4 +205,4 @@ const CadastrarAulaCliente = ({ showModal, handleClose, clienteId }) => {
     );
 };
 
-export default CadastrarAulaCliente;
+export default AulasDisponiveisColaborador;
