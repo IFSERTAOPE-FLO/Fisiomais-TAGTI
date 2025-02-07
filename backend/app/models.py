@@ -242,6 +242,7 @@ class PlanosTratamento(db.Model):
     duracao_prevista = db.Column(db.Integer, nullable=False)  # Duração prevista em semanas
     data_inicio = db.Column(db.Date, nullable=False, default=datetime.utcnow)  # Data de início do plano
     data_fim = db.Column(db.Date, nullable=True)  # Data de término do plano (opcional)
+    anamnese_filename = db.Column(db.String(255), nullable=True)  # Novo campo para armazenar o nome do arquivo
 
     # Relacionamentos
     cliente = db.relationship('Clientes', backref='planos_tratamento')
