@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, url_for
-from app.models import Clientes, Enderecos, Colaboradores, db
+from app.models import Clientes, Enderecos, Colaboradores, Planos, db
 from app.utils import is_cpf_valid, send_email
 from werkzeug.security import generate_password_hash
 from datetime import datetime
@@ -26,6 +26,39 @@ Cada rota executa operações como validação de dados, criptografia de senha, 
 
 @clientes.route('/', methods=['GET'])
 def get_clientes():
+    id_cliente = request.args.get('id_cliente')  # Obtém o ID da query string
+
+    if id_cliente:
+        cliente = Clientes.query.filter_by(id_cliente=id_cliente).first()
+        if not cliente:
+            return jsonify({"erro": "Cliente não encontrado"}), 404
+        
+        cliente_data = {
+            "ID_Cliente": cliente.id_cliente,
+            "Nome": cliente.nome,
+            "Email": cliente.email,
+            "Email Confirmado": cliente.email_confirmado,
+            "CPF": cliente.cpf,
+            "Telefone": cliente.telefone,
+            "Endereço": {
+                "Rua": cliente.endereco.rua,
+                "Número": cliente.endereco.numero,
+                "Complemento": cliente.endereco.complemento,
+                "Bairro": cliente.endereco.bairro,
+                "Cidade": cliente.endereco.cidade,
+                "Estado": cliente.endereco.estado
+            } if cliente.endereco else None,
+            "Plano": {
+                "ID_Plano": cliente.plano.id_plano,
+                "Nome": cliente.plano.nome,
+                "Descrição": cliente.plano.descricao,
+                "Valor": float(cliente.plano.valor) if cliente.plano else None,
+                "Aulas por Semana": cliente.plano.quantidade_aulas_por_semana
+            } if cliente.plano else None
+        }
+        return jsonify(cliente_data)
+    
+    # Se nenhum id_cliente for passado, retorna todos os clientes
     clientes = Clientes.query.all()
     clientes_list = [
         {
@@ -42,11 +75,19 @@ def get_clientes():
                 "Bairro": cliente.endereco.bairro,
                 "Cidade": cliente.endereco.cidade,
                 "Estado": cliente.endereco.estado
-            } if cliente.endereco else None
+            } if cliente.endereco else None,
+            "Plano": {
+                "ID_Plano": cliente.plano.id_plano,
+                "Nome": cliente.plano.nome,
+                "Descrição": cliente.plano.descricao,
+                "Valor": float(cliente.plano.valor) if cliente.plano else None,
+                "Aulas por Semana": cliente.plano.quantidade_aulas_por_semana
+            } if cliente.plano else None
         }
         for cliente in clientes
     ]
     return jsonify(clientes_list)
+
 
 
 
@@ -255,9 +296,6 @@ def register_without_jwt():
         return jsonify({"message": f"Erro ao realizar a inscrição: {str(e)}"}), 500
 
 
-
-
-
 @clientes.route('/confirm/<token>', methods=['GET'])
 def confirm_email(token):
     cliente = Clientes.query.filter_by(token_confirmacao=token).first()
@@ -277,3 +315,44 @@ def confirm_email(token):
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Erro ao confirmar email: {str(e)}"}), 500
+    
+
+@clientes.route('/mudar_plano', methods=['PUT'])
+def mudar_plano_cliente():
+    try:
+        data = request.get_json()
+        print(f"[DEBUG] Dados recebidos: {data}")
+
+        cliente_id = data.get('cliente_id')
+        novo_plano_id = data.get('novo_plano_id')
+
+        if not cliente_id or not novo_plano_id:
+            return jsonify({"message": "Dados incompletos!"}), 400
+
+        # Verifica se o cliente existe
+        cliente = Clientes.query.get(cliente_id)
+        if not cliente:
+            return jsonify({"message": "Cliente não encontrado!"}), 404
+        print(f"[DEBUG] Cliente encontrado: {cliente.nome}")
+
+        # Verifica se o novo plano existe
+        novo_plano = Planos.query.get(novo_plano_id)
+        if not novo_plano:
+            return jsonify({"message": "Plano não encontrado!"}), 404
+        print(f"[DEBUG] Novo plano encontrado: {novo_plano.nome}")
+
+        # Impede troca se o plano já for o mesmo
+        if cliente.plano_id == novo_plano_id:
+            return jsonify({"message": "Cliente já está nesse plano!"}), 400
+
+        # Atualiza o plano do cliente
+        print(f"[DEBUG] Mudando plano de {cliente.plano_id} para {novo_plano_id}")
+        cliente.plano_id = novo_plano_id
+        db.session.commit()
+
+        return jsonify({"message": "Plano alterado com sucesso!"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Erro ao mudar plano: {str(e)}")
+        return jsonify({"message": "Erro interno no servidor!"}), 500

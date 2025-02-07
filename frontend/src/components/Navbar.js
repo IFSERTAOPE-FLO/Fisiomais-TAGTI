@@ -441,14 +441,7 @@ function Navbar() {
                   <i className="bi bi-wallet2"></i>
                   {sidebarVisible && " Gerenciar Pagamentos"}
                 </Link>
-              </li>
-              {role === "cliente" && (
-              <li className="mt-3">
-              <Link to="cadastrar-aula-cliente" className="sidebar-item">
-                  <i className="bi bi-person-arms-up"></i>
-                  {sidebarVisible && " Aulas de Pilates"}
-                </Link>
-              </li>)}
+              </li>              
               {role === "admin" && (
               <li className="mt-3">
                 <Link to={{ pathname: "/adminPage", state: { opcaoSelecionada: "aulasPilates" } }} className="sidebar-item">
@@ -462,10 +455,12 @@ function Navbar() {
                   <i className="bi bi-person-arms-up"></i>
                   {sidebarVisible && " Aulas de Pilates"}
                 </Link>
-                <Link to="/aulas-disponiveis-colaborador"  className="sidebar-item">
+                <Link to="/minhas-aulas-pilates"  className="sidebar-item">
                   <i className="bi bi-person-arms-up"></i>
                   {sidebarVisible && " Aulas de Pilates"}
                 </Link>
+                
+                
               </li>)}
               <li className="mt-3">
                 <button onClick={handleLogout} className="logout-btn">

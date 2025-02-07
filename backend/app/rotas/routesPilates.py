@@ -122,6 +122,7 @@ def adicionar_cliente_aula_colaborador():
 
     return jsonify({"message": "Cliente adicionado com sucesso a aula!"}), 201
     
+
 from datetime import datetime, timedelta
 
 @pilates.route('/cliente/cadastrar_aula', methods=['POST'])
@@ -131,10 +132,10 @@ def cadastrar_aula_cliente():
         print(f"[DEBUG] Dados recebidos: {data}")
 
         cliente_id = data.get('cliente_id')
-        plano_id = data.get('plano_id')
+        plano_id = data.get('plano_id')  # Opcional se o cliente já tem plano
         aulas_selecionadas = data.get('aulas_selecionadas', [])
 
-        if not cliente_id or not plano_id or not aulas_selecionadas:
+        if not cliente_id or not aulas_selecionadas:
             print("[DEBUG] Dados incompletos!")
             return jsonify({"message": "Dados incompletos!"}), 400
 
@@ -145,19 +146,20 @@ def cadastrar_aula_cliente():
             return jsonify({"message": "Cliente não encontrado!"}), 404
         print(f"[DEBUG] Cliente encontrado: {cliente.nome}")
 
-        # Verificando se o plano existe
-        plano = Planos.query.get(plano_id)
-        if not plano:
-            print("[DEBUG] Plano não encontrado!")
-            return jsonify({"message": "Plano não encontrado!"}), 404
-        print(f"[DEBUG] Plano encontrado: {plano.nome} - Limite semanal: {plano.quantidade_aulas_por_semana}")
-
-        # Vincular plano ao cliente se não tiver
-        if not cliente.plano_id:
+        # Se o cliente já tem um plano, usa esse plano
+        if cliente.plano_id:
+            plano = Planos.query.get(cliente.plano_id)
+            print(f"[DEBUG] Cliente já tem plano associado: {plano.nome}")
+        else:
+            # Se não tiver um plano, usa o fornecido na requisição
+            if not plano_id:
+                return jsonify({"message": "Plano não informado e cliente não possui plano ativo!"}), 400
+            plano = Planos.query.get(plano_id)
+            if not plano:
+                return jsonify({"message": "Plano não encontrado!"}), 404
+            print(f"[DEBUG] Associando novo plano ao cliente: {plano.nome}")
             cliente.plano_id = plano_id
             db.session.add(cliente)
-        elif cliente.plano_id != plano_id:
-            return jsonify({"message": "Cliente já possui outro plano ativo!"}), 400
 
         # Verificação de limite semanal
         data_inicio_semana = datetime.utcnow() - timedelta(days=datetime.utcnow().weekday())
@@ -198,6 +200,7 @@ def cadastrar_aula_cliente():
         db.session.rollback()
         print(f"[ERROR] Erro ao cadastrar cliente na aula: {str(e)}")
         return jsonify({"message": "Erro interno no servidor!"}), 500
+
 
 
 
@@ -493,5 +496,55 @@ def obter_dias_do_mes(data_inicial, dia_semana):
     return dias
 
 
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
+@pilates.route('/cliente/minhas_aulas', methods=['GET'])
+@jwt_required()
+def listar_aulas_cliente():
+    try:
+        # Obtém o email do cliente logado a partir do token JWT
+        cliente_email = get_jwt_identity()
+        
+        # Busca o cliente no banco de dados
+        cliente = Clientes.query.filter_by(email=cliente_email).first()
+        if not cliente:
+            return jsonify({"message": "Cliente não encontrado."}), 404
+
+        # Busca todas as aulas em que o cliente está matriculado
+        aulas_cliente = AulasClientes.query.filter_by(id_cliente=cliente.id_cliente).all()
+
+        # Lista para armazenar os dados das aulas
+        aulas_list = []
+
+        for aula_cliente in aulas_cliente:
+            aula = Aulas.query.get(aula_cliente.id_aula)
+            if not aula:
+                continue  # Se a aula não existir, pula para a próxima
+
+            colaborador = aula.colaborador
+            clinica = colaborador.clinica if colaborador else None
+            servico = colaborador.servicos[0] if colaborador and colaborador.servicos else None
+
+            aulas_list.append({
+                'id_aula': aula.id_aula,
+                'dia_semana': aula.dia_semana,
+                'hora_inicio': aula.hora_inicio.strftime('%H:%M'),
+                'hora_fim': aula.hora_fim.strftime('%H:%M'),
+                'limite_alunos': aula.limite_alunos,
+                'num_alunos': len(aula.alunos),  # Número de alunos na aula
+                'colaborador': {
+                    'id_colaborador': colaborador.id_colaborador if colaborador else None,
+                    'nome': colaborador.nome if colaborador else None,
+                },
+                'clinica': clinica.nome if clinica else None,
+                'servico': servico.nome if servico else None,
+                'data_inscricao': aula_cliente.data_inscricao.strftime('%Y-%m-%d %H:%M:%S')  # Data da inscrição
+            })
+
+        return jsonify(aulas_list), 200
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Erro ao listar aulas do cliente: {str(e)}")
+        return jsonify({"message": "Erro interno no servidor!"}), 500
 

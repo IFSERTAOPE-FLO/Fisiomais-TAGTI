@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Modal, Button, Form, ListGroup, Alert } from "react-bootstrap";
-import Select from "react-select";
-import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
 const CadastrarAulaCliente = () => {
     const [clienteId, setClienteId] = useState("");
@@ -17,10 +14,32 @@ const CadastrarAulaCliente = () => {
     const [loading, setLoading] = useState(false);
     const [clinica, setClinica] = useState('');
     const [clinicas, setClinicas] = useState([]);
+    const [planoAtual, setPlanoAtual] = useState(null);
     const userId = localStorage.getItem("userId");
 
     const token = localStorage.getItem("token");
     const apiBaseUrl = "http://localhost:5000/";
+
+    // Buscar dados do cliente e plano atual
+    useEffect(() => {
+        const fetchCliente = async () => {
+            try {
+                const response = await fetch(`${apiBaseUrl}clientes?id_cliente=${userId}`, {
+
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log(data);
+                    setPlanoAtual(data.Plano);
+                    setClienteId(userId);
+                }
+            } catch (err) {
+                console.error("Erro ao buscar dados do cliente:", err);
+            }
+        };
+
+        if (userId) fetchCliente();
+    }, [userId, token, apiBaseUrl]);
 
     // Buscar serviços ao carregar o componente
     useEffect(() => {
@@ -33,12 +52,10 @@ const CadastrarAulaCliente = () => {
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    const servicosPilates = data.filter(servico => 
+                    const servicosPilates = data.filter(servico =>
                         servico.Tipos.includes("pilates")
                     );
                     setServicos(servicosPilates);
-                } else {
-                    setErro("Erro ao buscar serviços.");
                 }
             } catch (err) {
                 setErro(err.message);
@@ -73,23 +90,19 @@ const CadastrarAulaCliente = () => {
                     if (response.ok) {
                         const data = await response.json();
                         setAulasDisponiveis(data);
-                    } else {
-                        setErro("Erro ao buscar aulas disponíveis.");
                     }
                 } catch (err) {
                     setErro(err.message);
                 }
             };
             fetchAulasDisponiveis();
-        } else {
-            setAulasDisponiveis([]);
         }
     }, [clinica, token, apiBaseUrl]);
 
     const handleSelecionarAula = (aulaId) => {
-        setAulasSelecionadas(prev => 
-            prev.includes(aulaId) 
-                ? prev.filter(id => id !== aulaId) 
+        setAulasSelecionadas(prev =>
+            prev.includes(aulaId)
+                ? prev.filter(id => id !== aulaId)
                 : [...prev, aulaId]
         );
     };
@@ -114,20 +127,20 @@ const CadastrarAulaCliente = () => {
         setErro("");
         setSucesso("");
 
-       
-
         try {
+            const body = {
+                cliente_id: userId,
+                aulas_selecionadas: aulasSelecionadas,
+                ...(!planoAtual && { plano_id: planoId })
+            };
+
             const response = await fetch(`${apiBaseUrl}pilates/cliente/cadastrar_aula`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({
-                    cliente_id: userId,
-                    plano_id: planoId,
-                    aulas_selecionadas: aulasSelecionadas,
-                }),
+                body: JSON.stringify(body),
             });
 
             const data = await response.json();
@@ -138,6 +151,7 @@ const CadastrarAulaCliente = () => {
                 setServicoId("");
                 setPlanoId("");
                 setAulasSelecionadas([]);
+                if (data.plano) setPlanoAtual(data.plano);
             } else {
                 setErro(data.message || "Erro ao realizar inscrição.");
             }
@@ -148,24 +162,32 @@ const CadastrarAulaCliente = () => {
         }
     };
 
-    // Verifica se o cliente já está inscrito em uma aula
-    const estaInscrito = (aulaId) => aulasInscritas.includes(aulaId);
-
-    // Verifica se o cliente atingiu o limite de aulas do plano
-    const atingiuLimiteAulas = () => {
-        if (!planoCliente) return false;
-        return aulasInscritas.length >= planoCliente.quantidade_aulas_por_semana;
-    };
-
     return (
         <div className="container">
             <h2 className="mb-4 text-center">Inscrever-se em Aulas de Pilates</h2>
 
+            {planoAtual && (
+                <div className="card mb-4">
+                    <div className="card-body">
+                        <h5 className="card-title">Plano Ativo</h5>
+                        <p className="card-text">
+                            {planoAtual.Nome} - {planoAtual["Aulas por Semana"]} aulas/semana
+                        </p>
+                        <button
+                            className="btn btn-outline-primary"
+                            onClick={() => setPlanoAtual(null)}
+                        >
+                            Trocar Plano
+                        </button>
+                    </div>
+                </div>
+            )}
+
+
             {erro && <div className="alert alert-danger">{erro}</div>}
             {sucesso && <div className="alert alert-success">{sucesso}</div>}
 
-            <form onSubmit={handleSubmit}>            
-
+            <form onSubmit={handleSubmit}>
                 <div className="mb-3">
                     <label className="form-label">Clínica</label>
                     <select
@@ -200,29 +222,31 @@ const CadastrarAulaCliente = () => {
                     </select>
                 </div>
 
-                <div className="mb-3">
-                    <label className="form-label">Plano</label>
-                    <select
-                        className="form-select"
-                        value={planoId}
-                        onChange={(e) => setPlanoId(e.target.value)}
-                        required
-                    >
-                        <option value="">Selecione seu plano</option>
-                        {planos.map((plano) => (
-                            <option key={plano.ID_Plano} value={plano.ID_Plano}>
-                                {plano.Nome_plano} ({plano.Quantidade_Aulas_Por_Semana} aulas/semana)
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                {!planoAtual && (
+                    <div className="mb-3">
+                        <label className="form-label">Plano</label>
+                        <select
+                            className="form-select"
+                            value={planoId}
+                            onChange={(e) => setPlanoId(e.target.value)}
+                            required
+                        >
+                            <option value="">Selecione seu plano</option>
+                            {planos.map((plano) => (
+                                <option key={plano.ID_Plano} value={plano.ID_Plano}>
+                                    {plano.Nome_plano} ({plano.Quantidade_Aulas_Por_Semana} aulas/semana)
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
 
                 <div className="mb-4">
                     <label className="form-label">Aulas Disponíveis</label>
                     <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
                         {aulasDisponiveis.map((aula) => (
                             <div key={aula.id_aula} className="col">
-                                <div 
+                                <div
                                     className={`card h-100 ${aulasSelecionadas.includes(aula.id_aula) ? 'border-primary shadow-lg' : ''}`}
                                     style={{ cursor: 'pointer' }}
                                     onClick={() => handleSelecionarAula(aula.id_aula)}
@@ -253,8 +277,8 @@ const CadastrarAulaCliente = () => {
                 </div>
 
                 <div className="d-grid">
-                    <button 
-                        type="submit" 
+                    <button
+                        type="submit"
                         className="btn btn-primary btn-lg"
                         disabled={loading}
                     >

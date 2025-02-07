@@ -20,12 +20,11 @@ import GerenciarPagamentos from "./pages/GerenciarPagamentos";
 import CalendarioInterativo from "./pages/CalendarioInterativo";
 
 // Componentes de Pilates
-import AdicionarAulaPilates from "./components/pilates/AdicionarAulaPilates";
-import AdicionarClienteAulaColaborador from "./components/pilates/AdicionarClienteAulaColaborador";
-import CadastrarAulaCliente from "./components/pilates/CadastrarAulaCliente";
-import GerenciarAulasPilates from "./components/pilates/GerenciarAulasPilates";
-import AulasDisponiveisColaborador from "./components/pilates/AulasDisponiveisColaborador";
-
+import AdicionarAulaPilates from "./components/pilates/usuariocolaborador/AdicionarAulaPilates.js";
+import AdicionarClienteAulaColaborador from "./components/pilates/usuariocolaborador/AdicionarClienteAulaColaborador.js";
+import CadastrarAulaCliente from "./components/pilates/usuariocliente/CadastrarAulaCliente.js";
+import GerenciarAulasPilates from "./components/pilates/usuariocolaborador/GerenciarAulasPilates.js";
+import MinhasAulasCliente from  "./components/pilates/usuariocliente/MinhasAulasCliente.js";
 function App() {
     return (
         <Router>
@@ -171,13 +170,15 @@ function App() {
                         }
                     />
                     <Route
-                        path="/aulas-disponiveis-colaborador"
+                        path="/minhas-aulas-pilates"
                         element={
-                            <PageWrapper title="Aulas Disponíveis - Fisiomais">
-                                <AulasDisponiveisColaborador />
+                            <PageWrapper title="Minhas Aulas Pilates - Fisiomais">
+                                <MinhasAulasCliente />
                             </PageWrapper>
                         }
                     />
+                    
+                    
                 </Routes>
 
                 <Footer />

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import Paginator from "../Paginator"; // Importe o componente Paginator
+import Paginator from "../../Paginator"; // Importe o componente Paginator
 import AdicionarClienteAulaColaborador from "./AdicionarClienteAulaColaborador"; // Importe o modal
 import AdicionarAulaPilates from "./AdicionarAulaPilates";
 import { Modal, Button } from "react-bootstrap"; // Importando Modal e Button do Bootstrap
