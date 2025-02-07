@@ -104,6 +104,11 @@ class Clientes(db.Model):
     # Novos campos para verificação de email
     email_confirmado = db.Column(db.Boolean, default=False, nullable=False)
     token_confirmacao = db.Column(db.String(128), nullable=True)
+    
+    # Relacionamento com Planos (um cliente pode ter apenas um plano de pilates)
+    plano_id = db.Column(db.Integer, db.ForeignKey('planos.id_plano'), nullable=True)
+    plano = db.relationship('Planos', backref='clientes')
+
     aulas = db.relationship('AulasClientes', back_populates='cliente')
 
     # Relacionamentos
@@ -254,7 +259,7 @@ class Aulas(db.Model):
     hora_inicio = db.Column(db.Time, nullable=False)
     hora_fim = db.Column(db.Time, nullable=False)
     limite_alunos = db.Column(db.Integer, nullable=False)  # Número máximo de alunos na aula
-
+    data = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)  
     # Relacionamentos
     colaborador = db.relationship('Colaboradores', back_populates='aulas')
     alunos = db.relationship('AulasClientes', back_populates='aula')  # Associações com clientes
@@ -267,7 +272,7 @@ class AulasClientes(db.Model):
     id_aula_cliente = db.Column(db.Integer, primary_key=True)
     id_aula = db.Column(db.Integer, db.ForeignKey('aulas.id_aula'), nullable=False)
     id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False)
-
+    data_inscricao = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)  
     # Relacionamentos
     aula = db.relationship('Aulas', back_populates='alunos')
     cliente = db.relationship('Clientes')

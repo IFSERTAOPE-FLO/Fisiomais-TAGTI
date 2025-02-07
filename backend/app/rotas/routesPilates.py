@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.models import Aulas, Clientes, Colaboradores, Servicos, ColaboradoresServicos, AulasClientes, Clinicas, Agendamentos, Clientes, Aulas, db
+from app.models import Aulas, Clientes, Colaboradores, Servicos, Planos, ColaboradoresServicos, AulasClientes, Clinicas, Agendamentos, Clientes, Aulas, db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 pilates = Blueprint('pilates', __name__)
@@ -73,8 +73,9 @@ def adicionar_aula_pilates():
         return jsonify({"message": "Aulas de Pilates criadas com sucesso!"}), 201
     except Exception as e:
         db.session.rollback()
-        print(f"Erro: {str(e)}")  # Debug: Log do erro
-        return jsonify({"message": f"Ocorreu um erro: {str(e)}"}), 500
+        response = jsonify({"message": f"Ocorreu um erro: {str(e)}"})
+        response.headers["Content-Type"] = "application/json; charset=utf-8"
+        return response, 500
 
 
 
@@ -121,34 +122,84 @@ def adicionar_cliente_aula_colaborador():
 
     return jsonify({"message": "Cliente adicionado com sucesso a aula!"}), 201
     
+from datetime import datetime, timedelta
+
 @pilates.route('/cliente/cadastrar_aula', methods=['POST'])
 def cadastrar_aula_cliente():
-    data = request.get_json()
+    try:
+        data = request.get_json()
+        print(f"[DEBUG] Dados recebidos: {data}")
 
-    cliente_id = data.get('cliente_id')
-    aula_id = data.get('aula_id')
+        cliente_id = data.get('cliente_id')
+        plano_id = data.get('plano_id')
+        aulas_selecionadas = data.get('aulas_selecionadas', [])
 
-    # Verificando se o cliente existe
-    cliente = Clientes.query.get(cliente_id)
-    if not cliente:
-        return jsonify({"message": "Cliente nao encontrado!"}), 404
+        if not cliente_id or not plano_id or not aulas_selecionadas:
+            print("[DEBUG] Dados incompletos!")
+            return jsonify({"message": "Dados incompletos!"}), 400
 
-    # Verificando se a aula existe
-    aula = Aulas.query.get(aula_id)
-    if not aula:
-        return jsonify({"message": "Aula nao encontrada!"}), 404
+        # Verificando se o cliente existe
+        cliente = Clientes.query.get(cliente_id)
+        if not cliente:
+            print("[DEBUG] Cliente não encontrado!")
+            return jsonify({"message": "Cliente não encontrado!"}), 404
+        print(f"[DEBUG] Cliente encontrado: {cliente.nome}")
 
-    # Verificando se o cliente já está inscrito
-    aluno_existente = AulasClientes.query.filter_by(cliente_id=cliente_id, aula_id=aula_id).first()
-    if aluno_existente:
-        return jsonify({"message": "Cliente ja inscrito nesta aula!"}), 400
+        # Verificando se o plano existe
+        plano = Planos.query.get(plano_id)
+        if not plano:
+            print("[DEBUG] Plano não encontrado!")
+            return jsonify({"message": "Plano não encontrado!"}), 404
+        print(f"[DEBUG] Plano encontrado: {plano.nome} - Limite semanal: {plano.quantidade_aulas_por_semana}")
 
-    # Adicionando a inscrição
-    novo_inscricao = AulasClientes(cliente_id=cliente_id, aula_id=aula_id)
-    db.session.add(novo_inscricao)
-    db.session.commit()
+        # Vincular plano ao cliente se não tiver
+        if not cliente.plano_id:
+            cliente.plano_id = plano_id
+            db.session.add(cliente)
+        elif cliente.plano_id != plano_id:
+            return jsonify({"message": "Cliente já possui outro plano ativo!"}), 400
 
-    return jsonify({"message": "Cliente inscrito com sucesso na aula!"}), 201
+        # Verificação de limite semanal
+        data_inicio_semana = datetime.utcnow() - timedelta(days=datetime.utcnow().weekday())
+        aulas_semana_atual = AulasClientes.query.join(Aulas).filter(
+            AulasClientes.id_cliente == cliente_id,
+            Aulas.data >= data_inicio_semana
+        ).count()
+
+        if aulas_semana_atual + len(aulas_selecionadas) > plano.quantidade_aulas_por_semana:
+            msg = f"Limite de {plano.quantidade_aulas_por_semana} aulas semanais excedido!"
+            return jsonify({"message": msg}), 400
+
+        for aula_id in aulas_selecionadas:
+            aula = Aulas.query.get(aula_id)
+            if not aula:
+                return jsonify({"message": f"Aula ID {aula_id} não encontrada!"}), 404
+
+            # Verificar se já está inscrito
+            if AulasClientes.query.filter_by(id_cliente=cliente_id, id_aula=aula_id).first():
+                return jsonify({"message": f"Cliente já está inscrito na aula ID {aula_id}!"}), 400
+
+            # Verificar limite de alunos
+            if len(aula.alunos) >= aula.limite_alunos:
+                return jsonify({"message": f"Aula ID {aula_id} lotada!"}), 400
+
+            # Criar inscrição
+            nova_inscricao = AulasClientes(
+                id_cliente=cliente_id,
+                id_aula=aula_id,
+                data_inscricao=datetime.utcnow()
+            )
+            db.session.add(nova_inscricao)
+
+        db.session.commit()
+        return jsonify({"message": "Inscrição realizada com sucesso!"}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Erro ao cadastrar cliente na aula: {str(e)}")
+        return jsonify({"message": "Erro interno no servidor!"}), 500
+
+
 
 
 
@@ -271,6 +322,63 @@ def excluir_aula(id_aula):
         response = jsonify({"message": str(e)})
         response.headers["Content-Type"] = "application/json; charset=utf-8"
         return response, 500
+    
+
+
+@pilates.route('/listar_aulas/clinica/<int:clinica_id>', methods=['GET'])
+@jwt_required()
+def listar_aulas_por_clinica(clinica_id):
+    try:
+        print(f"[DEBUG] Recebendo requisição para listar aulas da clínica ID: {clinica_id}")
+
+        clinica = Clinicas.query.get(clinica_id)
+        if not clinica:
+            
+            return jsonify({"message": "Clínica não encontrada."}), 404
+        print(f"[DEBUG] Clínica encontrada: {clinica.nome}")
+
+        # Buscar todos os colaboradores da clínica
+        colaboradores = Colaboradores.query.filter_by(clinica_id=clinica_id).all()
+        if not colaboradores:
+            
+            return jsonify({"message": "Nenhum colaborador encontrado para esta clínica."}), 404
+        
+        print(f"[DEBUG] {len(colaboradores)} colaborador(es) encontrado(s) na clínica {clinica.nome}.")
+
+        # Buscar todas as aulas dos colaboradores dessa clínica
+        aulas_list = []
+        for colaborador in colaboradores:   
+            aulas = Aulas.query.filter_by(id_colaborador=colaborador.id_colaborador).all()            
+
+            for aula in aulas:
+                num_alunos = len(aula.alunos)
+                servico = colaborador.servicos[0] if colaborador.servicos else None
+
+                aulas_list.append({
+                    'id_aula': aula.id_aula,
+                    'dia_semana': aula.dia_semana,
+                    'hora_inicio': aula.hora_inicio.strftime('%H:%M'),
+                    'hora_fim': aula.hora_fim.strftime('%H:%M'),
+                    'limite_alunos': aula.limite_alunos,
+                    'num_alunos': num_alunos,
+                    'colaborador': {
+                        'id_colaborador': colaborador.id_colaborador,
+                        'nome': colaborador.nome,
+                    },
+                    'clinica': clinica.nome,
+                    'servico': servico.nome if servico else None
+                })
+
+        print(f"[DEBUG] Total de aulas retornadas: {len(aulas_list)}")
+        return jsonify(aulas_list)
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Erro ao listar aulas: {str(e)}")
+        return jsonify({"message": str(e)}), 500
+
+
+
 
 from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify
@@ -295,13 +403,13 @@ def criar_agendamentos_para_aula(aula_id):
         # Pegue a aula selecionada
         aula = Aulas.query.get(aula_id)
         if not aula:
-            return jsonify({"message": "Aula não encontrada"}), 404
+            return jsonify({"message": "Aula nao encontrada"}), 404
         
         # Pegue todos os alunos vinculados à aula
         alunos = aula.alunos
         # Verificar se a lista de alunos não está vazia
         if len(alunos) == 0:
-            return jsonify({"message": "Não há alunos vinculados a esta aula."}), 400
+            return jsonify({"message": "Nao ha alunos vinculados a esta aula."}), 400
         
         # Calcular as datas para o próximo mês, nos dias da semana da aula
         dias_semana = aula.dia_semana  # Exemplo: "Segunda-feira"
@@ -327,7 +435,7 @@ def criar_agendamentos_para_aula(aula_id):
                 ).first()
 
                 if agendamento_existente:
-                    return jsonify({"message": f"Já existe um agendamento para o colaborador nesse dia: {dia.strftime('%d/%m/%Y')}, {dias_da_semana_pt[dia.strftime('%A')]}."}), 400
+                    return jsonify({"message": f"Ja existe um agendamento para o colaborador nesse dia: {dia.strftime('%d/%m/%Y')}, {dias_da_semana_pt[dia.strftime('%A')]}."}), 400
 
                 # Traduzir o dia da semana para português
                 dia_em_portugues = dias_da_semana_pt[dia.strftime('%A')] 

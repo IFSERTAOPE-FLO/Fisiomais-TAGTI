@@ -442,6 +442,13 @@ function Navbar() {
                   {sidebarVisible && " Gerenciar Pagamentos"}
                 </Link>
               </li>
+              {role === "cliente" && (
+              <li className="mt-3">
+              <Link to="cadastrar-aula-cliente" className="sidebar-item">
+                  <i className="bi bi-person-arms-up"></i>
+                  {sidebarVisible && " Aulas de Pilates"}
+                </Link>
+              </li>)}
               {role === "admin" && (
               <li className="mt-3">
                 <Link to={{ pathname: "/adminPage", state: { opcaoSelecionada: "aulasPilates" } }} className="sidebar-item">

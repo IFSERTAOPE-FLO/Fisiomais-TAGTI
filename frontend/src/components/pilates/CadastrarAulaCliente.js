@@ -4,96 +4,118 @@ import { Modal, Button, Form, ListGroup, Alert } from "react-bootstrap";
 import Select from "react-select";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
-const CadastrarAulaCliente = ({ showModal, handleClose, clienteId }) => {
-    const [aulas, setAulas] = useState([]);
-    const [colaboradores, setColaboradores] = useState([]);
-    const [colaboradorSelecionado, setColaboradorSelecionado] = useState(null);
-    const [aulasDisponiveis, setAulasDisponiveis] = useState([]);
+const CadastrarAulaCliente = () => {
+    const [clienteId, setClienteId] = useState("");
+    const [servicoId, setServicoId] = useState("");
+    const [planoId, setPlanoId] = useState("");
+    const [aulasSelecionadas, setAulasSelecionadas] = useState([]);
     const [erro, setErro] = useState("");
     const [sucesso, setSucesso] = useState("");
-    const [planoCliente, setPlanoCliente] = useState(null);
-    const [aulasInscritas, setAulasInscritas] = useState([]);
+    const [servicos, setServicos] = useState([]);
+    const [planos, setPlanos] = useState([]);
+    const [aulasDisponiveis, setAulasDisponiveis] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [clinica, setClinica] = useState('');
+    const [clinicas, setClinicas] = useState([]);
+    const userId = localStorage.getItem("userId");
+
     const token = localStorage.getItem("token");
     const apiBaseUrl = "http://localhost:5000/";
 
-    // Buscar colaboradores e aulas disponíveis
+    // Buscar serviços ao carregar o componente
     useEffect(() => {
-        const fetchColaboradores = async () => {
+        const fetchServicos = async () => {
             try {
-                const response = await fetch(`${apiBaseUrl}colaboradores/`, {
+                const response = await fetch(`${apiBaseUrl}servicos/listar_servicos`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                const data = await response.json();
-                if (response.ok) setColaboradores(data);
-                else setErro("Erro ao carregar colaboradores.");
+                if (response.ok) {
+                    const data = await response.json();
+                    const servicosPilates = data.filter(servico => 
+                        servico.Tipos.includes("pilates")
+                    );
+                    setServicos(servicosPilates);
+                } else {
+                    setErro("Erro ao buscar serviços.");
+                }
             } catch (err) {
-                setErro("Erro ao carregar colaboradores.");
+                setErro(err.message);
             }
         };
+        fetchServicos();
+    }, [token, apiBaseUrl]);
 
-        const fetchPlanoCliente = async () => {
-            try {
-                const response = await fetch(`${apiBaseUrl}clientes/${clienteId}/plano`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                const data = await response.json();
-                if (response.ok) setPlanoCliente(data.plano);
-                else setErro("Erro ao carregar o plano do cliente.");
-            } catch (err) {
-                setErro("Erro ao carregar o plano do cliente.");
-            }
-        };
-
-        const fetchAulasInscritas = async () => {
-            try {
-                const response = await fetch(`${apiBaseUrl}clientes/${clienteId}/aulas`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                const data = await response.json();
-                if (response.ok) setAulasInscritas(data.aulas || []);
-                else setErro("Erro ao carregar aulas inscritas.");
-            } catch (err) {
-                setErro("Erro ao carregar aulas inscritas.");
-            }
-        };
-
-        fetchColaboradores();
-        fetchPlanoCliente();
-        fetchAulasInscritas();
-    }, [clienteId, token]);
-
-    // Buscar aulas disponíveis quando um colaborador é selecionado
+    // Buscar planos quando um serviço é selecionado
     useEffect(() => {
-        if (colaboradorSelecionado) {
+        if (servicoId) {
+            const servicoSelecionado = servicos.find((s) => s.ID_Servico === parseInt(servicoId));
+            setPlanos(servicoSelecionado?.Planos || []);
+        } else {
+            setPlanos([]);
+        }
+    }, [servicoId, servicos]);
+
+    // Buscar aulas disponíveis quando a clínica é selecionada
+    useEffect(() => {
+        if (clinica) {
             const fetchAulasDisponiveis = async () => {
                 try {
                     const response = await fetch(
-                        `${apiBaseUrl}pilates/listar_aulas?colaborador_id=${colaboradorSelecionado.value}`,
+                        `${apiBaseUrl}pilates/listar_aulas/clinica/${clinica}`,
                         {
                             headers: {
                                 Authorization: `Bearer ${token}`,
                             },
                         }
                     );
-                    const data = await response.json();
-                    if (response.ok) setAulasDisponiveis(data);
-                    else setErro("Erro ao carregar aulas disponíveis.");
+                    if (response.ok) {
+                        const data = await response.json();
+                        setAulasDisponiveis(data);
+                    } else {
+                        setErro("Erro ao buscar aulas disponíveis.");
+                    }
                 } catch (err) {
-                    setErro("Erro ao carregar aulas disponíveis.");
+                    setErro(err.message);
                 }
             };
             fetchAulasDisponiveis();
+        } else {
+            setAulasDisponiveis([]);
         }
-    }, [colaboradorSelecionado, token]);
+    }, [clinica, token, apiBaseUrl]);
 
-    // Função para inscrever o cliente em uma aula
-    const inscreverNaAula = async (aulaId) => {
+    const handleSelecionarAula = (aulaId) => {
+        setAulasSelecionadas(prev => 
+            prev.includes(aulaId) 
+                ? prev.filter(id => id !== aulaId) 
+                : [...prev, aulaId]
+        );
+    };
+
+    useEffect(() => {
+        const fetchClinicas = async () => {
+            try {
+                const response = await fetch("http://localhost:5000/clinicas");
+                if (response.ok) {
+                    setClinicas(await response.json());
+                }
+            } catch (error) {
+                console.error("Erro ao buscar clínicas:", error);
+            }
+        };
+        fetchClinicas();
+    }, []);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setErro("");
+        setSucesso("");
+
+       
+
         try {
             const response = await fetch(`${apiBaseUrl}pilates/cliente/cadastrar_aula`, {
                 method: "POST",
@@ -102,8 +124,9 @@ const CadastrarAulaCliente = ({ showModal, handleClose, clienteId }) => {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    cliente_id: clienteId,
-                    aula_id: aulaId,
+                    cliente_id: userId,
+                    plano_id: planoId,
+                    aulas_selecionadas: aulasSelecionadas,
                 }),
             });
 
@@ -111,12 +134,17 @@ const CadastrarAulaCliente = ({ showModal, handleClose, clienteId }) => {
 
             if (response.ok) {
                 setSucesso("Inscrição realizada com sucesso!");
-                setAulasInscritas((prev) => [...prev, aulaId]);
+                setClinica('');
+                setServicoId("");
+                setPlanoId("");
+                setAulasSelecionadas([]);
             } else {
                 setErro(data.message || "Erro ao realizar inscrição.");
             }
         } catch (err) {
-            setErro("Erro ao realizar inscrição.");
+            setErro(err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -130,77 +158,111 @@ const CadastrarAulaCliente = ({ showModal, handleClose, clienteId }) => {
     };
 
     return (
-        <Modal show={showModal} onHide={handleClose} size="lg">
-            <Modal.Header closeButton className="bg-primary text-white">
-                <Modal.Title>
-                    <FaCheckCircle className="me-2" />
-                    Inscrever-se em Aulas de Pilates
-                </Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                {erro && <Alert variant="danger">{erro}</Alert>}
-                {sucesso && <Alert variant="success">{sucesso}</Alert>}
+        <div className="container">
+            <h2 className="mb-4 text-center">Inscrever-se em Aulas de Pilates</h2>
 
-                {/* Seleção de Colaborador */}
-                <div className="mb-4">
-                    <label className="form-label">Selecione um Colaborador:</label>
-                    <Select
-                        options={colaboradores.map((colab) => ({
-                            value: colab.id_colaborador,
-                            label: colab.nome,
-                        }))}
-                        value={colaboradorSelecionado}
-                        onChange={setColaboradorSelecionado}
-                        placeholder="Pesquise e selecione um colaborador"
-                    />
+            {erro && <div className="alert alert-danger">{erro}</div>}
+            {sucesso && <div className="alert alert-success">{sucesso}</div>}
+
+            <form onSubmit={handleSubmit}>            
+
+                <div className="mb-3">
+                    <label className="form-label">Clínica</label>
+                    <select
+                        className="form-select"
+                        value={clinica}
+                        onChange={(e) => setClinica(e.target.value)}
+                        required
+                    >
+                        <option value="">Selecione uma clínica</option>
+                        {clinicas.map((clin) => (
+                            <option key={clin.ID_Clinica} value={clin.ID_Clinica}>
+                                {clin.Nome}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
-                {/* Lista de Aulas Disponíveis */}
-                {colaboradorSelecionado && (
-                    <div>
-                        <h5 className="text-secondary">Aulas Disponíveis:</h5>
-                        <ListGroup>
-                            {aulasDisponiveis.map((aula) => (
-                                <ListGroup.Item
-                                    key={aula.id_aula}
-                                    className="d-flex justify-content-between align-items-center"
+                <div className="mb-3">
+                    <label className="form-label">Serviço</label>
+                    <select
+                        className="form-select"
+                        value={servicoId}
+                        onChange={(e) => setServicoId(e.target.value)}
+                        required
+                    >
+                        <option value="">Selecione o serviço</option>
+                        {servicos.map((servico) => (
+                            <option key={servico.ID_Servico} value={servico.ID_Servico}>
+                                {servico.Nome_servico}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="mb-3">
+                    <label className="form-label">Plano</label>
+                    <select
+                        className="form-select"
+                        value={planoId}
+                        onChange={(e) => setPlanoId(e.target.value)}
+                        required
+                    >
+                        <option value="">Selecione seu plano</option>
+                        {planos.map((plano) => (
+                            <option key={plano.ID_Plano} value={plano.ID_Plano}>
+                                {plano.Nome_plano} ({plano.Quantidade_Aulas_Por_Semana} aulas/semana)
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="mb-4">
+                    <label className="form-label">Aulas Disponíveis</label>
+                    <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                        {aulasDisponiveis.map((aula) => (
+                            <div key={aula.id_aula} className="col">
+                                <div 
+                                    className={`card h-100 ${aulasSelecionadas.includes(aula.id_aula) ? 'border-primary shadow-lg' : ''}`}
+                                    style={{ cursor: 'pointer' }}
+                                    onClick={() => handleSelecionarAula(aula.id_aula)}
                                 >
-                                    <div>
-                                        <strong>{aula.dia_semana}</strong> - {aula.hora_inicio} às{" "}
-                                        {aula.hora_fim}
-                                        <br />
-                                        <small className="text-muted">
-                                            Vagas disponíveis: {aula.limite_alunos - aula.num_alunos}
-                                        </small>
+                                    <div className="card-body">
+                                        <h5 className="card-title text-primary">
+                                            {aula.dia_semana}
+                                        </h5>
+                                        <div className="card-text">
+                                            <p className="mb-1">
+                                                <strong>Horário:</strong> {aula.hora_inicio} - {aula.hora_fim}
+                                            </p>
+                                            <p className="mb-1">
+                                                <strong>Professor:</strong> {aula.colaborador.nome}
+                                            </p>
+                                            <p className="mb-1">
+                                                <strong>Vagas:</strong> {aula.limite_alunos - aula.num_alunos}
+                                            </p>
+                                            <p className="mb-0">
+                                                <strong>Local:</strong> {aula.clinica}
+                                            </p>
+                                        </div>
                                     </div>
-                                    {estaInscrito(aula.id_aula) ? (
-                                        <Button variant="success" disabled>
-                                            <FaCheckCircle /> Inscrito
-                                        </Button>
-                                    ) : atingiuLimiteAulas() ? (
-                                        <Button variant="warning" disabled>
-                                            Limite de aulas atingido
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            variant="primary"
-                                            onClick={() => inscreverNaAula(aula.id_aula)}
-                                        >
-                                            Inscrever-se
-                                        </Button>
-                                    )}
-                                </ListGroup.Item>
-                            ))}
-                        </ListGroup>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                )}
-            </Modal.Body>
-            <Modal.Footer>
-                <Button variant="secondary" onClick={handleClose}>
-                    Fechar
-                </Button>
-            </Modal.Footer>
-        </Modal>
+                </div>
+
+                <div className="d-grid">
+                    <button 
+                        type="submit" 
+                        className="btn btn-primary btn-lg"
+                        disabled={loading}
+                    >
+                        {loading ? "Processando..." : "Confirmar Inscrição"}
+                    </button>
+                </div>
+            </form>
+        </div>
     );
 };
 
