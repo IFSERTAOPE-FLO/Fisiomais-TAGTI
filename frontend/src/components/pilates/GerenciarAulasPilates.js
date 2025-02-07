@@ -147,7 +147,7 @@ const GerenciarAulasPilates = () => {
                 {sucesso && <p className="alert alert-success">{sucesso}</p>}
 
                 <div className="row mb-3">
-                    <div className="col-md-3">
+                    <div className="col-md-4">
                         <div className="input-group">
                             <input
                                 type="text"
@@ -214,7 +214,7 @@ const GerenciarAulasPilates = () => {
                     {!adicionandoAula ? (
                     <div className="col-md-2 d-flex justify-content-md-end mt-2 mt-md-0">
                         <button className="btn btn-login" onClick={() => setAdicionandoAula(true)}>
-                            <i className="bi bi-plus-circle"></i> Adicionar Aula de Pilates
+                            <i className="bi bi-plus-circle"></i> Adicionar nova aula
                         </button>
                     </div>
                 ) : (

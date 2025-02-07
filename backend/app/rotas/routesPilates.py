@@ -73,8 +73,9 @@ def adicionar_aula_pilates():
         return jsonify({"message": "Aulas de Pilates criadas com sucesso!"}), 201
     except Exception as e:
         db.session.rollback()
-        print(f"Erro: {str(e)}")  # Debug: Log do erro
-        return jsonify({"message": f"Ocorreu um erro: {str(e)}"}), 500
+        response = jsonify({"message": f"Ocorreu um erro: {str(e)}"})
+        response.headers["Content-Type"] = "application/json; charset=utf-8"
+        return response, 500
 
 
 
@@ -295,13 +296,13 @@ def criar_agendamentos_para_aula(aula_id):
         # Pegue a aula selecionada
         aula = Aulas.query.get(aula_id)
         if not aula:
-            return jsonify({"message": "Aula não encontrada"}), 404
+            return jsonify({"message": "Aula nao encontrada"}), 404
         
         # Pegue todos os alunos vinculados à aula
         alunos = aula.alunos
         # Verificar se a lista de alunos não está vazia
         if len(alunos) == 0:
-            return jsonify({"message": "Não há alunos vinculados a esta aula."}), 400
+            return jsonify({"message": "Nao ha alunos vinculados a esta aula."}), 400
         
         # Calcular as datas para o próximo mês, nos dias da semana da aula
         dias_semana = aula.dia_semana  # Exemplo: "Segunda-feira"
@@ -327,7 +328,7 @@ def criar_agendamentos_para_aula(aula_id):
                 ).first()
 
                 if agendamento_existente:
-                    return jsonify({"message": f"Já existe um agendamento para o colaborador nesse dia: {dia.strftime('%d/%m/%Y')}, {dias_da_semana_pt[dia.strftime('%A')]}."}), 400
+                    return jsonify({"message": f"Ja existe um agendamento para o colaborador nesse dia: {dia.strftime('%d/%m/%Y')}, {dias_da_semana_pt[dia.strftime('%A')]}."}), 400
 
                 # Traduzir o dia da semana para português
                 dia_em_portugues = dias_da_semana_pt[dia.strftime('%A')] 
