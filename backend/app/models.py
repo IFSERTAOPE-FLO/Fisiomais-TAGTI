@@ -138,7 +138,8 @@ class Servicos(db.Model):
     # Relacionamentos
     tipo_servicos = db.relationship('TipoServico', secondary='servicos_tipo_servico', back_populates='servicos')
     colaboradores = db.relationship('Colaboradores', secondary='colaboradores_servicos', back_populates='servicos')
-
+    # Relacionamento com planos de tratamento
+    planos_tratamento_relacionados = db.relationship('PlanosTratamentoServicos', back_populates='servico')
     def set_valor(self, tipo_servico):
         # Se o tipo for fisioterapia, o valor é fixo
         if tipo_servico == "fisioterapia":
@@ -280,24 +281,36 @@ class AulasClientes(db.Model):
     def __repr__(self):
         return f'<AulaCliente Aula: {self.id_aula} Cliente: {self.id_cliente}>'
     
+# Tabela Associativa entre Planos de Tratamento e Serviços
+class PlanosTratamentoServicos(db.Model):
+    __tablename__ = 'planos_tratamento_servicos'
+    id = db.Column(db.Integer, primary_key=True)
+    id_plano_tratamento = db.Column(db.Integer, db.ForeignKey('planos_tratamento.id_plano_tratamento'), nullable=False)
+    id_servico = db.Column(db.Integer, db.ForeignKey('servicos.id_servico'), nullable=False)
+
+    # Relacionamentos
+    plano_tratamento = db.relationship('PlanosTratamento', back_populates='servicos_relacionados')
+    servico = db.relationship('Servicos', back_populates='planos_tratamento_relacionados')
+
+# Atualizando o modelo de PlanosTratamento
 class PlanosTratamento(db.Model):
     __tablename__ = 'planos_tratamento'
-    id_plano_tratamento = db.Column(db.Integer, primary_key=True)  # ID único do plano de tratamento
-    id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False)  # Relacionamento com Cliente
-    id_colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.id_colaborador'), nullable=False)  # Relacionamento com Colaborador
-    id_servico = db.Column(db.Integer, db.ForeignKey('servicos.id_servico'), nullable=False)  # Relacionamento com Serviço
-    diagnostico = db.Column(db.Text, nullable=False)  # Diagnóstico inicial do paciente
-    objetivos = db.Column(db.Text, nullable=False)  # Objetivos do plano de tratamento
-    metodologia = db.Column(db.Text, nullable=True)  # Métodos propostos para o tratamento
-    duracao_prevista = db.Column(db.Integer, nullable=False)  # Duração prevista em semanas
-    data_inicio = db.Column(db.Date, nullable=False, default=datetime.utcnow)  # Data de início do plano
-    data_fim = db.Column(db.Date, nullable=True)  # Data de término do plano (opcional)
-    anamnese_filename = db.Column(db.String(255), nullable=True)  # Novo campo para armazenar o nome do arquivo
+    id_plano_tratamento = db.Column(db.Integer, primary_key=True)
+    id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False)
+    id_colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.id_colaborador'), nullable=False)
+    diagnostico = db.Column(db.Text, nullable=False)
+    objetivos = db.Column(db.Text, nullable=False)
+    metodologia = db.Column(db.Text, nullable=True)
+    duracao_prevista = db.Column(db.Integer, nullable=False)
+    data_inicio = db.Column(db.Date, nullable=False, default=datetime.utcnow)
+    data_fim = db.Column(db.Date, nullable=True)
+    anamnese_filename = db.Column(db.String(255), nullable=True)
 
     # Relacionamentos
     cliente = db.relationship('Clientes', backref='planos_tratamento')
     colaborador = db.relationship('Colaboradores', backref='planos_tratamento')
-    servico = db.relationship('Servicos', backref='planos_tratamento')
+    servicos_relacionados = db.relationship('PlanosTratamentoServicos', back_populates='plano_tratamento')
+
 
 class HistoricoSessao(db.Model):
     __tablename__ = 'historico_sessao'
