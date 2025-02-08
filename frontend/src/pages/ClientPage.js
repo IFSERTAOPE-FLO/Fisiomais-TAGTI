@@ -6,7 +6,7 @@ import CalendarioInterativo from "./CalendarioInterativo";
 import VisualizarAgendamentos from "./VisualizarAgendamentos";
 import CriarAgendamento from "./CriarAgendamento";
 import MinhasAulasCliente from "../components/pilates/usuariocliente/MinhasAulasCliente";
-import Dashboard from "./Dashboard";
+import DashboardCliente from "./DashboardCliente";
 
 const ClientPage = () => {
   const savedRole = localStorage.getItem("role");
@@ -106,7 +106,7 @@ const ClientPage = () => {
       </nav>
 
       {/* Renderização dos componentes */}
-      {opcaoSelecionada === "dashboard" && <Dashboard />}
+      {opcaoSelecionada === "dashboard" && <DashboardCliente />}
       {opcaoSelecionada === "pagamentos" && <GerenciarPagamentos />}
       {opcaoSelecionada === "criarAgendamento" && <CriarAgendamento />}
       {opcaoSelecionada === "visualizarAgendamentos" && <VisualizarAgendamentos />}

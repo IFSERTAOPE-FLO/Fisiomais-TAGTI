@@ -152,7 +152,7 @@ const CadastrarAulaCliente = ({ onAulaAdicionada }) => {
                 setPlanoId("");
                 setAulasSelecionadas([]);
                 onAulaAdicionada();
-                
+
                 if (data.plano) setPlanoAtual(data.plano);
             } else {
                 setErro(data.message || "Erro ao realizar inscrição.");
@@ -170,7 +170,7 @@ const CadastrarAulaCliente = ({ onAulaAdicionada }) => {
                 <div className="col-md-12">
                     <div className="card shadow-lg border-0">
                         <div className="card-header text-center  rounded-top">
-                            <h3 className="fw-bold text-primary text-center">Inscrever-se em Aulas de Pilates</h3>
+                            <h3 className=" text-secondary text-center">Inscrever-se em Aulas de Pilates</h3>
                         </div>
                         <div className="card-body p-4">
                             {erro && <div className="alert alert-danger">{erro}</div>}
@@ -178,7 +178,7 @@ const CadastrarAulaCliente = ({ onAulaAdicionada }) => {
 
                             <form onSubmit={handleSubmit}>
                                 <div className="mb-3">
-                                    <label className="form-label">Clínica</label>
+                                    <label className="form-label fw-bold">Clínica</label>
                                     <select
                                         className="form-select"
                                         value={clinica}
@@ -195,7 +195,7 @@ const CadastrarAulaCliente = ({ onAulaAdicionada }) => {
                                 </div>
 
                                 <div className="mb-3">
-                                    <label className="form-label">Serviço</label>
+                                    <label className="form-label fw-bold">Serviço</label>
                                     <select
                                         className="form-select"
                                         value={servicoId}
@@ -213,28 +213,42 @@ const CadastrarAulaCliente = ({ onAulaAdicionada }) => {
 
                                 {!planoAtual && (
                                     <div className="mb-3">
-                                        <label className="form-label">Plano</label>
+                                        <label className="form-label fw-bold">Plano</label>
+
                                         {planos.length === 0 ? (
-                                            <div className="alert alert-warning text-center" role="alert">
+                                            <div className="alert alert-warning text-center d-flex align-items-center gap-2" role="alert">
+                                                <i className="bi bi-exclamation-circle-fill text-warning"></i>
                                                 Selecione uma clínica ou serviço para visualizar os planos disponíveis!
                                             </div>
                                         ) : (
                                             <div className="row">
                                                 {planos.map((plano) => (
                                                     <div key={plano.ID_Plano} className="col-md-6 mb-3">
+
                                                         <div
-                                                            className={`d-flex justify-content-between align-items-center p-3 border btn-plano rounded ${planoId === plano.ID_Plano ? "active" : ""
-                                                                }`}
+                                                            className={`d-flex flex-column p-3 border rounded shadow-sm btn-plano 
+                          ${planoId === plano.ID_Plano ? "border-primary bg-light" : "bg-white"}`}
                                                             onClick={() => setPlanoId(plano.ID_Plano)}
-                                                            style={{ cursor: "pointer" }}
+                                                            style={{ cursor: "pointer", transition: "all 0.3s ease-in-out" }}
                                                         >
-                                                            <div className="flex-grow-1">
-                                                                <strong>{plano.Nome_plano}</strong> -{" "}
-                                                                {plano.Quantidade_Aulas_Por_Semana} aulas por semana
+
+                                                            {/* Nome do Plano */}
+                                                            <h5 className="text-primary d-flex align-items-center gap-2">
+                                                            <i className="bi bi-card-checklist me-1"></i> {plano.Nome_plano}
+                                                            </h5>
+
+                                                            {/* Informações */}
+                                                            <div className="d-flex justify-content-between align-items-center text-secondary">
+                                                                <div className="d-flex align-items-center gap-2">
+                                                                    <i className="bi bi-calendar-check text-muted"></i>
+                                                                    <span><strong>Aulas:</strong> {plano.Quantidade_Aulas_Por_Semana} por semana</span>
+                                                                </div>
+
+                                                                <div className="d-flex align-items-center gap-2">                                                                   
+                                                                    <span className="fw-bold text-secondary">R$ {plano.Valor}</span>
+                                                                </div>
                                                             </div>
-                                                            <div className="text-end">
-                                                                <span className="fw-bold">R$ {plano.Valor}</span>
-                                                            </div>
+
                                                         </div>
                                                     </div>
                                                 ))}
@@ -244,22 +258,36 @@ const CadastrarAulaCliente = ({ onAulaAdicionada }) => {
                                 )}
 
 
+
                                 {planoAtual && (
                                     <div className="mb-4">
-                                        <div className="d-flex align-items-center justify-content-between gap-4 p-3 border rounded shadow-sm">
-                                            {/* Card do Plano (mantém o background do btn-plano) */}
-                                            <div className="flex-grow-1 p-3 rounded btn-plano">
-                                                <strong className="d-block text-center mb-2">{planoAtual.Nome}</strong>
-                                                <div className="d-flex justify-content-center gap-4">
-                                                    <span><strong>Aulas por Semana:</strong> {planoAtual["Aulas por Semana"]}</span>
-                                                    <span><strong>Valor:</strong> R$ {planoAtual.Valor}</span>
+                                        <div className="d-flex align-items-center justify-content-between gap-4 p-3 ">
+
+                                            {/* Card do Plano */}
+                                            <div className="flex-grow-1 p-3 rounded bg-white border-0 shadow-sm">
+                                                <h5 className="text-center text-primary mb-3">
+                                                    <i className="bi bi-card-checklist me-1"></i> {planoAtual.Nome}
+                                                </h5>
+
+                                                <div className="d-flex justify-content-center gap-4 text-secondary">
+                                                    <div className="d-flex align-items-center gap-2">
+                                                        <i className="bi bi-calendar-check text-muted"></i>
+                                                        <span>Aulas por Semana: {planoAtual["Aulas por Semana"]}</span>
+                                                    </div>
+
+                                                    <div className="d-flex align-items-center gap-2">
+                                                        <span><strong> R$ {planoAtual.Valor.toFixed(2)} </strong></span>
+                                                    </div>
+
                                                 </div>
                                             </div>
 
-                                            {/* Botão fora do background do plano */}
-                                            <button className="btn btn-login" onClick={() => setPlanoAtual(null)}>
-                                                Trocar Plano
+                                            {/* Botão de Troca */}
+                                            <button className="btn btn-outline-danger d-flex align-items-center gap-2 px-3" onClick={() => setPlanoAtual(null)}>
+                                                <i className="bi bi-arrow-repeat"></i>
+                                                <span>Trocar Plano</span>
                                             </button>
+
                                         </div>
                                     </div>
                                 )}
@@ -267,34 +295,58 @@ const CadastrarAulaCliente = ({ onAulaAdicionada }) => {
 
 
 
-                                <div className="mb-4 py-1">
-                                    <label className="form-label py-1">Aulas Disponíveis</label>
-                                    <div className="row ">
+
+                                <div className="mb-4">
+                                    {aulasDisponiveis.length > 0 ? (
+                                        <label className="form-label text-secondary fw-bold">Aulas Disponíveis</label>
+                                    ) : (
+                                        <div className="alert alert-warning text-center d-flex align-items-center gap-2" role="alert">
+                                            <i className="bi bi-exclamation-circle-fill text-warning"></i>
+                                            Nenhuma aula disponível!
+                                        </div>
+                                    )}
+
+                                    <div className="row row-cols-1 row-cols-md-2 g-3">
                                         {aulasDisponiveis.map((aula) => (
-                                            <div key={aula.id_aula} className="col-md-6 mb-3 ">
+                                            <div key={aula.id_aula} className="col">
                                                 <div
-                                                    className={` py-1  d-flex justify-content-between align-items-center  border btn-plano rounded ${aulasSelecionadas.includes(aula.id_aula) ? "active" : ""
-                                                        }`}
+                                                    className={`card h-100 border-0 shadow-sm hover-shadow p-3 rounded ${aulasSelecionadas.includes(aula.id_aula) ? "active bg-primary-subtle" : ""}`}
                                                     style={{ cursor: "pointer" }}
                                                     onClick={() => handleSelecionarAula(aula.id_aula)}
                                                 >
-                                                    <div className="flex-grow-1 py-0">
-                                                        <div className="card-header text-center  rounded-top">
-                                                            <strong className="d-block text-center">{aula.dia_semana}</strong>
+                                                    {/* Cabeçalho com o Dia da Semana */}
+                                                    <div className="d-flex align-items-center gap-2 mb-2">
+                                                        <h5 className="mb-0 text-primary">
+                                                            {aula.dia_semana}
+                                                        </h5>
+                                                        <span className="badge bg-success-subtle text-secondary">
+                                                            <i className="bi bi-clock me-1"></i>
+                                                            {aula.hora_inicio} - {aula.hora_fim}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Informações da Aula */}
+                                                    <div className="d-flex flex-column gap-2">
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <i className="bi bi-person-badge text-muted"></i>
+                                                            <span>{aula.colaborador.nome}</span>
                                                         </div>
-                                                        <div className="card-body">
-                                                            <p className="mb-1">
-                                                                <strong>Horário:</strong> {aula.hora_inicio} - {aula.hora_fim}
-                                                            </p>
-                                                            <p className="mb-1">
-                                                                <strong>Professor:</strong> {aula.colaborador.nome}
-                                                            </p>
-                                                            <p className="mb-1">
-                                                                <strong>Vagas:</strong> {aula.limite_alunos - aula.num_alunos}
-                                                            </p>
-                                                            <p className="mb-0">
-                                                                <strong>Local:</strong> {aula.clinica}
-                                                            </p>
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <i className="bi bi-geo-alt text-muted"></i>
+                                                            <span> {aula.clinica || "Não informado"}</span>
+                                                        </div>
+                                                        {/* Progresso de Participação */}
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <div className="progress flex-grow-1" style={{ height: '8px' }}>
+                                                                <div
+                                                                    className="progress-bar bg-primary"
+                                                                    role="progressbar"
+                                                                    style={{ width: `${(aula.num_alunos / aula.limite_alunos) * 100}%` }}
+                                                                ></div>
+                                                            </div>
+                                                            <small className="text-muted">
+                                                                {aula.limite_alunos - aula.num_alunos} vagas restantes
+                                                            </small>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -302,6 +354,7 @@ const CadastrarAulaCliente = ({ onAulaAdicionada }) => {
                                         ))}
                                     </div>
                                 </div>
+
 
                                 <div className="d-grid">
                                     <button type="submit" className="btn btn-signup" disabled={loading}>

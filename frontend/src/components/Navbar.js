@@ -60,7 +60,7 @@ function Navbar() {
 
       // Redireciona com base no papel do usuário
       setTimeout(() => {
-        navigate(role === "admin" ? "/adminpage" : "/");
+        navigate(role === "admin" ? "/adminpage" : "/clientepage");
         window.location.reload();
       }, 300);
 

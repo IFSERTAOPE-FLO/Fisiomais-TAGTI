@@ -129,39 +129,28 @@ from datetime import datetime, timedelta
 def cadastrar_aula_cliente():
     try:
         data = request.get_json()
-        print(f"[DEBUG] Dados recebidos: {data}")
-
         cliente_id = data.get('cliente_id')
-        plano_id = data.get('plano_id')  # Opcional se o cliente já tem plano
+        plano_id = data.get('plano_id')  
         aulas_selecionadas = data.get('aulas_selecionadas', [])
 
         if not cliente_id or not aulas_selecionadas:
-            print("[DEBUG] Dados incompletos!")
             return jsonify({"message": "Dados incompletos!"}), 400
 
-        # Verificando se o cliente existe
         cliente = Clientes.query.get(cliente_id)
         if not cliente:
-            print("[DEBUG] Cliente não encontrado!")
             return jsonify({"message": "Cliente não encontrado!"}), 404
-        print(f"[DEBUG] Cliente encontrado: {cliente.nome}")
 
-        # Se o cliente já tem um plano, usa esse plano
         if cliente.plano_id:
             plano = Planos.query.get(cliente.plano_id)
-            print(f"[DEBUG] Cliente já tem plano associado: {plano.nome}")
         else:
-            # Se não tiver um plano, usa o fornecido na requisição
             if not plano_id:
                 return jsonify({"message": "Plano não informado e cliente não possui plano ativo!"}), 400
             plano = Planos.query.get(plano_id)
             if not plano:
                 return jsonify({"message": "Plano não encontrado!"}), 404
-            print(f"[DEBUG] Associando novo plano ao cliente: {plano.nome}")
             cliente.plano_id = plano_id
             db.session.add(cliente)
 
-        # Verificação de limite semanal
         data_inicio_semana = datetime.utcnow() - timedelta(days=datetime.utcnow().weekday())
         aulas_semana_atual = AulasClientes.query.join(Aulas).filter(
             AulasClientes.id_cliente == cliente_id,
@@ -169,23 +158,19 @@ def cadastrar_aula_cliente():
         ).count()
 
         if aulas_semana_atual + len(aulas_selecionadas) > plano.quantidade_aulas_por_semana:
-            msg = f"Limite de {plano.quantidade_aulas_por_semana} aulas semanais excedido!"
-            return jsonify({"message": msg}), 400
+            return jsonify({"message": f"Limite de {plano.quantidade_aulas_por_semana} aulas semanais excedido!"}), 400
 
         for aula_id in aulas_selecionadas:
             aula = Aulas.query.get(aula_id)
             if not aula:
                 return jsonify({"message": f"Aula ID {aula_id} não encontrada!"}), 404
 
-            # Verificar se já está inscrito
             if AulasClientes.query.filter_by(id_cliente=cliente_id, id_aula=aula_id).first():
                 return jsonify({"message": f"Cliente já está inscrito na aula ID {aula_id}!"}), 400
 
-            # Verificar limite de alunos
             if len(aula.alunos) >= aula.limite_alunos:
                 return jsonify({"message": f"Aula ID {aula_id} lotada!"}), 400
 
-            # Criar inscrição
             nova_inscricao = AulasClientes(
                 id_cliente=cliente_id,
                 id_aula=aula_id,
@@ -194,16 +179,14 @@ def cadastrar_aula_cliente():
             db.session.add(nova_inscricao)
 
         db.session.commit()
-        return jsonify({"message": "Inscrição realizada com sucesso!"}), 201
+
+        # 🔹 **Chamada da nova rota após a inscrição**
+        response = criar_agendamentos_semana_atual(cliente_id)
+        return response
 
     except Exception as e:
         db.session.rollback()
-        print(f"[ERROR] Erro ao cadastrar cliente na aula: {str(e)}")
-        return jsonify({"message": "Erro interno no servidor!"}), 500
-
-
-
-
+        return jsonify({"message": f"Erro ao cadastrar cliente na aula: {str(e)}"}), 500
 
 
 @pilates.route('/colaborador/remover_cliente_aula', methods=['DELETE'])
@@ -580,3 +563,73 @@ def listar_aulas_cliente():
         print(f"[ERROR] Erro ao listar aulas do cliente: {str(e)}")
         return jsonify({"message": "Erro interno no servidor!"}), 500
 
+from flask import request, jsonify
+from datetime import datetime, timedelta
+import pytz
+
+brt = pytz.timezone("America/Sao_Paulo")  # Fuso horário de Brasília
+
+@pilates.route('/criar_agendamentos_semana_atual/<int:cliente_id>', methods=['POST'])
+def criar_agendamentos_semana_atual(cliente_id):
+    try:
+        cliente = Clientes.query.get(cliente_id)
+        if not cliente:
+            return jsonify({"message": "Cliente não encontrado!"}), 404
+
+        data = request.get_json()
+        id_aula = data.get("id_aula")  # Aula específica a ser agendada (opcional)
+
+        hoje = datetime.now(brt)
+        inicio_semana = (hoje - timedelta(days=hoje.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+        fim_semana = (inicio_semana + timedelta(days=6)).replace(hour=23, minute=59, second=59, microsecond=999999)
+
+        # Filtra apenas a aula específica ou todas as aulas da semana
+        query = AulasClientes.query.join(Aulas).filter(
+            AulasClientes.id_cliente == cliente_id,
+            Aulas.data.between(inicio_semana, fim_semana)
+        )
+
+        if id_aula:
+            query = query.filter(AulasClientes.id_aula == id_aula)
+
+        aulas_cliente = query.all()
+
+        if not aulas_cliente:
+            return jsonify({"message": "Nenhuma aula encontrada para esta semana!"}), 400
+
+        for aula_cliente in aulas_cliente:
+            aula = aula_cliente.aula  
+
+            data_aula = aula.data.astimezone(brt).replace(
+                hour=aula.hora_inicio.hour, 
+                minute=aula.hora_inicio.minute, 
+                second=0, 
+                microsecond=0
+            )
+
+            # Verifica se já existe um agendamento para essa aula
+            agendamento_existente = Agendamentos.query.filter_by(
+                data_e_hora=data_aula,
+                id_cliente=cliente_id
+            ).first()
+
+            if agendamento_existente:
+                continue  # Pula a criação se já existir
+
+            agendamento = Agendamentos(
+                data_e_hora=data_aula,
+                dias_e_horarios=f"{dias_da_semana_pt[data_aula.strftime('%A')]} - {aula.hora_inicio.strftime('%H:%M')} até {aula.hora_fim.strftime('%H:%M')}",
+                id_cliente=cliente_id,
+                id_colaborador=aula.id_colaborador,
+                id_servico=aula.colaborador.servicos[0].id_servico if aula.colaborador.servicos else None,
+                id_clinica=aula.colaborador.clinica.id_clinica if aula.colaborador.clinica else None,
+                status="confirmado",
+            )
+            db.session.add(agendamento)
+
+        db.session.commit()
+        return jsonify({"message": "Agendamento(s) criado(s) com sucesso!"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Erro ao criar agendamentos: {str(e)}"}), 500
