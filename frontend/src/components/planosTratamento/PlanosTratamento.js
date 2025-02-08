@@ -120,8 +120,8 @@ function CriarPlanoTratamento() {
   return (
     <div className="container my-5">
       <div className="card shadow">
-        <div className="card-header custom-header text-white text-center">
-          <h2>Criar Novo Plano de Tratamento</h2>
+        <div className="card-header custom-header text-primary text-center">
+          <h2 >Criar Novo Plano de Tratamento</h2>
         </div>
         <div className="card-body">
           <form onSubmit={handleSubmit}>
