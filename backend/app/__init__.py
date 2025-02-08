@@ -1,9 +1,12 @@
 #cd backend
 #python -m venv venv(a primeira vez)
 #.\venv\Scripts\activate
-#pip freeze > requirements.txt (caso adicionem uma nova importação)
+
 #pip install -r requirements.txt
 #flask run
+
+#pip freeze > requirements.txt (caso adicionem uma nova importação)
+
 #email: fisiomaispilatesefisioterapia@gmail.com  senha: 12345
 
 #DBeaver baixar para trabalhar com o sqlite
