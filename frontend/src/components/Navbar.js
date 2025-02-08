@@ -327,7 +327,15 @@ function Navbar() {
                       <>
                         <li>
                           <Link className="dropdown-item" to="/adminPage">Central de Controle</Link>
-                        </li>                        
+                        </li>
+                      </>
+                    )}
+
+                    {(role === "cliente") && (
+                      <>
+                      <Link className="dropdown-item" to="/clientepage">Dashboard</Link>
+
+                      <Link className="dropdown-item" to="/minhas-aulas-pilates">Minhas Aulas</Link>
                       </>
                     )}
 
@@ -441,27 +449,29 @@ function Navbar() {
                   <i className="bi bi-wallet2"></i>
                   {sidebarVisible && " Gerenciar Pagamentos"}
                 </Link>
-              </li>              
+              </li>
               {role === "admin" && (
-              <li className="mt-3">
-                <Link to={{ pathname: "/adminPage", state: { opcaoSelecionada: "aulasPilates" } }} className="sidebar-item">
-                  <i className="bi bi-person-arms-up"></i>
-                  {sidebarVisible && " Aulas de Pilates"}
-                </Link>
-              </li>)}
+                <li className="mt-3">
+                  <Link to={{ pathname: "/adminPage", state: { opcaoSelecionada: "aulasPilates" } }} className="sidebar-item">
+                    <i className="bi bi-person-arms-up"></i>
+                    {sidebarVisible && " Aulas de Pilates"}
+                  </Link>
+                </li>)}
               {role === "cliente" && (
-              <li className="mt-3">
-                <Link to="/cadastrar-aula-cliente"  className="sidebar-item">
-                  <i className="bi bi-person-arms-up"></i>
-                  {sidebarVisible && " Aulas de Pilates"}
-                </Link>
-                <Link to="/minhas-aulas-pilates"  className="sidebar-item">
-                  <i className="bi bi-person-arms-up"></i>
-                  {sidebarVisible && " Aulas de Pilates"}
-                </Link>
-                
-                
-              </li>)}
+                <>
+                  <li className="mt-3">
+                    <Link to="/minhas-aulas-pilates" className="sidebar-item">
+                      <i className="bi bi-person-arms-up"></i>
+                      {sidebarVisible && " Aulas de Pilates"}
+                    </Link>
+                    <li className="mt-3">
+                      <Link to="/clientepage" className="sidebar-item">
+                        <i className="bi bi-gear"></i>
+                        {sidebarVisible && " Central do Cliente"}
+                      </Link>
+                    </li>
+                  </li>
+                </>)}
               <li className="mt-3">
                 <button onClick={handleLogout} className="logout-btn">
                   <i className="bi bi-box-arrow-right"></i>

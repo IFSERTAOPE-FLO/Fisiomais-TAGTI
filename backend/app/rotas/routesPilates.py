@@ -224,6 +224,38 @@ def remover_cliente_aula_colaborador():
 
     return jsonify({"message": "Cliente removido com sucesso da aula!"}), 200
 
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
+@pilates.route('/cliente/remover_aula', methods=['DELETE'])
+@jwt_required()
+def remover_cliente_aula():
+    data = request.get_json()
+    aula_id = data.get('aula_id')
+
+    # Obtém o e-mail do cliente a partir do token JWT
+    email_cliente = get_jwt_identity()
+
+    if not aula_id:
+        return jsonify({"message": "ID da aula é obrigatório!"}), 400
+
+    # Busca o ID do cliente com base no e-mail
+    cliente = Clientes.query.filter_by(email=email_cliente).first()
+    if not cliente:
+        return jsonify({"message": "Cliente não encontrado!"}), 404
+
+    # Verifica se o cliente está matriculado na aula
+    inscricao = AulasClientes.query.filter_by(id_cliente=cliente.id_cliente, id_aula=aula_id).first()
+    if not inscricao:
+        return jsonify({"message": "Você não está matriculado nesta aula!"}), 404
+
+    # Remove a matrícula da aula
+    db.session.delete(inscricao)
+    db.session.commit()
+
+    return jsonify({"message": "Você saiu da aula com sucesso!"}), 200
+
+
+
 
 
 @pilates.route('/aula/<int:aula_id>/clientes', methods=['GET'])

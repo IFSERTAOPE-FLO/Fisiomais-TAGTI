@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-const CadastrarAulaCliente = () => {
+const CadastrarAulaCliente = ({ onAulaAdicionada }) => {
     const [clienteId, setClienteId] = useState("");
     const [servicoId, setServicoId] = useState("");
     const [planoId, setPlanoId] = useState("");
@@ -151,6 +151,8 @@ const CadastrarAulaCliente = () => {
                 setServicoId("");
                 setPlanoId("");
                 setAulasSelecionadas([]);
+                onAulaAdicionada();
+                
                 if (data.plano) setPlanoAtual(data.plano);
             } else {
                 setErro(data.message || "Erro ao realizar inscrição.");
@@ -163,131 +165,157 @@ const CadastrarAulaCliente = () => {
     };
 
     return (
-        <div className="container">
-            <h2 className="mb-4 text-center">Inscrever-se em Aulas de Pilates</h2>
+        <div className="container  ">
+            <div className="row align-items-center ">
+                <div className="col-md-12">
+                    <div className="card shadow-lg border-0">
+                        <div className="card-header text-center  rounded-top">
+                            <h3 className="fw-bold text-primary text-center">Inscrever-se em Aulas de Pilates</h3>
+                        </div>
+                        <div className="card-body p-4">
+                            {erro && <div className="alert alert-danger">{erro}</div>}
+                            {sucesso && <div className="alert alert-success">{sucesso}</div>}
 
-            {planoAtual && (
-                <div className="card mb-4">
-                    <div className="card-body">
-                        <h5 className="card-title">Plano Ativo</h5>
-                        <p className="card-text">
-                            {planoAtual.Nome} - {planoAtual["Aulas por Semana"]} aulas/semana
-                        </p>
-                        <button
-                            className="btn btn-outline-primary"
-                            onClick={() => setPlanoAtual(null)}
-                        >
-                            Trocar Plano
-                        </button>
-                    </div>
-                </div>
-            )}
+                            <form onSubmit={handleSubmit}>
+                                <div className="mb-3">
+                                    <label className="form-label">Clínica</label>
+                                    <select
+                                        className="form-select"
+                                        value={clinica}
+                                        onChange={(e) => setClinica(e.target.value)}
+                                        required
+                                    >
+                                        <option value="">Selecione uma clínica</option>
+                                        {clinicas.map((clin) => (
+                                            <option key={clin.ID_Clinica} value={clin.ID_Clinica}>
+                                                {clin.Nome}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="mb-3">
+                                    <label className="form-label">Serviço</label>
+                                    <select
+                                        className="form-select"
+                                        value={servicoId}
+                                        onChange={(e) => setServicoId(e.target.value)}
+                                        required
+                                    >
+                                        <option value="">Selecione o serviço</option>
+                                        {servicos.map((servico) => (
+                                            <option key={servico.ID_Servico} value={servico.ID_Servico}>
+                                                {servico.Nome_servico}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {!planoAtual && (
+                                    <div className="mb-3">
+                                        <label className="form-label">Plano</label>
+                                        {planos.length === 0 ? (
+                                            <div className="alert alert-warning text-center" role="alert">
+                                                Selecione uma clínica ou serviço para visualizar os planos disponíveis!
+                                            </div>
+                                        ) : (
+                                            <div className="row">
+                                                {planos.map((plano) => (
+                                                    <div key={plano.ID_Plano} className="col-md-6 mb-3">
+                                                        <div
+                                                            className={`d-flex justify-content-between align-items-center p-3 border btn-plano rounded ${planoId === plano.ID_Plano ? "active" : ""
+                                                                }`}
+                                                            onClick={() => setPlanoId(plano.ID_Plano)}
+                                                            style={{ cursor: "pointer" }}
+                                                        >
+                                                            <div className="flex-grow-1">
+                                                                <strong>{plano.Nome_plano}</strong> -{" "}
+                                                                {plano.Quantidade_Aulas_Por_Semana} aulas por semana
+                                                            </div>
+                                                            <div className="text-end">
+                                                                <span className="fw-bold">R$ {plano.Valor}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
 
-            {erro && <div className="alert alert-danger">{erro}</div>}
-            {sucesso && <div className="alert alert-success">{sucesso}</div>}
+                                {planoAtual && (
+                                    <div className="mb-4">
+                                        <div className="d-flex align-items-center justify-content-between gap-4 p-3 border rounded shadow-sm">
+                                            {/* Card do Plano (mantém o background do btn-plano) */}
+                                            <div className="flex-grow-1 p-3 rounded btn-plano">
+                                                <strong className="d-block text-center mb-2">{planoAtual.Nome}</strong>
+                                                <div className="d-flex justify-content-center gap-4">
+                                                    <span><strong>Aulas por Semana:</strong> {planoAtual["Aulas por Semana"]}</span>
+                                                    <span><strong>Valor:</strong> R$ {planoAtual.Valor}</span>
+                                                </div>
+                                            </div>
 
-            <form onSubmit={handleSubmit}>
-                <div className="mb-3">
-                    <label className="form-label">Clínica</label>
-                    <select
-                        className="form-select"
-                        value={clinica}
-                        onChange={(e) => setClinica(e.target.value)}
-                        required
-                    >
-                        <option value="">Selecione uma clínica</option>
-                        {clinicas.map((clin) => (
-                            <option key={clin.ID_Clinica} value={clin.ID_Clinica}>
-                                {clin.Nome}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="mb-3">
-                    <label className="form-label">Serviço</label>
-                    <select
-                        className="form-select"
-                        value={servicoId}
-                        onChange={(e) => setServicoId(e.target.value)}
-                        required
-                    >
-                        <option value="">Selecione o serviço</option>
-                        {servicos.map((servico) => (
-                            <option key={servico.ID_Servico} value={servico.ID_Servico}>
-                                {servico.Nome_servico}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                {!planoAtual && (
-                    <div className="mb-3">
-                        <label className="form-label">Plano</label>
-                        <select
-                            className="form-select"
-                            value={planoId}
-                            onChange={(e) => setPlanoId(e.target.value)}
-                            required
-                        >
-                            <option value="">Selecione seu plano</option>
-                            {planos.map((plano) => (
-                                <option key={plano.ID_Plano} value={plano.ID_Plano}>
-                                    {plano.Nome_plano} ({plano.Quantidade_Aulas_Por_Semana} aulas/semana)
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                )}
-
-                <div className="mb-4">
-                    <label className="form-label">Aulas Disponíveis</label>
-                    <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                        {aulasDisponiveis.map((aula) => (
-                            <div key={aula.id_aula} className="col">
-                                <div
-                                    className={`card h-100 ${aulasSelecionadas.includes(aula.id_aula) ? 'border-primary shadow-lg' : ''}`}
-                                    style={{ cursor: 'pointer' }}
-                                    onClick={() => handleSelecionarAula(aula.id_aula)}
-                                >
-                                    <div className="card-body">
-                                        <h5 className="card-title text-primary">
-                                            {aula.dia_semana}
-                                        </h5>
-                                        <div className="card-text">
-                                            <p className="mb-1">
-                                                <strong>Horário:</strong> {aula.hora_inicio} - {aula.hora_fim}
-                                            </p>
-                                            <p className="mb-1">
-                                                <strong>Professor:</strong> {aula.colaborador.nome}
-                                            </p>
-                                            <p className="mb-1">
-                                                <strong>Vagas:</strong> {aula.limite_alunos - aula.num_alunos}
-                                            </p>
-                                            <p className="mb-0">
-                                                <strong>Local:</strong> {aula.clinica}
-                                            </p>
+                                            {/* Botão fora do background do plano */}
+                                            <button className="btn btn-login" onClick={() => setPlanoAtual(null)}>
+                                                Trocar Plano
+                                            </button>
                                         </div>
                                     </div>
+                                )}
+
+
+
+
+                                <div className="mb-4 py-1">
+                                    <label className="form-label py-1">Aulas Disponíveis</label>
+                                    <div className="row ">
+                                        {aulasDisponiveis.map((aula) => (
+                                            <div key={aula.id_aula} className="col-md-6 mb-3 ">
+                                                <div
+                                                    className={` py-1  d-flex justify-content-between align-items-center  border btn-plano rounded ${aulasSelecionadas.includes(aula.id_aula) ? "active" : ""
+                                                        }`}
+                                                    style={{ cursor: "pointer" }}
+                                                    onClick={() => handleSelecionarAula(aula.id_aula)}
+                                                >
+                                                    <div className="flex-grow-1 py-0">
+                                                        <div className="card-header text-center  rounded-top">
+                                                            <strong className="d-block text-center">{aula.dia_semana}</strong>
+                                                        </div>
+                                                        <div className="card-body">
+                                                            <p className="mb-1">
+                                                                <strong>Horário:</strong> {aula.hora_inicio} - {aula.hora_fim}
+                                                            </p>
+                                                            <p className="mb-1">
+                                                                <strong>Professor:</strong> {aula.colaborador.nome}
+                                                            </p>
+                                                            <p className="mb-1">
+                                                                <strong>Vagas:</strong> {aula.limite_alunos - aula.num_alunos}
+                                                            </p>
+                                                            <p className="mb-0">
+                                                                <strong>Local:</strong> {aula.clinica}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+
+                                <div className="d-grid">
+                                    <button type="submit" className="btn btn-signup" disabled={loading}>
+                                        {loading ? "Processando..." : "Confirmar Inscrição"}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
-
-                <div className="d-grid">
-                    <button
-                        type="submit"
-                        className="btn btn-primary btn-lg"
-                        disabled={loading}
-                    >
-                        {loading ? "Processando..." : "Confirmar Inscrição"}
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     );
+
 };
 
 export default CadastrarAulaCliente;

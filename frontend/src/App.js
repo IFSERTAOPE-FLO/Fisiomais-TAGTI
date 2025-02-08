@@ -18,6 +18,7 @@ import AdminPage from "./pages/AdminPage";
 import Especialidades from "./pages/Especialidades";
 import GerenciarPagamentos from "./pages/GerenciarPagamentos";
 import CalendarioInterativo from "./pages/CalendarioInterativo";
+import ClientPage from "./pages/ClientPage";
 
 // Componentes de Pilates
 import AdicionarAulaPilates from "./components/pilates/usuariocolaborador/AdicionarAulaPilates.js";
@@ -174,6 +175,14 @@ function App() {
                         element={
                             <PageWrapper title="Minhas Aulas Pilates - Fisiomais">
                                 <MinhasAulasCliente />
+                            </PageWrapper>
+                        }
+                    />
+                    <Route
+                        path="/clientepage"
+                        element={
+                            <PageWrapper title="Dashboard Cliente - Fisiomais">
+                                <ClientPage />
                             </PageWrapper>
                         }
                     />
