@@ -10,6 +10,7 @@ import CalendarioInterativo from "./CalendarioInterativo";
 import Dashboard from "./Dashboard";
 import GerenciarPagamentos from "./GerenciarPagamentos";
 import GerenciarAulasPilates from "../components/pilates/usuariocolaborador/GerenciarAulasPilates";  // Importação do novo componente
+import PlanosTratamento from "../components/planosTratamento/PlanosTratamento";  // Importação do novo componente
 
 const AdminPage = () => {
   const savedRole = localStorage.getItem("role");
@@ -81,6 +82,15 @@ const AdminPage = () => {
             </li>
             <li className="nav-item">
               <a
+                href="#planosTratamento"
+                className={`nav-link ${opcaoSelecionada === "planosTratamento" ? "active" : ""}`}
+                onClick={() => handleOpcaoChange("planosTratamento")}
+              >
+                <i className=""></i> Planos de Tratamento
+              </a>
+            </li>
+            <li className="nav-item">
+              <a
                 href="#aulasPilates"
                 className={`nav-link ${opcaoSelecionada === "aulasPilates" ? "active" : ""}`}
                 onClick={() => handleOpcaoChange("aulasPilates")}
@@ -143,6 +153,7 @@ const AdminPage = () => {
       {opcaoSelecionada === "dashboard" && <Dashboard />}
       {opcaoSelecionada === "gerenciarPagamentos" && <GerenciarPagamentos />}
       {opcaoSelecionada === "aulasPilates" && <GerenciarAulasPilates />}  {/* Nova renderização */}
+      {opcaoSelecionada === "planosTratamento" && <PlanosTratamento />}  {/* Nova renderização */}
     </div>
   );
 };
