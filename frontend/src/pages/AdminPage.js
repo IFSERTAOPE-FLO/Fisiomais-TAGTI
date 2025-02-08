@@ -10,7 +10,7 @@ import CalendarioInterativo from "./CalendarioInterativo";
 import Dashboard from "./Dashboard";
 import GerenciarPagamentos from "./GerenciarPagamentos";
 import GerenciarAulasPilates from "../components/pilates/usuariocolaborador/GerenciarAulasPilates";  // Importação do novo componente
-import PlanosTratamento from "../components/planosTratamento/PlanosTratamento";  // Importação do novo componente
+import PlanosTratamento from "../components/planosTratamento/HistoricoPlanos";  // Importação do novo componente
 
 const AdminPage = () => {
   const savedRole = localStorage.getItem("role");
