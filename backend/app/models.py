@@ -281,50 +281,51 @@ class AulasClientes(db.Model):
     def __repr__(self):
         return f'<AulaCliente Aula: {self.id_aula} Cliente: {self.id_cliente}>'
     
+
 # Tabela Associativa entre Planos de Tratamento e Serviços
 class PlanosTratamentoServicos(db.Model):
     __tablename__ = 'planos_tratamento_servicos'
     id = db.Column(db.Integer, primary_key=True)
     id_plano_tratamento = db.Column(db.Integer, db.ForeignKey('planos_tratamento.id_plano_tratamento'), nullable=False)
     id_servico = db.Column(db.Integer, db.ForeignKey('servicos.id_servico'), nullable=False)
+    quantidade_sessoes = db.Column(db.Integer, nullable=False, default=1)  # Número de sessões previstas
 
     # Relacionamentos
     plano_tratamento = db.relationship('PlanosTratamento', back_populates='servicos_relacionados')
     servico = db.relationship('Servicos', back_populates='planos_tratamento_relacionados')
-
-# Atualizando o modelo de PlanosTratamento
+ 
+# Planos de Tratamento (Agora são fixos e recomendados)
 class PlanosTratamento(db.Model):
     __tablename__ = 'planos_tratamento'
     id_plano_tratamento = db.Column(db.Integer, primary_key=True)
-    id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False)
-    id_colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.id_colaborador'), nullable=False)
-    diagnostico = db.Column(db.Text, nullable=False)
-    objetivos = db.Column(db.Text, nullable=False)
-    metodologia = db.Column(db.Text, nullable=True)
-    duracao_prevista = db.Column(db.Integer, nullable=False)
-    data_inicio = db.Column(db.Date, nullable=False, default=datetime.utcnow)
-    data_fim = db.Column(db.Date, nullable=True)
-    anamnese_filename = db.Column(db.String(255), nullable=True)
+    diagnostico = db.Column(db.Text, nullable=False)  # Diagnóstico padrão do plano
+    objetivos = db.Column(db.Text, nullable=False)  # Objetivos do plano fixo
+    metodologia = db.Column(db.Text, nullable=True)  # Metodologia recomendada
+    duracao_prevista = db.Column(db.Integer, nullable=False)  # Duração prevista (semanas)
+    valor = db.Column(db.Numeric(10, 2), nullable=True)  # Valor fixo do plano
 
-    # Relacionamentos
-    cliente = db.relationship('Clientes', backref='planos_tratamento')
-    colaborador = db.relationship('Colaboradores', backref='planos_tratamento')
+    # Relacionamento com serviços
     servicos_relacionados = db.relationship('PlanosTratamentoServicos', back_populates='plano_tratamento')
 
-
+# Modelo: Histórico de Sessões (Agora relaciona Cliente, Colaborador e Agendamento)
 class HistoricoSessao(db.Model):
     __tablename__ = 'historico_sessao'
     id_sessao = db.Column(db.Integer, primary_key=True)  # ID único da sessão
-    id_plano_tratamento = db.Column(db.Integer, db.ForeignKey('planos_tratamento.id_plano_tratamento'), nullable=False)  # Relacionamento com PlanoTratamento
+    id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False)  # Cliente vinculado
+    id_colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.id_colaborador'), nullable=False)  # Colaborador responsável
+    id_plano_tratamento = db.Column(db.Integer, db.ForeignKey('planos_tratamento.id_plano_tratamento'), nullable=False)  # Plano utilizado
+    id_agendamento = db.Column(db.Integer, db.ForeignKey('agendamentos.id_agendamento'), nullable=False)  # Relacionamento com Agendamento
     data_sessao = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)  # Data e hora da sessão
-    detalhes = db.Column(db.Text, nullable=True)  # Detalhes das atividades da sessão
+    detalhes = db.Column(db.Text, nullable=True)  # Detalhes das atividades realizadas
     observacoes = db.Column(db.Text, nullable=True)  # Observações feitas pelo colaborador
-    avaliacao_cliente = db.Column(db.Text, nullable=True)  # Avaliação ou feedback do cliente
+    avaliacao_cliente = db.Column(db.Text, nullable=True)  # Feedback do cliente
     ficha_anamnese = db.Column(db.String(255), nullable=True)  # Caminho ou nome do arquivo da ficha de anamnese
 
-    # Relacionamento
-    plano_tratamento = db.relationship('PlanosTratamento', backref='historico_sessao')
-
+    # Relacionamentos
+    cliente = db.relationship('Clientes', backref='historico_sessoes')
+    colaborador = db.relationship('Colaboradores', backref='historico_sessoes')
+    plano_tratamento = db.relationship('PlanosTratamento', backref='historico_sessoes')
+    agendamento = db.relationship('Agendamentos', backref='historico_sessoes')
 
 
 class BlacklistedToken(db.Model):

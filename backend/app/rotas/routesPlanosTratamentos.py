@@ -43,8 +43,7 @@ def criar_plano_tratamento():
             duracao_prevista=data['duracao_prevista'],
             data_inicio=datetime.strptime(data['data_inicio'], '%Y-%m-%d'),
             data_fim=datetime.strptime(data['data_fim'], '%Y-%m-%d') if 'data_fim' in data else None,
-            anamnese_filename=filename  # Salvando o nome do arquivo no banco
-        )
+                    )
 
         db.session.add(novo_plano)
         db.session.commit()
