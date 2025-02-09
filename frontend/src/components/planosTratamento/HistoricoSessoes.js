@@ -3,7 +3,7 @@ import { Form, Button, Table, Modal, Alert, Card, Row, Col } from 'react-bootstr
 import { FaCalendarAlt, FaUser, FaEdit, FaTrash, FaPlus, FaFileMedical, FaFilePdf } from 'react-icons/fa';
 import axios from 'axios';
 import IniciarPlanoTratamento from './IniciarPlanoTratamento';
-
+import { Link } from 'react-router-dom';
 
 const apiBaseUrl = "http://localhost:5000/";
 
@@ -63,6 +63,7 @@ const HistoricoSessoes = () => {
         const url = formData.id_sessao ? `${apiBaseUrl}historico_sessoes/${formData.id_sessao}` : `${apiBaseUrl}historico_sessoes`;
 
         const formDataToSend = new FormData();
+        
 
         // Anexa todos os campos do formulário
         Object.keys(formData).forEach(key => {
@@ -129,74 +130,79 @@ const HistoricoSessoes = () => {
 
                     {selectedCliente && (
                         <>
-                            {sessoes.length === 0 ? (
-                                <IniciarPlanoTratamento idCliente={selectedCliente} />
-                            ) : (
-                                <>
-                                    <div className="d-flex justify-content-end mb-3">
-                                        <Button className='btn btn-login' onClick={() => handleShowModal()}>
-                                            <FaPlus className="me-2" />Nova Sessão
-                                        </Button>
-                                    </div>
 
-                                    <Table striped hover responsive className="align-middle">
-                                        <thead className="table-dark">
-                                            <tr>
-                                                <th><FaCalendarAlt className="me-2" />Data</th>
-                                                <th>Detalhes da Sessão</th>
-                                                <th>Ficha de Anamnese</th>
-                                                <th>Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {sessoes.map(sessao => (
-                                                <tr key={sessao.id_sessao}>
-                                                    <td>
-                                                        {new Date(sessao.data_sessao).toLocaleDateString('pt-BR', {
-                                                            day: '2-digit',
-                                                            month: 'long',
-                                                            year: 'numeric'
-                                                        })}
-                                                    </td>
-                                                    <td className="text-muted">{sessao.detalhes}</td>
-                                                    <td>
-                                                        {sessao.ficha_anamnese && (
-                                                            <a
-                                                                href={`${apiBaseUrl}${sessao.ficha_anamnese}`}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="text-primary"
-                                                            >
-                                                                <FaFilePdf className="me-1" />
-                                                                Visualizar
-                                                            </a>
-                                                        )}
-                                                    </td>
-                                                    <td>
-                                                        <Button
-                                                            variant="outline-warning"
-                                                            size="sm"
-                                                            className="me-2"
-                                                            onClick={() => handleShowModal(sessao)}
-                                                        >
-                                                            <FaEdit />
-                                                        </Button>
-                                                        <Button
-                                                            variant="outline-danger"
-                                                            size="sm"
-                                                            onClick={() => handleDelete(sessao.id_sessao)}
-                                                        >
-                                                            <FaTrash />
-                                                        </Button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </Table>
-                                </>
-                            )}
+                            <div className="d-flex justify-content-end mb-3">
+                                <Button className='btn btn-login' onClick={() => handleShowModal()}>
+                                    <FaPlus className="me-2" />Nova Sessão
+                                </Button>
+                                <button className="btn btn-signup">
+                                    <Link to="/criaragendamento" className='text-decoration-none text-white' >
+                                        <i className="bi bi-calendar-plus"></i> Criar Agendamento
+
+                                    </Link>
+                                </button>
+                            </div>
+
+
+
+                            <Table striped hover responsive className="align-middle">
+                                <thead className="table-dark">
+                                    <tr>
+                                        <th><FaCalendarAlt className="me-2" />Data</th>
+                                        <th>Detalhes da Sessão</th>
+                                        <th>Ficha de Anamnese</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {sessoes.map(sessao => (
+                                        <tr key={sessao.id_sessao}>
+                                            <td>
+                                                {new Date(sessao.data_sessao).toLocaleDateString('pt-BR', {
+                                                    day: '2-digit',
+                                                    month: 'long',
+                                                    year: 'numeric'
+                                                })}
+                                            </td>
+                                            <td className="text-muted">{sessao.detalhes}</td>
+                                            <td>
+                                                {sessao.ficha_anamnese && (
+                                                    <a
+                                                        href={`${apiBaseUrl}${sessao.ficha_anamnese}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-primary"
+                                                    >
+                                                        <FaFilePdf className="me-1" />
+                                                        Visualizar
+                                                    </a>
+                                                )}
+                                            </td>
+                                            <td>
+                                                <Button
+                                                    variant="outline-warning"
+                                                    size="sm"
+                                                    className="me-2"
+                                                    onClick={() => handleShowModal(sessao)}
+                                                >
+                                                    <FaEdit />
+                                                </Button>
+                                                <Button
+                                                    variant="outline-danger"
+                                                    size="sm"
+                                                    onClick={() => handleDelete(sessao.id_sessao)}
+                                                >
+                                                    <FaTrash />
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
                         </>
                     )}
+
+
                 </Card.Body>
             </Card>
 
@@ -221,25 +227,25 @@ const HistoricoSessoes = () => {
                                 </Form.Group>
                             </Col>
                             <Col md={6}>
-                            <Form.Group controlId="formFicha" className="mt-0">
-                                <Form.Label>Ficha de Anamnese (PDF)</Form.Label>
-                                <Form.Control
-                                    type="file"
-                                    accept=".pdf"
-                                    onChange={handleFileChange}
-                                />
-                                {formData.ficha_anamnese && (
-                                    <div className="mt-2">
-                                        <a
-                                            href={`${apiBaseUrl}${formData.ficha_anamnese}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            Ver ficha atual
-                                        </a>
-                                    </div>
-                                )}
-                            </Form.Group>
+                                <Form.Group controlId="formFicha" className="mt-0">
+                                    <Form.Label>Ficha de Anamnese (PDF)</Form.Label>
+                                    <Form.Control
+                                        type="file"
+                                        accept=".pdf"
+                                        onChange={handleFileChange}
+                                    />
+                                    {formData.ficha_anamnese && (
+                                        <div className="mt-2">
+                                            <a
+                                                href={`${apiBaseUrl}${formData.ficha_anamnese}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                Ver ficha atual
+                                            </a>
+                                        </div>
+                                    )}
+                                </Form.Group>
                             </Col>
                             <Col md={12}>
                                 <Form.Group>
@@ -253,7 +259,17 @@ const HistoricoSessoes = () => {
                                         placeholder="Descreva os procedimentos realizados..."
                                     />
                                 </Form.Group>
+
                             </Col>
+                          
+
+                            <IniciarPlanoTratamento
+                                idCliente={selectedCliente}
+                                onSelectPlano={(idPlano) =>
+                                    setFormData({ ...formData, id_plano_tratamento: idPlano })
+                                }
+                            />
+
                             <Col md={12}>
                                 <Form.Group>
                                     <Form.Label>Observações Clínicas</Form.Label>
@@ -267,7 +283,7 @@ const HistoricoSessoes = () => {
                                     />
                                 </Form.Group>
                             </Col>
-                            
+
                         </Row>
                     </Form>
                 </Modal.Body>

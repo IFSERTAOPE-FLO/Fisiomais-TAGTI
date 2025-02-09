@@ -12,7 +12,7 @@ import GerenciarPagamentos from "./GerenciarPagamentos";
 import GerenciarAulasPilates from "../components/pilates/usuariocolaborador/GerenciarAulasPilates";
 import CrudPlanoTratamento from "../components/planosTratamento/CrudPlanoTratamento";  // Importação do componente
 import CriarPlanoTratamento from "../components/planosTratamento/CriarPlanoTratamento";
-import HistoricoPlanos from "../components/planosTratamento/historicoPlanos";
+import HistoricoPlanos from "../components/planosTratamento/HistoricoPlanos";
 import HistoricoSessoes from "../components/planosTratamento/HistoricoSessoes";  // Importação do componente
 
 
