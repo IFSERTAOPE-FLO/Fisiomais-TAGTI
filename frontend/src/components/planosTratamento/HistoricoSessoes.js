@@ -5,6 +5,8 @@ import axios from 'axios';
 import IniciarPlanoTratamento from './IniciarPlanoTratamento';
 import { Link } from 'react-router-dom';
 import Paginator from '../Paginator'; // Certifique-se de que o caminho está correto
+import CriarAgendamento from "../../pages/CriarAgendamento";
+
 
 const apiBaseUrl = "http://localhost:5000/";
 
@@ -24,10 +26,10 @@ const HistoricoSessoes = () => {
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
     };
-
-     // Estados para paginação
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+    const [showCriarAgendamento, setShowCriarAgendamento] = useState(false);
+    // Estados para paginação
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const token = localStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}` };
@@ -55,6 +57,7 @@ const HistoricoSessoes = () => {
         else setFormData({ id_cliente: selectedCliente, id_colaborador: '', id_agendamento: '', data_sessao: '', detalhes: '', observacoes: '' });
         setShowModal(true);
     };
+
 
 
     const handleCloseModal = () => setShowModal(false);
@@ -104,9 +107,9 @@ const HistoricoSessoes = () => {
             .catch(error => console.error('Erro ao excluir sessão', error));
     };
     // Lógica de paginação: calcular os itens para a página atual
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentSessoes = sessoes.slice(indexOfFirstItem, indexOfLastItem);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentSessoes = sessoes.slice(indexOfFirstItem, indexOfLastItem);
 
     return (
         <div className="container mt-4">
@@ -141,16 +144,26 @@ const HistoricoSessoes = () => {
                         <>
 
                             <div className="d-flex justify-content-end mb-3">
-                                <Button className='btn btn-login' onClick={() => handleShowModal()}>
+                                <Button className="btn btn-login" onClick={() => handleShowModal()}>
                                     <FaPlus className="me-2" />Nova Sessão
                                 </Button>
-                                <button className="btn btn-signup">
-                                    <Link to="/criaragendamento" className='text-decoration-none text-white' >
-                                        <i className="bi bi-calendar-plus"></i> Criar Agendamento
-
-                                    </Link>
-                                </button>
+                                {!showCriarAgendamento ? (
+                                    <button className="btn btn-signup ms-2" onClick={() => setShowCriarAgendamento(true)}>
+                                        <FaPlus className="me-2" />Criar Agendamento
+                                    </button>
+                                ) : (
+                                    <button className="btn btn-signup ms-2 " onClick={() => setShowCriarAgendamento(false)}>
+                                        Voltar
+                                    </button>
+                                )}
                             </div>
+
+
+                            {showCriarAgendamento && (
+
+                                <CriarAgendamento />
+
+                            )}
 
 
 
@@ -264,7 +277,7 @@ const HistoricoSessoes = () => {
                 itemsPerPage={itemsPerPage}
                 currentPage={currentPage}
                 setCurrentPage={setCurrentPage}
-              />
+            />
 
             <Modal show={showModal} onHide={handleCloseModal} size="lg">
                 <Modal.Header closeButton >
