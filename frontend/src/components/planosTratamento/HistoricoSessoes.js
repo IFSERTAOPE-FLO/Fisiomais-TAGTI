@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Table, Modal, Alert, Card, Row, Col } from 'react-bootstrap';
-import { FaCalendarAlt, FaUser, FaEdit, FaTrash, FaPlus, FaFileMedical } from 'react-icons/fa';
+import { FaCalendarAlt, FaUser, FaEdit, FaTrash, FaPlus, FaFileMedical, FaFilePdf } from 'react-icons/fa';
 import axios from 'axios';
 import IniciarPlanoTratamento from './IniciarPlanoTratamento';
+import { Link } from 'react-router-dom';
 
 const apiBaseUrl = "http://localhost:5000/";
 
@@ -15,6 +16,13 @@ const HistoricoSessoes = () => {
         id_cliente: '', id_colaborador: '', id_agendamento: '', data_sessao: '', detalhes: '', observacoes: ''
     });
     const [message, setMessage] = useState(null);
+    // Adicione este estado no componente
+    const [file, setFile] = useState(null);
+
+    // Handler para o campo de arquivo
+    const handleFileChange = (e) => {
+        setFile(e.target.files[0]);
+    };
 
     const token = localStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}` };
@@ -43,6 +51,7 @@ const HistoricoSessoes = () => {
         setShowModal(true);
     };
 
+
     const handleCloseModal = () => setShowModal(false);
 
     const handleChange = (e) => {
@@ -53,11 +62,33 @@ const HistoricoSessoes = () => {
         const method = formData.id_sessao ? 'put' : 'post';
         const url = formData.id_sessao ? `${apiBaseUrl}historico_sessoes/${formData.id_sessao}` : `${apiBaseUrl}historico_sessoes`;
 
-        axios[method](url, formData, { headers })
+        const formDataToSend = new FormData();
+        
+
+        // Anexa todos os campos do formulário
+        Object.keys(formData).forEach(key => {
+            formDataToSend.append(key, formData[key]);
+        });
+
+        // Anexa o arquivo se existir
+        if (file) {
+            formDataToSend.append('ficha_anamnese', file);
+        }
+
+        // Configura headers para multipart/form-data
+        const config = {
+            headers: {
+                ...headers,
+                'Content-Type': 'multipart/form-data'
+            }
+        };
+
+        axios[method](url, formDataToSend, config)
             .then(response => {
                 setMessage(response.data.message);
                 handleCloseModal();
                 fetchSessoes(selectedCliente);
+                setFile(null);
             })
             .catch(error => console.error('Erro ao salvar sessão', error));
     };
@@ -72,7 +103,7 @@ const HistoricoSessoes = () => {
         <div className="container mt-4">
             <Card className="shadow  mb-4">
                 <Card.Header className="text-center d-flex justify-content-center align-items-center">
-                <FaFileMedical className="me-1 text-primary" size={20} />
+                    <FaFileMedical className="me-1 text-primary" size={20} />
 
                     <h3 className="mb-0 text-primary d-inline-block"><strong>Histórico de Sessões Terapêuticas</strong></h3>
                 </Card.Header>
@@ -99,60 +130,79 @@ const HistoricoSessoes = () => {
 
                     {selectedCliente && (
                         <>
-                            {sessoes.length === 0 ? (
-                                <IniciarPlanoTratamento idCliente={selectedCliente} />
-                            ) : (
-                                <>
-                                    <div className="d-flex justify-content-end mb-3">
-                                        <Button className='btn btn-login' onClick={() => handleShowModal()}>
-                                            <FaPlus className="me-2" />Nova Sessão
-                                        </Button>
-                                    </div>
 
-                                    <Table striped hover responsive className="align-middle">
-                                        <thead className="table-dark">
-                                            <tr>
-                                                <th><FaCalendarAlt className="me-2" />Data</th>
-                                                <th>Detalhes da Sessão</th>
-                                                <th>Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {sessoes.map(sessao => (
-                                                <tr key={sessao.id_sessao}>
-                                                    <td>
-                                                        {new Date(sessao.data_sessao).toLocaleDateString('pt-BR', {
-                                                            day: '2-digit',
-                                                            month: 'long',
-                                                            year: 'numeric'
-                                                        })}
-                                                    </td>
-                                                    <td className="text-muted">{sessao.detalhes}</td>
-                                                    <td>
-                                                        <Button
-                                                            variant="outline-warning"
-                                                            size="sm"
-                                                            className="me-2"
-                                                            onClick={() => handleShowModal(sessao)}
-                                                        >
-                                                            <FaEdit />
-                                                        </Button>
-                                                        <Button
-                                                            variant="outline-danger"
-                                                            size="sm"
-                                                            onClick={() => handleDelete(sessao.id_sessao)}
-                                                        >
-                                                            <FaTrash />
-                                                        </Button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </Table>
-                                </>
-                            )}
+                            <div className="d-flex justify-content-end mb-3">
+                                <Button className='btn btn-login' onClick={() => handleShowModal()}>
+                                    <FaPlus className="me-2" />Nova Sessão
+                                </Button>
+                                <button className="btn btn-signup">
+                                    <Link to="/criaragendamento" className='text-decoration-none text-white' >
+                                        <i className="bi bi-calendar-plus"></i> Criar Agendamento
+
+                                    </Link>
+                                </button>
+                            </div>
+
+
+
+                            <Table striped hover responsive className="align-middle">
+                                <thead className="table-dark">
+                                    <tr>
+                                        <th><FaCalendarAlt className="me-2" />Data</th>
+                                        <th>Detalhes da Sessão</th>
+                                        <th>Ficha de Anamnese</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {sessoes.map(sessao => (
+                                        <tr key={sessao.id_sessao}>
+                                            <td>
+                                                {new Date(sessao.data_sessao).toLocaleDateString('pt-BR', {
+                                                    day: '2-digit',
+                                                    month: 'long',
+                                                    year: 'numeric'
+                                                })}
+                                            </td>
+                                            <td className="text-muted">{sessao.detalhes}</td>
+                                            <td>
+                                                {sessao.ficha_anamnese && (
+                                                    <a
+                                                        href={`${apiBaseUrl}${sessao.ficha_anamnese}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-primary"
+                                                    >
+                                                        <FaFilePdf className="me-1" />
+                                                        Visualizar
+                                                    </a>
+                                                )}
+                                            </td>
+                                            <td>
+                                                <Button
+                                                    variant="outline-warning"
+                                                    size="sm"
+                                                    className="me-2"
+                                                    onClick={() => handleShowModal(sessao)}
+                                                >
+                                                    <FaEdit />
+                                                </Button>
+                                                <Button
+                                                    variant="outline-danger"
+                                                    size="sm"
+                                                    onClick={() => handleDelete(sessao.id_sessao)}
+                                                >
+                                                    <FaTrash />
+                                                </Button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
                         </>
                     )}
+
+
                 </Card.Body>
             </Card>
 
@@ -176,6 +226,27 @@ const HistoricoSessoes = () => {
                                     />
                                 </Form.Group>
                             </Col>
+                            <Col md={6}>
+                                <Form.Group controlId="formFicha" className="mt-0">
+                                    <Form.Label>Ficha de Anamnese (PDF)</Form.Label>
+                                    <Form.Control
+                                        type="file"
+                                        accept=".pdf"
+                                        onChange={handleFileChange}
+                                    />
+                                    {formData.ficha_anamnese && (
+                                        <div className="mt-2">
+                                            <a
+                                                href={`${apiBaseUrl}${formData.ficha_anamnese}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                Ver ficha atual
+                                            </a>
+                                        </div>
+                                    )}
+                                </Form.Group>
+                            </Col>
                             <Col md={12}>
                                 <Form.Group>
                                     <Form.Label>Detalhes da Sessão</Form.Label>
@@ -188,7 +259,17 @@ const HistoricoSessoes = () => {
                                         placeholder="Descreva os procedimentos realizados..."
                                     />
                                 </Form.Group>
+
                             </Col>
+                          
+
+                            <IniciarPlanoTratamento
+                                idCliente={selectedCliente}
+                                onSelectPlano={(idPlano) =>
+                                    setFormData({ ...formData, id_plano_tratamento: idPlano })
+                                }
+                            />
+
                             <Col md={12}>
                                 <Form.Group>
                                     <Form.Label>Observações Clínicas</Form.Label>
@@ -202,6 +283,7 @@ const HistoricoSessoes = () => {
                                     />
                                 </Form.Group>
                             </Col>
+
                         </Row>
                     </Form>
                 </Modal.Body>
