@@ -172,7 +172,7 @@ const CrudPlanosTratamento = () => {
             {success && <Alert variant="success">{success}</Alert>}
 
             <div className="mb-3">
-                <Button variant="primary" onClick={() => setShowModal(true)}>
+                <Button className="custom-button" onClick={() => setShowModal(true)}>
                     Novo Plano
                 </Button>
                 <Form.Control
