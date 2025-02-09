@@ -123,7 +123,7 @@ def adicionar_cliente_aula_colaborador():
     db.session.commit()
 
     # Gerando pagamento mensal com base no plano do cliente
-    resultado_pagamento = gerar_pagamento_mensal(cliente.id, cliente.plano_id)
+    resultado_pagamento = gerar_pagamento_mensal(cliente.id_cliente, cliente.plano_id)
 
     # Retornar a resposta do pagamento caso haja erro
     if resultado_pagamento["status"] != 201:
@@ -580,48 +580,59 @@ def listar_aulas_cliente():
         print(f"[ERROR] Erro ao listar aulas do cliente: {str(e)}")
         return jsonify({"message": "Erro interno no servidor!"}), 500
 
-from flask import request, jsonify
 from datetime import datetime, timedelta
 import pytz
+from flask import request, jsonify
 
-brt = pytz.timezone("America/Sao_Paulo")  # Fuso horário de Brasília
+# Define o fuso horário de Brasília
+brt = pytz.timezone("America/Sao_Paulo")
 
 @pilates.route('/criar_agendamentos_semana_atual/<int:cliente_id>', methods=['POST'])
 @jwt_required()
 def criar_agendamentos_semana_atual(cliente_id):
     try:
+        # Verifica se o cliente existe
         cliente = Clientes.query.get(cliente_id)
         if not cliente:
             return jsonify({"message": "Cliente não encontrado!"}), 404
 
         data = request.get_json()
-        id_aula = data.get("id_aula")  # Aula específica a ser agendada (opcional)
+        id_aula = data.get("id_aula")  # Aula específica (opcional)
+
+        # Recupera o plano associado ao cliente
+        # Supondo que o objeto `cliente` tenha um atributo `plano_id`
+        plano_id = cliente.plano_id  
+        if not plano_id:
+            return jsonify({"message": "Cliente não possui um plano cadastrado."}), 400
 
         hoje = datetime.now(brt)
-        inicio_semana = (hoje - timedelta(days=hoje.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
-        fim_semana = (inicio_semana + timedelta(days=6)).replace(hour=23, minute=59, second=59, microsecond=999999)
+        inicio_semana = (hoje - timedelta(days=hoje.weekday())).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        fim_semana = (inicio_semana + timedelta(days=6)).replace(
+            hour=23, minute=59, second=59, microsecond=999999
+        )
 
-        # Filtra apenas a aula específica ou todas as aulas da semana
+        # Consulta as aulas do cliente na semana atual (filtrando por id_aula, se fornecido)
         query = AulasClientes.query.join(Aulas).filter(
             AulasClientes.id_cliente == cliente_id,
             Aulas.data.between(inicio_semana, fim_semana)
         )
-
         if id_aula:
             query = query.filter(AulasClientes.id_aula == id_aula)
-
         aulas_cliente = query.all()
 
         if not aulas_cliente:
             return jsonify({"message": "Nenhuma aula encontrada para esta semana!"}), 400
 
+        # Criação dos agendamentos para cada aula encontrada
         for aula_cliente in aulas_cliente:
-            aula = aula_cliente.aula  
+            aula = aula_cliente.aula
 
             data_aula = aula.data.astimezone(brt).replace(
-                hour=aula.hora_inicio.hour, 
-                minute=aula.hora_inicio.minute, 
-                second=0, 
+                hour=aula.hora_inicio.hour,
+                minute=aula.hora_inicio.minute,
+                second=0,
                 microsecond=0
             )
 
@@ -630,9 +641,8 @@ def criar_agendamentos_semana_atual(cliente_id):
                 data_e_hora=data_aula,
                 id_cliente=cliente_id
             ).first()
-
             if agendamento_existente:
-                continue  # Pula a criação se já existir
+                continue  # Pula se o agendamento já existir
 
             agendamento = Agendamentos(
                 data_e_hora=data_aula,
@@ -646,11 +656,19 @@ def criar_agendamentos_semana_atual(cliente_id):
             db.session.add(agendamento)
 
         db.session.commit()
-        return jsonify({"message": "Agendamento(s) criado(s) com sucesso!"}), 200
+
+        # Após criar os agendamentos, gera o pagamento mensal usando o plano do cliente
+        pagamento_response = gerar_pagamento_mensal(cliente_id, plano_id)
+
+        return jsonify({
+            "message": "Agendamento(s) criado(s) com sucesso!",
+            "pagamento_response": pagamento_response
+        }), 200
 
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Erro ao criar agendamentos: {str(e)}"}), 500
+
 
 
 from datetime import datetime, timedelta

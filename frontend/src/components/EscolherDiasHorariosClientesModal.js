@@ -75,8 +75,7 @@ const EscolherDiasHorariosClientesModal = ({ show, onHide, onSubmit }) => {
       .join(', ');
   
     // Passa o texto para o componente pai
-    onSubmit(diasHorariosTexto); 
-    
+    onSubmit(diasHorariosTexto);     
     // Limpa a configuração do modal e fecha ele
     setDiasConfig({});
     setSelectedDays([]);
@@ -87,7 +86,7 @@ const EscolherDiasHorariosClientesModal = ({ show, onHide, onSubmit }) => {
   return (
     <Modal show={show} onHide={onHide} centered>
       <Modal.Header closeButton>
-        <Modal.Title className="fw-bold">Escolha conforme sua disponibilidade</Modal.Title>
+        <Modal.Title className="fw-bold">Sugestão de horários (Não obrigatório)</Modal.Title>
       </Modal.Header>
       <Modal.Body>
         <div className="mb-4">

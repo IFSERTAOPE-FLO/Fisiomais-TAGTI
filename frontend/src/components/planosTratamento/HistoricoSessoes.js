@@ -3,7 +3,7 @@ import { Form, Button, Table, Modal, Alert, Card, Row, Col } from 'react-bootstr
 import { FaCalendarAlt, FaUser, FaEdit, FaTrash, FaPlus, FaFileMedical, FaFilePdf } from 'react-icons/fa';
 import axios from 'axios';
 import IniciarPlanoTratamento from './IniciarPlanoTratamento';
-import { Link } from 'react-router-dom';
+
 import Paginator from '../Paginator'; // Certifique-se de que o caminho está correto
 import CriarAgendamento from "../../pages/CriarAgendamento";
 

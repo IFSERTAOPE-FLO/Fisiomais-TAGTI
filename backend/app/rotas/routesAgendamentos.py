@@ -970,11 +970,23 @@ def agendamento_sem_pagamento():
             .first()
         )
         id_plano_tratamento = ultima_sessao.id_plano_tratamento if ultima_sessao else None
+        plano_id = data.get('plano_id')
+        plano_selecionado = None
+        # Verificar se o serviço é Pilates
+        if 'pilates' in [tipo.tipo for tipo in servico.tipo_servicos]:
+            if not plano_id:
+                print("Plano não fornecido para Pilates.")  # Mensagem de erro
+                return jsonify({'message': 'Plano não fornecido para Pilates.'}), 400
 
-        # Verificar se o serviço requer plano
-        if 'pilates' in [t.tipo for t in servico.tipo_servicos] and not id_plano_tratamento:
-            return jsonify({'message': 'Plano necessário para este serviço'}), 400
+            # Procurando plano se o serviço for de pilates
+            for plano in servico.planos or []:
+                if plano.id_plano == plano_id:
+                    plano_selecionado = plano
+                    break
 
+            if not plano_selecionado:
+                print("Plano não encontrado para Pilates.")  # Mensagem de erro
+                return jsonify({'message': 'Plano não encontrado para Pilates.'}), 404
         # Definir o colaborador para o agendamento
         colaborador_id = data.get('colaborador_id')  # Pode ser enviado pelo frontend
         if colaborador_id:
@@ -995,6 +1007,9 @@ def agendamento_sem_pagamento():
             status='Confirmado',
             id_clinica=colaborador_escolhido.clinica_id
         )
+        if plano_selecionado:
+                novo_agendamento.id_plano = plano_selecionado.id_plano
+                cliente.id_plano = plano_selecionado.id_plano
         db.session.add(novo_agendamento)
         db.session.commit()
 

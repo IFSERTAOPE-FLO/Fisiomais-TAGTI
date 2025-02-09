@@ -416,7 +416,7 @@ const handleSubmit = async (e) => {
                 )}
 
 
-                {(tipoServico === 'pilates' && role === 'cliente') ? (
+                {tipoServico === 'pilates' && (
                   <div className="mb-3">
                     <label className="form-label">Plano de Pilates</label>
                     <div className="row">
@@ -439,7 +439,7 @@ const handleSubmit = async (e) => {
                       ))}
                     </div>
                     <div className='mb-3 mt-2'>
-                      <label className="form-label">Qual é a sua disponibilidade?</label>
+                      <label className="form-label">Sugira um horário</label>
                       <div className="mb-6 d-flex align-items-center gap-3">
                         <input
                           type="text"
@@ -458,22 +458,12 @@ const handleSubmit = async (e) => {
                           onClick={handleOpenModal}
                           className="btn-plano rounded"
                         >
-                          Escolher Dias e Horários
+                          Sugerir Dias e Horários
                         </button>
                       </div>
                     </div>
                   </div>
-                ) : (tipoServico === 'pilates' && (
-                  <div className="mb-3">
-                    <Link
-                      to={{ pathname: "/adminPage", state: { opcaoSelecionada: "aulasPilates" } }}
-                    >
-                      <button className="btn btn-login">
-                        Ir para Gerenciar Aulas de Pilates
-                      </button>
-                    </Link>
-                  </div>)
-                )}
+                ) }
 
                 <EscolherDiasHorariosClientesModal
                   show={modalShow}
@@ -588,7 +578,7 @@ const handleSubmit = async (e) => {
                 <button
                   type="submit"
                   className="btn btn-signup w-100 text-uppercase fw-bold"
-                  disabled={loading || (tipoServico === 'pilates' && (role === 'admin' || role === 'colaborador'))}
+                  disabled={loading }
                 >
                   {loading ? (
                     <i className="bi bi-arrow-repeat spinner"></i>
