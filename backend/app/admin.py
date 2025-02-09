@@ -1,6 +1,6 @@
-from flask_admin import Admin
-from flask_admin.contrib.sqla import ModelView
-from flask_admin.form import Select2Field
+from flask_admin import Admin # type: ignore
+from flask_admin.contrib.sqla import ModelView # type: ignore
+from flask_admin.form import Select2Field # type: ignore
 from app import db
 from app.models import Enderecos, Clinicas, Colaboradores, Clientes, Servicos, Planos, Agendamentos, Pagamentos, Faturas
 
