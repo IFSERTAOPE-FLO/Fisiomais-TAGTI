@@ -174,26 +174,30 @@ def register_or_update_colaborador():
 @colaboradores.route('/listar', methods=['GET'])
 def get_colaboradores():
     servico_id = request.args.get('servico_id')
-    clinica_id = request.args.get('clinica_id')  # Novo parâmetro para filtrar pela clínica
-    if not servico_id:
-        return jsonify({"error": "Servico ID é necessário"}), 400
-    
-    query = Colaboradores.query.filter(
-        Colaboradores.servicos.any(id_servico=servico_id),
-        Colaboradores.is_admin == False
-    )
-    
-    # Se uma clínica foi fornecida, filtra também pelos colaboradores dessa clínica
+    clinica_id = request.args.get('clinica_id')  # Parâmetro opcional para filtrar pela clínica
+
+    # Inicia a query filtrando apenas os colaboradores que não são administradores
+    query = Colaboradores.query.filter(Colaboradores.is_admin == False)
+
+    # Se um servico_id for fornecido, filtra os colaboradores que atendem esse serviço
+    if servico_id:
+        query = query.filter(Colaboradores.servicos.any(id_servico=servico_id))
+
+    # Se um clinica_id for fornecido, filtra os colaboradores que pertencem à clínica especificada
     if clinica_id:
         query = query.filter(Colaboradores.clinica_id == clinica_id)
-    
+
     colaboradores = query.all()
-    
+
     if not colaboradores:
-        return jsonify({"message": "Nenhum colaborador encontrado para o serviço solicitado"}), 404
-    
-    colaboradores_list = [{"id_colaborador": c.id_colaborador, "nome": c.nome} for c in colaboradores]
+        return jsonify({"message": "Nenhum colaborador encontrado."}), 404
+
+    colaboradores_list = [
+        {"id_colaborador": c.id_colaborador, "nome": c.nome} for c in colaboradores
+    ]
     return jsonify(colaboradores_list)
+
+
 
 
 

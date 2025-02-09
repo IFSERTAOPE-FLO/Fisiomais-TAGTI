@@ -35,7 +35,7 @@ function CriarPlanoTratamento() {
 
     const fetchColaboradores = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/colaboradores/todos");
+        const response = await axios.get("http://localhost:5000/colaboradores/listar");
         setColaboradores(response.data);
       } catch (error) {
         console.error("Erro ao buscar colaboradores:", error);
