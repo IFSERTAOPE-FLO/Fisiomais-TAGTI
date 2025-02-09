@@ -1,47 +1,28 @@
 import React, { useState } from "react";
-import { Modal, Button } from "react-bootstrap";
-import CriarPlanoTratamento from "./CriarPlanoTratamento"; // Importando o componente de criação de plano
+import { Button, Card } from "react-bootstrap";
+import CriarPlanoTratamento from "./CriarPlanoTratamento";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./css/Planosdetratamento.css";
 
 function HistoricoPlanos() {
-  const [showModal, setShowModal] = useState(false);
-  const [showCreatePlano, setShowCreatePlano] = useState(false); // Novo estado para controlar a visibilidade da página de criação
+  const [showCreatePlano, setShowCreatePlano] = useState(false);
 
   // Dados fictícios para a tabela
   const planos = [
-    {
-      id: 1,
-      cliente: "João da Silva",
-      colaborador: "Maria Oliveira",
-      diagnostico: "Lombalgia",
-      data_inicio: "2025-01-01",
-      data_fim: "2025-03-01",
-    },
-    {
-      id: 2,
-      cliente: "Ana Souza",
-      colaborador: "Carlos Pereira",
-      diagnostico: "Hérnia Discal",
-      data_inicio: "2025-02-01",
-      data_fim: "2025-04-01",
-    },
-    // Adicione mais planos fictícios aqui se quiser
+    { id: 1, cliente: "João da Silva", colaborador: "Maria Oliveira", diagnostico: "Lombalgia", data_inicio: "2025-01-01", data_fim: "2025-03-01" },
+    { id: 2, cliente: "Ana Souza", colaborador: "Carlos Pereira", diagnostico: "Hérnia Discal", data_inicio: "2025-02-01", data_fim: "2025-04-01" },
   ];
-
-  const handleShowModal = () => setShowModal(true);
-  const handleCloseModal = () => setShowModal(false);
 
   return (
     <div className="container my-5">
-      <div className="card shadow">
-        <div className="card-header custom-header text-primary text-center">
-          <h2>Histórico dos Planos de Tratamento</h2>
-        </div>
-        <div className="card-body">
-          {/* Exibe o histórico de planos ou o formulário de criação */}
-          {showCreatePlano ? (
-            <CriarPlanoTratamento /> // Exibe o componente de criação de plano
-          ) : (
-            <>
+      <div className="row">
+        {/* Coluna da esquerda: Histórico de planos */}
+        <div className="col-md-7">
+          <Card className="shadow p-3">
+            <Card.Header className="text-primary text-center">
+              <h4>Histórico dos Planos de Tratamento</h4>
+            </Card.Header>
+            <Card.Body>
               <table className="table table-striped">
                 <thead>
                   <tr>
@@ -49,8 +30,8 @@ function HistoricoPlanos() {
                     <th>Cliente</th>
                     <th>Colaborador</th>
                     <th>Diagnóstico</th>
-                    <th>Data de Início</th>
-                    <th>Data de Término</th>
+                    <th>Início</th>
+                    <th>Término</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -66,37 +47,29 @@ function HistoricoPlanos() {
                   ))}
                 </tbody>
               </table>
+            </Card.Body>
+          </Card>
+        </div>
 
-              {/* Botão para exibir o formulário de criação de plano */}
-              <Button variant="primary" onClick={() => setShowCreatePlano(true)}>
-                Criar Novo Plano de Tratamento
-              </Button>
-            </>
-          )}
-
-          {/* Modal para redirecionar (caso ainda queira usar) */}
-          <Modal show={showModal} onHide={handleCloseModal}>
-            <Modal.Header closeButton>
-              <Modal.Title>Criar Novo Plano</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <p>Você está prestes a criar um novo plano de tratamento. Deseja continuar?</p>
-            </Modal.Body>
-            <Modal.Footer>
-              <Button variant="secondary" onClick={handleCloseModal}>
-                Fechar
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  handleCloseModal();
-                  setShowCreatePlano(true); // Alterna para mostrar o formulário de criação
-                }}
-              >
-                Ir para Criar Plano
-              </Button>
-            </Modal.Footer>
-          </Modal>
+        {/* Coluna da direita: Criar novo plano */}
+        <div className="col-md-5">
+          <Card className="shadow p-3">
+            <Card.Header className="text-center custom-title">
+              <h4>{showCreatePlano ? "Novo Plano de Tratamento" : "Adicionar Plano"}</h4>
+            </Card.Header>
+            <Card.Body>
+              {showCreatePlano ? (
+                <CriarPlanoTratamento />
+              ) : (
+                <div className="text-center">
+                  <p>Clique no botão abaixo para adicionar um novo plano de tratamento.</p>
+                  <Button className="custom-button" onClick={() => setShowCreatePlano(true)}>
+                    Criar Novo Plano
+                  </Button>
+                </div>
+              )}
+            </Card.Body>
+          </Card>
         </div>
       </div>
     </div>
