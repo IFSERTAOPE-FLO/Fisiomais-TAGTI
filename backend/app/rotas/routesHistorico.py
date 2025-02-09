@@ -59,10 +59,10 @@ def criar_sessao():
 def listar_sessoes():
     id_cliente = request.args.get('id_cliente')
     query = HistoricoSessao.query
-    
+
     if id_cliente:
         query = query.filter_by(id_cliente=id_cliente)
-    
+
     sessoes = query.all()
     return jsonify([
         {
@@ -76,9 +76,28 @@ def listar_sessoes():
             'observacoes': s.observacoes,
             'avaliacao_cliente': s.avaliacao_cliente,
             'ficha_anamnese': s.ficha_anamnese,
-            'sessoes_realizadas': s.sessoes_realizadas
+            'sessoes_realizadas': s.sessoes_realizadas,
+            # Se houver um plano de tratamento vinculado, adiciona seus detalhes
+            'plano_tratamento': {
+                'id_plano_tratamento': s.plano_tratamento.id_plano_tratamento,
+                'diagnostico': s.plano_tratamento.diagnostico,
+                'objetivos': s.plano_tratamento.objetivos,
+                'metodologia': s.plano_tratamento.metodologia,
+                'duracao_prevista': s.plano_tratamento.duracao_prevista,
+                'valor': float(s.plano_tratamento.valor) if s.plano_tratamento.valor is not None else None,
+                # Lista dos serviços associados a esse plano
+                'servicos': [
+                    {
+                        'id_servico': pts.servico.id_servico,
+                        'nome': pts.servico.nome,
+                        'quantidade_sessoes': pts.quantidade_sessoes,
+                        'sessoes_utilizadas': pts.sessoes_utilizadas
+                    } for pts in s.plano_tratamento.servicos_relacionados
+                ]
+            } if s.plano_tratamento else None
         } for s in sessoes
     ])
+
 
 # Obter uma sessão específica pelo ID
 @historico_sessoes.route('/<int:id_sessao>', methods=['GET'])
