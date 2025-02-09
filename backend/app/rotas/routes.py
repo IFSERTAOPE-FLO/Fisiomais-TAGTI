@@ -21,7 +21,6 @@ Rotas POST:
 """
 
 
-
 import logging
 
 @main.route('/login', methods=['POST'])
@@ -100,10 +99,6 @@ def login():
     return jsonify(message="Credenciais inválidas"), 401
 
 
-
-
-
-
 @main.route('/logout', methods=['POST'])
 @jwt_required()  # Garantir que o JWT esteja presente
 def logout():
@@ -141,6 +136,12 @@ def refresh_token():
         print(f"Erro ao renovar o token: {str(e)}")  # Log para verificar o erro
         return jsonify({"error": "Erro ao renovar o token"}), 422
 
+@main.route('/uploads/anamneses/clientes/<path:filename>')
+def serve_anamnese(filename):
+    return send_from_directory(
+        os.path.join(current_app.config['UPLOAD_FOLDER'], 'anamneses', 'clientes'), 
+        filename
+    )
 
 
 @main.route('/api/notificar_admin', methods=['POST'])

@@ -2,16 +2,17 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from datetime import datetime
 from app.models import db, HistoricoSessao, Clientes, Colaboradores, PlanosTratamento, Agendamentos
-
+import os
 historico_sessoes = Blueprint('historico_sessoes', __name__)
 
 # Criar uma nova sessão no histórico
-@historico_sessoes.route('/historico_sessoes', methods=['POST'])
+@historico_sessoes.route('/', methods=['POST'])
 @jwt_required()
 def criar_sessao():
-    data = request.get_json()
+    # Usa request.form para suportar arquivos + dados JSON
+    data = request.form.to_dict()
+    required_fields = ['id_cliente', 'id_colaborador',  'data_sessao']
     
-    required_fields = ['id_cliente', 'id_colaborador', 'id_agendamento', 'data_sessao']
     for field in required_fields:
         if field not in data:
             return jsonify({'message': f'Campo obrigatório ausente: {field}'}), 400
@@ -25,13 +26,32 @@ def criar_sessao():
         detalhes=data.get('detalhes'),
         observacoes=data.get('observacoes'),
         avaliacao_cliente=data.get('avaliacao_cliente'),
-        ficha_anamnese=data.get('ficha_anamnese'),
+        ficha_anamnese=None,  # Inicialmente sem arquivo
         sessoes_realizadas=data.get('sessoes_realizadas', 0)
     )
     
     db.session.add(nova_sessao)
     db.session.commit()
-    return jsonify({'message': 'Sessão criada com sucesso', 'id_sessao': nova_sessao.id_sessao}), 201
+    
+    # Verifica se um arquivo foi enviado
+    if 'ficha_anamnese' in request.files:
+        file = request.files['ficha_anamnese']
+        if file.filename != '':
+            cliente = Clientes.query.get(nova_sessao.id_cliente)
+            if not cliente:
+                return jsonify({'message': 'Cliente não encontrado'}), 404
+            
+            cliente_folder = os.path.join(UPLOAD_FOLDER, secure_filename(cliente.nome))
+            os.makedirs(cliente_folder, exist_ok=True)
+            
+            filename = secure_filename(f'sessao_{nova_sessao.id_sessao}.pdf')
+            filepath = os.path.join(cliente_folder, filename)
+            
+            file.save(filepath)
+            nova_sessao.ficha_anamnese = filepath
+            db.session.commit()
+    
+    return jsonify({'message': 'Sessão criada com sucesso', 'id_sessao': nova_sessao.id_sessao, 'ficha_anamnese': nova_sessao.ficha_anamnese}), 201
 
 # Listar todas as sessões (opcionalmente filtradas por cliente)
 @historico_sessoes.route('', methods=['GET'])
@@ -82,7 +102,9 @@ def obter_sessao(id_sessao):
         'sessoes_realizadas': sessao.sessoes_realizadas
     })
 
-# Atualizar uma sessão existente
+UPLOAD_FOLDER = 'uploads/anamneses/clientes/'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+from werkzeug.utils import secure_filename
 @historico_sessoes.route('/<int:id_sessao>', methods=['PUT'])
 @jwt_required()
 def atualizar_sessao(id_sessao):
@@ -90,7 +112,13 @@ def atualizar_sessao(id_sessao):
     if not sessao:
         return jsonify({'message': 'Sessão não encontrada'}), 404
     
-    data = request.get_json()
+    # Verifica se o cliente da sessão existe
+    cliente = Clientes.query.get(sessao.id_cliente)
+    if not cliente:
+        return jsonify({'message': 'Cliente não encontrado'}), 404
+    
+    # Atualização dos dados JSON
+    data = request.form.to_dict()  # Usa form para suportar arquivos + dados JSON
     sessao.id_cliente = data.get('id_cliente', sessao.id_cliente)
     sessao.id_colaborador = data.get('id_colaborador', sessao.id_colaborador)
     sessao.id_agendamento = data.get('id_agendamento', sessao.id_agendamento)
@@ -99,11 +127,23 @@ def atualizar_sessao(id_sessao):
     sessao.detalhes = data.get('detalhes', sessao.detalhes)
     sessao.observacoes = data.get('observacoes', sessao.observacoes)
     sessao.avaliacao_cliente = data.get('avaliacao_cliente', sessao.avaliacao_cliente)
-    sessao.ficha_anamnese = data.get('ficha_anamnese', sessao.ficha_anamnese)
     sessao.sessoes_realizadas = data.get('sessoes_realizadas', sessao.sessoes_realizadas)
+
+    # Verifica se um arquivo foi enviado
+    if 'ficha_anamnese' in request.files:
+        file = request.files['ficha_anamnese']
+        if file.filename != '':
+            cliente_folder = os.path.join(UPLOAD_FOLDER, secure_filename(cliente.nome))
+            os.makedirs(cliente_folder, exist_ok=True)
+
+            filename = secure_filename(f'sessao_{id_sessao}.pdf')
+            filepath = os.path.join(cliente_folder, filename)
+
+            file.save(filepath)
+            sessao.ficha_anamnese = filepath  # Atualiza o caminho do arquivo na sessão
     
     db.session.commit()
-    return jsonify({'message': 'Sessão atualizada com sucesso'})
+    return jsonify({'message': 'Sessão atualizada com sucesso', 'ficha_anamnese': sessao.ficha_anamnese})
 
 # Deletar uma sessão
 @historico_sessoes.route('/<int:id_sessao>', methods=['DELETE'])
@@ -116,3 +156,7 @@ def deletar_sessao(id_sessao):
     db.session.delete(sessao)
     db.session.commit()
     return jsonify({'message': 'Sessão deletada com sucesso'})
+
+
+
+

@@ -13,7 +13,10 @@ class Config:
     # Configurações gerais
     SECRET_KEY = os.getenv('SECRET_KEY', 'default-secret-key')  # Valor padrão se não estiver no .env
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf','docx','doc'}
+
+    # Configuração para servir fichas de anamnese como arquivos estáticos
+    ANAMNESE_FOLDER = os.path.join(UPLOAD_FOLDER, 'anamneses', 'clientes')
 
     # Configurações de e-mail
     MAIL_SERVER = 'smtp.gmail.com'
@@ -30,3 +33,7 @@ class Config:
     # Criar pasta de uploads se não existir
     if not os.path.exists(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
+    
+    # Criar pasta de anamneses se não existir
+    if not os.path.exists(ANAMNESE_FOLDER):
+        os.makedirs(ANAMNESE_FOLDER)
