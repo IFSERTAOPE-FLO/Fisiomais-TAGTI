@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.models import Aulas, Clientes, Colaboradores, Servicos, Planos, ColaboradoresServicos, AulasClientes, Clinicas, Agendamentos, Clientes, Aulas, db
+from app.models import Aulas, Pagamentos, Clientes, Colaboradores, Servicos, Planos, ColaboradoresServicos, AulasClientes, Clinicas, Agendamentos, Clientes, Aulas, db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 pilates = Blueprint('pilates', __name__)
@@ -91,36 +91,46 @@ def adicionar_cliente_aula_colaborador():
     # Verificando se a aula existe
     aula = Aulas.query.get(aula_id)
     if not aula:
-        return jsonify({"message": "Aula nao encontrada!"}), 404
+        return jsonify({"message": "Aula não encontrada!"}), 404
 
     # Verificando se o colaborador está associado à aula
     colaborador = aula.colaborador
     if not colaborador:
-        return jsonify({"message": "Colaborador nao encontrado para esta aula!"}), 404
+        return jsonify({"message": "Colaborador não encontrado para esta aula!"}), 404
 
     # Verificando se o cliente existe
     cliente = Clientes.query.get(id_cliente)
     if not cliente:
-        return jsonify({"message": "Cliente nao encontrado!"}), 404
+        return jsonify({"message": "Cliente não encontrado!"}), 404
+
+    # Verificando se o cliente possui um plano associado
+    if not cliente.plano_id:
+        return jsonify({"message": "Cliente não possui um plano ativo!"}), 400
 
     # Verificando se o cliente já está inscrito
     aluno_existente = AulasClientes.query.filter_by(id_cliente=id_cliente, id_aula=aula_id).first()
     if aluno_existente:
-        return jsonify({"message": "Cliente ja inscrito nesta aula!"}), 400
+        return jsonify({"message": "Cliente já inscrito nesta aula!"}), 400
 
     # Contando o número de alunos na aula
     total_alunos = AulasClientes.query.filter_by(id_aula=aula_id).count()
-
     if total_alunos >= aula.limite_alunos:
         return jsonify({"message": "O limite de alunos para esta aula foi atingido!"}), 400
 
     # Adicionando o cliente à aula
     nova_inscricao = AulasClientes(id_cliente=id_cliente, id_aula=aula_id)
-
     db.session.add(nova_inscricao)
     db.session.commit()
 
-    return jsonify({"message": "Cliente adicionado com sucesso a aula!"}), 201
+    # Gerando pagamento mensal com base no plano do cliente
+    resultado_pagamento = gerar_pagamento_mensal(cliente.id, cliente.plano_id)
+
+    # Retornar a resposta do pagamento caso haja erro
+    if resultado_pagamento["status"] != 201:
+        return jsonify(resultado_pagamento), resultado_pagamento["status"]
+
+    return jsonify({"message": "Cliente adicionado com sucesso à aula!"}), 201
+
     
 
 from datetime import datetime, timedelta
@@ -179,10 +189,17 @@ def cadastrar_aula_cliente():
             db.session.add(nova_inscricao)
 
         db.session.commit()
+        resultado_pagamento = gerar_pagamento_mensal(cliente_id, plano_id)
+        # Retornar a resposta do pagamento caso haja erro
+        if resultado_pagamento["status"] != 201:
+            return jsonify(resultado_pagamento), resultado_pagamento["status"]
+
 
         # 🔹 **Chamada da nova rota após a inscrição**
         response = criar_agendamentos_semana_atual(cliente_id)
+        
         return response
+        
 
     except Exception as e:
         db.session.rollback()
@@ -570,6 +587,7 @@ import pytz
 brt = pytz.timezone("America/Sao_Paulo")  # Fuso horário de Brasília
 
 @pilates.route('/criar_agendamentos_semana_atual/<int:cliente_id>', methods=['POST'])
+@jwt_required()
 def criar_agendamentos_semana_atual(cliente_id):
     try:
         cliente = Clientes.query.get(cliente_id)
@@ -633,3 +651,49 @@ def criar_agendamentos_semana_atual(cliente_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Erro ao criar agendamentos: {str(e)}"}), 500
+
+
+from datetime import datetime, timedelta
+
+def gerar_pagamento_mensal(cliente_id, plano_id):
+    try:
+        if not cliente_id or not plano_id:
+            return {"message": "Dados incompletos!", "status": 400}
+
+        cliente = Clientes.query.get(cliente_id)
+        if not cliente:
+            return {"message": "Cliente não encontrado!", "status": 404}
+
+        plano = Planos.query.get(plano_id)
+        if not plano:
+            return {"message": "Plano não encontrado!", "status": 404}
+
+        # Verificar se já existe um pagamento no último mês
+        um_mes_atras = datetime.utcnow() - timedelta(days=30)
+        pagamento_existente = Pagamentos.query.filter(
+            Pagamentos.id_cliente == cliente_id,
+            Pagamentos.id_plano == plano_id,
+            Pagamentos.data_pagamento >= um_mes_atras
+        ).first()
+
+        if pagamento_existente:
+            return {"message": "Pagamento já realizado neste mês.", "status": 200}
+
+        # Criar novo pagamento
+        novo_pagamento = Pagamentos(
+            id_cliente=cliente_id,
+            id_plano=plano_id,
+            id_servico=plano.servico_id,
+            valor=plano.valor,
+            metodo_pagamento='a definir',
+            status='pendente',
+            data_pagamento=datetime.utcnow()
+        )
+        db.session.add(novo_pagamento)
+        db.session.commit()
+
+        return {"message": "Pagamento gerado com sucesso!", "status": 201, "id_pagamento": novo_pagamento.id_pagamento}
+    
+    except Exception as e:
+        db.session.rollback()
+        return {"message": f"Erro ao gerar pagamento: {str(e)}", "status": 500}

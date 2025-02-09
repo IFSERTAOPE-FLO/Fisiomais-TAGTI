@@ -313,3 +313,107 @@ def populate_database():
     
     db.session.commit()
 
+
+from datetime import datetime, timedelta
+from app import db
+from app.models import (
+    Colaboradores, Clinicas, Servicos, Clientes, 
+    PlanosTratamento, PlanosTratamentoServicos, 
+    HistoricoSessao, Agendamentos
+)
+
+def populate_database_extra():
+    # Criar cliente se não existir
+    cliente_existente = Clientes.query.filter_by(cpf='123.456.789-00').first()
+    if not cliente_existente:
+        cliente = Clientes(
+            nome='Carlos Silva',
+            email='carlos.silva@example.com',
+            telefone='987654321',
+            cpf='123.456.789-00',
+            senha='123'  # Senha padrão
+        )
+        db.session.add(cliente)
+        db.session.flush()
+    else:
+        cliente = cliente_existente
+    
+    # Criar plano de tratamento se não existir
+    plano_existente = PlanosTratamento.query.filter_by(diagnostico='Dor lombar crônica').first()
+    if not plano_existente:
+        plano_tratamento = PlanosTratamento(
+            diagnostico='Dor lombar crônica',
+            objetivos='Redução da dor e melhora da mobilidade',
+            metodologia='Exercícios terapêuticos e pilates',
+            duracao_prevista=12,
+            valor=1500.00
+        )
+        db.session.add(plano_tratamento)
+        db.session.flush()
+    else:
+        plano_tratamento = plano_existente
+    
+    # Buscar serviço de fisioterapia
+    servico_existente = Servicos.query.filter_by(nome='Fisioterapia Clássica').first()
+    
+    if servico_existente:
+        associacao_existente = PlanosTratamentoServicos.query.filter_by(
+            id_plano_tratamento=plano_tratamento.id_plano_tratamento,
+            id_servico=servico_existente.id_servico
+        ).first()
+        
+        if not associacao_existente:
+            plano_servico = PlanosTratamentoServicos(
+                id_plano_tratamento=plano_tratamento.id_plano_tratamento,
+                id_servico=servico_existente.id_servico,
+                quantidade_sessoes=10
+            )
+            db.session.add(plano_servico)
+
+    # Criar um agendamento fictício
+    colaborador = Colaboradores.query.first()
+    clinica = Clinicas.query.first()
+    
+    if colaborador and servico_existente and clinica:
+        agendamento_existente = Agendamentos.query.filter_by(
+            id_cliente=cliente.id_cliente,
+            id_servico=servico_existente.id_servico
+        ).first()
+
+        if not agendamento_existente:
+            novo_agendamento = Agendamentos(
+                data_e_hora=datetime.utcnow() + timedelta(days=2),  # Sessão para daqui a 2 dias
+                id_cliente=cliente.id_cliente,
+                id_colaborador=colaborador.id_colaborador,
+                id_servico=servico_existente.id_servico,
+                status="confirmado",
+                id_clinica=clinica.id_clinica,
+                dias_e_horarios="Segunda-feira às 10h"
+            )
+            db.session.add(novo_agendamento)
+            db.session.flush()  # Garante que temos o ID do agendamento
+
+        else:
+            novo_agendamento = agendamento_existente
+    
+        # Criar um histórico de sessão vinculado ao agendamento
+        historico_existente = HistoricoSessao.query.filter_by(
+            id_agendamento=novo_agendamento.id_agendamento
+        ).first()
+
+        if not historico_existente:
+            historico_sessao = HistoricoSessao(
+                id_cliente=cliente.id_cliente,
+                id_colaborador=colaborador.id_colaborador,
+                id_plano_tratamento=plano_tratamento.id_plano_tratamento,
+                id_agendamento=novo_agendamento.id_agendamento,
+                data_sessao=datetime.utcnow(),
+                detalhes='Sessão inicial de avaliação e alongamento',
+                observacoes='Paciente relatou alívio leve da dor',
+                avaliacao_cliente='Muito satisfeito',
+                sessoes_realizadas=1
+            )
+            db.session.add(historico_sessao)
+    
+    db.session.commit()
+    print("Banco de dados populado com cliente, plano de tratamento, agendamento e histórico de sessão.")

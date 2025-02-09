@@ -209,21 +209,22 @@ function CriarAgendamento() {
   };
 
 
-  const handleSubmit = async (e) => {
+
+const handleSubmit = async (e) => {
     e.preventDefault();  // Garantir que o evento não se propague automaticamente
     setLoading(true);
 
     // Validações
     if (tipoServico !== 'pilates' && !hora) {
-      alert('Por favor, selecione um horário válido.');
-      setLoading(false);
-      return;
+        alert('Por favor, selecione um horário válido.');
+        setLoading(false);
+        return;
     }
 
     if (!cliente || !colaborador || !servico) {
-      alert('Por favor, preencha todos os campos obrigatórios.');
-      setLoading(false);
-      return;
+        alert('Por favor, preencha todos os campos obrigatórios.');
+        setLoading(false);
+        return;
     }
 
     const colaboradorId = role === 'colaborador' ? localStorage.getItem('userId') : colaborador;
@@ -231,44 +232,51 @@ function CriarAgendamento() {
     const dataHoraISO = dataEscolhida.toISOString();
 
     const agendamentoData = {
-      servico_id: servico,
-      colaborador_id: colaboradorId,
-      data: dataHoraISO,
-      cliente_id: cliente,
-      plano_id: tipoServico === 'pilates' ? planoSelecionado || null : null,
-      dias_e_horarios: diasHorariosTexto, // Incluindo os dias e horários
+        servico_id: servico,
+        colaborador_id: colaboradorId,
+        data: dataHoraISO,
+        cliente_id: cliente,
+        plano_id: tipoServico === 'pilates' ? planoSelecionado || null : null,
+        dias_e_horarios: diasHorariosTexto, // Incluindo os dias e horários
     };
 
     const token = localStorage.getItem('token');
     if (!token) {
-      alert('Por favor, faça login para agendar.');
-      setLoading(false);
-      return;
+        alert('Por favor, faça login para agendar.');
+        setLoading(false);
+        return;
     }
 
     try {
-      const response = await fetch('http://localhost:5000/agendamentos/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(agendamentoData),
-      });
+        // Definir a rota com base no papel do usuário
+        const rota = (role === 'colaborador' || role === 'admin') 
+            ? '/agendamentos/agendamento-plano-tratamento' 
+            : '/agendamentos/';
 
-      if (response.ok) {
-        const successData = await response.json();
-        alert(successData.message || 'Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail');
-        fetchHorariosDisponiveis(colaborador || localStorage.getItem('userId'), data);
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || 'Erro ao agendar a sessão.');
-      }
+
+        const response = await fetch(`http://localhost:5000${rota}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(agendamentoData),
+        });
+
+        if (response.ok) {
+            const successData = await response.json();
+            alert(successData.message || 'Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail');
+            fetchHorariosDisponiveis(colaborador || localStorage.getItem('userId'), data);
+        } else {
+            const errorData = await response.json();
+            alert(errorData.message || 'Erro ao agendar a sessão.');
+        }
     } catch (error) {
-      console.error('Erro no agendamento:', error);
+        console.error('Erro no agendamento:', error);
+        alert('Erro ao conectar com o servidor. Tente novamente mais tarde.');
     }
     setLoading(false);
-  };
+};
 
 
 

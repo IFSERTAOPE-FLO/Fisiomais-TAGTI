@@ -117,7 +117,7 @@ def create_app():
 
     with app.app_context():
         # Importar modelos e rotas aqui dentro para evitar importação circular
-        from app.services import populate_database
+        from app.services import populate_database, populate_database_extra
         from app.rotas.routes import main
         from app.rotas.routesClientes import clientes
         from app.rotas.routesColaboradores import colaboradores
@@ -129,6 +129,7 @@ def create_app():
         from app.rotas.routesPagamentos import pagamentos_faturas
         from app.rotas.routesPilates import pilates
         from app.rotas.routesPlanosTratamentos import planos_de_tratamento
+        from app.rotas.routesHistorico import historico_sessoes
        
 
         app.register_blueprint(main, url_prefix='/')
@@ -142,7 +143,7 @@ def create_app():
         app.register_blueprint(pagamentos_faturas, url_prefix='/pagamentos', name='pagamentos_blueprint')
         app.register_blueprint(pilates, url_prefix='/pilates', name='pilates')
         app.register_blueprint(planos_de_tratamento, url_prefix='/planos_de_tratamento', name='planos_de_tratamento_blueprint')
-
+        app.register_blueprint(historico_sessoes, url_prefix='/historico_sessoes', name='historico_sessoes_blueprint')
 
         # Garantir que a pasta de uploads exista
         if not os.path.exists(app.config['UPLOAD_FOLDER']):
@@ -151,6 +152,7 @@ def create_app():
         # Registrar os modelos e criar tabelas
         db.create_all()  # Cria as tabelas no banco de dados
         populate_database()  # Popular o banco com dados iniciais, se necessário
+        populate_database_extra()
 
     return app
 

@@ -17,11 +17,9 @@
   margin: 0;
   
 }
-p {
-  text-indent: 30px; /* Define o recuo do início do parágrafo */
-}
+
 .btn-secondary {
-  z-index: 1 !important;
+  z-index: 0 !important;
   position: relative; /* Necessário para que o z-index funcione */
 }
 
