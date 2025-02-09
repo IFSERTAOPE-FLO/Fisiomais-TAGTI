@@ -217,27 +217,28 @@ class Agendamentos(db.Model):
     clinica = db.relationship('Clinicas', backref='agendamentos')  
     pagamento = db.relationship('Pagamentos', back_populates='agendamento', uselist=False) 
 
-class Pagamentos(db.Model): 
+class Pagamentos(db.Model):
     __tablename__ = 'pagamentos'
-    id_pagamento = db.Column(db.Integer, primary_key=True)  # ID único
-    id_agendamento = db.Column(db.Integer, db.ForeignKey('agendamentos.id_agendamento'), nullable=False)  # Relacionamento com o agendamento
-    id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False)  # Relacionamento com o cliente
-    id_servico = db.Column(db.Integer, db.ForeignKey('servicos.id_servico'), nullable=False)  # Relacionamento com o serviço
-    id_colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.id_colaborador'), nullable=True)  # Relacionamento com o colaborador
-    id_plano = db.Column(db.Integer, db.ForeignKey('planos.id_plano'), nullable=True)  # Relacionamento com o plano
-    valor = db.Column(db.Numeric(10, 2), nullable=True)  # Valor pago
-    metodo_pagamento = db.Column(db.String(50), nullable=False, default='a definir')  # Ex: 'cartão', 'boleto', 'pix'
-    status = db.Column(db.String(20), nullable=False, default='pendente')  # 'pendente', 'pago', 'cancelado'
-    data_pagamento = db.Column(db.DateTime, nullable=True)  # Data de conclusão do pagamento
-    referencia_pagamento = db.Column(db.String(255), nullable=True)  # Referência de terceiros (ex: ID de pagamento externo)
+    id_pagamento = db.Column(db.Integer, primary_key=True)
+    id_agendamento = db.Column(db.Integer, db.ForeignKey('agendamentos.id_agendamento'), nullable=False)
+    id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False)
+    id_servico = db.Column(db.Integer, db.ForeignKey('servicos.id_servico'), nullable=False)
+    id_colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.id_colaborador'), nullable=True)
+    id_plano = db.Column(db.Integer, db.ForeignKey('planos.id_plano'), nullable=True)
+    id_plano_tratamento = db.Column(db.Integer, db.ForeignKey('planos_tratamento.id_plano_tratamento'), nullable=True)  # Adicionando a chave estrangeira
+    valor = db.Column(db.Numeric(10, 2), nullable=True)
+    metodo_pagamento = db.Column(db.String(50), nullable=False, default='a definir')
+    status = db.Column(db.String(20), nullable=False, default='pendente')
+    data_pagamento = db.Column(db.DateTime, nullable=True)
+    referencia_pagamento = db.Column(db.String(255), nullable=True)
 
     # Relacionamentos
     agendamento = db.relationship('Agendamentos', back_populates='pagamento', uselist=False)
-    cliente = db.relationship('Clientes', backref='pagamentos')  # Relacionamento com Clientes
-    servico = db.relationship('Servicos', backref='pagamentos')  # Relacionamento com Servicos
-    colaborador = db.relationship('Colaboradores', backref='pagamentos')  # Relacionamento com Colaboradores
-    plano = db.relationship('Planos', backref='pagamentos')  # Relacionamento com Planos (opcional, caso o pagamento seja associado a um plano específico)
-
+    cliente = db.relationship('Clientes', backref='pagamentos')
+    servico = db.relationship('Servicos', backref='pagamentos')
+    colaborador = db.relationship('Colaboradores', backref='pagamentos')
+    plano = db.relationship('Planos', backref='pagamentos')
+    plano_tratamento = db.relationship('PlanosTratamento', backref='pagamentos')  # Agora há uma chave estrangeira correta
 
 class Faturas(db.Model):
     __tablename__ = 'faturas'
@@ -279,8 +280,7 @@ class AulasClientes(db.Model):
     cliente = db.relationship('Clientes')
 
     def __repr__(self):
-        return f'<AulaCliente Aula: {self.id_aula} Cliente: {self.id_cliente}>'
-    
+        return f'<AulaCliente Aula: {self.id_aula} Cliente: {self.id_cliente}>'  
 
 # Tabela Associativa entre Planos de Tratamento e Serviços
 class PlanosTratamentoServicos(db.Model):

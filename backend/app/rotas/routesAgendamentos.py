@@ -941,3 +941,76 @@ def listar_agendamentos_calendario():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@agendamentos.route('/sem-pagamento', methods=['POST'])
+@jwt_required()
+def agendamento_sem_pagamento():
+    try:
+        data = request.get_json()
+        print(f"Dados recebidos: {data}")
+
+        # Verificar se o usuário é colaborador
+        current_user_email = get_jwt_identity()
+        colaborador = Colaboradores.query.filter_by(email=current_user_email).first()
+        if not colaborador:
+            return jsonify({'message': 'Acesso negado. Somente colaboradores podem criar este tipo de agendamento.'}), 403
+
+        # Campos obrigatórios
+        required_fields = ['cliente_id', 'servico_id', 'colaborador_id', 'data', 'clinica_id']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'message': f'Campo obrigatório ausente: {field}'}), 400
+
+        # Buscar entidades relacionadas
+        cliente = Clientes.query.get(data['cliente_id'])
+        servico = Servicos.query.get(data['servico_id'])
+        clinica = Clinicas.query.get(data['clinica_id'])
+
+        if not cliente or not servico or not clinica:
+            return jsonify({'message': 'Cliente, serviço ou clínica não encontrados'}), 404
+
+        
+        
+        # Converter data/horário
+        try:
+            data_e_hora_utc = datetime.fromisoformat(data['data']).astimezone(timezone('UTC'))
+            data_e_hora_local = data_e_hora_utc.astimezone(BRASILIA).replace(tzinfo=None)
+        except ValueError as e:
+            return jsonify({'message': f'Formato de data inválido: {e}'}), 400
+
+        # Verificar conflito de horário
+        agendamento_existente = Agendamentos.query.filter(
+            Agendamentos.id_colaborador == data['colaborador_id'],
+            Agendamentos.data_e_hora == data_e_hora_local
+        ).first()
+
+        if agendamento_existente:
+            return jsonify({'message': 'Horário já ocupado para este colaborador'}), 400
+
+        # Criar agendamento
+        novo_agendamento = Agendamentos(
+            data_e_hora=data_e_hora_local,
+            id_cliente=cliente.id_cliente,
+            id_colaborador=data['colaborador_id'],
+            id_servico=servico.id_servico,
+            status="Confirmado",  # Confirmado automaticamente por ser colaborador
+            id_clinica=clinica.id_clinica
+        )
+
+        db.session.add(novo_agendamento)
+        db.session.commit()
+
+        return jsonify({
+            'message': 'Agendamento criado com sucesso',
+            'detalhes': {
+                'id': novo_agendamento.id_agendamento,
+                'data': data_e_hora_local.isoformat(),
+                'servico': servico.nome,
+                'cliente': cliente.nome,
+                'colaborador': colaborador.nome
+            }
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Erro: {str(e)}")
+        return jsonify({'message': f'Erro interno no servidor: {str(e)}'}), 500
