@@ -4,6 +4,7 @@ import { FaCalendarAlt, FaUser, FaEdit, FaTrash, FaPlus, FaFileMedical, FaFilePd
 import axios from 'axios';
 import IniciarPlanoTratamento from './IniciarPlanoTratamento';
 import { Link } from 'react-router-dom';
+import Paginator from '../Paginator'; // Certifique-se de que o caminho está correto
 
 const apiBaseUrl = "http://localhost:5000/";
 
@@ -23,6 +24,10 @@ const HistoricoSessoes = () => {
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
     };
+
+     // Estados para paginação
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
     const token = localStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}` };
@@ -63,7 +68,7 @@ const HistoricoSessoes = () => {
         const url = formData.id_sessao ? `${apiBaseUrl}historico_sessoes/${formData.id_sessao}` : `${apiBaseUrl}historico_sessoes`;
 
         const formDataToSend = new FormData();
-        
+
 
         // Anexa todos os campos do formulário
         Object.keys(formData).forEach(key => {
@@ -98,6 +103,10 @@ const HistoricoSessoes = () => {
             .then(() => fetchSessoes(selectedCliente))
             .catch(error => console.error('Erro ao excluir sessão', error));
     };
+    // Lógica de paginação: calcular os itens para a página atual
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentSessoes = sessoes.slice(indexOfFirstItem, indexOfLastItem);
 
     return (
         <div className="container mt-4">
@@ -145,66 +154,117 @@ const HistoricoSessoes = () => {
 
 
 
-                            <Table striped hover responsive className="align-middle">
-                                <thead className="table-dark">
-                                    <tr>
-                                        <th><FaCalendarAlt className="me-2" />Data</th>
-                                        <th>Detalhes da Sessão</th>
-                                        <th>Ficha de Anamnese</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {sessoes.map(sessao => (
-                                        <tr key={sessao.id_sessao}>
-                                            <td>
-                                                {new Date(sessao.data_sessao).toLocaleDateString('pt-BR', {
-                                                    day: '2-digit',
-                                                    month: 'long',
-                                                    year: 'numeric'
-                                                })}
-                                            </td>
-                                            <td className="text-muted">{sessao.detalhes}</td>
-                                            <td>
-                                                {sessao.ficha_anamnese && (
-                                                    <a
-                                                        href={`${apiBaseUrl}${sessao.ficha_anamnese}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-primary"
-                                                    >
-                                                        <FaFilePdf className="me-1" />
-                                                        Visualizar
-                                                    </a>
-                                                )}
-                                            </td>
-                                            <td>
-                                                <Button
-                                                    variant="outline-warning"
-                                                    size="sm"
-                                                    className="me-2"
-                                                    onClick={() => handleShowModal(sessao)}
-                                                >
-                                                    <FaEdit />
-                                                </Button>
-                                                <Button
-                                                    variant="outline-danger"
-                                                    size="sm"
-                                                    onClick={() => handleDelete(sessao.id_sessao)}
-                                                >
-                                                    <FaTrash />
-                                                </Button>
-                                            </td>
+                            <div className="table-responsive">
+                                <Table striped hover className=" table table-striped" >
+                                    <thead className="table-dark">
+                                        <tr>
+                                            <th>
+                                                <FaCalendarAlt className="me-2" />Data
+                                            </th>
+                                            <th>Detalhes da Sessão</th>
+                                            <th>Plano de Tratamento</th>
+                                            <th>Ficha de Anamnese</th>
+                                            <th>Ações</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </Table>
+                                    </thead>
+                                    <tbody>
+                                        {sessoes.map(sessao => (
+                                            <tr key={sessao.id_sessao}>
+                                                <td>
+                                                    {new Date(sessao.data_sessao).toLocaleDateString('pt-BR', {
+                                                        day: '2-digit',
+                                                        month: 'long',
+                                                        year: 'numeric'
+                                                    })}
+                                                </td>
+                                                <td className="text-muted">{sessao.detalhes}</td>
+                                                <td>
+                                                    {sessao.plano_tratamento ? (
+                                                        <div>
+                                                            <p className="mb-1">
+                                                                <strong>Diagnóstico:</strong> {sessao.plano_tratamento.diagnostico}
+                                                            </p>
+                                                            <p className="mb-1">
+                                                                <strong>Objetivos:</strong> {sessao.plano_tratamento.objetivos}
+                                                            </p>
+                                                            <p className="mb-1">
+                                                                <strong>Metodologia:</strong> {sessao.plano_tratamento.metodologia}
+                                                            </p>
+                                                            <p className="mb-1">
+                                                                <strong>Duração:</strong> {sessao.plano_tratamento.duracao_prevista} semanas
+                                                            </p>
+                                                            <p className="mb-1">
+                                                                <strong>Valor:</strong>{' '}
+                                                                {sessao.plano_tratamento.valor
+                                                                    ? `R$ ${sessao.plano_tratamento.valor.toFixed(2)}`
+                                                                    : 'N/A'}
+                                                            </p>
+                                                            {sessao.plano_tratamento.servicos &&
+                                                                sessao.plano_tratamento.servicos.length > 0 && (
+                                                                    <div>
+                                                                        <strong>Serviços:</strong>
+                                                                        <ul className="list-unstyled mb-0">
+                                                                            {sessao.plano_tratamento.servicos.map(servico => (
+                                                                                <li key={servico.id_servico} className="small">
+                                                                                    {servico.nome} (Sessões: {servico.quantidade_sessoes})
+                                                                                </li>
+                                                                            ))}
+                                                                        </ul>
+                                                                    </div>
+                                                                )}
+                                                        </div>
+                                                    ) : (
+                                                        "N/A"
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    {sessao.ficha_anamnese && (
+                                                        <a
+                                                            href={`${apiBaseUrl}${sessao.ficha_anamnese}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-primary"
+                                                        >
+                                                            <FaFilePdf className="me-1" />
+                                                            Visualizar
+                                                        </a>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    <Button
+                                                        variant="outline-warning"
+                                                        size="sm"
+                                                        className="me-2"
+                                                        onClick={() => handleShowModal(sessao)}
+                                                    >
+                                                        <FaEdit />
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline-danger"
+                                                        size="sm"
+                                                        onClick={() => handleDelete(sessao.id_sessao)}
+                                                    >
+                                                        <FaTrash />
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </Table>
+                            </div>
+
                         </>
                     )}
 
 
                 </Card.Body>
             </Card>
+            <Paginator
+                totalItems={sessoes.length}
+                itemsPerPage={itemsPerPage}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+              />
 
             <Modal show={showModal} onHide={handleCloseModal} size="lg">
                 <Modal.Header closeButton >
@@ -261,7 +321,7 @@ const HistoricoSessoes = () => {
                                 </Form.Group>
 
                             </Col>
-                          
+
 
                             <IniciarPlanoTratamento
                                 idCliente={selectedCliente}
