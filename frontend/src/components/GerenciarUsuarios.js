@@ -190,8 +190,8 @@ const GerenciarUsuarios = () => {
                                 value={pesquisaNome}
                                 onChange={(e) => setPesquisaNome(e.target.value)}
                             />
-                            <button className="btn btn-secondary" type="button" id="button-addon2">
-                                <i className="bi bi-search"></i>
+                            <button className="btn btn-secondary z-bot" type="button" id="button-addon2">
+                                <i className="bi bi-search z-bot"></i>
                             </button>
 
                         </div>

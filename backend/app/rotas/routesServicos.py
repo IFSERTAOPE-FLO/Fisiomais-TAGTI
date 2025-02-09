@@ -285,10 +285,7 @@ def editar_servico(id_servico):
         db.session.rollback()
         return jsonify({"message": f"Erro ao atualizar o serviço: {str(e)}"}), 500
 
-
-
-
-    
+   
 @servicos.route('/adicionar_colaboradores', methods=['POST'])
 def adicionar_colaboradores():
     data = request.get_json()

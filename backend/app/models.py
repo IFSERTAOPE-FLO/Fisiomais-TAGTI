@@ -138,7 +138,8 @@ class Servicos(db.Model):
     # Relacionamentos
     tipo_servicos = db.relationship('TipoServico', secondary='servicos_tipo_servico', back_populates='servicos')
     colaboradores = db.relationship('Colaboradores', secondary='colaboradores_servicos', back_populates='servicos')
-
+    # Relacionamento com planos de tratamento
+    planos_tratamento_relacionados = db.relationship('PlanosTratamentoServicos', back_populates='servico')
     def set_valor(self, tipo_servico):
         # Se o tipo for fisioterapia, o valor é fixo
         if tipo_servico == "fisioterapia":
@@ -216,27 +217,28 @@ class Agendamentos(db.Model):
     clinica = db.relationship('Clinicas', backref='agendamentos')  
     pagamento = db.relationship('Pagamentos', back_populates='agendamento', uselist=False) 
 
-class Pagamentos(db.Model): 
+class Pagamentos(db.Model):
     __tablename__ = 'pagamentos'
-    id_pagamento = db.Column(db.Integer, primary_key=True)  # ID único
-    id_agendamento = db.Column(db.Integer, db.ForeignKey('agendamentos.id_agendamento'), nullable=False)  # Relacionamento com o agendamento
-    id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False)  # Relacionamento com o cliente
-    id_servico = db.Column(db.Integer, db.ForeignKey('servicos.id_servico'), nullable=False)  # Relacionamento com o serviço
-    id_colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.id_colaborador'), nullable=True)  # Relacionamento com o colaborador
-    id_plano = db.Column(db.Integer, db.ForeignKey('planos.id_plano'), nullable=True)  # Relacionamento com o plano
-    valor = db.Column(db.Numeric(10, 2), nullable=True)  # Valor pago
-    metodo_pagamento = db.Column(db.String(50), nullable=False, default='a definir')  # Ex: 'cartão', 'boleto', 'pix'
-    status = db.Column(db.String(20), nullable=False, default='pendente')  # 'pendente', 'pago', 'cancelado'
-    data_pagamento = db.Column(db.DateTime, nullable=True)  # Data de conclusão do pagamento
-    referencia_pagamento = db.Column(db.String(255), nullable=True)  # Referência de terceiros (ex: ID de pagamento externo)
+    id_pagamento = db.Column(db.Integer, primary_key=True)
+    id_agendamento = db.Column(db.Integer, db.ForeignKey('agendamentos.id_agendamento'), nullable=True)
+    id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False)
+    id_servico = db.Column(db.Integer, db.ForeignKey('servicos.id_servico'), nullable=False)
+    id_colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.id_colaborador'), nullable=True)
+    id_plano = db.Column(db.Integer, db.ForeignKey('planos.id_plano'), nullable=True)
+    id_plano_tratamento = db.Column(db.Integer, db.ForeignKey('planos_tratamento.id_plano_tratamento'), nullable=True)  # Adicionando a chave estrangeira
+    valor = db.Column(db.Numeric(10, 2), nullable=True)
+    metodo_pagamento = db.Column(db.String(50), nullable=False, default='a definir')
+    status = db.Column(db.String(20), nullable=False, default='pendente')
+    data_pagamento = db.Column(db.DateTime, nullable=True)
+    referencia_pagamento = db.Column(db.String(255), nullable=True)
 
     # Relacionamentos
     agendamento = db.relationship('Agendamentos', back_populates='pagamento', uselist=False)
-    cliente = db.relationship('Clientes', backref='pagamentos')  # Relacionamento com Clientes
-    servico = db.relationship('Servicos', backref='pagamentos')  # Relacionamento com Servicos
-    colaborador = db.relationship('Colaboradores', backref='pagamentos')  # Relacionamento com Colaboradores
-    plano = db.relationship('Planos', backref='pagamentos')  # Relacionamento com Planos (opcional, caso o pagamento seja associado a um plano específico)
-
+    cliente = db.relationship('Clientes', backref='pagamentos')
+    servico = db.relationship('Servicos', backref='pagamentos')
+    colaborador = db.relationship('Colaboradores', backref='pagamentos')
+    plano = db.relationship('Planos', backref='pagamentos')
+    plano_tratamento = db.relationship('PlanosTratamento', backref='pagamentos')  # Agora há uma chave estrangeira correta
 
 class Faturas(db.Model):
     __tablename__ = 'faturas'
@@ -278,40 +280,53 @@ class AulasClientes(db.Model):
     cliente = db.relationship('Clientes')
 
     def __repr__(self):
-        return f'<AulaCliente Aula: {self.id_aula} Cliente: {self.id_cliente}>'
-    
-class PlanosTratamento(db.Model):
-    __tablename__ = 'planos_tratamento'
-    id_plano_tratamento = db.Column(db.Integer, primary_key=True)  # ID único do plano de tratamento
-    id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False)  # Relacionamento com Cliente
-    id_colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.id_colaborador'), nullable=False)  # Relacionamento com Colaborador
-    id_servico = db.Column(db.Integer, db.ForeignKey('servicos.id_servico'), nullable=False)  # Relacionamento com Serviço
-    diagnostico = db.Column(db.Text, nullable=False)  # Diagnóstico inicial do paciente
-    objetivos = db.Column(db.Text, nullable=False)  # Objetivos do plano de tratamento
-    metodologia = db.Column(db.Text, nullable=True)  # Métodos propostos para o tratamento
-    duracao_prevista = db.Column(db.Integer, nullable=False)  # Duração prevista em semanas
-    data_inicio = db.Column(db.Date, nullable=False, default=datetime.utcnow)  # Data de início do plano
-    data_fim = db.Column(db.Date, nullable=True)  # Data de término do plano (opcional)
-    anamnese_filename = db.Column(db.String(255), nullable=True)  # Novo campo para armazenar o nome do arquivo
+        return f'<AulaCliente Aula: {self.id_aula} Cliente: {self.id_cliente}>'  
+
+# Tabela Associativa entre Planos de Tratamento e Serviços
+class PlanosTratamentoServicos(db.Model):
+    __tablename__ = 'planos_tratamento_servicos'
+    id = db.Column(db.Integer, primary_key=True)
+    id_plano_tratamento = db.Column(db.Integer, db.ForeignKey('planos_tratamento.id_plano_tratamento'), nullable=False)
+    id_servico = db.Column(db.Integer, db.ForeignKey('servicos.id_servico'), nullable=False)
+    quantidade_sessoes = db.Column(db.Integer, nullable=False, default=1)  # Número de sessões previstas
+    sessoes_utilizadas = db.Column(db.Integer, nullable=False, default=0)
 
     # Relacionamentos
-    cliente = db.relationship('Clientes', backref='planos_tratamento')
-    colaborador = db.relationship('Colaboradores', backref='planos_tratamento')
-    servico = db.relationship('Servicos', backref='planos_tratamento')
+    plano_tratamento = db.relationship('PlanosTratamento', back_populates='servicos_relacionados')
+    servico = db.relationship('Servicos', back_populates='planos_tratamento_relacionados')
+ 
+# Planos de Tratamento (Agora são fixos e recomendados)
+class PlanosTratamento(db.Model):
+    __tablename__ = 'planos_tratamento'
+    id_plano_tratamento = db.Column(db.Integer, primary_key=True)
+    diagnostico = db.Column(db.Text, nullable=False)  # Diagnóstico padrão do plano
+    objetivos = db.Column(db.Text, nullable=False)  # Objetivos do plano fixo
+    metodologia = db.Column(db.Text, nullable=True)  # Metodologia recomendada
+    duracao_prevista = db.Column(db.Integer, nullable=False)  # Duração prevista (semanas)
+    valor = db.Column(db.Numeric(10, 2), nullable=True)  # Valor fixo do plano
 
+    # Relacionamento com serviços
+    servicos_relacionados = db.relationship('PlanosTratamentoServicos', back_populates='plano_tratamento')
+
+# Modelo: Histórico de Sessões (Agora relaciona Cliente, Colaborador e Agendamento)
 class HistoricoSessao(db.Model):
     __tablename__ = 'historico_sessao'
     id_sessao = db.Column(db.Integer, primary_key=True)  # ID único da sessão
-    id_plano_tratamento = db.Column(db.Integer, db.ForeignKey('planos_tratamento.id_plano_tratamento'), nullable=False)  # Relacionamento com PlanoTratamento
+    id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False)  # Cliente vinculado
+    id_colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.id_colaborador'), nullable=False)  # Colaborador responsável
+    id_plano_tratamento = db.Column(db.Integer, db.ForeignKey('planos_tratamento.id_plano_tratamento'), nullable=True)  # Plano utilizado
+    id_agendamento = db.Column(db.Integer, db.ForeignKey('agendamentos.id_agendamento'), nullable=False)  # Relacionamento com Agendamento
     data_sessao = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)  # Data e hora da sessão
-    detalhes = db.Column(db.Text, nullable=True)  # Detalhes das atividades da sessão
+    detalhes = db.Column(db.Text, nullable=True)  # Detalhes das atividades realizadas
     observacoes = db.Column(db.Text, nullable=True)  # Observações feitas pelo colaborador
-    avaliacao_cliente = db.Column(db.Text, nullable=True)  # Avaliação ou feedback do cliente
+    avaliacao_cliente = db.Column(db.Text, nullable=True)  # Feedback do cliente
     ficha_anamnese = db.Column(db.String(255), nullable=True)  # Caminho ou nome do arquivo da ficha de anamnese
-
-    # Relacionamento
-    plano_tratamento = db.relationship('PlanosTratamento', backref='historico_sessao')
-
+    sessoes_realizadas = db.Column(db.Integer, nullable=False, default=0)  # Número de sessões realizadas
+    # Relacionamentos
+    cliente = db.relationship('Clientes', backref='historico_sessoes')
+    colaborador = db.relationship('Colaboradores', backref='historico_sessoes')
+    plano_tratamento = db.relationship('PlanosTratamento', backref='historico_sessoes')
+    agendamento = db.relationship('Agendamentos', backref='historico_sessoes')
 
 
 class BlacklistedToken(db.Model):
