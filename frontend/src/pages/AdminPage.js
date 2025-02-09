@@ -12,7 +12,10 @@ import GerenciarPagamentos from "./GerenciarPagamentos";
 import GerenciarAulasPilates from "../components/pilates/usuariocolaborador/GerenciarAulasPilates";
 import CrudPlanoTratamento from "../components/planosTratamento/CrudPlanoTratamento";  // Importação do componente
 import CriarPlanoTratamento from "../components/planosTratamento/CriarPlanoTratamento";
-import HistoricoPlanos from "../components/planosTratamento/HistoricoPlanos";
+import HistoricoPlanos from "../components/planosTratamento/historicoPlanos";
+import HistoricoSessoes from "../components/planosTratamento/HistoricoSessoes";  // Importação do componente
+
+
 const AdminPage = () => {
   const savedRole = localStorage.getItem("role");
   const savedOpcao = localStorage.getItem("opcaoSelecionada") || "dashboard";
@@ -30,7 +33,7 @@ const AdminPage = () => {
     <div className="container-fluid p-4 bg-light rounded shadow">
       <nav className="navbar navbar-expand-lg navbar-light bg-subnavbar mb-4 rounded">
         <div className="container-fluid">
-          <ul className="navbar-nav mx-auto">
+          <ul className="navbar-nav mx-auto ">
             <li className="nav-item">
               <a
                 href="#dashboard"
@@ -51,21 +54,20 @@ const AdminPage = () => {
             </li>
             <li className="nav-item dropdown">
               <a
-                className={`nav-link dropdown-toggle ${
-                  opcaoSelecionada === "servicos" || opcaoSelecionada === "planosTratamento" ? "active" : ""
-                }`}
+                className={`nav-link dropdown-toggle ${opcaoSelecionada === "servicos" || opcaoSelecionada === "planosTratamento" ? "active" : ""
+                  }`}
                 href="#"
                 id="servicosDropdown"
                 role="button"
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
               >
-                <i className="bi bi-person-bounding-box"></i> Serviços 
+                <i className="bi bi-person-bounding-box"></i> Serviços
               </a>
-              <ul className="dropdown-menu dropdownAgendamentos" aria-labelledby="servicosDropdown">
+              <ul className="dropdown-menu dropdownAgendamentos z-top" aria-labelledby="servicosDropdown">
                 <li>
                   <a
-                    className={`dropdown-item ${opcaoSelecionada === "servicos" ? "active" : ""}`}
+                    className={`dropdown-item z-top ${opcaoSelecionada === "servicos" ? "active" : ""}`}
                     href="#servicos"
                     onClick={() => handleOpcaoChange("servicos")}
                   >
@@ -74,7 +76,7 @@ const AdminPage = () => {
                 </li>
                 <li>
                   <a
-                    className={`dropdown-item ${opcaoSelecionada === "planosTratamento" ? "active" : ""}`}
+                    className={`dropdown-item z-top ${opcaoSelecionada === "planosTratamento" ? "active" : ""}`}
                     href="#planosTratamento"
                     onClick={() => handleOpcaoChange("planosTratamento")}
                   >
@@ -83,7 +85,7 @@ const AdminPage = () => {
                 </li>
                 <li>
                   <a
-                    className={`dropdown-item ${opcaoSelecionada === "historicoPlano" ? "active" : ""}`}
+                    className={`dropdown-item z-top ${opcaoSelecionada === "historicoPlano" ? "active" : ""}`}
                     href="#historicoPlano"
                     onClick={() => handleOpcaoChange("historicoPlano")}
                   >
@@ -92,13 +94,25 @@ const AdminPage = () => {
                 </li>
                 <li>
                   <a
-                    className={`dropdown-item ${opcaoSelecionada === "criarPlanoTratamento" ? "active" : ""}`}
+                    className={`dropdown-item z-top ${opcaoSelecionada === "criarPlanoTratamento" ? "active" : ""}`}
                     href="#CriarPlanoTratamento"
                     onClick={() => handleOpcaoChange("criarPlanoTratamento")}
                   >
                     <i className="bi bi-clipboard2-pulse"></i> Gerenciar Planos de Tratamento
                   </a>
                 </li>
+
+                <li>
+                  <a
+                    className={`dropdown-item ${opcaoSelecionada === "historicoSessoes" ? "active" : ""}`}
+                    href="#historicoSessoes"
+                    onClick={() => handleOpcaoChange("historicoSessoes")}
+                  >
+                    <i className="bi bi-clock-history"></i> Histórico de Sessões
+                  </a>
+                </li>
+
+
               </ul>
             </li>
             <li className="nav-item">
@@ -130,9 +144,8 @@ const AdminPage = () => {
             </li>
             <li className="nav-item dropdown">
               <a
-                className={`nav-link dropdown-toggle ${
-                  opcaoSelecionada === "criarAgendamento" || opcaoSelecionada === "visualizarAgendamentos" || opcaoSelecionada === "CalendarioInterativo" ? "active" : ""
-                }`}
+                className={`nav-link dropdown-toggle ${opcaoSelecionada === "criarAgendamento" || opcaoSelecionada === "visualizarAgendamentos" || opcaoSelecionada === "CalendarioInterativo" ? "active" : ""
+                  }`}
                 href="#"
                 id="agendamentoDropdown"
                 role="button"
@@ -188,6 +201,7 @@ const AdminPage = () => {
       {opcaoSelecionada === "planosTratamento" && <CrudPlanoTratamento />}  {/* Renderização do CRUD de Planos de Tratamento */}
       {opcaoSelecionada === "criarPlanoTratamento" && <CriarPlanoTratamento />}  {/* Renderização do CRUD de Planos de Tratamento */}
       {opcaoSelecionada === "historicoPlano" && <HistoricoPlanos />}  {/* Renderização do CRUD de Planos de Tratamento */}
+      {opcaoSelecionada === "historicoSessoes" && <HistoricoSessoes />}
     </div>
   );
 };

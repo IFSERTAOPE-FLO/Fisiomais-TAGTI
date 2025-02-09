@@ -220,7 +220,7 @@ class Agendamentos(db.Model):
 class Pagamentos(db.Model):
     __tablename__ = 'pagamentos'
     id_pagamento = db.Column(db.Integer, primary_key=True)
-    id_agendamento = db.Column(db.Integer, db.ForeignKey('agendamentos.id_agendamento'), nullable=False)
+    id_agendamento = db.Column(db.Integer, db.ForeignKey('agendamentos.id_agendamento'), nullable=True)
     id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False)
     id_servico = db.Column(db.Integer, db.ForeignKey('servicos.id_servico'), nullable=False)
     id_colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.id_colaborador'), nullable=True)
@@ -289,6 +289,7 @@ class PlanosTratamentoServicos(db.Model):
     id_plano_tratamento = db.Column(db.Integer, db.ForeignKey('planos_tratamento.id_plano_tratamento'), nullable=False)
     id_servico = db.Column(db.Integer, db.ForeignKey('servicos.id_servico'), nullable=False)
     quantidade_sessoes = db.Column(db.Integer, nullable=False, default=1)  # Número de sessões previstas
+    sessoes_utilizadas = db.Column(db.Integer, nullable=False, default=0)
 
     # Relacionamentos
     plano_tratamento = db.relationship('PlanosTratamento', back_populates='servicos_relacionados')
@@ -313,14 +314,14 @@ class HistoricoSessao(db.Model):
     id_sessao = db.Column(db.Integer, primary_key=True)  # ID único da sessão
     id_cliente = db.Column(db.Integer, db.ForeignKey('clientes.id_cliente'), nullable=False)  # Cliente vinculado
     id_colaborador = db.Column(db.Integer, db.ForeignKey('colaboradores.id_colaborador'), nullable=False)  # Colaborador responsável
-    id_plano_tratamento = db.Column(db.Integer, db.ForeignKey('planos_tratamento.id_plano_tratamento'), nullable=False)  # Plano utilizado
+    id_plano_tratamento = db.Column(db.Integer, db.ForeignKey('planos_tratamento.id_plano_tratamento'), nullable=True)  # Plano utilizado
     id_agendamento = db.Column(db.Integer, db.ForeignKey('agendamentos.id_agendamento'), nullable=False)  # Relacionamento com Agendamento
     data_sessao = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)  # Data e hora da sessão
     detalhes = db.Column(db.Text, nullable=True)  # Detalhes das atividades realizadas
     observacoes = db.Column(db.Text, nullable=True)  # Observações feitas pelo colaborador
     avaliacao_cliente = db.Column(db.Text, nullable=True)  # Feedback do cliente
     ficha_anamnese = db.Column(db.String(255), nullable=True)  # Caminho ou nome do arquivo da ficha de anamnese
-
+    sessoes_realizadas = db.Column(db.Integer, nullable=False, default=0)  # Número de sessões realizadas
     # Relacionamentos
     cliente = db.relationship('Clientes', backref='historico_sessoes')
     colaborador = db.relationship('Colaboradores', backref='historico_sessoes')

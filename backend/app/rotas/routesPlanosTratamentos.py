@@ -207,66 +207,7 @@ def criar_sessao():
         "id_sessao": nova_sessao.id_sessao
     }), 201
     
-@planos_de_tratamento.route('/agendamento-plano-tratamento', methods=['POST'])
-@jwt_required()
-def agendamento_sem_pagamento():
-    try:
-        data = request.get_json()
-        current_user_email = get_jwt_identity()
-        colaborador = Colaboradores.query.filter_by(email=current_user_email).first()
 
-        if not colaborador:
-            return jsonify({'message': 'Acesso negado'}), 403
-
-        required_fields = ['cliente_id', 'servico_id', 'data', 'detalhes']
-        for field in required_fields:
-            if field not in data:
-                return jsonify({'message': f'Campo obrigatório ausente: {field}'}), 400
-
-        cliente = Clientes.query.get(data['cliente_id'])
-        servico = Servicos.query.get(data['servico_id'])
-
-        if not cliente or not servico:
-            return jsonify({'message': 'Cliente ou serviço não encontrado'}), 404
-
-        # Verificar se o serviço requer plano
-        if 'pilates' in [t.tipo for t in servico.tipo_servicos] and not cliente.plano_id:
-            return jsonify({'message': 'Plano necessário para este serviço'}), 400
-
-        # Criar agendamento
-        novo_agendamento = Agendamentos(
-            data_e_hora=datetime.fromisoformat(data['data']),
-            id_cliente=cliente.id_cliente,
-            id_colaborador=colaborador.id_colaborador,
-            id_servico=servico.id_servico,
-            status='Confirmado',
-            id_clinica=colaborador.clinica_id
-        )
-        db.session.add(novo_agendamento)
-        db.session.commit()
-
-        # Adicionar ao histórico
-        nova_sessao = HistoricoSessao(
-            id_cliente=cliente.id_cliente,
-            id_colaborador=colaborador.id_colaborador,
-            id_agendamento=novo_agendamento.id_agendamento,
-            id_plano_tratamento=cliente.plano_id if cliente.plano_id else None,
-            data_sessao=novo_agendamento.data_e_hora,
-            detalhes=data.get('detalhes', '')
-        )
-        db.session.add(nova_sessao)
-        db.session.commit()
-
-        return jsonify({
-            'message': 'Agendamento criado com sucesso',
-            'agendamento_id': novo_agendamento.id_agendamento,
-            'sessao_id': nova_sessao.id_sessao
-        }), 201
-
-    except Exception as e:
-        db.session.rollback()
-        print(f"Erro: {str(e)}")
-        return jsonify({'message': 'Erro interno no servidor'}), 500
 # Rotas para Histórico de Sessões
 @planos_de_tratamento.route('/historico-sessoes/<int:cliente_id>', methods=['GET'])
 @jwt_required()

@@ -1,5 +1,5 @@
 from flask import Blueprint, current_app, send_from_directory, request, jsonify
-from app.models import Colaboradores, Agendamentos, Clientes, Servicos, Horarios, Clinicas,Planos, Pagamentos, db
+from app.models import Colaboradores, Agendamentos, HistoricoSessao,PlanosTratamentoServicos, Clientes, Servicos, Horarios, Clinicas,Planos, Pagamentos, db
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_mail import Message
 from flask import current_app
@@ -941,76 +941,103 @@ def listar_agendamentos_calendario():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@agendamentos.route('/sem-pagamento', methods=['POST'])
+@agendamentos.route('/agendamento-plano-tratamento', methods=['POST'])
 @jwt_required()
 def agendamento_sem_pagamento():
     try:
         data = request.get_json()
-        print(f"Dados recebidos: {data}")
-
-        # Verificar se o usuário é colaborador
         current_user_email = get_jwt_identity()
-        colaborador = Colaboradores.query.filter_by(email=current_user_email).first()
-        if not colaborador:
-            return jsonify({'message': 'Acesso negado. Somente colaboradores podem criar este tipo de agendamento.'}), 403
+        colaborador_logado = Colaboradores.query.filter_by(email=current_user_email).first()
 
-        # Campos obrigatórios
-        required_fields = ['cliente_id', 'servico_id', 'colaborador_id', 'data', 'clinica_id']
+        if not colaborador_logado:
+            return jsonify({'message': 'Acesso negado'}), 403
+
+        required_fields = ['cliente_id', 'servico_id', 'data']
         for field in required_fields:
             if field not in data:
                 return jsonify({'message': f'Campo obrigatório ausente: {field}'}), 400
 
-        # Buscar entidades relacionadas
         cliente = Clientes.query.get(data['cliente_id'])
         servico = Servicos.query.get(data['servico_id'])
-        clinica = Clinicas.query.get(data['clinica_id'])
 
-        if not cliente or not servico or not clinica:
-            return jsonify({'message': 'Cliente, serviço ou clínica não encontrados'}), 404
+        if not cliente or not servico:
+            return jsonify({'message': 'Cliente ou serviço não encontrado'}), 404
 
-        
-        
-        # Converter data/horário
-        try:
-            data_e_hora_utc = datetime.fromisoformat(data['data']).astimezone(timezone('UTC'))
-            data_e_hora_local = data_e_hora_utc.astimezone(BRASILIA).replace(tzinfo=None)
-        except ValueError as e:
-            return jsonify({'message': f'Formato de data inválido: {e}'}), 400
+        # Obter o ID do plano de tratamento do histórico do cliente
+        ultima_sessao = (
+            HistoricoSessao.query.filter_by(id_cliente=cliente.id_cliente)
+            .order_by(HistoricoSessao.data_sessao.desc())  # Buscar a sessão mais recente
+            .first()
+        )
+        id_plano_tratamento = ultima_sessao.id_plano_tratamento if ultima_sessao else None
 
-        # Verificar conflito de horário
-        agendamento_existente = Agendamentos.query.filter(
-            Agendamentos.id_colaborador == data['colaborador_id'],
-            Agendamentos.data_e_hora == data_e_hora_local
-        ).first()
+        # Verificar se o serviço requer plano
+        if 'pilates' in [t.tipo for t in servico.tipo_servicos] and not id_plano_tratamento:
+            return jsonify({'message': 'Plano necessário para este serviço'}), 400
 
-        if agendamento_existente:
-            return jsonify({'message': 'Horário já ocupado para este colaborador'}), 400
+        # Definir o colaborador para o agendamento
+        colaborador_id = data.get('colaborador_id')  # Pode ser enviado pelo frontend
+        if colaborador_id:
+            colaborador_escolhido = Colaboradores.query.get(colaborador_id)
+            if not colaborador_escolhido:
+                return jsonify({'message': 'Colaborador não encontrado'}), 404
+            if not colaborador_escolhido.clinica_id:
+                return jsonify({'message': 'Colaborador não tem clínica associada'}), 400
+        else:
+            colaborador_escolhido = colaborador_logado
 
         # Criar agendamento
         novo_agendamento = Agendamentos(
-            data_e_hora=data_e_hora_local,
+            data_e_hora=datetime.fromisoformat(data['data']),
             id_cliente=cliente.id_cliente,
-            id_colaborador=data['colaborador_id'],
+            id_colaborador=colaborador_escolhido.id_colaborador,
             id_servico=servico.id_servico,
-            status="Confirmado",  # Confirmado automaticamente por ser colaborador
-            id_clinica=clinica.id_clinica
+            status='Confirmado',
+            id_clinica=colaborador_escolhido.clinica_id
         )
-
         db.session.add(novo_agendamento)
+        db.session.commit()
+
+        # Contar sessões realizadas pelo cliente no plano específico
+        sessoes_realizadas = HistoricoSessao.query.filter_by(
+            id_cliente=cliente.id_cliente,
+            id_plano_tratamento=id_plano_tratamento
+        ).count()
+
+        # Obter a quantidade total de sessões previstas no plano
+        plano_tratamento = PlanosTratamentoServicos.query.filter_by(
+            id_plano_tratamento=id_plano_tratamento,
+            id_servico=servico.id_servico
+        ).first()
+
+        total_sessoes = plano_tratamento.quantidade_sessoes if plano_tratamento else 0
+        sessoes_restantes = max(total_sessoes - sessoes_realizadas, 0)
+
+        # Adicionar ao histórico com o detalhamento do progresso
+        detalhes_sessao = data.get('detalhes', '')
+        progresso = f"Sessões realizadas: {sessoes_realizadas}/{total_sessoes} (Faltam {sessoes_restantes})"
+        detalhes_completos = f"Serviço: {servico.nome}\n{detalhes_sessao}\n{progresso}" if detalhes_sessao else f"Serviço: {servico.nome}\n{progresso}"
+
+        nova_sessao = HistoricoSessao(
+            id_cliente=cliente.id_cliente,
+            id_colaborador=colaborador_escolhido.id_colaborador,
+            id_agendamento=novo_agendamento.id_agendamento,
+            id_plano_tratamento=id_plano_tratamento,
+            data_sessao=novo_agendamento.data_e_hora,
+            detalhes=detalhes_completos
+        )
+        db.session.add(nova_sessao)
         db.session.commit()
 
         return jsonify({
             'message': 'Agendamento criado com sucesso',
-            'detalhes': {
-                'id': novo_agendamento.id_agendamento,
-                'data': data_e_hora_local.isoformat(),
-                'servico': servico.nome,
-                'cliente': cliente.nome,
-                'colaborador': colaborador.nome
-            }
+            'agendamento_id': novo_agendamento.id_agendamento,
+            'sessao_id': nova_sessao.id_sessao
         }), 201
 
     except Exception as e:
         db.session.rollback()
         print(f"Erro: {str(e)}")
-        return jsonify({'message': f'Erro interno no servidor: {str(e)}'}), 500
+        return jsonify({'message': 'Erro interno no servidor'}), 500
+
+

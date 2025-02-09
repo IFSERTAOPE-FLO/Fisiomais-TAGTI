@@ -302,44 +302,46 @@ const CrudPlanosTratamento = () => {
                             <Row className="mb-3">
                                 <Col>
                                     <h5>Serviços Associados</h5>
-                                    {servicos.map(servico => (
-                                        <div key={servico.id_servico} className="mb-3">
-                                            {/* Checkbox HTML com Bootstrap */}
-                                            <div className="form-check">
-                                                <input
-                                                    type="checkbox"
-                                                    className="form-check-input"
-                                                    id={`servico-${servico.id_servico}`}
-                                                    checked={formData.servicos.some(s => s.id_servico === servico.id_servico)}
-                                                    onChange={(e) => handleServicoChange(
-                                                        servico.id_servico,
-                                                        e.target.checked ? 1 : 0
-                                                    )}
-                                                />
-                                                <label
-                                                    htmlFor={`servico-${servico.id_servico}`}
-                                                    className="form-check-label text-dark" // Classe para garantir texto escuro
-                                                >
-                                                    {servico.nome}
-                                                </label>
-                                            </div>
+                                    <Row>
+                                        {servicos.map(servico => (
+                                            <Col key={servico.id_servico} md={3} className="mb-3"> {/* Exibe 2 serviços por linha em telas médias ou maiores */}
+                                                {/* Checkbox HTML com Bootstrap */}
+                                                <div className="form-check">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="form-check-input"
+                                                        id={`servico-${servico.id_servico}`}
+                                                        checked={formData.servicos.some(s => s.id_servico === servico.id_servico)}
+                                                        onChange={(e) => handleServicoChange(
+                                                            servico.id_servico,
+                                                            e.target.checked ? 1 : 0
+                                                        )}
+                                                    />
+                                                    <label
+                                                        htmlFor={`servico-${servico.id_servico}`}
+                                                        className="form-check-label text-dark" // Classe para garantir texto escuro
+                                                    >
+                                                        {servico.nome}
+                                                    </label>
+                                                </div>
 
-                                            {/* Campo de quantidade de sessões */}
-                                            {formData.servicos.some(s => s.id_servico === servico.id_servico) && (
-                                                <input
-                                                    type="number"
-                                                    placeholder="Quantidade de sessões"
-                                                    value={formData.servicos.find(s => s.id_servico === servico.id_servico)?.quantidade_sessoes || ""}
-                                                    onChange={(e) => handleServicoChange(
-                                                        servico.id_servico,
-                                                        parseInt(e.target.value)
-                                                    )}
-                                                    className="form-control mt-2"
-                                                    min="1"
-                                                />
-                                            )}
-                                        </div>
-                                    ))}
+                                                {/* Campo de quantidade de sessões */}
+                                                {formData.servicos.some(s => s.id_servico === servico.id_servico) && (
+                                                    <input
+                                                        type="number"
+                                                        placeholder="Quantidade de sessões"
+                                                        value={formData.servicos.find(s => s.id_servico === servico.id_servico)?.quantidade_sessoes || ""}
+                                                        onChange={(e) => handleServicoChange(
+                                                            servico.id_servico,
+                                                            parseInt(e.target.value)
+                                                        )}
+                                                        className="form-control mt-2 w-50" // Reduz o tamanho do campo para 50% da largura
+                                                        min="1"
+                                                    />
+                                                )}
+                                            </Col>
+                                        ))}
+                                    </Row>
                                 </Col>
                             </Row>
                         </Form>
