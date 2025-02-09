@@ -13,6 +13,7 @@ import GerenciarAulasPilates from "../components/pilates/usuariocolaborador/Gere
 import CrudPlanoTratamento from "../components/planosTratamento/CrudPlanoTratamento";  // Importação do componente
 import CriarPlanoTratamento from "../components/planosTratamento/CriarPlanoTratamento";
 import HistoricoPlanos from "../components/planosTratamento/HistoricoPlanos";
+ 
 const AdminPage = () => {
   const savedRole = localStorage.getItem("role");
   const savedOpcao = localStorage.getItem("opcaoSelecionada") || "dashboard";
@@ -30,7 +31,7 @@ const AdminPage = () => {
     <div className="container-fluid p-4 bg-light rounded shadow">
       <nav className="navbar navbar-expand-lg navbar-light bg-subnavbar mb-4 rounded">
         <div className="container-fluid">
-          <ul className="navbar-nav mx-auto">
+          <ul className="navbar-nav mx-auto z-top">
             <li className="nav-item">
               <a
                 href="#dashboard"
