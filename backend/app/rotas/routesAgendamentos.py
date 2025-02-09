@@ -1012,6 +1012,22 @@ def agendamento_sem_pagamento():
                 cliente.id_plano = plano_selecionado.id_plano
         db.session.add(novo_agendamento)
         db.session.commit()
+        
+        # Criar pagamento relacionado
+        pagamento = Pagamentos(
+                id_agendamento=novo_agendamento.id_agendamento,
+                id_cliente=cliente.id_cliente,
+                id_servico=servico.id_servico,
+                id_colaborador=colaborador_escolhido.id_colaborador,
+                id_plano=plano_selecionado.id_plano if plano_selecionado else None,
+                valor=plano_selecionado.valor if plano_selecionado else None,
+                metodo_pagamento=None,  # A ser definido mais tarde
+                status="Pendente",
+                data_pagamento=None,
+                referencia_pagamento=None
+            )
+        db.session.add(pagamento)
+        db.session.commit()
 
         # Contar sessões realizadas pelo cliente no plano específico
         sessoes_realizadas = HistoricoSessao.query.filter_by(

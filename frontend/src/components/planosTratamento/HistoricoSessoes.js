@@ -6,7 +6,7 @@ import IniciarPlanoTratamento from './IniciarPlanoTratamento';
 
 import Paginator from '../Paginator'; // Certifique-se de que o caminho está correto
 import CriarAgendamento from "../../pages/CriarAgendamento";
-
+import Select from 'react-select';
 
 const apiBaseUrl = "http://localhost:5000/";
 
@@ -33,6 +33,8 @@ const HistoricoSessoes = () => {
 
     const token = localStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}` };
+
+
 
     useEffect(() => {
         axios.get(`${apiBaseUrl}clientes/`, { headers })
@@ -127,38 +129,57 @@ const HistoricoSessoes = () => {
                     <Row className="mb-4">
                         <Col md={6}>
                             <Form.Group controlId="clienteSelect">
-                                <Form.Label><FaUser className="me-2" />Selecione o Paciente</Form.Label>
-                                <Form.Control as="select" onChange={handleSelectCliente} value={selectedCliente}>
-                                    <option value="">Escolha um paciente...</option>
-                                    {clientes.map(cliente => (
-                                        <option key={cliente.ID_Cliente} value={cliente.ID_Cliente}>
-                                            {cliente.Nome}
-                                        </option>
-                                    ))}
-                                </Form.Control>
+                                <div className="d-flex align-items-center">
+                                    <Form.Label className="mb-2 me-3">
+                                        <FaUser className="me-2" />
+                                        Selecione o Paciente
+                                    </Form.Label>
+                                    <Select
+                                        options={clientes.map(cliente => ({
+                                            value: cliente.ID_Cliente,
+                                            label: cliente.Nome,
+                                        }))}
+                                        value={
+                                            clientes
+                                                .map(cliente => ({
+                                                    value: cliente.ID_Cliente,
+                                                    label: cliente.Nome,
+                                                }))
+                                                .find(option => option.value === selectedCliente) || null
+                                        }
+                                        onChange={(selectedOption) =>
+                                            handleSelectCliente({ target: { value: selectedOption ? selectedOption.value : '' } })
+                                        }
+                                        placeholder="Escolha um paciente..."
+                                        isClearable
+                                        className="w-auto"
+                                    />
+                                </div>
+
                             </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                            {selectedCliente && (
+                                <div className="d-flex justify-content-end mb-3">
+                                    <Button className="btn btn-login" onClick={() => handleShowModal()}>
+                                        <FaPlus className="me-2" />Nova Sessão
+                                    </Button>
+                                    {!showCriarAgendamento ? (
+                                        <button className="btn btn-signup ms-2" onClick={() => setShowCriarAgendamento(true)}>
+                                            <FaPlus className="me-2" />Criar Agendamento
+                                        </button>
+                                    ) : (
+                                        <button className="btn btn-signup ms-2 " onClick={() => setShowCriarAgendamento(false)}>
+                                            Voltar
+                                        </button>
+                                    )}
+                                </div>)}
+
                         </Col>
                     </Row>
 
                     {selectedCliente && (
                         <>
-
-                            <div className="d-flex justify-content-end mb-3">
-                                <Button className="btn btn-login" onClick={() => handleShowModal()}>
-                                    <FaPlus className="me-2" />Nova Sessão
-                                </Button>
-                                {!showCriarAgendamento ? (
-                                    <button className="btn btn-signup ms-2" onClick={() => setShowCriarAgendamento(true)}>
-                                        <FaPlus className="me-2" />Criar Agendamento
-                                    </button>
-                                ) : (
-                                    <button className="btn btn-signup ms-2 " onClick={() => setShowCriarAgendamento(false)}>
-                                        Voltar
-                                    </button>
-                                )}
-                            </div>
-
-
                             {showCriarAgendamento && (
 
                                 <CriarAgendamento />
@@ -168,8 +189,8 @@ const HistoricoSessoes = () => {
 
 
                             <div className="table-responsive">
-                                <Table striped hover className=" table table-striped" >
-                                    <thead className="table-dark">
+                                <table className="table table-striped table-bordered mt-4 agendamento-header" >
+                                    <thead >
                                         <tr>
                                             <th>
                                                 <FaCalendarAlt className="me-2" />Data
@@ -181,7 +202,7 @@ const HistoricoSessoes = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {sessoes.map(sessao => (
+                                        {currentSessoes.map(sessao => (
                                             <tr key={sessao.id_sessao}>
                                                 <td>
                                                     {new Date(sessao.data_sessao).toLocaleDateString('pt-BR', {
@@ -263,7 +284,7 @@ const HistoricoSessoes = () => {
                                             </tr>
                                         ))}
                                     </tbody>
-                                </Table>
+                                </table>
                             </div>
 
                         </>

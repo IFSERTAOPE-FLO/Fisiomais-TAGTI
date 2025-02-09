@@ -305,7 +305,8 @@ def populate_database():
                 nome=cliente["nome"],
                 email=cliente["email"],
                 telefone=cliente["telefone"],
-                cpf=cliente["cpf"]
+                cpf=cliente["cpf"],  # Senha padrão
+                
             )
             new_cliente.set_password("123")  # Criptografando a senha
             db.session.add(new_cliente)
@@ -331,7 +332,9 @@ def populate_database_extra():
             email='carlos.silva@example.com',
             telefone='987654321',
             cpf='123.456.789-00',
-            senha='123'  # Senha padrão
+            senha='123',  # Senha padrão
+            plano_id=1
+            
         )
         db.session.add(cliente)
         db.session.flush()

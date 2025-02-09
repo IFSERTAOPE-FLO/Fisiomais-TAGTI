@@ -29,6 +29,8 @@ class Config:
     # Configurações de JWT
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=1) # Tempo do access token
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)    # Tempo do refresh token
+    
+    
 
     # Criar pasta de uploads se não existir
     if not os.path.exists(UPLOAD_FOLDER):

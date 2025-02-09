@@ -40,7 +40,28 @@ const GerenciarPagamentos = () => {
     }
   }, [pagamentoId]);
 
+// Função para chamar a rota de geração de pagamentos automáticos
+const handleGerarPagamentos = async () => {
+  setLoading(true);
+  setSucesso(null);
+  setErro(null);
+  try {
+    const response = await axios.post('http://localhost:5000/pagamentos/gerar_pagamentos_automaticos', {}, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    });
+    setSucesso(response.data.message);
 
+    // Opcional: atualiza a lista de pagamentos após a geração
+    const pagamentosResponse = await axios.get('http://localhost:5000/pagamentos/listar', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    });
+    setPagamentos(pagamentosResponse.data.pagamentos);
+  } catch (error) {
+    console.error('Erro ao gerar pagamentos:', error);
+    setErro(error.response?.data?.message || 'Erro ao gerar pagamentos.');
+  }
+  setLoading(false);
+};
 
   useEffect(() => {
     const fetchPagamentos = async () => {
@@ -159,6 +180,7 @@ const GerenciarPagamentos = () => {
         <div className="card-body">
           {erro && <div className="alert alert-danger">{erro}</div>}
           {sucesso && <div className="alert alert-success">{sucesso}</div>}
+      
           <div className="row g-3 align-items-center mb-3">
             {/* Tipo de pesquisa */}
             <div className="col-md-3">
@@ -180,7 +202,7 @@ const GerenciarPagamentos = () => {
             </div>
 
             {/* Campo de pesquisa */}
-            <div className="col-md-5">
+            <div className="col-md-3">
               <div className="input-group">
                 <span className="input-group-text">
                   <FontAwesomeIcon icon={faSearch} />
@@ -215,11 +237,23 @@ const GerenciarPagamentos = () => {
               </div>
 
             </div>
+            
             <div className="col-md-1">
               <button onClick={resetPesquisa} className="btn btn-secondary py-1 d-flex align-items-center">
                 <i className="bi bi-x-circle me-2"></i> Limpar
               </button>
             </div>
+            {(isAdmin || isColaborador) && (   
+      <div className="col-md-2">
+        <button
+          className="btn btn-login"
+          onClick={handleGerarPagamentos}
+          disabled={loading}
+        >
+          {loading ? 'Gerando pagamentos...' : 'Gerar Pagamentos Automáticos'}
+        </button>
+      </div>
+      )}
 
 
           </div>

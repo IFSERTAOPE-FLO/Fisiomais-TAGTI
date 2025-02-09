@@ -280,3 +280,94 @@ def excluir_fatura(id):
     except SQLAlchemyError as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+import calendar
+from datetime import datetime
+
+@pagamentos_faturas.route('/gerar_pagamentos_automaticos', methods=['POST'])
+@jwt_required()
+def gerar_pagamentos_automaticos():
+    try:
+        # Usamos a data atual (UTC) para definir o período de verificação
+        today = datetime.utcnow()
+        pagamentos_criados = 0
+
+        # Busca todos os clientes que possuem um plano associado
+        clientes = Clientes.query.filter(Clientes.plano_id.isnot(None)).all()
+
+        for cliente in clientes:
+            # Recupera o plano associado ao cliente
+            plano = cliente.plano
+            if not plano:
+                continue  # Evita inconsistências
+
+            # Converte o nome do plano para minúsculas para busca case-insensitive
+            plano_nome = plano.nome.lower()
+
+            # Determina a frequência e define o período (início e fim) para verificação
+            frequencia = None
+            period_start = None
+            period_end = None
+
+            if 'mensal' in plano_nome:
+                frequencia = 'mensal'
+                period_start = datetime(today.year, today.month, 1, 0, 0, 0)
+                last_day = calendar.monthrange(today.year, today.month)[1]
+                period_end = datetime(today.year, today.month, last_day, 23, 59, 59, 999999)
+            elif 'trimestral' in plano_nome:
+                frequencia = 'trimestral'
+                # Calcula o trimestre atual: Q1 (Jan-Mar), Q2 (Abr-Jun), Q3 (Jul-Set) ou Q4 (Out-Dez)
+                quarter = (today.month - 1) // 3
+                quarter_start_month = quarter * 3 + 1
+                quarter_end_month = quarter * 3 + 3
+                period_start = datetime(today.year, quarter_start_month, 1, 0, 0, 0)
+                last_day = calendar.monthrange(today.year, quarter_end_month)[1]
+                period_end = datetime(today.year, quarter_end_month, last_day, 23, 59, 59, 999999)
+            elif 'semestral' in plano_nome:
+                frequencia = 'semestral'
+                if today.month <= 6:
+                    period_start = datetime(today.year, 1, 1, 0, 0, 0)
+                    period_end = datetime(today.year, 6, 30, 23, 59, 59, 999999)
+                else:
+                    period_start = datetime(today.year, 7, 1, 0, 0, 0)
+                    period_end = datetime(today.year, 12, 31, 23, 59, 59, 999999)
+            elif 'anual' in plano_nome:
+                frequencia = 'anual'
+                period_start = datetime(today.year, 1, 1, 0, 0, 0)
+                period_end = datetime(today.year, 12, 31, 23, 59, 59, 999999)
+
+            # Se o nome do plano não contiver nenhuma palavra-chave definida, ignora este cliente
+            if not frequencia:
+                continue
+
+            # Verifica se já existe um pagamento para este cliente e plano dentro do período definido
+            existing_payment = Pagamentos.query.filter(
+                Pagamentos.id_cliente == cliente.id_cliente,
+                Pagamentos.id_plano == plano.id_plano,
+                Pagamentos.data_pagamento >= period_start,
+                Pagamentos.data_pagamento <= period_end
+            ).first()
+
+            if existing_payment:
+                # Se já existir um pagamento no período, não cria um novo
+                continue
+
+            # Cria um novo pagamento com base no plano do cliente
+            novo_pagamento = Pagamentos(
+                id_cliente=cliente.id_cliente,
+                id_servico=plano.servico_id,   # O plano está vinculado a um serviço
+                id_plano=plano.id_plano,
+                valor=plano.valor,
+                metodo_pagamento='a definir',  # Pode ser ajustado conforme sua lógica
+                status='pendente',
+                data_pagamento=datetime.utcnow()  # Data de criação do pagamento
+            )
+            db.session.add(novo_pagamento)
+            pagamentos_criados += 1
+
+        db.session.commit()
+        return jsonify({'message': f'{pagamentos_criados} pagamentos gerados com sucesso!'}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': f'Erro ao gerar pagamentos: {str(e)}'}), 500
