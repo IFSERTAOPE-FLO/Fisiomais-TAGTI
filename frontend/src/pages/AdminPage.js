@@ -21,7 +21,7 @@ import DashboardColaborador from './DashboardColaborador';
 const AdminPage = () => {
   const location = useLocation();
   const query = new URLSearchParams(location.search);
-  const opcaoFromQuery = query.get("opcaoSelecionada") || "dashboard";
+  const opcaoFromQuery = query.get("opcaoSelecionada") || "dashboardColaborador";
   const [role, setRole] = useState('');
   const [opcaoSelecionada, setOpcaoSelecionada] = useState(opcaoFromQuery);
   useEffect(() => {
@@ -48,7 +48,7 @@ const AdminPage = () => {
                 className={`nav-link ${opcaoSelecionada === "dashboardColaborador" ? "active" : ""}`}
                 onClick={() => handleOpcaoChange("dashboardColaborador")}
               >
-                <i className="bi bi-house-door"></i> Dashboard
+                <i className="bi bi-speedometer2"></i> Dashboard
               </a>
             </li>
             <li className="nav-item">

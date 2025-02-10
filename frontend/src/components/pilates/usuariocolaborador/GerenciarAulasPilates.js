@@ -5,6 +5,8 @@ import AdicionarClienteAulaColaborador from "./AdicionarClienteAulaColaborador";
 import AdicionarAulaPilates from "./AdicionarAulaPilates";
 import { Modal, Button } from "react-bootstrap"; // Importando Modal e Button do Bootstrap
 import CriarAgendamento from "../../../pages/CriarAgendamento";
+import VincularAlunoPlano from "./VincularAlunoPlano";
+
 const GerenciarAulasPilates = () => {
     const [aulas, setAulas] = useState([]); // Lista de todas as aulas de pilates
     const [pesquisaNome, setPesquisaNome] = useState(""); // Filtro de nome
@@ -23,7 +25,7 @@ const GerenciarAulasPilates = () => {
     const [aulaParaExcluir, setAulaParaExcluir] = useState(null); // Aula para excluir
     const [adicionandoAula, setAdicionandoAula] = useState(false);
     const [adicionandoAgendamento, setAdicionandoAgendamento] = useState(false);
-    
+
     const buscarAulas = async () => {
         try {
             const response = await fetch(`${apiBaseUrl}pilates/listar_aulas`, {
@@ -142,11 +144,11 @@ const GerenciarAulasPilates = () => {
 
     return (
         <div className="container">
-            
-            
-          <h2 className=" mb-4 text-center text-secondary ">Gerenciar Aulas de Pilates</h2>
-        
-            
+
+
+            <h2 className=" mb-4 text-center text-secondary ">Gerenciar Aulas de Pilates</h2>
+
+
 
             <div className="card-body">
                 {erro && <p className="alert alert-danger">{erro}</p>}
@@ -218,41 +220,41 @@ const GerenciarAulasPilates = () => {
                         </select>
                     </div>
                     {!adicionandoAula ? (
-                    <div className="col-md-2 d-flex justify-content-md-end mt-2 mt-md-0">
-                        <button className="btn btn-login" onClick={() => setAdicionandoAula(true)}>
-                            <i className="bi bi-plus-circle"></i> Adicionar nova aula
-                        </button>
-                    </div>
-                ) : (
-                    <div className="col-md-2 d-flex  mt-2 mt-md-0">
-                        <button className="btn btn-signup" onClick={() => setAdicionandoAula(false)}>
-                            <i className="bi bi-arrow-left"></i> Voltar
-                        </button>
-                    </div>
-                )}
-                {!adicionandoAgendamento ? (
+                        <div className="col-md-2 d-flex justify-content-md-end mt-2 mt-md-0">
+                            <button className="btn btn-login" onClick={() => setAdicionandoAula(true)}>
+                                <i className="bi bi-plus-circle"></i> Adicionar nova aula
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="col-md-2 d-flex  mt-2 mt-md-0">
+                            <button className="btn btn-signup" onClick={() => setAdicionandoAula(false)}>
+                                <i className="bi bi-arrow-left"></i> Voltar
+                            </button>
+                        </div>
+                    )}
+
                     <div className="col-md-2 d-flex justify-content-md-end mt-2 mt-md-0">
                         <button className="btn btn-signup" onClick={() => setAdicionandoAgendamento(true)}>
-                            <i className="bi bi-plus-circle"></i> Vincular cliente a um plano
+                            <i className="bi bi-plus-circle"></i> Vincular plano
                         </button>
                     </div>
-                ) : (
-                    <div className="col-md-2 d-flex  mt-2 mt-md-0">
-                        <button className="btn btn-signup" onClick={() => setAdicionandoAgendamento(false)}>
-                            <i className="bi bi-arrow-left"></i> Voltar
-                        </button>
-                    </div>
-                )}
+
+
 
                 </div>
 
-               
+
 
                 {adicionandoAula && (
                     <AdicionarAulaPilates onAulaAdicionada={handleAulaAdicionada} />
                 )}
+
+                {/* Renderiza o modal de vinculação de aluno a um plano */}
                 {adicionandoAgendamento && (
-                    <CriarAgendamento onAulaAdicionada={handleAgendamentoAdicionado} />
+                    <VincularAlunoPlano
+                        showModal={adicionandoAgendamento}
+                        handleClose={() => setAdicionandoAgendamento(false)}
+                    />
                 )}
 
                 <div className="table-responsive">
@@ -282,7 +284,7 @@ const GerenciarAulasPilates = () => {
                                     <td>{aula.colaborador?.nome || "Sem colaborador"}</td>
                                     <td>{aula.clinica || "Sem clínica"}</td>
                                     <td>
-                                        
+
                                         <button
                                             className="btn btn-danger btn-sm me-1"
                                             onClick={() => handleOpenConfirmModal(aula.id_aula)}
@@ -308,7 +310,7 @@ const GerenciarAulasPilates = () => {
                     </table>
                 </div>
             </div>
-            
+
             {/* Modal para confirmação de exclusão */}
             <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)}>
                 <Modal.Header closeButton>

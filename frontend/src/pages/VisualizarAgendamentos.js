@@ -371,7 +371,7 @@ const VisualizarAgendamentos = () => {
                           </>
                         ) : (
                           <>
-                            Aguardar confirmação.< br/> Intenção de aulas: < br/> {agendamento.dias_e_horarios || 'não informada'}
+                            Vinculado ao plano, acesse minhas aulas para finalizar.< br/> 
                           </>
                         )}
 

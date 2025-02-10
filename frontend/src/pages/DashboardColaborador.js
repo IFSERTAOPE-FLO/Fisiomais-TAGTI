@@ -65,14 +65,14 @@ const DashboardColaborador = () => {
         <Container className="mt-4">
             {/* Cabeçalho com título centralizado e botão para editar perfil */}
             <div className="row align-items-center mb-3">
-                <div className="col-4"></div>
-                <div className="col-4 text-center text-secondary">
+                <div className="col-3"></div>
+                <div className="col-6 text-center text-secondary">
                     <h2 className="mb-0">
                         <i className="bi bi-speedometer2 me-2"></i>
                         Dashboard do Colaborador
                     </h2>
                 </div>
-                <div className="col-4 text-end">
+                <div className="col-3 text-end">
                     <button className='btn btn-login' onClick={handleOpenPerfil}>
                         <i className="bi bi-person-circle me-2"></i> Editar Perfil
                     </button>
@@ -164,7 +164,7 @@ const DashboardColaborador = () => {
                     </Card>
                 </Col>
                 {/* Histórico de Pagamentos */}
-                <Col md={6} lg={4}>
+                <Col md={5} lg={5}>
                     <Card>
                         <Card.Header className="d-flex align-items-center">
                             <i className="bi bi-cash-coin me-2"></i>
@@ -176,12 +176,15 @@ const DashboardColaborador = () => {
                         >
                             {pagamentos.length ? (
                                 pagamentos.map((pagamento) => (
-                                    <ListGroup.Item key={pagamento.id} className="d-flex justify-content-between">
+                                    <ListGroup.Item key={pagamento.id_pagamento} className="d-flex justify-content-between">
                                         <div>
-                                            <strong>{pagamento.servico}</strong>
+                                            <strong>{pagamento.servico.nome}</strong>
                                             <div className="text-muted small">
-                                                {new Date(pagamento.data).toLocaleDateString("pt-BR")}
+                                                {pagamento.data_pagamento
+                                                    ? new Date(pagamento.data_pagamento).toLocaleDateString("pt-BR")
+                                                    : "Pagamento Pendente"}
                                             </div>
+
                                         </div>
                                         <div>
                                             <Badge bg={pagamento.status === 'pago' ? 'success' : 'warning'}>
@@ -193,12 +196,13 @@ const DashboardColaborador = () => {
                             ) : (
                                 <ListGroup.Item className="text-muted">Nenhum pagamento</ListGroup.Item>
                             )}
+
                         </ListGroup>
                     </Card>
                 </Col>
 
                 {/* Minhas Aulas Ministradas */}
-                <Col md={6} lg={6}>
+                <Col md={7} lg={7}>
 
                     <Card>
                         <Card.Header>

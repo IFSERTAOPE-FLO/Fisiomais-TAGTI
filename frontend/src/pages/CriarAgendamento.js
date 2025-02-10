@@ -210,21 +210,21 @@ function CriarAgendamento() {
 
 
 
-const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();  // Garantir que o evento não se propague automaticamente
     setLoading(true);
 
     // Validações
     if (tipoServico !== 'pilates' && !hora) {
-        alert('Por favor, selecione um horário válido.');
-        setLoading(false);
-        return;
+      alert('Por favor, selecione um horário válido.');
+      setLoading(false);
+      return;
     }
 
     if (!cliente || !colaborador || !servico) {
-        alert('Por favor, preencha todos os campos obrigatórios.');
-        setLoading(false);
-        return;
+      alert('Por favor, preencha todos os campos obrigatórios.');
+      setLoading(false);
+      return;
     }
 
     const colaboradorId = role === 'colaborador' ? localStorage.getItem('userId') : colaborador;
@@ -232,51 +232,51 @@ const handleSubmit = async (e) => {
     const dataHoraISO = dataEscolhida.toISOString();
 
     const agendamentoData = {
-        servico_id: servico,
-        colaborador_id: colaboradorId,
-        data: dataHoraISO,
-        cliente_id: cliente,
-        plano_id: tipoServico === 'pilates' ? planoSelecionado || null : null,
-        dias_e_horarios: diasHorariosTexto, // Incluindo os dias e horários
+      servico_id: servico,
+      colaborador_id: colaboradorId,
+      data: dataHoraISO,
+      cliente_id: cliente,
+      plano_id: tipoServico === 'pilates' ? planoSelecionado || null : null,
+      dias_e_horarios: diasHorariosTexto, // Incluindo os dias e horários
     };
 
     const token = localStorage.getItem('token');
     if (!token) {
-        alert('Por favor, faça login para agendar.');
-        setLoading(false);
-        return;
+      alert('Por favor, faça login para agendar.');
+      setLoading(false);
+      return;
     }
 
     try {
-        // Definir a rota com base no papel do usuário
-        const rota = (role === 'colaborador' || role === 'admin') 
-            ? '/agendamentos/agendamento-plano-tratamento' 
-            : '/agendamentos/';
+      // Definir a rota com base no papel do usuário
+      const rota = (role === 'colaborador' || role === 'admin')
+        ? '/agendamentos/agendamento-plano-tratamento'
+        : '/agendamentos/';
 
 
-        const response = await fetch(`http://localhost:5000${rota}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(agendamentoData),
-        });
+      const response = await fetch(`http://localhost:5000${rota}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(agendamentoData),
+      });
 
-        if (response.ok) {
-            const successData = await response.json();
-            alert(successData.message || 'Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail');
-            fetchHorariosDisponiveis(colaborador || localStorage.getItem('userId'), data);
-        } else {
-            const errorData = await response.json();
-            alert(errorData.message || 'Erro ao agendar a sessão.');
-        }
+      if (response.ok) {
+        const successData = await response.json();
+        alert(successData.message || 'Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail');
+        fetchHorariosDisponiveis(colaborador || localStorage.getItem('userId'), data);
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || 'Erro ao agendar a sessão.');
+      }
     } catch (error) {
-        console.error('Erro no agendamento:', error);
-        alert('Erro ao conectar com o servidor. Tente novamente mais tarde.');
+      console.error('Erro no agendamento:', error);
+      alert('Erro ao conectar com o servidor. Tente novamente mais tarde.');
     }
     setLoading(false);
-};
+  };
 
 
 
@@ -438,6 +438,7 @@ const handleSubmit = async (e) => {
                         </div>
                       ))}
                     </div>
+
                     <div className='mb-3 mt-2'>
                       <label className="form-label">Sugira um horário</label>
                       <div className="mb-6 d-flex align-items-center gap-3">
@@ -463,7 +464,13 @@ const handleSubmit = async (e) => {
                       </div>
                     </div>
                   </div>
-                ) }
+                )}
+                {role === 'colaborador' && role !== 'admin' && (
+                  <div className="alert alert-info text-center" role="alert">
+                    Vinculando cliente ao plano.
+                  </div>
+                )}
+
 
                 <EscolherDiasHorariosClientesModal
                   show={modalShow}
@@ -578,7 +585,7 @@ const handleSubmit = async (e) => {
                 <button
                   type="submit"
                   className="btn btn-signup w-100 text-uppercase fw-bold"
-                  disabled={loading }
+                  disabled={loading}
                 >
                   {loading ? (
                     <i className="bi bi-arrow-repeat spinner"></i>

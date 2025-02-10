@@ -131,6 +131,40 @@ def adicionar_cliente_aula_colaborador():
 
     return jsonify({"message": "Cliente adicionado com sucesso à aula!"}), 201
 
+@pilates.route('/colaborador/vincular_plano_aluno', methods=['POST'])
+def vincular_plano_aluno():
+    try:
+        data = request.get_json()
+        aluno_id = data.get('aluno_id')
+        plano_id = data.get('plano_id')
+
+        # Verifica se os dados necessários foram enviados
+        if not aluno_id or not plano_id:
+            return jsonify({"message": "Dados incompletos! Informe 'aluno_id' e 'plano_id'."}), 400
+
+        # Buscando o aluno (ou cliente) no banco de dados.
+        # Caso sua model se chame 'Clientes' ou 'Alunos', ajuste conforme necessário.
+        aluno = Clientes.query.get(aluno_id)
+        if not aluno:
+            return jsonify({"message": "Aluno não encontrado!"}), 404
+
+        # Buscando o plano no banco de dados
+        plano = Planos.query.get(plano_id)
+        if not plano:
+            return jsonify({"message": "Plano não encontrado!"}), 404
+
+        # Vincula o plano ao aluno
+        aluno.plano_id = plano_id
+        db.session.add(aluno)
+        db.session.commit()
+
+        return jsonify({"message": "Plano vinculado com sucesso ao aluno!"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Erro ao vincular o plano ao aluno: {str(e)}"}), 500
+
+
     
 
 from datetime import datetime, timedelta
@@ -253,8 +287,6 @@ def remover_cliente_aula():
     db.session.commit()
 
     return jsonify({"message": "Você saiu da aula com sucesso!"}), 200
-
-
 
 
 
