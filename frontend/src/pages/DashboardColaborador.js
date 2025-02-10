@@ -10,7 +10,6 @@ const DashboardColaborador = () => {
     const [aulas, setAulas] = useState([]);
     const [erro, setErro] = useState(null);
     const [showPerfil, setShowPerfil] = useState(false);
-    const [servicosData, setServicosData] = useState({});
     const [servicos, setServicos] = useState([]);
     const [pagamentos, setPagamentos] = useState([]);
 
@@ -20,44 +19,44 @@ const DashboardColaborador = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-          try {
-            const token = localStorage.getItem('token');
-            const headers = { Authorization: `Bearer ${token}` };
-      
-            // Executa todas as requisições em paralelo
-            const [
-              aulasRes,
-              pagamentosRes,
-              servicosRes,
-              agendamentosRes
-            ] = await Promise.all([
-              axios.get('http://localhost:5000/pilates/listar_aulas', { headers }),
-              axios.get('http://localhost:5000/pagamentos/listar', { headers }),
-              axios.get('http://localhost:5000/servicos/listar_servicos', { headers }),
-              axios.get('http://localhost:5000/agendamentos/listar_agendamentos', { headers })
-            ]);
-      
-            // Atualiza os estados para aulas, pagamentos e serviços
-            setAulas(aulasRes.data || []);
-            setPagamentos(pagamentosRes.data.pagamentos || []);
-            setServicos(servicosRes.data || []);
-      
-            // Filtra os agendamentos para obter os 5 mais próximos da data atual
-            const agora = new Date();
-            const proximosAgendamentos = agendamentosRes.data
-              .filter(agendamento => new Date(agendamento.data) >= agora)
-              .sort((a, b) => new Date(a.data) - new Date(b.data))
-              .slice(0, 5);
-            setAgendamentos(proximosAgendamentos);
-          } catch (error) {
-            console.error('Erro ao buscar dados:', error);
-            setErro('Erro ao carregar dados. Tente recarregar a página.');
-          }
+            try {
+                const token = localStorage.getItem('token');
+                const headers = { Authorization: `Bearer ${token}` };
+
+                // Executa todas as requisições em paralelo
+                const [
+                    aulasRes,
+                    pagamentosRes,
+                    servicosRes,
+                    agendamentosRes
+                ] = await Promise.all([
+                    axios.get('http://localhost:5000/pilates/listar_aulas', { headers }),
+                    axios.get('http://localhost:5000/pagamentos/listar', { headers }),
+                    axios.get('http://localhost:5000/servicos/listar_servicos', { headers }),
+                    axios.get('http://localhost:5000/agendamentos/listar_agendamentos', { headers })
+                ]);
+
+                // Atualiza os estados para aulas, pagamentos e serviços
+                setAulas(aulasRes.data || []);
+                setPagamentos(pagamentosRes.data.pagamentos || []);
+                setServicos(servicosRes.data || []);
+
+                // Filtra os agendamentos para obter os 5 mais próximos da data atual
+                const agora = new Date();
+                const proximosAgendamentos = agendamentosRes.data
+                    .filter(agendamento => new Date(agendamento.data) >= agora)
+                    .sort((a, b) => new Date(a.data) - new Date(b.data))
+                    .slice(0, 5);
+                setAgendamentos(proximosAgendamentos);
+            } catch (error) {
+                console.error('Erro ao buscar dados:', error);
+                setErro('Erro ao carregar dados. Tente recarregar a página.');
+            }
         };
-      
+
         fetchData();
-      }, []);
-      
+    }, []);
+
 
 
 
@@ -84,7 +83,7 @@ const DashboardColaborador = () => {
 
             <Row className="g-4">
                 {/* Agendamentos Futuros */}
-                <Col md={6} lg={4}>
+                <Col md={6} lg={5}>
                     <Card>
                         <Card.Header className="d-flex align-items-center">
                             <i className="bi bi-calendar-event me-2"></i>
@@ -105,7 +104,7 @@ const DashboardColaborador = () => {
                                                 })}
                                             </div>
                                         </div>
-                                        <Badge bg="info" className="d-flex align-items-center justify-content-center">
+                                        <Badge bg={agendamento.status.toLowerCase() === "confirmado" ? "success" : "info"} className="d-flex align-items-center justify-content-center">
                                             {agendamento.status.charAt(0).toUpperCase() + agendamento.status.slice(1)}
                                         </Badge>
                                     </ListGroup.Item>
@@ -119,7 +118,7 @@ const DashboardColaborador = () => {
                 </Col>
                 {/* Serviços Disponíveis */}
 
-                <Col md={6} lg={4}>
+                <Col md={4} lg={7}>
                     <Card>
                         <Card.Header className="d-flex align-items-center">
                             <i className="bi bi-person-workspace me-2"></i>
@@ -130,7 +129,7 @@ const DashboardColaborador = () => {
                                 <div className="accordion-item" key={servico.id}>
                                     <h2 className="accordion-header" id={`heading-${index}`}>
                                         <button
-                                            className="accordion-button collapsed small"
+                                            className="accordion-button collapsed small d-flex align-items-center"
                                             type="button"
                                             data-bs-toggle="collapse"
                                             data-bs-target={`#collapse-${index}`}
@@ -138,17 +137,24 @@ const DashboardColaborador = () => {
                                             aria-controls={`collapse-${index}`}
                                             style={{ fontSize: "0.775rem", fontWeight: "bold", padding: "8px 12px" }}
                                         >
-                                            <span className="me-2">{servico.Nome_servico}</span>
-                                            <Badge bg="secondary" style={{ fontSize: "0.75rem" }}>{servico.Tipos}</Badge>
+                                            <span>{servico.Nome_servico}</span>
+                                            <Badge
+                                                bg="secondary"
+                                                className="ms-auto"
+                                                style={{ fontSize: "0.75rem" }}
+                                            >
+                                                {servico.Tipos}
+                                            </Badge>
                                         </button>
                                     </h2>
+
                                     <div
                                         id={`collapse-${index}`}
                                         className="accordion-collapse collapse"
                                         aria-labelledby={`heading-${index}`}
                                         data-bs-parent="#servicosAccordion"
                                     >
-                                        <div className="accordion-body text-muted small" style={{ fontSize: "0.75rem" }}>
+                                        <div className="accordion-body text-muted small " style={{ fontSize: "0.75rem" }}>
                                             {servico.Descricao}
                                         </div>
                                     </div>
@@ -157,8 +163,42 @@ const DashboardColaborador = () => {
                         </div>
                     </Card>
                 </Col>
-                {/* Minhas Aulas Ministradas */}
+                {/* Histórico de Pagamentos */}
                 <Col md={6} lg={4}>
+                    <Card>
+                        <Card.Header className="d-flex align-items-center">
+                            <i className="bi bi-cash-coin me-2"></i>
+                            <span>Histórico de Pagamentos</span>
+                        </Card.Header>
+                        <ListGroup
+                            variant="flush"
+                            style={{ maxHeight: "400px", overflowY: "auto" }}
+                        >
+                            {pagamentos.length ? (
+                                pagamentos.map((pagamento) => (
+                                    <ListGroup.Item key={pagamento.id} className="d-flex justify-content-between">
+                                        <div>
+                                            <strong>{pagamento.servico}</strong>
+                                            <div className="text-muted small">
+                                                {new Date(pagamento.data).toLocaleDateString("pt-BR")}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <Badge bg={pagamento.status === 'pago' ? 'success' : 'warning'}>
+                                                R$ {pagamento.valor}
+                                            </Badge>
+                                        </div>
+                                    </ListGroup.Item>
+                                ))
+                            ) : (
+                                <ListGroup.Item className="text-muted">Nenhum pagamento</ListGroup.Item>
+                            )}
+                        </ListGroup>
+                    </Card>
+                </Col>
+
+                {/* Minhas Aulas Ministradas */}
+                <Col md={6} lg={6}>
 
                     <Card>
                         <Card.Header>

@@ -106,7 +106,7 @@ const DashboardClientes = () => {
                         })}
                       </div>
                     </div>
-                    <Badge bg="info" className="d-flex align-items-center justify-content-center">
+                    <Badge bg={agendamento.status.toLowerCase() === "confirmado" ? "success" : "info"} className="d-flex align-items-center justify-content-center">
                       {agendamento.status.charAt(0).toUpperCase() + agendamento.status.slice(1)}
                     </Badge>
                   </ListGroup.Item>
@@ -126,13 +126,18 @@ const DashboardClientes = () => {
               <i className="bi bi-cash-coin me-2"></i>
               <span>Histórico de Pagamentos</span>
             </Card.Header>
-            <ListGroup variant="flush">
+            <ListGroup
+              variant="flush"
+              style={{ maxHeight: "400px", overflowY: "auto" }}
+            >
               {pagamentos.length ? (
                 pagamentos.map((pagamento) => (
                   <ListGroup.Item key={pagamento.id} className="d-flex justify-content-between">
                     <div>
                       <strong>{pagamento.servico}</strong>
-                      <div className="text-muted small">{new Date(pagamento.data).toLocaleDateString()}</div>
+                      <div className="text-muted small">
+                        {new Date(pagamento.data).toLocaleDateString("pt-BR")}
+                      </div>
                     </div>
                     <div>
                       <Badge bg={pagamento.status === 'pago' ? 'success' : 'warning'}>
@@ -148,6 +153,7 @@ const DashboardClientes = () => {
           </Card>
         </Col>
 
+
         {/* Serviços Disponíveis */}
         <Col md={6} lg={4}>
           <Card>
@@ -155,12 +161,12 @@ const DashboardClientes = () => {
               <i className="bi bi-person-workspace me-2"></i>
               <span>Serviços Disponíveis</span>
             </Card.Header>
-            <div className="accordion" id="servicosAccordion">
+            <div className="accordion" id="servicosAccordion" >
               {servicos.map((servico, index) => (
                 <div className="accordion-item" key={servico.id}>
                   <h2 className="accordion-header" id={`heading-${index}`}>
                     <button
-                      className="accordion-button collapsed small"
+                      className="accordion-button collapsed small d-flex align-items-center"
                       type="button"
                       data-bs-toggle="collapse"
                       data-bs-target={`#collapse-${index}`}
@@ -168,10 +174,17 @@ const DashboardClientes = () => {
                       aria-controls={`collapse-${index}`}
                       style={{ fontSize: "0.775rem", fontWeight: "bold", padding: "8px 12px" }}
                     >
-                      <span className="me-2">{servico.Nome_servico}</span>
-                      <Badge bg="secondary" style={{ fontSize: "0.75rem" }}>{servico.Tipos}</Badge>
+                      <span>{servico.Nome_servico}</span>
+                      <Badge
+                        bg="secondary"
+                        className="ms-auto"
+                        style={{ fontSize: "0.75rem" }}
+                      >
+                        {servico.Tipos}
+                      </Badge>
                     </button>
                   </h2>
+
                   <div
                     id={`collapse-${index}`}
                     className="accordion-collapse collapse"
