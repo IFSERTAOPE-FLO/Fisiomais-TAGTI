@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../css/AdminPage.css';
+import { useLocation } from "react-router-dom";
+
 import "bootstrap/dist/css/bootstrap.min.css";
 import GerenciarPagamentos from "./GerenciarPagamentos";
 import CalendarioInterativo from "./CalendarioInterativo";
@@ -9,16 +11,15 @@ import MinhasAulasCliente from "../components/pilates/usuariocliente/MinhasAulas
 import DashboardCliente from "./DashboardCliente";
 
 const ClientPage = () => {
-  const savedRole = localStorage.getItem("role");
+  const location = useLocation();
+  const query = new URLSearchParams(location.search);
+  const opcaoFromQuery = query.get("opcaoSelecionada") || "dashboard";
 
-  // Recupera a opção selecionada do localStorage
-  const savedOpcao = localStorage.getItem("opcaoSelecionada") || "dashboard";
-
-  const [opcaoSelecionada, setOpcaoSelecionada] = useState(savedOpcao);
+  const [opcaoSelecionada, setOpcaoSelecionada] = useState(opcaoFromQuery);
 
   useEffect(() => {
-    localStorage.setItem("opcaoSelecionada", opcaoSelecionada);
-  }, [opcaoSelecionada]);
+    setOpcaoSelecionada(opcaoFromQuery);
+  }, [opcaoFromQuery]);
 
   const handleOpcaoChange = (opcao) => {
     setOpcaoSelecionada(opcao);

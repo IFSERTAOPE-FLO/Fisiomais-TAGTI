@@ -1,6 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Container, Row, Col, Card, ListGroup, Table, Badge, Alert } from 'react-bootstrap';
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  ListGroup,
+  Table,
+  Badge,
+  Alert,
+  Modal,
+  Button
+} from 'react-bootstrap';
+import Perfil from "./Perfil";
 
 const DashboardClientes = () => {
   const [agendamentos, setAgendamentos] = useState([]);
@@ -8,6 +20,7 @@ const DashboardClientes = () => {
   const [servicos, setServicos] = useState([]);
   const [aulas, setAulas] = useState([]);
   const [erro, setErro] = useState(null);
+  const [showPerfil, setShowPerfil] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -15,22 +28,26 @@ const DashboardClientes = () => {
         const token = localStorage.getItem('token');
         const headers = { Authorization: `Bearer ${token}` };
 
-        // Fetch agendamentos
+        // Buscar agendamentos
         const agendamentosRes = await axios.get('http://localhost:5000/agendamentos/listar_agendamentos', { headers });
-        setAgendamentos(agendamentosRes.data.length ? agendamentosRes.data : []);
+        const agora = new Date();
+        const proximosAgendamentos = agendamentosRes.data
+          .filter(agendamento => new Date(agendamento.data) >= agora)
+          .sort((a, b) => new Date(a.data) - new Date(b.data))
+          .slice(0, 5);
+        setAgendamentos(proximosAgendamentos);
 
-        // Fetch pagamentos
+        // Buscar pagamentos
         const pagamentosRes = await axios.get('http://localhost:5000/pagamentos/listar', { headers });
         setPagamentos(pagamentosRes.data.pagamentos || []);
 
-        // Fetch serviços
+        // Buscar serviços
         const servicosRes = await axios.get('http://localhost:5000/servicos/listar_servicos', { headers });
         setServicos(servicosRes.data || []);
 
-        // Fetch aulas de pilates
+        // Buscar aulas de pilates
         const aulasRes = await axios.get('http://localhost:5000/pilates/cliente/minhas_aulas', { headers });
         setAulas(aulasRes.data || []);
-
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
         setErro('Erro ao carregar dados. Tente recarregar a página.');
@@ -40,12 +57,29 @@ const DashboardClientes = () => {
     fetchData();
   }, []);
 
+
+  // Funções para abrir e fechar o Modal de edição do perfil
+  const handleOpenPerfil = () => setShowPerfil(true);
+  const handleClosePerfil = () => setShowPerfil(false);
+
   return (
-    <Container  className="mt-4">
-      <h2 className="mb-4 text-center text-secondary">
-        <i className="bi bi-clipboard-check me-2"></i>
-        Dashboard do Cliente
-      </h2>
+    <Container className="mt-4">
+      {/* Botão para exibir o formulário de edição de perfil */}
+
+      <div className="row align-items-center mb-3">
+        <div className="col-4"></div>
+        <div className="col-4 text-center text-secondary">
+          <h2 className="mb-0">
+            <i className="bi bi-clipboard-check me-2"></i>
+            Dashboard do Cliente
+          </h2>
+        </div>
+        <div className="col-4 text-end">
+          <button className='btn btn-login' onClick={handleOpenPerfil}>
+            <i className="bi bi-person-circle me-2"></i> Editar Perfil
+          </button>
+        </div>
+      </div>
 
       {erro && <Alert variant="danger">{erro}</Alert>}
 
@@ -63,15 +97,25 @@ const DashboardClientes = () => {
                   <ListGroup.Item key={agendamento.id} className="d-flex justify-content-between">
                     <div>
                       <strong>{agendamento.servico}</strong>
-                      <div className="text-muted small">{agendamento.data}</div>
+                      <div className="text-muted small">
+                        {new Date(agendamento.data).toLocaleDateString("pt-BR", {
+                          weekday: 'long',
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric'
+                        })}
+                      </div>
                     </div>
-                    <Badge bg="info">Agendado</Badge>
+                    <Badge bg="info" className="d-flex align-items-center justify-content-center">
+                      {agendamento.status.charAt(0).toUpperCase() + agendamento.status.slice(1)}
+                    </Badge>
                   </ListGroup.Item>
                 ))
               ) : (
                 <ListGroup.Item className="text-muted">Nenhum agendamento</ListGroup.Item>
               )}
             </ListGroup>
+
           </Card>
         </Col>
 
@@ -111,19 +155,36 @@ const DashboardClientes = () => {
               <i className="bi bi-person-workspace me-2"></i>
               <span>Serviços Disponíveis</span>
             </Card.Header>
-            <ListGroup variant="flush">
-              {servicos.map((servico) => (
-                <ListGroup.Item key={servico.id}>
-                  <div className="d-flex justify-content-between">
-                    <span>{servico.nome}</span>
-                    <Badge bg="secondary">{servico.categoria}</Badge>
+            <div className="accordion" id="servicosAccordion">
+              {servicos.map((servico, index) => (
+                <div className="accordion-item" key={servico.id}>
+                  <h2 className="accordion-header" id={`heading-${index}`}>
+                    <button
+                      className="accordion-button collapsed small"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target={`#collapse-${index}`}
+                      aria-expanded="false"
+                      aria-controls={`collapse-${index}`}
+                      style={{ fontSize: "0.775rem", fontWeight: "bold", padding: "8px 12px" }}
+                    >
+                      <span className="me-2">{servico.Nome_servico}</span>
+                      <Badge bg="secondary" style={{ fontSize: "0.75rem" }}>{servico.Tipos}</Badge>
+                    </button>
+                  </h2>
+                  <div
+                    id={`collapse-${index}`}
+                    className="accordion-collapse collapse"
+                    aria-labelledby={`heading-${index}`}
+                    data-bs-parent="#servicosAccordion"
+                  >
+                    <div className="accordion-body text-muted small" style={{ fontSize: "0.75rem" }}>
+                      {servico.Descricao}
+                    </div>
                   </div>
-                  {servico.descricao && (
-                    <div className="text-muted small mt-1">{servico.descricao}</div>
-                  )}
-                </ListGroup.Item>
+                </div>
               ))}
-            </ListGroup>
+            </div>
           </Card>
         </Col>
 
@@ -174,6 +235,16 @@ const DashboardClientes = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* Modal para edição do Perfil */}
+      <Modal show={showPerfil} onHide={handleClosePerfil} size="xl" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Editar Perfil</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Perfil />
+        </Modal.Body>
+      </Modal>
     </Container>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from "react-router-dom";
 import '../css/AdminPage.css';
 import "bootstrap/dist/css/bootstrap.min.css";
 import GerenciarUsuarios from "../components/GerenciarUsuarios";
@@ -14,16 +15,23 @@ import CrudPlanoTratamento from "../components/planosTratamento/CrudPlanoTratame
 import CriarPlanoTratamento from "../components/planosTratamento/CriarPlanoTratamento";
 import HistoricoPlanos from "../components/planosTratamento/HistoricoPlanos";
 import HistoricoSessoes from "../components/planosTratamento/HistoricoSessoes";  // Importação do componente
+import DashboardColaborador from './DashboardColaborador';
 
 
 const AdminPage = () => {
-  const savedRole = localStorage.getItem("role");
-  const savedOpcao = localStorage.getItem("opcaoSelecionada") || "dashboard";
-  const [opcaoSelecionada, setOpcaoSelecionada] = useState(savedOpcao);
+  const location = useLocation();
+  const query = new URLSearchParams(location.search);
+  const opcaoFromQuery = query.get("opcaoSelecionada") || "dashboard";
+  const [role, setRole] = useState('');
+  const [opcaoSelecionada, setOpcaoSelecionada] = useState(opcaoFromQuery);
+  useEffect(() => {
+    const savedRole = localStorage.getItem('role');
+    setRole(savedRole);
+  }, [role]);
 
   useEffect(() => {
-    localStorage.setItem("opcaoSelecionada", opcaoSelecionada);
-  }, [opcaoSelecionada]);
+    setOpcaoSelecionada(opcaoFromQuery);
+  }, [opcaoFromQuery]);
 
   const handleOpcaoChange = (opcao) => {
     setOpcaoSelecionada(opcao);
@@ -36,13 +44,23 @@ const AdminPage = () => {
           <ul className="navbar-nav mx-auto ">
             <li className="nav-item">
               <a
-                href="#dashboard"
-                className={`nav-link ${opcaoSelecionada === "dashboard" ? "active" : ""}`}
-                onClick={() => handleOpcaoChange("dashboard")}
+                href="#dashboardColaborador"
+                className={`nav-link ${opcaoSelecionada === "dashboardColaborador" ? "active" : ""}`}
+                onClick={() => handleOpcaoChange("dashboardColaborador")}
               >
                 <i className="bi bi-house-door"></i> Dashboard
               </a>
             </li>
+            <li className="nav-item">
+              <a
+                href="#dashboard"
+                className={`nav-link ${opcaoSelecionada === "dashboard" ? "active" : ""}`}
+                onClick={() => handleOpcaoChange("dashboard")}
+              >
+                <i className="bi bi-graph-up"></i> Gráficos Interativos
+              </a>
+            </li>
+            
             <li className="nav-item">
               <a
                 href="#usuarios"
@@ -202,6 +220,7 @@ const AdminPage = () => {
       {opcaoSelecionada === "criarPlanoTratamento" && <CriarPlanoTratamento />}  {/* Renderização do CRUD de Planos de Tratamento */}
       {opcaoSelecionada === "historicoPlano" && <HistoricoPlanos />}  {/* Renderização do CRUD de Planos de Tratamento */}
       {opcaoSelecionada === "historicoSessoes" && <HistoricoSessoes />}
+      {opcaoSelecionada === "dashboardColaborador" && <DashboardColaborador />}
     </div>
   );
 };

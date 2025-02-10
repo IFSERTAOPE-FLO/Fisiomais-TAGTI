@@ -121,7 +121,7 @@ const MinhasAulasCliente = () => {
     <div className="d-flex gap-2">
       {!adicionandoAula ? (
         <button 
-          className="btn btn-primary d-flex align-items-center gap-2"
+          className="btn btn-login d-flex align-items-center gap-2"
           onClick={() => setAdicionandoAula(true)}
         >
           <i className="bi bi-plus-circle fs-5"></i>
@@ -129,7 +129,7 @@ const MinhasAulasCliente = () => {
         </button>
       ) : (
         <button 
-          className="btn btn-outline-secondary d-flex align-items-center gap-2"
+          className="btn btn-signup d-flex align-items-center gap-2"
           onClick={() => setAdicionandoAula(false)}
         >
           <i className="bi bi-arrow-left fs-5"></i>

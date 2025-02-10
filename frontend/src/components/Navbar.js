@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import bootstrap from "bootstrap/dist/js/bootstrap.bundle.min.js";
+
 import "../css/Navbar.css";
 import CadastroClienteModal from './CadastroClienteModal'; // Atualize o caminho conforme necessário
 
@@ -21,6 +22,12 @@ function Navbar() {
   const [showCadastroModal, setShowCadastroModal] = useState(false);
   const [sidebarVisible, setSidebarVisible] = React.useState(false);
   const [agendamentosOpen, setAgendamentosOpen] = useState(false);
+  const [planosOpen, setPlanosOpen] = useState(false);
+  const location = useLocation();
+  const query = new URLSearchParams(location.search);
+  const currentOption = query.get("opcaoSelecionada") || "dashboard";
+  window.bootstrap = bootstrap;
+
 
   const navigate = useNavigate();
 
@@ -332,26 +339,10 @@ function Navbar() {
                     )}
 
                     {(role === "cliente") && (
-                      <>
-                      <Link className="dropdown-item" to="/clientepage">Dashboard</Link>
+                      <Link className="dropdown-item" to="/clientepage">Área do cliente</Link>
 
-                      <Link className="dropdown-item" to="/minhas-aulas-pilates">Minhas Aulas</Link>
-                      </>
+
                     )}
-
-                    <li>
-                      <Link className="dropdown-item" to="/criaragendamento">Agendar Atendimento</Link>
-                    </li>
-                    <li>
-                      <Link className="dropdown-item" to="/gerenciarPagamentos">Gerenciar Pagamentos</Link>
-                    </li>
-
-                    <li>
-                      <Link className="dropdown-item" to="/visualizaragendamentos">Agendamentos</Link>
-                    </li>
-                    <li >
-                      <Link className="dropdown-item" to="/calendario_agendamentos">Calendário</Link>
-                    </li>
                     <li>
                       <button
                         className="dropdown-item"
@@ -387,91 +378,248 @@ function Navbar() {
               {!sidebarVisible && <br />}
             </div>
             <ul className="sidebar-menu bg-light">
-              <li className="mt-3">
-                <Link to="/perfil" className="sidebar-item gap-2">
-                  <i className="bi bi-person"></i>
-                  {sidebarVisible && " Meu Perfil"}
-                </Link>
-              </li>
-              {role === "admin" && (
-                <li className="mt-3">
-                  <Link to="/adminPage" className="sidebar-item">
-                    <i className="bi bi-shield-lock"></i>
-                    {sidebarVisible && " Página Administrador"}
-                  </Link>
-                </li>
-              )}
-              {role === "colaborador" && (
-                <li className="mt-3">
-                  <Link to="/adminPage" className="sidebar-item">
-                    <i className="bi bi-person-workspace"></i>
-                    {sidebarVisible && " Central de Controle"}
-                  </Link>
-                </li>
-              )}
-
-              {/* Seção de Agendamentos */}
-              <li className="mt-3">
-                <button
-                  className="sidebar-item d-flex align-items-center w-100"
-                  onClick={() => setAgendamentosOpen(!agendamentosOpen)}
-                >
-                  <i className="bi bi-calendar-check"></i>
-                  {sidebarVisible && " Agendamentos"}
-                  <i className={`ms-auto bi ${agendamentosOpen ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
-                </button>
-                {agendamentosOpen && (
-                  <ul className="submenu">
-                    <li>
-                      <Link to="/criaragendamento" className="sidebar-item">
-                        <i className="bi bi-calendar-plus"></i>
-                        {sidebarVisible && " Agendar "}
-                      </Link>
-                    </li>
-                    <li>
-                      <Link to="/visualizaragendamentos" className="sidebar-item">
-                        <i className="bi bi-calendar-check"></i>
-                        {sidebarVisible && " Lista "}
-                      </Link>
-                    </li>
-                    <li>
-                      <Link to="/calendario_agendamentos" className="sidebar-item">
-                        <i className="bi bi-calendar-event"></i>
-                        {sidebarVisible && " Calendário "}
-                      </Link>
-                    </li>
-                  </ul>
-                )}
-              </li>
-
-              <li className="mt-3">
-                <Link to="/gerenciarPagamentos" className="sidebar-item ">
-                  <i className="bi bi-wallet2"></i>
-                  {sidebarVisible && " Gerenciar Pagamentos"}
-                </Link>
-              </li>
-              {role === "admin" && (
-                <li className="mt-3">
-                  <Link to={{ pathname: "/adminPage", state: { opcaoSelecionada: "aulasPilates" } }} className="sidebar-item">
-                    <i className="bi bi-person-arms-up"></i>
-                    {sidebarVisible && " Aulas de Pilates"}
-                  </Link>
-                </li>)}
-              {role === "cliente" && (
+              {(role === "admin" || role === "colaborador") && (
                 <>
+                  {/* Dashboard */}
                   <li className="mt-3">
-                    <Link to="/minhas-aulas-pilates" className="sidebar-item">
+                    <Link
+                      to="/adminPage?opcaoSelecionada=dashboardColaborador"
+                      className={`sidebar-item ${currentOption === "dashboardColaborador" ? "active" : ""}`}
+                    >
+                      <i className="bi bi-speedometer2"></i>
+                      {sidebarVisible && " Dashboard"}
+                    </Link>
+                  </li>
+
+                  {/* Gerenciar Usuários */}
+                  <li className="mt-3">
+                    <Link
+                      to="/adminPage?opcaoSelecionada=usuarios"
+                      className={`sidebar-item ${currentOption === "usuarios" ? "active" : ""}`}
+                    >
+                      <i className="bi bi-people"></i>
+                      {sidebarVisible && " Gerenciar Usuários"}
+                    </Link>
+                  </li>
+
+                  {/* Gerenciar Serviços */}
+                  <li className="mt-3">
+                    <Link
+                      to="/adminPage?opcaoSelecionada=servicos"
+                      className={`sidebar-item ${currentOption === "servicos" ? "active" : ""}`}
+                    >
+                      <i className="bi bi-tools"></i>
+                      {sidebarVisible && " Gerenciar Serviços"}
+                    </Link>
+                  </li>
+
+                  {/* Gerenciar Clínicas */}
+                  <li className="mt-3">
+                    <Link
+                      to="/adminPage?opcaoSelecionada=clinicas"
+                      className={`sidebar-item ${currentOption === "clinicas" ? "active" : ""}`}
+                    >
+                      <i className="bi bi-building"></i>
+                      {sidebarVisible && " Gerenciar Clínicas"}
+                    </Link>
+                  </li>
+
+                  {/* Agendamentos (submenu) */}
+                  <li className="mt-3">
+                    <button
+                      className={`sidebar-item d-flex align-items-center w-100 ${["criarAgendamento", "visualizarAgendamentos", "CalendarioInterativo"].includes(currentOption) ? "active" : ""}`}
+                      onClick={() => setAgendamentosOpen(!agendamentosOpen)}
+                    >
+                      <i className="bi bi-calendar-check"></i>
+                      {sidebarVisible && " Agendamentos"}
+                      <i className={`ms-auto bi ${agendamentosOpen || ["criarAgendamento", "visualizarAgendamentos", "CalendarioInterativo"].includes(currentOption) ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
+                    </button>
+                    {agendamentosOpen && (
+                      <ul className="submenu">
+                        <li>
+                          <Link
+                            to="/adminPage?opcaoSelecionada=criarAgendamento"
+                            className={`sidebar-item ${currentOption === "criarAgendamento" ? "active" : ""}`}
+                          >
+                            <i className="bi bi-calendar-plus"></i>
+                            {sidebarVisible && " Criar Agendamento"}
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            to="/adminPage?opcaoSelecionada=visualizarAgendamentos"
+                            className={`sidebar-item ${currentOption === "visualizarAgendamentos" ? "active" : ""}`}
+                          >
+                            <i className="bi bi-calendar-check"></i>
+                            {sidebarVisible && " Visualizar Agendamentos"}
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            to="/adminPage?opcaoSelecionada=CalendarioInterativo"
+                            className={`sidebar-item ${currentOption === "CalendarioInterativo" ? "active" : ""}`}
+                          >
+                            <i className="bi bi-calendar-event"></i>
+                            {sidebarVisible && " Calendário"}
+                          </Link>
+                        </li>
+                      </ul>
+                    )}
+                  </li>
+
+                  {/* Gerenciar Pagamentos */}
+                  <li className="mt-3">
+                    <Link
+                      to="/adminPage?opcaoSelecionada=gerenciarPagamentos"
+                      className={`sidebar-item ${currentOption === "gerenciarPagamentos" ? "active" : ""}`}
+                    >
+                      <i className="bi bi-cash-coin"></i>
+                      {sidebarVisible && " Gerenciar Pagamentos"}
+                    </Link>
+                  </li>
+
+                  {/* Aulas de Pilates */}
+                  <li className="mt-3">
+                    <Link
+                      to="/adminPage?opcaoSelecionada=aulasPilates"
+                      className={`sidebar-item ${currentOption === "aulasPilates" ? "active" : ""}`}
+                    >
                       <i className="bi bi-person-arms-up"></i>
                       {sidebarVisible && " Aulas de Pilates"}
                     </Link>
-                    <li className="mt-3">
-                      <Link to="/clientepage" className="sidebar-item">
-                        <i className="bi bi-gear"></i>
-                        {sidebarVisible && " Central do Cliente"}
-                      </Link>
-                    </li>
                   </li>
-                </>)}
+
+                  {/* Planos de Tratamento (submenu) */}
+                  <li className="mt-3">
+                    <button
+                      className={`sidebar-item d-flex align-items-center w-100 ${["planosTratamento", "criarPlanoTratamento", "historicoPlano"].includes(currentOption) ? "active" : ""}`}
+                      onClick={() => setPlanosOpen(!planosOpen)}
+                    >
+                      <i className="bi bi-file-earmark-text"></i>
+                      {sidebarVisible && " Planos de Tratamento"}
+                      <i className={`ms-auto bi ${planosOpen || ["planosTratamento", "criarPlanoTratamento", "historicoPlano"].includes(currentOption) ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
+                    </button>
+                    {planosOpen && (
+                      <ul className="submenu">
+                        <li>
+                          <Link
+                            to="/adminPage?opcaoSelecionada=planosTratamento"
+                            className={`sidebar-item ${currentOption === "planosTratamento" ? "active" : ""}`}
+                          >
+                            <i className="bi bi-card-checklist"></i>
+                            {sidebarVisible && " Visualizar Planos"}
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            to="/adminPage?opcaoSelecionada=criarPlanoTratamento"
+                            className={`sidebar-item ${currentOption === "criarPlanoTratamento" ? "active" : ""}`}
+                          >
+                            <i className="bi bi-plus-circle"></i>
+                            {sidebarVisible && " Criar Plano"}
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            to="/adminPage?opcaoSelecionada=historicoPlano"
+                            className={`sidebar-item ${currentOption === "historicoPlano" ? "active" : ""}`}
+                          >
+                            <i className="bi bi-clock-history"></i>
+                            {sidebarVisible && " Histórico de Planos"}
+                          </Link>
+                        </li>
+                      </ul>
+                    )}
+                  </li>
+
+                  {/* Histórico de Sessões */}
+                  <li className="mt-3">
+                    <Link
+                      to="/adminPage?opcaoSelecionada=historicoSessoes"
+                      className={`sidebar-item ${currentOption === "historicoSessoes" ? "active" : ""}`}
+                    >
+                      <i className="bi bi-journal-text"></i>
+                      {sidebarVisible && " Histórico de Sessões"}
+                    </Link>
+                  </li>
+                </>
+              )}
+              {role === "cliente" && (
+                <>
+                  <li className="mt-3">
+                    <Link
+                      to="/clientepage?opcaoSelecionada=dashboard"
+                      className={`sidebar-item ${currentOption === "dashboard" ? "active" : ""}`}
+                    >
+                      <i className="bi bi-house-door"></i>
+                      {sidebarVisible && " Central do Cliente"}
+                    </Link>
+                  </li>
+                  <li className="mt-3">
+                    <Link
+                      to="/clientepage?opcaoSelecionada=pagamentos"
+                      className={`sidebar-item ${currentOption === "pagamentos" ? "active" : ""}`}
+                    >
+                      <i className="bi bi-wallet2"></i>
+                      {sidebarVisible && " Pagamentos"}
+                    </Link>
+                  </li>
+                  <li className="mt-3">
+                    <button
+                      className={`sidebar-item d-flex align-items-center w-100 ${["criarAgendamento", "visualizarAgendamentos", "CalendarioInterativo"].includes(currentOption)
+                          ? "active"
+                          : ""
+                        }`}
+                      onClick={() => setAgendamentosOpen(!agendamentosOpen)}
+                    >
+                      <i className="bi bi-calendar-check"></i>
+                      {sidebarVisible && " Agendamentos"}
+                      <i className={`ms-auto bi ${agendamentosOpen ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
+                    </button>
+                    {agendamentosOpen && (
+                      <ul className="submenu">
+                        <li>
+                          <Link
+                            to="/clientepage?opcaoSelecionada=criarAgendamento"
+                            className={`sidebar-item ${currentOption === "criarAgendamento" ? "active" : ""}`}
+                          >
+                            <i className="bi bi-calendar-plus"></i>
+                            {sidebarVisible && " Agendar"}
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            to="/clientepage?opcaoSelecionada=visualizarAgendamentos"
+                            className={`sidebar-item ${currentOption === "visualizarAgendamentos" ? "active" : ""}`}
+                          >
+                            <i className="bi bi-calendar-check"></i>
+                            {sidebarVisible && " Lista"}
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            to="/clientepage?opcaoSelecionada=CalendarioInterativo"
+                            className={`sidebar-item ${currentOption === "CalendarioInterativo" ? "active" : ""}`}
+                          >
+                            <i className="bi bi-calendar-event"></i>
+                            {sidebarVisible && " Calendário"}
+                          </Link>
+                        </li>
+                      </ul>
+                    )}
+                  </li>
+                  <li className="mt-3">
+                    <Link
+                      to="/clientepage?opcaoSelecionada=minhasAulas"
+                      className={`sidebar-item ${currentOption === "minhasAulas" ? "active" : ""}`}
+                    >
+                      <i className="bi bi-person-arms-up"></i>
+                      {sidebarVisible && " Aulas de Pilates"}
+                    </Link>
+                  </li>
+                </>
+              )}
+
               <li className="mt-3">
                 <button onClick={handleLogout} className="logout-btn">
                   <i className="bi bi-box-arrow-right"></i>

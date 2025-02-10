@@ -172,3 +172,6 @@ footer {
   height: 20px; /* Ajuste o tamanho conforme necessário */
 }
 
+.accordion-button::after {
+  display: none !important;
+}
