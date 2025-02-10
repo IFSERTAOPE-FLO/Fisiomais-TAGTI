@@ -4,7 +4,6 @@ import Paginator from "../../Paginator"; // Importe o componente Paginator
 import AdicionarClienteAulaColaborador from "./AdicionarClienteAulaColaborador"; // Importe o modal
 import AdicionarAulaPilates from "./AdicionarAulaPilates";
 import { Modal, Button } from "react-bootstrap"; // Importando Modal e Button do Bootstrap
-import CriarAgendamento from "../../../pages/CriarAgendamento";
 import VincularAlunoPlano from "./VincularAlunoPlano";
 
 const GerenciarAulasPilates = () => {
@@ -143,7 +142,7 @@ const GerenciarAulasPilates = () => {
     };
 
     return (
-        <div className="container">
+        <div className="container  ">
 
 
             <h2 className=" mb-4 text-center text-secondary ">Gerenciar Aulas de Pilates</h2>
@@ -155,7 +154,7 @@ const GerenciarAulasPilates = () => {
                 {sucesso && <p className="alert alert-success">{sucesso}</p>}
 
                 <div className="row mb-3">
-                    <div className="col-md-3">
+                    <div className="col-md-2 ">
                         <div className="input-group">
                             <input
                                 type="text"
@@ -169,7 +168,7 @@ const GerenciarAulasPilates = () => {
                             </button>
                         </div>
                     </div>
-                    <div className="col-md-1">
+                    <div className="col-md-2">
                         <select
                             className="form-select"
                             value={filtroDia}
@@ -219,25 +218,26 @@ const GerenciarAulasPilates = () => {
                                 ))}
                         </select>
                     </div>
+                    <div className="col-md-4 d-flex justify-content-md-end mt-2 mt-md-0">
                     {!adicionandoAula ? (
-                        <div className="col-md-2 d-flex justify-content-md-end mt-2 mt-md-0">
+                        
                             <button className="btn btn-login" onClick={() => setAdicionandoAula(true)}>
                                 <i className="bi bi-plus-circle"></i> Adicionar nova aula
                             </button>
-                        </div>
+                            
+                        
                     ) : (
-                        <div className="col-md-2 d-flex  mt-2 mt-md-0">
-                            <button className="btn btn-signup" onClick={() => setAdicionandoAula(false)}>
+                        
+                            <button className="btn btn-login" onClick={() => setAdicionandoAula(false)}>
                                 <i className="bi bi-arrow-left"></i> Voltar
                             </button>
-                        </div>
+                        
                     )}
-
-                    <div className="col-md-2 d-flex justify-content-md-end mt-2 mt-md-0">
-                        <button className="btn btn-signup" onClick={() => setAdicionandoAgendamento(true)}>
+                    <button className="btn btn-signup" onClick={() => setAdicionandoAgendamento(true)}>
                             <i className="bi bi-plus-circle"></i> Vincular plano
                         </button>
-                    </div>
+</div>
+                    
 
 
 

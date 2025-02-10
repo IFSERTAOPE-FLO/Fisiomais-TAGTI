@@ -162,18 +162,23 @@ const HistoricoSessoes = () => {
                             {selectedCliente && (
                                 <div className="d-flex justify-content-end mb-3">
                                     <Button className="btn btn-login" onClick={() => handleShowModal()}>
-                                        <FaPlus className="me-2" />Nova Sessão
+                                        <FaPlus className="me-2" />
+                                        Iniciar Novo Tratamento
                                     </Button>
-                                    {!showCriarAgendamento ? (
-                                        <button className="btn btn-signup ms-2" onClick={() => setShowCriarAgendamento(true)}>
-                                            <FaPlus className="me-2" />Criar Agendamento
-                                        </button>
-                                    ) : (
-                                        <button className="btn btn-signup ms-2 " onClick={() => setShowCriarAgendamento(false)}>
-                                            Voltar
-                                        </button>
+                                    {sessoes.length > 0 && (
+                                        !showCriarAgendamento ? (
+                                            <button className="btn btn-signup ms-2" onClick={() => setShowCriarAgendamento(true)}>
+                                                <FaPlus className="me-2" />Criar Agendamento
+                                            </button>
+                                        ) : (
+                                            <button className="btn btn-signup ms-2" onClick={() => setShowCriarAgendamento(false)}>
+                                                Voltar
+                                            </button>
+                                        )
                                     )}
-                                </div>)}
+                                </div>
+                            )}
+
 
                         </Col>
                     </Row>
@@ -181,10 +186,14 @@ const HistoricoSessoes = () => {
                     {selectedCliente && (
                         <>
                             {showCriarAgendamento && (
-
-                                <CriarAgendamento />
-
+                                <CriarAgendamento
+                                    historicoAgendamento={true}
+                                    idCliente={selectedCliente}
+                                    // Aqui, após o agendamento, atualiza as sessões (passando o id do cliente)
+                                    onAgendamentoSuccess={() => fetchSessoes(selectedCliente)}
+                                />
                             )}
+
 
 
 

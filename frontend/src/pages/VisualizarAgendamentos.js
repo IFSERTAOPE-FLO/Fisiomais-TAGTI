@@ -361,20 +361,11 @@ const VisualizarAgendamentos = () => {
                         {agendamento.data && !isNaN(new Date(agendamento.data).getTime()) ? (
                           <>
                             {new Date(agendamento.data).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}
-                            {agendamento.status === 'Pedido de Remarcação' ? (
-                              agendamento.dias_e_horarios && agendamento.dias_e_horarios !== 'não informada'
-                                ? ` - Solicitação de remarcação: ${formatarDataBrasileira(agendamento.dias_e_horarios)}`
-                                : ''
-                            )  : (
-                              `  `
+                            {agendamento.status === 'Pedido de Remarcação' && (
+                              ` - Solicitação de remarcação: ${formatarDataBrasileira(agendamento.dias_e_horarios)}`
                             )}
                           </>
-                        ) : (
-                          <>
-                            Vinculado ao plano, acesse minhas aulas para finalizar.< br/> 
-                          </>
-                        )}
-
+                        ) : null}
 
                       </td>
 
@@ -389,7 +380,7 @@ const VisualizarAgendamentos = () => {
                       <td>
                         {agendamento.plano?.nome && agendamento.plano?.valor ? (
                           <div>
-                            <strong>{agendamento.plano.nome}:</strong> {' '}  {agendamento.plano.quantidade_aulas_por_semana} aulas por semana < br/>
+                            <strong>{agendamento.plano.nome}:</strong> {' '}  {agendamento.plano.quantidade_aulas_por_semana} aulas por semana < br />
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(agendamento.plano.valor)}
                           </div>
                         ) : (
@@ -571,7 +562,7 @@ const VisualizarAgendamentos = () => {
                   {selectedAgendamento.plano?.nome && selectedAgendamento.plano?.valor ? (
                     <>
                       <div className="col-12 col-md-6">
-                        <strong>Plano:</strong> {selectedAgendamento.plano.nome} < br/> {selectedAgendamento.plano.quantidade_aulas_por_semana} aulas por semana
+                        <strong>Plano:</strong> {selectedAgendamento.plano.nome} < br /> {selectedAgendamento.plano.quantidade_aulas_por_semana} aulas por semana
                       </div>
                       <div className="col-12 col-md-6">
                         <strong>Valor do Plano:</strong>{' '}

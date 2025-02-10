@@ -4,9 +4,9 @@ import '../css/CriarAgendamento.css';
 import '../css/Estilos.css';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import EscolherDiasHorariosClientesModal from '../components/EscolherDiasHorariosClientesModal';
 
-function CriarAgendamento() {
+
+function CriarAgendamento({ historicoAgendamento, idCliente, onAgendamentoSuccess }) {
   const [data, setData] = useState('');
   const [hora, setHora] = useState('');
   const [servico, setServico] = useState('');
@@ -27,9 +27,6 @@ function CriarAgendamento() {
   const [diasPermitidos, setDiasPermitidos] = useState([]);
   const [feriados, setFeriados] = useState([]);
 
-  const [modalShow, setModalShow] = useState(false);
-  const [diasHorariosModal, setDiasHorariosModal] = useState([]);
-  const [diasHorariosTexto, setDiasHorariosTexto] = useState(''); // Estado para armazenar o texto dos dias e horários
 
 
 
@@ -203,58 +200,48 @@ function CriarAgendamento() {
     }
   };
 
-  const handleOpenModal = () => {
-    // Lógica para abrir o modal
-    setModalShow(true); // Supondo que você esteja usando `setModalShow` para gerenciar a exibição do modal.
-  };
-
-
 
   const handleSubmit = async (e) => {
-    e.preventDefault();  // Garantir que o evento não se propague automaticamente
+    e.preventDefault();
     setLoading(true);
-
+  
     // Validações
     if (tipoServico !== 'pilates' && !hora) {
       alert('Por favor, selecione um horário válido.');
       setLoading(false);
       return;
     }
-
-    if (!cliente || !colaborador || !servico) {
+    if ((!historicoAgendamento && !cliente) || !colaborador || !servico) {
       alert('Por favor, preencha todos os campos obrigatórios.');
       setLoading(false);
       return;
     }
-
+  
+    // Se o usuário logado for colaborador, usa o ID do localStorage; se for admin, usa o valor selecionado no estado "colaborador"
     const colaboradorId = role === 'colaborador' ? localStorage.getItem('userId') : colaborador;
     const dataEscolhida = new Date(data + 'T' + hora + ':00');
     const dataHoraISO = dataEscolhida.toISOString();
-
+  
+    // Se for agendamento via histórico, usa o idCliente recebido; senão, usa o estado "cliente"
     const agendamentoData = {
       servico_id: servico,
       colaborador_id: colaboradorId,
       data: dataHoraISO,
-      cliente_id: cliente,
+      cliente_id: historicoAgendamento ? idCliente : cliente,
       plano_id: tipoServico === 'pilates' ? planoSelecionado || null : null,
-      dias_e_horarios: diasHorariosTexto, // Incluindo os dias e horários
     };
-
+  
     const token = localStorage.getItem('token');
     if (!token) {
       alert('Por favor, faça login para agendar.');
       setLoading(false);
       return;
     }
-
+  
     try {
-      // Definir a rota com base no papel do usuário
-      const rota = (role === 'colaborador' || role === 'admin')
-        ? '/agendamentos/agendamento-plano-tratamento'
-        : '/agendamentos/';
-
-
-      const response = await fetch(`http://localhost:5000${rota}`, {
+      const endpoint = historicoAgendamento ? 'agendamento-plano-tratamento' : '';
+      const url = `http://localhost:5000/agendamentos/${endpoint}`;
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -262,11 +249,18 @@ function CriarAgendamento() {
         },
         body: JSON.stringify(agendamentoData),
       });
-
+  
       if (response.ok) {
         const successData = await response.json();
-        alert(successData.message || 'Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail');
-        fetchHorariosDisponiveis(colaborador || localStorage.getItem('userId'), data);
+        alert(
+          successData.message ||
+            'Pedido de agendamento realizado com sucesso! Aguarde a confirmação por e-mail'
+        );
+        // Chama a função passada pelo pai para atualizar o histórico
+        if (typeof onAgendamentoSuccess === 'function') {
+          onAgendamentoSuccess();
+        }
+        fetchHorariosDisponiveis(colaborador);
       } else {
         const errorData = await response.json();
         alert(errorData.message || 'Erro ao agendar a sessão.');
@@ -277,6 +271,7 @@ function CriarAgendamento() {
     }
     setLoading(false);
   };
+  
 
 
 
@@ -416,7 +411,7 @@ function CriarAgendamento() {
                 )}
 
 
-                {tipoServico === 'pilates' && (
+                {tipoServico === 'pilates' && !historicoAgendamento && (
                   <div className="mb-3">
                     <label className="form-label">Plano de Pilates</label>
                     <div className="row">
@@ -438,49 +433,12 @@ function CriarAgendamento() {
                         </div>
                       ))}
                     </div>
-
-                    <div className='mb-3 mt-2'>
-                      <label className="form-label">Sugira um horário</label>
-                      <div className="mb-6 d-flex align-items-center gap-3">
-                        <input
-                          type="text"
-                          className="form-control py-2 rounded"
-                          value={diasHorariosTexto}
-                          readOnly
-                          placeholder="Nenhum horário selecionado"
-                          style={{
-                            whiteSpace: 'nowrap', // Impede a quebra de linha
-                            overflowX: 'auto', // Permite rolagem horizontal
-                            textOverflow: 'ellipsis', // Adiciona "..." caso o texto ultrapasse
-                          }}
-                        />
-                        <button
-                          type="button" // Adicione isso para evitar o submit
-                          onClick={handleOpenModal}
-                          className="btn-plano rounded"
-                        >
-                          Sugerir Dias e Horários
-                        </button>
-                      </div>
-                    </div>
                   </div>
                 )}
-                {role === 'colaborador' && role !== 'admin' && (
-                  <div className="alert alert-info text-center" role="alert">
-                    Vinculando cliente ao plano.
-                  </div>
-                )}
+                
 
 
-                <EscolherDiasHorariosClientesModal
-                  show={modalShow}
-                  onHide={() => setModalShow(false)}
-                  onSubmit={(diasEHoras) => {
-                    setDiasHorariosModal(diasEHoras); // Atualiza o estado com os dados do modal
-                    setDiasHorariosTexto(diasEHoras); // Atualiza o texto exibido no input
-                    setModalShow(false); // Fecha o modal
-                  }}
-                />
+
 
 
                 {/* Collaborator Selection */}
@@ -515,52 +473,48 @@ function CriarAgendamento() {
 
 
                 </div>
-                {tipoServico !== 'pilates' && (
-
-                  <div className="row ">
-                    {/* Calendário */}
-                    <div className="col-md-8 mb-3">
-                      <label htmlFor="data" className="form-label">Data</label>
-                      <Calendar
-                        onChange={handleDateChange}
-                        tileDisabled={({ date }) => isDateDisabled(date)}
-                        minDate={new Date()} // Desabilita datas anteriores ao dia atual
-                      />
-                    </div>
-
-                    {/* Horário */}
-                    <div className="col-md-4 mb-3">
-                      <label htmlFor="hora" className="form-label">Horário</label>
-                      {Array.isArray(horariosDisponiveis) && horariosDisponiveis.length > 0 ? (
-                        <select
-                          id="hora"
-                          className="form-select"
-                          value={hora}
-                          onChange={(e) => setHora(e.target.value)}
-                          required
-                        >
-                          <option value="">Escolha o horário</option>
-                          {horariosDisponiveis.map((horario, index) => (
-                            <option key={index} value={horario}>
-                              {horario}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <div className="alert alert-warning" role="alert">
-                          Nenhum horário disponível!
-                        </div>
-                      )}
-                    </div>
-
-
+                <div className="row ">
+                  {/* Calendário */}
+                  <div className="col-md-8 mb-3">
+                    <label htmlFor="data" className="form-label">Data</label>
+                    <Calendar
+                      onChange={handleDateChange}
+                      tileDisabled={({ date }) => isDateDisabled(date)}
+                      minDate={new Date()} // Desabilita datas anteriores ao dia atual
+                    />
                   </div>
-                )}
+
+                  {/* Horário */}
+                  <div className="col-md-4 mb-3">
+                    <label htmlFor="hora" className="form-label">Horário</label>
+                    {Array.isArray(horariosDisponiveis) && horariosDisponiveis.length > 0 ? (
+                      <select
+                        id="hora"
+                        className="form-select"
+                        value={hora}
+                        onChange={(e) => setHora(e.target.value)}
+                        required
+                      >
+                        <option value="">Escolha o horário</option>
+                        {horariosDisponiveis.map((horario, index) => (
+                          <option key={index} value={horario}>
+                            {horario}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className="alert alert-warning" role="alert">
+                        Nenhum horário disponível!
+                      </div>
+                    )}
+                  </div>
+
+
+                </div>
+
                 <div className="mb-3">
 
-                  {role === 'cliente' ? (
-                    <br />
-                  ) : (
+                  {role !== 'cliente' && !historicoAgendamento && (
                     <>
                       <label htmlFor="cliente" className="form-label">Cliente</label>
                       <select
@@ -579,6 +533,7 @@ function CriarAgendamento() {
                       </select>
                     </>
                   )}
+
 
                 </div>
 

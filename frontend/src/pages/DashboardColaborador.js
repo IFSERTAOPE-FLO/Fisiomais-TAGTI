@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Container, Row, Col, Card, ListGroup, Table, Badge, Alert, Modal, Button } from 'react-bootstrap';
 import Perfil from "./Perfil";
+import EditarHorarios from '../components/EditarHorarios';
 
 
 
@@ -12,10 +13,21 @@ const DashboardColaborador = () => {
     const [showPerfil, setShowPerfil] = useState(false);
     const [servicos, setServicos] = useState([]);
     const [pagamentos, setPagamentos] = useState([]);
+    const [horariosEditando, setHorariosEditando] = useState(null);
+    const userId = localStorage.getItem('userId');
+    const role = localStorage.getItem('role');
+
 
     // Funções para abrir/fechar o modal de edição do perfil
     const handleOpenPerfil = () => setShowPerfil(true);
     const handleClosePerfil = () => setShowPerfil(false);
+    const handleEditarHorarios = () => setHorariosEditando(true);
+    const handleFecharEditarHorarios = () => setHorariosEditando(false);
+    // Função para editar horários
+
+
+
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -65,19 +77,43 @@ const DashboardColaborador = () => {
         <Container className="mt-4">
             {/* Cabeçalho com título centralizado e botão para editar perfil */}
             <div className="row align-items-center mb-3">
-                <div className="col-3"></div>
+                <div className="col-2"></div>
                 <div className="col-6 text-center text-secondary">
                     <h2 className="mb-0">
                         <i className="bi bi-speedometer2 me-2"></i>
                         Dashboard do Colaborador
                     </h2>
                 </div>
-                <div className="col-3 text-end">
+                <div className="col-4 text-end">
                     <button className='btn btn-login' onClick={handleOpenPerfil}>
                         <i className="bi bi-person-circle me-2"></i> Editar Perfil
                     </button>
+                    {role === 'colaborador' && (
+                        <button
+                        className="btn-login btn-sm me-2"
+                        onClick={() => handleEditarHorarios(userId)}
+                    >
+                        <i className="bi bi-clock"></i> Editar seus horários
+                    </button>
+
+                    )}
+                    
+
                 </div>
+                
             </div>
+
+            {horariosEditando && (
+                        
+                            
+                        <EditarHorarios
+                            colaboradorId={userId}
+                            onClose={handleFecharEditarHorarios}  // Passando o ID para o modal                     // Passando o nome para o modal                    
+
+                        />
+                    
+                )}
+            
 
             {erro && <Alert variant="danger">{erro}</Alert>}
 
