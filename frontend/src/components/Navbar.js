@@ -199,6 +199,21 @@ function Navbar() {
       navigate("/");
     }
   };
+  useEffect(() => {
+    const handleCliqueFora = (event) => {
+      const sidebar = document.getElementById("sidebar");
+
+      if (sidebar && !sidebar.contains(event.target)) {
+        setSidebarVisible(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleCliqueFora);
+
+    return () => {
+      document.removeEventListener("mousedown", handleCliqueFora);
+    };
+    }, []);
 
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
@@ -364,7 +379,7 @@ function Navbar() {
 
       {/* Remove a logo do navbar */}
       {isLoggedIn && (
-        <div className="sidebar-container d-none d-md-block">
+        <div className="sidebar-container d-none d-md-block" id="sidebar">
           <button
             className={`sidebar-toggle ${sidebarVisible ? "toggle-open" : ""}`}
             onClick={() => setSidebarVisible(!sidebarVisible)}
