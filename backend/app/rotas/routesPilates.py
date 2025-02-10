@@ -411,7 +411,6 @@ def listar_aulas_por_clinica(clinica_id):
             return jsonify({"message": "Nenhum colaborador encontrado para esta clínica."}), 404
         
         print(f"[DEBUG] {len(colaboradores)} colaborador(es) encontrado(s) na clínica {clinica.nome}.")
-
         # Buscar todas as aulas dos colaboradores dessa clínica
         aulas_list = []
         for colaborador in colaboradores:   
@@ -689,12 +688,10 @@ def criar_agendamentos_semana_atual(cliente_id):
 
         db.session.commit()
 
-        # Após criar os agendamentos, gera o pagamento mensal usando o plano do cliente
-        pagamento_response = gerar_pagamento_mensal(cliente_id, plano_id)
+        
 
         return jsonify({
-            "message": "Agendamento(s) criado(s) com sucesso!",
-            "pagamento_response": pagamento_response
+            "message": "Agendamento(s) criado(s) com sucesso!",            
         }), 200
 
     except Exception as e:
