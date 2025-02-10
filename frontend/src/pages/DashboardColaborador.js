@@ -90,30 +90,30 @@ const DashboardColaborador = () => {
                     </button>
                     {role === 'colaborador' && (
                         <button
-                        className="btn-login btn-sm me-2"
-                        onClick={() => handleEditarHorarios(userId)}
-                    >
-                        <i className="bi bi-clock"></i> Editar seus horários
-                    </button>
+                            className="btn-login btn-sm me-2"
+                            onClick={() => handleEditarHorarios(userId)}
+                        >
+                            <i className="bi bi-clock"></i> Editar seus horários
+                        </button>
 
                     )}
-                    
+
 
                 </div>
-                
+
             </div>
 
             {horariosEditando && (
-                        
-                            
-                        <EditarHorarios
-                            colaboradorId={userId}
-                            onClose={handleFecharEditarHorarios}  // Passando o ID para o modal                     // Passando o nome para o modal                    
 
-                        />
-                    
-                )}
-            
+
+                <EditarHorarios
+                    colaboradorId={userId}
+                    onClose={handleFecharEditarHorarios}  // Passando o ID para o modal                     // Passando o nome para o modal                    
+
+                />
+
+            )}
+
 
             {erro && <Alert variant="danger">{erro}</Alert>}
 
@@ -238,8 +238,8 @@ const DashboardColaborador = () => {
                 </Col>
 
                 {/* Minhas Aulas Ministradas */}
+                {/* Minhas Aulas de Pilates */}
                 <Col md={7} lg={7}>
-
                     <Card>
                         <Card.Header>
                             <h5 className="mb-0">Minhas Aulas de Pilates</h5>
@@ -251,27 +251,38 @@ const DashboardColaborador = () => {
                                         <tr>
                                             <th>Dia</th>
                                             <th>Horário</th>
-                                            <th>Turma</th>
-                                            <th>Local</th>
+                                            <th>Colaborador</th>
+                                            <th>Clínica</th>
+                                            <th>Serviço</th>                                            
+                                            <th>Vagas</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {aulas.map((aula) => (
                                             <tr key={aula.id_aula}>
                                                 <td>{aula.dia_semana}</td>
-                                                <td>{aula.hora_inicio} - {aula.hora_fim}</td>
-                                                <td>{aula.turma || 'N/A'}</td>
-                                                <td>{aula.local || 'N/A'}</td>
+                                                <td>
+                                                    {aula.hora_inicio} - {aula.hora_fim}
+                                                </td>
+                                                <td>{aula.colaborador ? aula.colaborador.nome : 'N/A'}</td>
+                                                <td>{aula.clinica || 'N/A'}</td>
+                                                <td>{aula.servico || 'N/A'}</td>                                                
+                                                <td>
+                                                    {aula.num_alunos} / {aula.limite_alunos}
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </Table>
                             ) : (
-                                <div className="text-center text-muted py-4">Nenhuma aula agendada</div>
+                                <div className="text-center text-muted py-4">
+                                    Nenhuma aula agendada
+                                </div>
                             )}
                         </Card.Body>
                     </Card>
                 </Col>
+
 
 
             </Row>
