@@ -75,6 +75,10 @@ const GerenciarUsuarios = () => {
 
     // Função para deletar usuário
     const deletarUsuario = async (tipo, id) => {
+        // Exibe uma confirmação antes de prosseguir
+        if (!window.confirm("ATENÇÃO: Esta ação é irreversível. Tem certeza de que deseja deletar este usuário?")) {
+            return; // Se o usuário cancelar, a função é encerrada
+        }
         try {
             const token = localStorage.getItem("token");
             const response = await fetch(
@@ -83,7 +87,7 @@ const GerenciarUsuarios = () => {
                     method: "DELETE",
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`,
+                        Authorization: `Bearer ${token}`,
                     },
                 }
             );
@@ -98,6 +102,7 @@ const GerenciarUsuarios = () => {
             setErro(err.message);
         }
     };
+
 
     const handleEditarUsuario = (usuario) => {
         setUsuarioEditando(usuario);
@@ -315,6 +320,7 @@ const GerenciarUsuarios = () => {
                                             <button
                                                 className="btn btn-warning btn-sm me-1"
                                                 onClick={() => handleEditarUsuario(usuario)}
+                                                title="Editar usuario selecionado"
                                             >
                                                 <i className="bi bi-pencil"></i>
                                             </button>
@@ -323,6 +329,7 @@ const GerenciarUsuarios = () => {
                                             <button
                                                 className="btn btn-danger btn-sm me-1"
                                                 onClick={() => deletarUsuario(usuario.role, usuario.id)}
+                                                title="Excluir usuário selecionado"
                                             >
                                                 <i className="bi bi-trash"></i>
                                             </button>
@@ -338,8 +345,9 @@ const GerenciarUsuarios = () => {
                                                 <button
                                                     className="btn btn-info btn-sm me-1"
                                                     onClick={() => handleVerAulasCliente(usuario.id)}
+                                                    title="Ver as aulas de pilates do cliente selecionado"
                                                 >
-                                                    <i className="bi bi-calendar-plus"></i> Aulas Pilates
+                                                    <i className="bi bi-calendar-plus"></i>
 
                                                 </button>
                                             )}

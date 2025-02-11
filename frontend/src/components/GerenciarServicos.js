@@ -141,6 +141,9 @@ const GerenciarServicos = () => {
   };
 
   const deletarServico = async (idServico) => {
+    if (!window.confirm("ATENÇÃO: Esta ação é irreversível. Tem certeza de que deseja deletar este usuário?")) {
+      return; // Se o usuário cancelar, a função é encerrada
+    }
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -266,136 +269,136 @@ const GerenciarServicos = () => {
       {mensagem && <div className="alert alert-success">{mensagem}</div>}
 
       <form
-  onSubmit={(e) => {
-    e.preventDefault();
-    salvarServico();
-  }}
-  className="mb-4"
->
-  <div className="row">
-    <div className="col-md-6">
-      <input
-        type="text"
-        placeholder="Nome do Serviço"
-        value={novoServico.nome_servico}
-        onChange={(e) => setNovoServico({ ...novoServico, nome_servico: e.target.value })}
-        required
-        className="form-control mb-2"
-      />
-    </div>
-    <div className="col-md-6">
-      <input
-        type="text"
-        placeholder="Descrição"
-        value={novoServico.descricao}
-        onChange={(e) => setNovoServico({ ...novoServico, descricao: e.target.value })}
-        required
-        className="form-control mb-2"
-      />
-    </div>
-  </div>
-
-  <div className="row">
-    <div className="col-md-6">
-      <select
-        value={novoServico.tipo_servico}
-        onChange={handleTipoServicoChange}
-        className="form-control mb-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          salvarServico();
+        }}
+        className="mb-4"
       >
-        <option value="">Selecione o Tipo de Serviço</option>
-        <option value="fisioterapia">Fisioterapia</option>
-        <option value="pilates">Pilates</option>
-      </select>
-    </div>
-    {novoServico.tipo_servico === "fisioterapia" && (
-      <div className="col-md-6">
-        <input
-          type="number"
-          placeholder="Valor"
-          value={novoServico.valor}
-          onChange={(e) => setNovoServico({ ...novoServico, valor: e.target.value })}
-          className="form-control mb-2"
-        />
-      </div>
-    )}
-  </div>
-
-  {novoServico.tipo_servico === "pilates" && (
-    <>
-      <div className="row">
-        <div className="col-md-4">
-          <input
-            type="text"
-            placeholder="Nome do Plano"
-            value={novoPlano.nome}
-            onChange={(e) => setNovoPlano({ ...novoPlano, nome: e.target.value })}
-            className="form-control mb-2"
-          />
-        </div>
-        <div className="col-md-4">
-          <input
-            type="number"
-            placeholder="Valor do Plano"
-            value={novoPlano.valor}
-            onChange={(e) => setNovoPlano({ ...novoPlano, valor: e.target.value })}
-            className="form-control mb-2"
-          />
-        </div>
-        <div className="col-md-4">
-          <input
-            type="number"
-            placeholder="Aulas por Semana"
-            value={novoPlano.quantidade_aulas}
-            onChange={(e) => setNovoPlano({ ...novoPlano, quantidade_aulas: e.target.value })}
-            className="form-control mb-2"
-            min="1"
-          />
-        </div>
-      </div>
-
-      <div className="d-flex justify-content-center">
-        <button type="button" onClick={adicionarPlano} className="btn btn-signup">
-          Adicionar Plano
-        </button>
-      </div>
-
-      {novoServico.planos.length > 0 && (
-        <div className="mb-3">
-          <label className="form-label">Planos Adicionados:</label>
-          <div className="row">
-            {novoServico.planos.map((plano, index) => (
-              <div key={index} className="col-md-4">
-                <div className="d-flex justify-content-between align-items-center p-2 border btn-plano rounded">
-                  <div className="flex-grow-1">
-                    <strong>{plano.Nome_plano}</strong>
-                    <div className="text-muted small">{plano.quantidade_aulas_por_semana} aulas/semana</div>
-                  </div>
-                  <span className="fw-bold">R$ {plano.Valor.toFixed(2)}</span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setNovoServico((prev) => ({
-                        ...prev,
-                        planos: prev.planos.filter((_, i) => i !== index),
-                      }))
-                    }
-                    className="btn btn-danger btn-sm ms-2"
-                  >
-                    <i className="bi bi-trash"></i>
-                  </button>
-                </div>
-              </div>
-            ))}
+        <div className="row">
+          <div className="col-md-6">
+            <input
+              type="text"
+              placeholder="Nome do Serviço"
+              value={novoServico.nome_servico}
+              onChange={(e) => setNovoServico({ ...novoServico, nome_servico: e.target.value })}
+              required
+              className="form-control mb-2"
+            />
+          </div>
+          <div className="col-md-6">
+            <input
+              type="text"
+              placeholder="Descrição"
+              value={novoServico.descricao}
+              onChange={(e) => setNovoServico({ ...novoServico, descricao: e.target.value })}
+              required
+              className="form-control mb-2"
+            />
           </div>
         </div>
-      )}
-    </>
-  )}
 
-  <div className="d-flex justify-content-center">
-    <button type="submit" className="btn btn-login mt-3">Adicionar Serviço</button>
-  </div>
-</form>
+        <div className="row">
+          <div className="col-md-6">
+            <select
+              value={novoServico.tipo_servico}
+              onChange={handleTipoServicoChange}
+              className="form-control mb-2"
+            >
+              <option value="">Selecione o Tipo de Serviço</option>
+              <option value="fisioterapia">Fisioterapia</option>
+              <option value="pilates">Pilates</option>
+            </select>
+          </div>
+          {novoServico.tipo_servico === "fisioterapia" && (
+            <div className="col-md-6">
+              <input
+                type="number"
+                placeholder="Valor"
+                value={novoServico.valor}
+                onChange={(e) => setNovoServico({ ...novoServico, valor: e.target.value })}
+                className="form-control mb-2"
+              />
+            </div>
+          )}
+        </div>
+
+        {novoServico.tipo_servico === "pilates" && (
+          <>
+            <div className="row">
+              <div className="col-md-4">
+                <input
+                  type="text"
+                  placeholder="Nome do Plano"
+                  value={novoPlano.nome}
+                  onChange={(e) => setNovoPlano({ ...novoPlano, nome: e.target.value })}
+                  className="form-control mb-2"
+                />
+              </div>
+              <div className="col-md-4">
+                <input
+                  type="number"
+                  placeholder="Valor do Plano"
+                  value={novoPlano.valor}
+                  onChange={(e) => setNovoPlano({ ...novoPlano, valor: e.target.value })}
+                  className="form-control mb-2"
+                />
+              </div>
+              <div className="col-md-4">
+                <input
+                  type="number"
+                  placeholder="Aulas por Semana"
+                  value={novoPlano.quantidade_aulas}
+                  onChange={(e) => setNovoPlano({ ...novoPlano, quantidade_aulas: e.target.value })}
+                  className="form-control mb-2"
+                  min="1"
+                />
+              </div>
+            </div>
+
+            <div className="d-flex justify-content-center">
+              <button type="button" onClick={adicionarPlano} className="btn btn-signup">
+                Adicionar Plano
+              </button>
+            </div>
+
+            {novoServico.planos.length > 0 && (
+              <div className="mb-3">
+                <label className="form-label">Planos Adicionados:</label>
+                <div className="row">
+                  {novoServico.planos.map((plano, index) => (
+                    <div key={index} className="col-md-4">
+                      <div className="d-flex justify-content-between align-items-center p-2 border btn-plano rounded">
+                        <div className="flex-grow-1">
+                          <strong>{plano.Nome_plano}</strong>
+                          <div className="text-muted small">{plano.quantidade_aulas_por_semana} aulas/semana</div>
+                        </div>
+                        <span className="fw-bold">R$ {plano.Valor.toFixed(2)}</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setNovoServico((prev) => ({
+                              ...prev,
+                              planos: prev.planos.filter((_, i) => i !== index),
+                            }))
+                          }
+                          className="btn btn-danger btn-sm ms-2"
+                        >
+                          <i className="bi bi-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        <div className="d-flex justify-content-center">
+          <button type="submit" className="btn btn-login mt-3">Adicionar Serviço</button>
+        </div>
+      </form>
 
 
       <h3 className="text-primary">Lista de Serviços</h3>

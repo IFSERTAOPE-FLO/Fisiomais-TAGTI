@@ -290,7 +290,7 @@ const DashboardColaborador = () => {
                         <Card.Header>
                             <h5 className="mb-0">Minhas Aulas de Pilates</h5>
                         </Card.Header>
-                        <Card.Body>
+                        <Card.Body style={{ maxHeight: "400px", overflowY: "auto" }} >
                             {aulas.length > 0 ? (
                                 <div className="accordion" id="aulasAccordion">
                                     {sortedAulas.map((aula) => (
