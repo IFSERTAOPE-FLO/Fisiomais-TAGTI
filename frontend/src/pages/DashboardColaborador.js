@@ -209,165 +209,160 @@ const DashboardColaborador = () => {
                             <i className="bi bi-person-workspace me-2"></i>
                             <span>Serviços Disponíveis</span>
                         </Card.Header>
-                        <div className="accordion" id="servicosAccordion" style={{ maxHeight: "500px", overflowY: "auto" }}>
-                            <div className="accordion" id="servicosAccordion">
-                                {servicos.map((servico) => (
-                                    <div className="accordion-item" key={servico.ID_Servico}>
-                                        <h2 className="accordion-header" id={`heading-${servico.ID_Servico}`}>
+                        {/* Container único para o accordion de serviços */}
+                        <div className="accordion" id="servicosAccordionServico" style={{ maxHeight: "500px", overflowY: "auto" }}>
+                            {servicos.map((servico) => (
+                                <div className="accordion-item" key={servico.ID_Servico}>
+                                    <h2 className="accordion-header" id={`heading-servico-${servico.ID_Servico}`}>
+                                        <button
+                                            className="accordion-button collapsed small d-flex align-items-center"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target={`#collapse-servico-${servico.ID_Servico}`}
+                                            aria-expanded="false"
+                                            aria-controls={`collapse-servico-${servico.ID_Servico}`}
+                                            style={{ fontSize: "0.775rem", fontWeight: "bold", padding: "8px 12px" }}
+                                        >
+                                            <span>{servico.Nome_servico}</span>
+                                            <Badge bg="secondary" className="ms-auto" style={{ fontSize: "0.75rem" }}>
+                                                {servico.Tipos}
+                                            </Badge>
+                                        </button>
+                                    </h2>
+                                    <div
+                                        id={`collapse-servico-${servico.ID_Servico}`}
+                                        className="accordion-collapse collapse"
+                                        aria-labelledby={`heading-servico-${servico.ID_Servico}`}
+                                        data-bs-parent="#servicosAccordionServico"
+                                    >
+                                        <div className="accordion-body text-muted small" style={{ fontSize: "0.75rem" }}>
+                                            {servico.Descricao}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+                </Col>
+
+
+            {/* Histórico de Pagamentos */}
+            <Col md={5} lg={5}>
+                <Card>
+                    <Card.Header className="d-flex align-items-center">
+                        <i className="bi bi-cash-coin me-2"></i>
+                        <span>Histórico de Pagamentos</span>
+                    </Card.Header>
+                    <ListGroup variant="flush" style={{ maxHeight: "400px", overflowY: "auto" }}>
+                        {pagamentos.length ? (
+                            pagamentos.map((pagamento) => (
+                                <ListGroup.Item key={pagamento.id_pagamento} className="d-flex justify-content-between">
+                                    <div>
+                                        <strong>{pagamento.servico.nome}</strong>
+                                        <div className="text-muted small">
+                                            {pagamento.data_pagamento
+                                                ? new Date(pagamento.data_pagamento).toLocaleDateString("pt-BR")
+                                                : "Pagamento Pendente"}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <Badge bg={pagamento.status === "pago" ? "success" : "warning"}>
+                                            R$ {pagamento.valor}
+                                        </Badge>
+                                    </div>
+                                </ListGroup.Item>
+                            ))
+                        ) : (
+                            <ListGroup.Item className="text-muted">Nenhum pagamento</ListGroup.Item>
+                        )}
+                    </ListGroup>
+                </Card>
+            </Col>
+
+            {/* Minhas Aulas de Pilates */}
+            <Col md={7} lg={7}>
+                <Card>
+                    <Card.Header>
+                        <h5 className="mb-0">Minhas Aulas de Pilates</h5>
+                    </Card.Header>
+                    <Card.Body style={{ maxHeight: "400px", overflowY: "auto" }} >
+                        {aulas.length > 0 ? (
+                            <div className="accordion" id="aulasAccordion">
+                                {sortedAulas.map((aula) => (
+                                    <div className="accordion-item" key={aula.id_aula}>
+                                        <h2 className="accordion-header" id={`heading-${aula.id_aula}`}>
                                             <button
-                                                className="accordion-button collapsed small d-flex align-items-center"
+                                                className="accordion-button collapsed"
                                                 type="button"
                                                 data-bs-toggle="collapse"
-                                                data-bs-target={`#collapse-${servico.ID_Servico}`}
+                                                data-bs-target={`#collapse-${aula.id_aula}`}
                                                 aria-expanded="false"
-                                                aria-controls={`collapse-${servico.ID_Servico}`}
-                                                style={{ fontSize: "0.775rem", fontWeight: "bold", padding: "8px 12px" }}
+                                                aria-controls={`collapse-${aula.id_aula}`}
+                                                onClick={() => toggleAlunosAccordion(aula.id_aula)}
                                             >
-                                                <span>{servico.Nome_servico}</span>
-                                                <Badge
-                                                    bg="secondary"
-                                                    className="ms-auto"
-                                                    style={{ fontSize: "0.75rem" }}
-                                                >
-                                                    {servico.Tipos}
-                                                </Badge>
+                                                <div className="d-flex flex-column gap-2 w-100">
+                                                    {/* Informações da Aula */}
+                                                    <div>
+                                                        <strong>{aula.dia_semana}</strong>
+                                                        <br />
+                                                        {aula.hora_inicio} - {aula.hora_fim}
+                                                    </div>
+                                                    {/* Instrutor */}
+                                                    <div className="d-flex align-items-center gap-2">
+                                                        <i className="bi bi-person-badge text-muted"></i>
+                                                        <span>{aula.colaborador ? aula.colaborador.nome : "N/A"}</span>
+                                                    </div>
+                                                    {/* Clínica */}
+                                                    <div className="d-flex align-items-center gap-2">
+                                                        <i className="bi bi-geo-alt text-muted"></i>
+                                                        <span>{aula.clinica || "N/A"}</span>
+                                                    </div>
+                                                    {/* Progresso de Participação */}
+                                                    <div className="d-flex align-items-center gap-2">
+                                                        <div className="progress flex-grow-1" style={{ height: "8px" }}>
+                                                            <div
+                                                                className="progress-bar bg-primary"
+                                                                role="progressbar"
+                                                                style={{ width: `${(aula.num_alunos / aula.limite_alunos) * 100}%` }}
+                                                            ></div>
+                                                        </div>
+                                                        <small className="text-muted">
+                                                            {aula.limite_alunos - aula.num_alunos} vagas restantes
+                                                        </small>
+                                                    </div>
+                                                </div>
                                             </button>
                                         </h2>
                                         <div
-                                            id={`collapse-${servico.ID_Servico}`}
+                                            id={`collapse-${aula.id_aula}`}
                                             className="accordion-collapse collapse"
-                                            aria-labelledby={`heading-${servico.ID_Servico}`}
-                                            data-bs-parent="#servicosAccordion"
+                                            aria-labelledby={`heading-${aula.id_aula}`}
+                                            data-bs-parent="#aulasAccordion"
                                         >
-                                            <div className="accordion-body text-muted small" style={{ fontSize: "0.75rem" }}>
-                                                {servico.Descricao}
+                                            <div className="accordion-body">
+                                                {alunosPorAula[aula.id_aula] && alunosPorAula[aula.id_aula].length > 0 ? (
+                                                    <p className="mb-0">
+                                                        <strong>Alunos:</strong>{" "}
+                                                        {alunosPorAula[aula.id_aula].map((cliente) => cliente.nome).join(", ")}
+                                                    </p>
+                                                ) : (
+                                                    <div className="text-muted">Nenhum aluno inscrito nesta aula.</div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
                                 ))}
                             </div>
 
-                        </div>
-                    </Card>
-                </Col>
+                        ) : (
+                            <div className="text-center text-muted py-4">Nenhuma aula agendada</div>
+                        )}
+                    </Card.Body>
 
-                {/* Histórico de Pagamentos */}
-                <Col md={5} lg={5}>
-                    <Card>
-                        <Card.Header className="d-flex align-items-center">
-                            <i className="bi bi-cash-coin me-2"></i>
-                            <span>Histórico de Pagamentos</span>
-                        </Card.Header>
-                        <ListGroup variant="flush" style={{ maxHeight: "400px", overflowY: "auto" }}>
-                            {pagamentos.length ? (
-                                pagamentos.map((pagamento) => (
-                                    <ListGroup.Item key={pagamento.id_pagamento} className="d-flex justify-content-between">
-                                        <div>
-                                            <strong>{pagamento.servico.nome}</strong>
-                                            <div className="text-muted small">
-                                                {pagamento.data_pagamento
-                                                    ? new Date(pagamento.data_pagamento).toLocaleDateString("pt-BR")
-                                                    : "Pagamento Pendente"}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <Badge bg={pagamento.status === "pago" ? "success" : "warning"}>
-                                                R$ {pagamento.valor}
-                                            </Badge>
-                                        </div>
-                                    </ListGroup.Item>
-                                ))
-                            ) : (
-                                <ListGroup.Item className="text-muted">Nenhum pagamento</ListGroup.Item>
-                            )}
-                        </ListGroup>
-                    </Card>
-                </Col>
-
-                {/* Minhas Aulas de Pilates */}
-                <Col md={7} lg={7}>
-                    <Card>
-                        <Card.Header>
-                            <h5 className="mb-0">Minhas Aulas de Pilates</h5>
-                        </Card.Header>
-                        <Card.Body style={{ maxHeight: "400px", overflowY: "auto" }} >
-                            {aulas.length > 0 ? (
-                                <div className="accordion" id="aulasAccordion">
-                                    {sortedAulas.map((aula) => (
-                                        <div className="accordion-item" key={aula.id_aula}>
-                                            <h2 className="accordion-header" id={`heading-${aula.id_aula}`}>
-                                                <button
-                                                    className="accordion-button collapsed"
-                                                    type="button"
-                                                    data-bs-toggle="collapse"
-                                                    data-bs-target={`#collapse-${aula.id_aula}`}
-                                                    aria-expanded="false"
-                                                    aria-controls={`collapse-${aula.id_aula}`}
-                                                    onClick={() => toggleAlunosAccordion(aula.id_aula)}
-                                                >
-                                                    <div className="d-flex flex-column gap-2 w-100">
-                                                        {/* Informações da Aula */}
-                                                        <div>
-                                                            <strong>{aula.dia_semana}</strong>
-                                                            <br />
-                                                            {aula.hora_inicio} - {aula.hora_fim}
-                                                        </div>
-                                                        {/* Instrutor */}
-                                                        <div className="d-flex align-items-center gap-2">
-                                                            <i className="bi bi-person-badge text-muted"></i>
-                                                            <span>{aula.colaborador ? aula.colaborador.nome : "N/A"}</span>
-                                                        </div>
-                                                        {/* Clínica */}
-                                                        <div className="d-flex align-items-center gap-2">
-                                                            <i className="bi bi-geo-alt text-muted"></i>
-                                                            <span>{aula.clinica || "N/A"}</span>
-                                                        </div>
-                                                        {/* Progresso de Participação */}
-                                                        <div className="d-flex align-items-center gap-2">
-                                                            <div className="progress flex-grow-1" style={{ height: "8px" }}>
-                                                                <div
-                                                                    className="progress-bar bg-primary"
-                                                                    role="progressbar"
-                                                                    style={{ width: `${(aula.num_alunos / aula.limite_alunos) * 100}%` }}
-                                                                ></div>
-                                                            </div>
-                                                            <small className="text-muted">
-                                                                {aula.limite_alunos - aula.num_alunos} vagas restantes
-                                                            </small>
-                                                        </div>
-                                                    </div>
-                                                </button>
-                                            </h2>
-                                            <div
-                                                id={`collapse-${aula.id_aula}`}
-                                                className="accordion-collapse collapse"
-                                                aria-labelledby={`heading-${aula.id_aula}`}
-                                                data-bs-parent="#aulasAccordion"
-                                            >
-                                                <div className="accordion-body">
-                                                    {alunosPorAula[aula.id_aula] && alunosPorAula[aula.id_aula].length > 0 ? (
-                                                        <p className="mb-0">
-                                                            <strong>Alunos:</strong>{" "}
-                                                            {alunosPorAula[aula.id_aula].map((cliente) => cliente.nome).join(", ")}
-                                                        </p>
-                                                    ) : (
-                                                        <div className="text-muted">Nenhum aluno inscrito nesta aula.</div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                            ) : (
-                                <div className="text-center text-muted py-4">Nenhuma aula agendada</div>
-                            )}
-                        </Card.Body>
-
-                    </Card>
-                </Col>
-            </Row>
-        </Container>
+                </Card>
+            </Col>
+        </Row>
+        </Container >
     );
 };
 
