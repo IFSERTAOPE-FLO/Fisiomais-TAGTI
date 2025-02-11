@@ -99,6 +99,7 @@ def adicionar_aula_pilates():
 
 
 
+
 @pilates.route('/colaborador/adicionar_cliente_aula', methods=['POST'])
 def adicionar_cliente_aula_colaborador():
     data = request.get_json()
@@ -120,7 +121,9 @@ def adicionar_cliente_aula_colaborador():
     if not isinstance(aula_ids, list):
         aula_ids = [aula_ids]
 
-    messages = []
+    messages = []           # Armazena as mensagens de feedback para cada ação
+    registrations = []      # Lista para armazenar as inscrições que serão adicionadas
+    force_required = False  # Flag para indicar se algum cliente atingiu o limite sem forçar
 
     # Para cada cliente selecionado
     for cid in cliente_ids:
@@ -144,9 +147,20 @@ def adicionar_cliente_aula_colaborador():
             AulasClientes.data_inscricao >= week_start
         ).count()
 
-        if plano.quantidade_aulas_por_semana and aulas_da_semana >= plano.quantidade_aulas_por_semana and not forcarCadastro:
-            messages.append(f"O limite semanal de {plano.quantidade_aulas_por_semana} aulas foi atingido para o cliente {cliente.nome}.")
-            continue
+        # Verifica se o limite semanal foi atingido (ou ultrapassado)
+        if plano.quantidade_aulas_por_semana and aulas_da_semana >= plano.quantidade_aulas_por_semana:
+            if not forcarCadastro:
+                messages.append(
+                    f"Limite semanal de {plano.quantidade_aulas_por_semana} aulas atingido para o cliente {cliente.nome}. "
+                    "Confirme se deseja forçar o cadastro enviando 'forcarCadastro' como True."
+                )
+                force_required = True
+                continue  # Pula o cadastro deste cliente
+            else:
+                messages.append(
+                    f"Atenção: o cliente {cliente.nome} já atingiu o limite semanal de {plano.quantidade_aulas_por_semana} aulas, "
+                    "mas a inscrição foi forçada."
+                )
 
         # Para cada aula selecionada, tenta cadastrar o cliente
         for id_aula in aula_ids:
@@ -161,9 +175,9 @@ def adicionar_cliente_aula_colaborador():
                 messages.append(f"Colaborador não encontrado para a aula {id_aula}!")
                 continue
 
-            # Verifica se o cliente já está inscrito na aula
+            # Verifica se o cliente já está vinculado (inscrito) na aula
             if AulasClientes.query.filter_by(id_cliente=cid, id_aula=id_aula).first():
-                messages.append(f"Cliente {cliente.nome} já está inscrito na aula {id_aula}.")
+                messages.append(f"Cliente {cliente.nome} já está vinculado na aula {id_aula}.")
                 continue
 
             # Verifica se o limite de alunos da aula já foi atingido
@@ -172,12 +186,23 @@ def adicionar_cliente_aula_colaborador():
                 messages.append(f"O limite de alunos para a aula {id_aula} foi atingido!")
                 continue
 
-            # Adiciona o cliente à aula
+            # Prepara a inscrição para ser adicionada
             nova_inscricao = AulasClientes(id_cliente=cid, id_aula=id_aula)
-            db.session.add(nova_inscricao)
+            registrations.append(nova_inscricao)
             messages.append(f"Cliente {cliente.nome} adicionado à aula {id_aula} com sucesso!")
 
+    # Se pelo menos um cliente atingiu o limite e não foi forçado, retorna erro 409 sem commitar
+    if force_required and not forcarCadastro:
+        return jsonify({
+            "message": "Alguns clientes atingiram o limite semanal.",
+            "limitReached": True,
+            "details": messages
+        }), 409
+
     try:
+        # Se chegou aqui, ou não houve nenhum problema ou o cadastro está sendo forçado
+        for reg in registrations:
+            db.session.add(reg)
         db.session.commit()
         return jsonify({"message": "Processo concluído.", "details": messages}), 201
     except Exception as e:
@@ -188,35 +213,68 @@ def adicionar_cliente_aula_colaborador():
 def vincular_plano_aluno():
     try:
         data = request.get_json()
-        aluno_id = data.get('aluno_id')
-        plano_id = data.get('plano_id')
+        aluno_ids = data.get('aluno_id')
+        plano_ids = data.get('plano_id')
+        forcarVinculo = data.get('forcarVinculo', False)
 
         # Verifica se os dados necessários foram enviados
-        if not aluno_id or not plano_id:
+        if not aluno_ids or not plano_ids:
             return jsonify({"message": "Dados incompletos! Informe 'aluno_id' e 'plano_id'."}), 400
 
-        # Buscando o aluno (ou cliente) no banco de dados.
-        # Caso sua model se chame 'Clientes' ou 'Alunos', ajuste conforme necessário.
-        aluno = Clientes.query.get(aluno_id)
-        if not aluno:
-            return jsonify({"message": "Aluno não encontrado!"}), 404
+        # Se os valores não forem listas, converte para listas
+        if not isinstance(aluno_ids, list):
+            aluno_ids = [aluno_ids]
+        if not isinstance(plano_ids, list):
+            plano_ids = [plano_ids]
 
-        # Buscando o plano no banco de dados
-        plano = Planos.query.get(plano_id)
+        messages = []          # Para armazenar feedback de cada operação
+        registrations = []     # Lista de alunos que serão atualizados
+        force_required = False # Flag para indicar que algum aluno já possui um plano
+
+        # Como cada aluno pode ter apenas um plano, usaremos apenas o primeiro plano selecionado.
+        novo_plano_id = plano_ids[0]
+        plano = Planos.query.get(novo_plano_id)
         if not plano:
-            return jsonify({"message": "Plano não encontrado!"}), 404
+            return jsonify({"message": f"Plano {novo_plano_id} não encontrado!"}), 404
 
-        # Vincula o plano ao aluno
-        aluno.plano_id = plano_id
-        db.session.add(aluno)
+        # Para cada aluno selecionado...
+        for aid in aluno_ids:
+            aluno = Clientes.query.get(aid)
+            if not aluno:
+                messages.append(f"Aluno {aid} não encontrado!")
+                continue
+
+            # Se o aluno já tiver um plano vinculado...
+            if aluno.plano_id is not None:
+                if not forcarVinculo:
+                    messages.append(f"Aluno {aluno.nome} já possui um plano vinculado. Confirme se deseja sobrescrever.")
+                    force_required = True
+                    continue  # Pula a atualização deste aluno
+                else:
+                    messages.append(f"Atenção: Sobrescrevendo o plano do aluno {aluno.nome}.")
+
+            # Atualiza o plano do aluno
+            aluno.plano_id = novo_plano_id
+            registrations.append(aluno)
+            messages.append(f"Plano {plano.nome if hasattr(plano, 'nome') else novo_plano_id} vinculado ao aluno {aluno.nome} com sucesso!")
+
+        # Se algum aluno já possuía um plano e não foi forçado, retorna 409
+        if force_required and not forcarVinculo:
+            return jsonify({
+                "message": "Alguns alunos já possuem um plano vinculado.",
+                "limitReached": True,
+                "details": messages
+            }), 409
+
+        # Realiza o commit das atualizações
+        for aluno in registrations:
+            db.session.add(aluno)
         db.session.commit()
-
-        return jsonify({"message": "Plano vinculado com sucesso ao aluno!"}), 200
+        return jsonify({"message": "Processo concluído.", "details": messages}), 200
 
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Erro ao vincular o plano ao aluno: {str(e)}"}), 500
-    
 
 from datetime import datetime, timedelta
 

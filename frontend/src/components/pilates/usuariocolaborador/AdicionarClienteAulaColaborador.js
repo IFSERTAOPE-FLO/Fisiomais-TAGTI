@@ -63,9 +63,12 @@ const AdicionarClienteAulaColaborador = ({ showModal, handleClose }) => {
             value: cliente.ID_Cliente, // Certifique-se de que o backend retorna 'id_cliente'
             label: cliente.Nome,         // e 'nome'
           }));
+          setErro('');
+          setSucesso('');
           setClienteOptions(options);
         } else {
-          setErro(data.message || "Erro ao carregar os clientes.");
+          setErro(data.message || "Erro ao carregar os clientes.");          
+          setSucesso('');
         }
       } catch (err) {
         setErro("Erro ao carregar os clientes.");
