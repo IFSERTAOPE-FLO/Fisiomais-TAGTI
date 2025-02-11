@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Container, Row, Col, Card, ListGroup, Table, Badge, Alert, Modal, Button } from 'react-bootstrap';
+import React, { useState, useEffect } from "react";
+import { Container, Row, Col, Card, Table, Badge, Alert, Button, ListGroup } from "react-bootstrap";
+import axios from "axios";
 import Perfil from "./Perfil";
-import EditarHorarios from '../components/EditarHorarios';
-
-
+import EditarHorarios from "../components/EditarHorarios";
 
 const DashboardColaborador = () => {
     const [agendamentos, setAgendamentos] = useState([]);
@@ -14,25 +12,59 @@ const DashboardColaborador = () => {
     const [servicos, setServicos] = useState([]);
     const [pagamentos, setPagamentos] = useState([]);
     const [horariosEditando, setHorariosEditando] = useState(null);
-    const userId = localStorage.getItem('userId');
-    const role = localStorage.getItem('role');
+    const userId = localStorage.getItem("userId");
+    const role = localStorage.getItem("role");
+    const token = localStorage.getItem("token");
+    const apiBaseUrl = "http://localhost:5000/";
 
+    // Estado para controle de expansão (inline) para exibir alunos de uma aula
+    const [expandedAulaId, setExpandedAulaId] = useState(null);
+    // Mapeia cada aula para a lista de alunos já carregada
+    const [alunosPorAula, setAlunosPorAula] = useState({});
 
-    // Funções para abrir/fechar o modal de edição do perfil
+    // Funções para abrir/fechar os modais de edição (perfil, horários)
     const handleOpenPerfil = () => setShowPerfil(true);
     const handleClosePerfil = () => setShowPerfil(false);
     const handleEditarHorarios = () => setHorariosEditando(true);
     const handleFecharEditarHorarios = () => setHorariosEditando(false);
-    // Função para editar horários
+    // Função para alternar a exibição dos alunos via Accordion
+    const toggleAlunosAccordion = async (aulaId) => {
+        // Se ainda não foram carregados, busca-os
+        if (!alunosPorAula[aulaId]) {
+            await fetchAlunosDaAula(aulaId);
+        }
+        // O Accordion do Bootstrap é controlado via atributos data-bs-target e classes,
+        // portanto, não precisamos de um estado extra para "expanded" aqui.
+        // Basta garantir que os alunos estejam carregados e deixar o Bootstrap controlar a exibição.
+    };
+    // Defina a ordem dos dias da semana em português
+    const diaOrder = [
+        "Segunda-feira",
+        "Terça-feira",
+        "Quarta-feira",
+        "Quinta-feira",
+        "Sexta-feira",
+        "Sábado",
+        "Domingo"
+    ];
+
+    // No seu componente, antes de mapear as aulas, faça:
+    const sortedAulas = aulas
+        .slice() // Cria uma cópia para não mutar o state
+        .sort((a, b) => {
+            // Compara o índice dos dias na ordem definida
+            const diaA = diaOrder.indexOf(a.dia_semana);
+            const diaB = diaOrder.indexOf(b.dia_semana);
+            if (diaA !== diaB) return diaA - diaB;
+            // Se for o mesmo dia, compara os horários de início (supondo formato "HH:MM")
+            return a.hora_inicio.localeCompare(b.hora_inicio);
+        });
 
 
-
-
-
+    // Função para buscar os dados (aulas, pagamentos, serviços, agendamentos)
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const token = localStorage.getItem('token');
                 const headers = { Authorization: `Bearer ${token}` };
 
                 // Executa todas as requisições em paralelo
@@ -42,18 +74,16 @@ const DashboardColaborador = () => {
                     servicosRes,
                     agendamentosRes
                 ] = await Promise.all([
-                    axios.get('http://localhost:5000/pilates/listar_aulas', { headers }),
-                    axios.get('http://localhost:5000/pagamentos/listar', { headers }),
-                    axios.get('http://localhost:5000/servicos/listar_servicos', { headers }),
-                    axios.get('http://localhost:5000/agendamentos/listar_agendamentos', { headers })
+                    axios.get(`${apiBaseUrl}pilates/listar_aulas`, { headers }),
+                    axios.get(`${apiBaseUrl}pagamentos/listar`, { headers }),
+                    axios.get(`${apiBaseUrl}servicos/listar_servicos`, { headers }),
+                    axios.get(`${apiBaseUrl}agendamentos/listar_agendamentos`, { headers })
                 ]);
 
-                // Atualiza os estados para aulas, pagamentos e serviços
                 setAulas(aulasRes.data || []);
                 setPagamentos(pagamentosRes.data.pagamentos || []);
                 setServicos(servicosRes.data || []);
 
-                // Filtra os agendamentos para obter os 5 mais próximos da data atual
                 const agora = new Date();
                 const proximosAgendamentos = agendamentosRes.data
                     .filter(agendamento => new Date(agendamento.data) >= agora)
@@ -61,21 +91,50 @@ const DashboardColaborador = () => {
                     .slice(0, 5);
                 setAgendamentos(proximosAgendamentos);
             } catch (error) {
-                console.error('Erro ao buscar dados:', error);
-                setErro('Erro ao carregar dados. Tente recarregar a página.');
+                console.error("Erro ao buscar dados:", error);
+                setErro("Erro ao carregar dados. Tente recarregar a página.");
             }
         };
 
         fetchData();
-    }, []);
+    }, [token]);
 
+    // Função para buscar os alunos de uma aula específica (usando a rota /aula/<aula_id>/clientes)
+    const fetchAlunosDaAula = async (aulaId) => {
+        try {
+            const response = await fetch(`${apiBaseUrl}pilates/aula/${aulaId}/clientes`, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            });
+            const data = await response.json();
+            if (response.ok) {
+                setAlunosPorAula((prev) => ({ ...prev, [aulaId]: data.clientes }));
+            } else {
+                setAlunosPorAula((prev) => ({ ...prev, [aulaId]: [] }));
+            }
+        } catch (err) {
+            setAlunosPorAula((prev) => ({ ...prev, [aulaId]: [] }));
+        }
+    };
 
-
-
+    // Alterna a exibição inline dos alunos para uma aula
+    const toggleAlunos = async (aulaId) => {
+        if (expandedAulaId === aulaId) {
+            setExpandedAulaId(null);
+        } else {
+            if (!alunosPorAula[aulaId]) {
+                await fetchAlunosDaAula(aulaId);
+            }
+            setExpandedAulaId(aulaId);
+        }
+    };
 
     return (
         <Container className="mt-4">
-            {/* Cabeçalho com título centralizado e botão para editar perfil */}
+            {/* Cabeçalho */}
             <div className="row align-items-center mb-3">
                 <div className="col-2"></div>
                 <div className="col-6 text-center text-secondary">
@@ -85,35 +144,26 @@ const DashboardColaborador = () => {
                     </h2>
                 </div>
                 <div className="col-4 text-end">
-                    <button className='btn btn-login' onClick={handleOpenPerfil}>
+                    <button className="btn btn-login" onClick={handleOpenPerfil}>
                         <i className="bi bi-person-circle me-2"></i> Editar Perfil
                     </button>
-                    {role === 'colaborador' && (
+                    {role === "colaborador" && (
                         <button
                             className="btn-login btn-sm me-2"
                             onClick={() => handleEditarHorarios(userId)}
                         >
                             <i className="bi bi-clock"></i> Editar seus horários
                         </button>
-
                     )}
-
-
                 </div>
-
             </div>
 
             {horariosEditando && (
-
-
                 <EditarHorarios
                     colaboradorId={userId}
-                    onClose={handleFecharEditarHorarios}  // Passando o ID para o modal                     // Passando o nome para o modal                    
-
+                    onClose={handleFecharEditarHorarios}
                 />
-
             )}
-
 
             {erro && <Alert variant="danger">{erro}</Alert>}
 
@@ -125,18 +175,18 @@ const DashboardColaborador = () => {
                             <i className="bi bi-calendar-event me-2"></i>
                             <span>Agendamentos Futuros</span>
                         </Card.Header>
-                        <ListGroup variant="flush">
+                        <ListGroup variant="flush" style={{ maxHeight: "500px", overflowY: "auto" }}>
                             {agendamentos.length ? (
                                 agendamentos.map((agendamento) => (
                                     <ListGroup.Item key={agendamento.id} className="d-flex justify-content-between">
-                                        <div>
+                                        <div >
                                             <strong>{agendamento.servico}</strong>
                                             <div className="text-muted small">
                                                 {new Date(agendamento.data).toLocaleDateString("pt-BR", {
-                                                    weekday: 'long',
-                                                    day: 'numeric',
-                                                    month: 'long',
-                                                    year: 'numeric'
+                                                    weekday: "long",
+                                                    day: "numeric",
+                                                    month: "long",
+                                                    year: "numeric",
                                                 })}
                                             </div>
                                         </div>
@@ -149,56 +199,58 @@ const DashboardColaborador = () => {
                                 <ListGroup.Item className="text-muted">Nenhum agendamento</ListGroup.Item>
                             )}
                         </ListGroup>
-
                     </Card>
                 </Col>
-                {/* Serviços Disponíveis */}
 
+                {/* Serviços Disponíveis */}
                 <Col md={4} lg={7}>
                     <Card>
                         <Card.Header className="d-flex align-items-center">
                             <i className="bi bi-person-workspace me-2"></i>
                             <span>Serviços Disponíveis</span>
                         </Card.Header>
-                        <div className="accordion" id="servicosAccordion">
-                            {servicos.map((servico, index) => (
-                                <div className="accordion-item" key={servico.id}>
-                                    <h2 className="accordion-header" id={`heading-${index}`}>
-                                        <button
-                                            className="accordion-button collapsed small d-flex align-items-center"
-                                            type="button"
-                                            data-bs-toggle="collapse"
-                                            data-bs-target={`#collapse-${index}`}
-                                            aria-expanded="false"
-                                            aria-controls={`collapse-${index}`}
-                                            style={{ fontSize: "0.775rem", fontWeight: "bold", padding: "8px 12px" }}
-                                        >
-                                            <span>{servico.Nome_servico}</span>
-                                            <Badge
-                                                bg="secondary"
-                                                className="ms-auto"
-                                                style={{ fontSize: "0.75rem" }}
+                        <div className="accordion" id="servicosAccordion" style={{ maxHeight: "500px", overflowY: "auto" }}>
+                            <div className="accordion" id="servicosAccordion">
+                                {servicos.map((servico) => (
+                                    <div className="accordion-item" key={servico.ID_Servico}>
+                                        <h2 className="accordion-header" id={`heading-${servico.ID_Servico}`}>
+                                            <button
+                                                className="accordion-button collapsed small d-flex align-items-center"
+                                                type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target={`#collapse-${servico.ID_Servico}`}
+                                                aria-expanded="false"
+                                                aria-controls={`collapse-${servico.ID_Servico}`}
+                                                style={{ fontSize: "0.775rem", fontWeight: "bold", padding: "8px 12px" }}
                                             >
-                                                {servico.Tipos}
-                                            </Badge>
-                                        </button>
-                                    </h2>
-
-                                    <div
-                                        id={`collapse-${index}`}
-                                        className="accordion-collapse collapse"
-                                        aria-labelledby={`heading-${index}`}
-                                        data-bs-parent="#servicosAccordion"
-                                    >
-                                        <div className="accordion-body text-muted small " style={{ fontSize: "0.75rem" }}>
-                                            {servico.Descricao}
+                                                <span>{servico.Nome_servico}</span>
+                                                <Badge
+                                                    bg="secondary"
+                                                    className="ms-auto"
+                                                    style={{ fontSize: "0.75rem" }}
+                                                >
+                                                    {servico.Tipos}
+                                                </Badge>
+                                            </button>
+                                        </h2>
+                                        <div
+                                            id={`collapse-${servico.ID_Servico}`}
+                                            className="accordion-collapse collapse"
+                                            aria-labelledby={`heading-${servico.ID_Servico}`}
+                                            data-bs-parent="#servicosAccordion"
+                                        >
+                                            <div className="accordion-body text-muted small" style={{ fontSize: "0.75rem" }}>
+                                                {servico.Descricao}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
+
                         </div>
                     </Card>
                 </Col>
+
                 {/* Histórico de Pagamentos */}
                 <Col md={5} lg={5}>
                     <Card>
@@ -206,10 +258,7 @@ const DashboardColaborador = () => {
                             <i className="bi bi-cash-coin me-2"></i>
                             <span>Histórico de Pagamentos</span>
                         </Card.Header>
-                        <ListGroup
-                            variant="flush"
-                            style={{ maxHeight: "400px", overflowY: "auto" }}
-                        >
+                        <ListGroup variant="flush" style={{ maxHeight: "400px", overflowY: "auto" }}>
                             {pagamentos.length ? (
                                 pagamentos.map((pagamento) => (
                                     <ListGroup.Item key={pagamento.id_pagamento} className="d-flex justify-content-between">
@@ -220,10 +269,9 @@ const DashboardColaborador = () => {
                                                     ? new Date(pagamento.data_pagamento).toLocaleDateString("pt-BR")
                                                     : "Pagamento Pendente"}
                                             </div>
-
                                         </div>
                                         <div>
-                                            <Badge bg={pagamento.status === 'pago' ? 'success' : 'warning'}>
+                                            <Badge bg={pagamento.status === "pago" ? "success" : "warning"}>
                                                 R$ {pagamento.valor}
                                             </Badge>
                                         </div>
@@ -232,12 +280,10 @@ const DashboardColaborador = () => {
                             ) : (
                                 <ListGroup.Item className="text-muted">Nenhum pagamento</ListGroup.Item>
                             )}
-
                         </ListGroup>
                     </Card>
                 </Col>
 
-                {/* Minhas Aulas Ministradas */}
                 {/* Minhas Aulas de Pilates */}
                 <Col md={7} lg={7}>
                     <Card>
@@ -246,56 +292,81 @@ const DashboardColaborador = () => {
                         </Card.Header>
                         <Card.Body>
                             {aulas.length > 0 ? (
-                                <Table striped hover responsive>
-                                    <thead>
-                                        <tr>
-                                            <th>Dia</th>
-                                            <th>Horário</th>
-                                            <th>Colaborador</th>
-                                            <th>Clínica</th>
-                                            <th>Serviço</th>                                            
-                                            <th>Vagas</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {aulas.map((aula) => (
-                                            <tr key={aula.id_aula}>
-                                                <td>{aula.dia_semana}</td>
-                                                <td>
-                                                    {aula.hora_inicio} - {aula.hora_fim}
-                                                </td>
-                                                <td>{aula.colaborador ? aula.colaborador.nome : 'N/A'}</td>
-                                                <td>{aula.clinica || 'N/A'}</td>
-                                                <td>{aula.servico || 'N/A'}</td>                                                
-                                                <td>
-                                                    {aula.num_alunos} / {aula.limite_alunos}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </Table>
-                            ) : (
-                                <div className="text-center text-muted py-4">
-                                    Nenhuma aula agendada
+                                <div className="accordion" id="aulasAccordion">
+                                    {sortedAulas.map((aula) => (
+                                        <div className="accordion-item" key={aula.id_aula}>
+                                            <h2 className="accordion-header" id={`heading-${aula.id_aula}`}>
+                                                <button
+                                                    className="accordion-button collapsed"
+                                                    type="button"
+                                                    data-bs-toggle="collapse"
+                                                    data-bs-target={`#collapse-${aula.id_aula}`}
+                                                    aria-expanded="false"
+                                                    aria-controls={`collapse-${aula.id_aula}`}
+                                                    onClick={() => toggleAlunosAccordion(aula.id_aula)}
+                                                >
+                                                    <div className="d-flex flex-column gap-2 w-100">
+                                                        {/* Informações da Aula */}
+                                                        <div>
+                                                            <strong>{aula.dia_semana}</strong>
+                                                            <br />
+                                                            {aula.hora_inicio} - {aula.hora_fim}
+                                                        </div>
+                                                        {/* Instrutor */}
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <i className="bi bi-person-badge text-muted"></i>
+                                                            <span>{aula.colaborador ? aula.colaborador.nome : "N/A"}</span>
+                                                        </div>
+                                                        {/* Clínica */}
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <i className="bi bi-geo-alt text-muted"></i>
+                                                            <span>{aula.clinica || "N/A"}</span>
+                                                        </div>
+                                                        {/* Progresso de Participação */}
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <div className="progress flex-grow-1" style={{ height: "8px" }}>
+                                                                <div
+                                                                    className="progress-bar bg-primary"
+                                                                    role="progressbar"
+                                                                    style={{ width: `${(aula.num_alunos / aula.limite_alunos) * 100}%` }}
+                                                                ></div>
+                                                            </div>
+                                                            <small className="text-muted">
+                                                                {aula.limite_alunos - aula.num_alunos} vagas restantes
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            </h2>
+                                            <div
+                                                id={`collapse-${aula.id_aula}`}
+                                                className="accordion-collapse collapse"
+                                                aria-labelledby={`heading-${aula.id_aula}`}
+                                                data-bs-parent="#aulasAccordion"
+                                            >
+                                                <div className="accordion-body">
+                                                    {alunosPorAula[aula.id_aula] && alunosPorAula[aula.id_aula].length > 0 ? (
+                                                        <p className="mb-0">
+                                                            <strong>Alunos:</strong>{" "}
+                                                            {alunosPorAula[aula.id_aula].map((cliente) => cliente.nome).join(", ")}
+                                                        </p>
+                                                    ) : (
+                                                        <div className="text-muted">Nenhum aluno inscrito nesta aula.</div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
+
+                            ) : (
+                                <div className="text-center text-muted py-4">Nenhuma aula agendada</div>
                             )}
                         </Card.Body>
+
                     </Card>
                 </Col>
-
-
-
             </Row>
-
-            {/* Modal para edição do Perfil */}
-            <Modal show={showPerfil} onHide={handleClosePerfil} size="xl" centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Editar Perfil</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Perfil />
-                </Modal.Body>
-            </Modal>
         </Container>
     );
 };

@@ -230,7 +230,8 @@ const GerenciarAulasPilates = () => {
                 {sucesso && <p className="alert alert-success">{sucesso}</p>}
 
                 <div className="row mb-4">
-                    <div className="col-md-3 col-lg-2">
+                    {/* Campo de Pesquisa */}
+                    <div className="col-12 col-md-3">
                         <div className="input-group">
                             <input
                                 type="text"
@@ -244,7 +245,9 @@ const GerenciarAulasPilates = () => {
                             </button>
                         </div>
                     </div>
-                    <div className="col-md-2">
+
+                    {/* Filtro por Dia da Semana */}
+                    <div className="col-6 col-md-3">
                         <select
                             className="form-select"
                             value={filtroDia}
@@ -260,7 +263,9 @@ const GerenciarAulasPilates = () => {
                             <option value="Domingo">Domingo</option>
                         </select>
                     </div>
-                    <div className="col-md-2">
+
+                    {/* Filtro por Colaborador */}
+                    <div className="col-6 col-md-3">
                         <select
                             className="form-select"
                             value={filtroColaborador}
@@ -269,7 +274,7 @@ const GerenciarAulasPilates = () => {
                             <option value="">Colaborador</option>
                             {aulas
                                 .map((aula) => aula.colaborador?.nome)
-                                .filter((value, index, self) => self.indexOf(value) === index)
+                                .filter((value, index, self) => value && self.indexOf(value) === index)
                                 .map((nomeColaborador) => (
                                     <option key={nomeColaborador} value={nomeColaborador}>
                                         {nomeColaborador}
@@ -277,7 +282,9 @@ const GerenciarAulasPilates = () => {
                                 ))}
                         </select>
                     </div>
-                    <div className="col-md-2">
+
+                    {/* Filtro por Clínica */}
+                    <div className="col-12 col-md-3">
                         <select
                             className="form-select"
                             value={filtroClinica}
@@ -286,7 +293,7 @@ const GerenciarAulasPilates = () => {
                             <option value="">Clínica</option>
                             {aulas
                                 .map((aula) => aula.clinica)
-                                .filter((value, index, self) => self.indexOf(value) === index)
+                                .filter((value, index, self) => value && self.indexOf(value) === index)
                                 .map((clinica) => (
                                     <option key={clinica} value={clinica}>
                                         {clinica}
@@ -294,33 +301,56 @@ const GerenciarAulasPilates = () => {
                                 ))}
                         </select>
                     </div>
-                    <div className="col-md-3 d-flex justify-content-md-end mt-2 mt-md-0">
+                </div>
+                <div className="row">
+                    <div className="col-12 d-flex flex-wrap justify-content-end align-items-center gap-2 mt-2">
+                        {selectedAulas.length > 0 && (
+                            <>
+                                <button
+                                    className="btn btn-danger"
+                                    onClick={excluirAulasSelecionadas}
+                                >
+                                    <i className="bi bi-trash"></i> Excluir Aulas Selecionadas
+                                </button>
+                                <button
+                                    className="btn btn-success"
+                                    onClick={criarAgendamentosSelecionados}
+                                >
+                                    <i className="bi bi-calendar-plus"></i> Criar Agendamentos para Selecionadas
+                                </button>
+                            </>
+                        )}
                         {!adicionandoAula ? (
-                            <button className="btn btn-login" onClick={() => setAdicionandoAula(true)}>
+                            <button
+                                className="btn btn-login"
+                                onClick={() => setAdicionandoAula(true)}
+                            >
                                 <i className="bi bi-plus-circle"></i> Adicionar nova aula
                             </button>
                         ) : (
-                            <button className="btn btn-login" onClick={() => setAdicionandoAula(false)}>
+                            <button
+                                className="btn btn-login"
+                                onClick={() => setAdicionandoAula(false)}
+                            >
                                 <i className="bi bi-arrow-left"></i> Voltar
                             </button>
                         )}
-                        <button className="btn btn-signup ms-2" onClick={() => setAdicionandoAgendamento(true)}>
+                        <button
+                            className="btn btn-signup"
+                            onClick={() => setAdicionandoAgendamento(true)}
+                        >
                             <i className="bi bi-plus-circle"></i> Vincular plano
                         </button>
+                        <button
+                            className="btn btn-primary"
+                            onClick={() => handleOpenModal()}
+                            title="Clique para vincular alunos à aulas"
+                        >
+                            <i className="bi bi-person-plus"></i> Matricular Alunos
+                        </button>
+
                     </div>
                 </div>
-
-                {/* Se houver alguma aula selecionada, mostra os botões de ação em massa */}
-                {selectedAulas.length > 0 && (
-                    <div className="mb-3">
-                        <button className="btn btn-danger me-2" onClick={excluirAulasSelecionadas}>
-                            <i className="bi bi-trash"></i> Excluir Aulas Selecionadas
-                        </button>
-                        <button className="btn btn-success" onClick={criarAgendamentosSelecionados}>
-                            <i className="bi bi-calendar-plus"></i> Criar Agendamentos para Selecionadas
-                        </button>
-                    </div>
-                )}
 
                 {adicionandoAula && (
                     <AdicionarAulaPilates onAulaAdicionada={handleAulaAdicionada} />
@@ -387,20 +417,13 @@ const GerenciarAulasPilates = () => {
                                         >
                                             <i className="bi bi-trash"></i>
                                         </button>
-                                        <button
-                                            className="btn btn-primary btn-sm me-1"
-                                            onClick={() => handleOpenModal(aula.id_aula)}
-                                            title="Clique para vincular aluno a essa aula"
-                                            
-                                        >
-                                            <i className="bi bi-person-plus"></i>
-                                        </button>
+
                                         <button
                                             className="btn btn-success btn-sm me-1"
                                             onClick={() => criarAgendamentos(aula.id_aula)}
                                             title="Clique para confirmar a criação dos agendamentos para as próximas 4 semanas"
                                         >
-                                            <i className="bi bi-calendar-plus"></i> 
+                                            <i className="bi bi-calendar-plus"></i>
                                         </button>
 
                                     </td>

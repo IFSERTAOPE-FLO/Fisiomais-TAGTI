@@ -99,49 +99,90 @@ def adicionar_aula_pilates():
 
 
 
-
 @pilates.route('/colaborador/adicionar_cliente_aula', methods=['POST'])
 def adicionar_cliente_aula_colaborador():
     data = request.get_json()
 
-    id_cliente = data.get('cliente_id')
-    aula_id = data.get('aula_id')
+    # Dados esperados:
+    # "cliente_id": id do(s) cliente(s) (pode ser único ou lista)
+    # "aula_id": um id ou uma lista de ids das aulas
+    # "forcarCadastro": booleano (opcional, padrão False)
+    cliente_ids = data.get('cliente_id')
+    aula_ids = data.get('aula_id')
+    forcarCadastro = data.get('forcarCadastro', False)
 
-    # Verificando se a aula existe
-    aula = Aulas.query.get(aula_id)
-    if not aula:
-        return jsonify({"message": "Aula não encontrada!"}), 404
+    if not cliente_ids or not aula_ids:
+        return jsonify({"message": "Dados incompletos!"}), 400
 
-    # Verificando se o colaborador está associado à aula
-    colaborador = aula.colaborador
-    if not colaborador:
-        return jsonify({"message": "Colaborador não encontrado para esta aula!"}), 404
+    # Se os valores não forem listas, converte para listas
+    if not isinstance(cliente_ids, list):
+        cliente_ids = [cliente_ids]
+    if not isinstance(aula_ids, list):
+        aula_ids = [aula_ids]
 
-    # Verificando se o cliente existe
-    cliente = Clientes.query.get(id_cliente)
-    if not cliente:
-        return jsonify({"message": "Cliente não encontrado!"}), 404
+    messages = []
 
-    # Verificando se o cliente possui um plano associado
-    if not cliente.plano_id:
-        return jsonify({"message": "Cliente não possui um plano ativo!"}), 400
+    # Para cada cliente selecionado
+    for cid in cliente_ids:
+        cliente = Clientes.query.get(cid)
+        if not cliente:
+            messages.append(f"Cliente {cid} não encontrado!")
+            continue
 
-    # Verificando se o cliente já está inscrito
-    aluno_existente = AulasClientes.query.filter_by(id_cliente=id_cliente, id_aula=aula_id).first()
-    if aluno_existente:
-        return jsonify({"message": "Cliente já inscrito nesta aula!"}), 400
+        # Verifica se o cliente possui um plano ativo
+        if not cliente.plano_id or not cliente.plano:
+            messages.append(f"Cliente {cliente.nome} não possui um plano ativo!")
+            continue
 
-    # Contando o número de alunos na aula
-    total_alunos = AulasClientes.query.filter_by(id_aula=aula_id).count()
-    if total_alunos >= aula.limite_alunos:
-        return jsonify({"message": "O limite de alunos para esta aula foi atingido!"}), 400
+        plano = cliente.plano
 
-    # Adicionando o cliente à aula
-    nova_inscricao = AulasClientes(id_cliente=id_cliente, id_aula=aula_id)
-    db.session.add(nova_inscricao)
-    db.session.commit()   
+        # Calcula quantas sessões (aulas) o cliente já possui na semana atual
+        hoje = datetime.today()
+        week_start = hoje - timedelta(days=hoje.weekday())
+        aulas_da_semana = AulasClientes.query.filter(
+            AulasClientes.id_cliente == cid,
+            AulasClientes.data_inscricao >= week_start
+        ).count()
 
-    return jsonify({"message": "Cliente adicionado com sucesso à aula!"}), 201
+        if plano.quantidade_aulas_por_semana and aulas_da_semana >= plano.quantidade_aulas_por_semana and not forcarCadastro:
+            messages.append(f"O limite semanal de {plano.quantidade_aulas_por_semana} aulas foi atingido para o cliente {cliente.nome}.")
+            continue
+
+        # Para cada aula selecionada, tenta cadastrar o cliente
+        for id_aula in aula_ids:
+            aula = Aulas.query.get(id_aula)
+            if not aula:
+                messages.append(f"Aula {id_aula} não encontrada!")
+                continue
+
+            # Verifica se há um colaborador associado à aula
+            colaborador = aula.colaborador
+            if not colaborador:
+                messages.append(f"Colaborador não encontrado para a aula {id_aula}!")
+                continue
+
+            # Verifica se o cliente já está inscrito na aula
+            if AulasClientes.query.filter_by(id_cliente=cid, id_aula=id_aula).first():
+                messages.append(f"Cliente {cliente.nome} já está inscrito na aula {id_aula}.")
+                continue
+
+            # Verifica se o limite de alunos da aula já foi atingido
+            total_alunos = AulasClientes.query.filter_by(id_aula=id_aula).count()
+            if total_alunos >= aula.limite_alunos:
+                messages.append(f"O limite de alunos para a aula {id_aula} foi atingido!")
+                continue
+
+            # Adiciona o cliente à aula
+            nova_inscricao = AulasClientes(id_cliente=cid, id_aula=id_aula)
+            db.session.add(nova_inscricao)
+            messages.append(f"Cliente {cliente.nome} adicionado à aula {id_aula} com sucesso!")
+
+    try:
+        db.session.commit()
+        return jsonify({"message": "Processo concluído.", "details": messages}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Erro ao adicionar os clientes à(s) aula(s): {str(e)}"}), 500
 
 @pilates.route('/colaborador/vincular_plano_aluno', methods=['POST'])
 def vincular_plano_aluno():
@@ -338,24 +379,31 @@ def listar_aulas_do_cliente(cliente_id):
     # Obtém todas as inscrições desse cliente na tabela AulasClientes
     inscricoes = AulasClientes.query.filter_by(id_cliente=cliente_id).all()
 
-    # Para cada inscrição, extrai os dados da aula associada
     aulas = []
     for inscricao in inscricoes:
         aula = inscricao.aula  # Relação definida em AulasClientes (back_populates='aula')
         if aula:
+            colaborador = aula.colaborador
+            clinica_nome = colaborador.clinica.nome if (colaborador and colaborador.clinica) else None
+            servico_nome = colaborador.servicos[0].nome if (colaborador and colaborador.servicos and len(colaborador.servicos) > 0) else None
+
             aulas.append({
                 "idAula": aula.id_aula,
                 "diaSemana": aula.dia_semana,
                 "horaInicio": aula.hora_inicio.strftime('%H:%M') if aula.hora_inicio else None,
                 "horaFim": aula.hora_fim.strftime('%H:%M') if aula.hora_fim else None,
                 "limiteAlunos": aula.limite_alunos,
+                "numAlunos": len(aula.alunos),
                 "colaborador": {
-                    "idColaborador": aula.colaborador.id_colaborador if aula.colaborador else None,
-                    "nome": aula.colaborador.nome if aula.colaborador else None
-                }
+                    "idColaborador": colaborador.id_colaborador if colaborador else None,
+                    "nome": colaborador.nome if colaborador else None
+                },
+                "clinica": clinica_nome,
+                "servico": servico_nome
             })
 
     return jsonify({"aulas": aulas}), 200
+
 
 
 
