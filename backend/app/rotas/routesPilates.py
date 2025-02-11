@@ -6,71 +6,90 @@ pilates = Blueprint('pilates', __name__)
 
 from datetime import datetime
 
+from datetime import datetime, timedelta
+from flask import request, jsonify, current_app
+from flask_jwt_extended import jwt_required, get_jwt_identity
+# Certifique-se de importar os modelos: Colaboradores, Servicos, Aulas, etc.
+
 @pilates.route('/adicionar_aula_pilates', methods=['POST'])
 @jwt_required()
 def adicionar_aula_pilates():
     try:
         # Recuperando os dados do request
         data = request.get_json()
-        colaborador_email = get_jwt_identity()  # Obtém o email do colaborador logado
-        servico_id = data.get('servico_id')  # ID do serviço (deve ser Pilates)
-        dias_semana = data.get('dias_semana')  # Lista de dias
-        hora_inicio = data.get('hora_inicio')
-        hora_fim = data.get('hora_fim')
-        limite_alunos = data.get('limite_alunos')  # Limite de alunos
+        colaborador_email = get_jwt_identity()  # Email do colaborador logado
+        servico_id = data.get('servico_id')       # ID do serviço (deve ser Pilates)
+        dias_semana = data.get('dias_semana')       # Lista de dias (ex.: ["Segunda-feira", "Terça-feira"])
+        hora_inicio = data.get('hora_inicio')       # Formato "HH:MM"
+        hora_fim = data.get('hora_fim')             # Formato "HH:MM"
+        limite_alunos = data.get('limite_alunos')   # Limite de alunos por aula
+        duracao_aula = data.get('duracao_aula')       # Duração de cada aula (em minutos)
 
+        # Validação de campos obrigatórios
+        if not all([dias_semana, hora_inicio, hora_fim, duracao_aula]):
+            return jsonify({"message": "Campos obrigatórios ausentes."}), 400
         if limite_alunos is None:
             return jsonify({"message": "O campo 'limite_alunos' é obrigatório."}), 400
-        
-        # Convertendo hora_inicio e hora_fim para objetos time
+
+        # Converter a duração para inteiro (removendo o sufixo 'min', se houver)
         try:
-            hora_inicio = datetime.strptime(hora_inicio, "%H:%M").time()
-            hora_fim = datetime.strptime(hora_fim, "%H:%M").time()
+            if isinstance(duracao_aula, str):
+                duracao_aula = duracao_aula.replace("min", "").strip()
+            duracao_minutes = int(duracao_aula)
+        except ValueError:
+            return jsonify({"message": "Duração da aula inválida."}), 400
+
+        # Converter hora de início e fim para objetos datetime (usando uma data arbitrária)
+        try:
+            hora_inicio_obj = datetime.strptime(hora_inicio, "%H:%M")
+            hora_fim_obj = datetime.strptime(hora_fim, "%H:%M")
         except ValueError:
             return jsonify({"message": "Formato de horário inválido. Use HH:MM."}), 400
 
-        # Verificando se o colaborador existe e possui o email correto
+        if hora_inicio_obj >= hora_fim_obj:
+            return jsonify({"message": "A hora de início deve ser antes da hora de fim."}), 400
+
+        # Verificando se o colaborador existe
         colaborador = Colaboradores.query.filter_by(email=colaborador_email).first()
         if not colaborador:
-            print(f"Colaborador com email {colaborador_email} não encontrado.")  # Debug
-            return jsonify({"message": "Colaborador nao encontrado."}), 404
-        
-        print(f"Colaborador encontrado: {colaborador.nome}, Admin: {colaborador.is_admin}")  # Debug
+            return jsonify({"message": "Colaborador não encontrado."}), 404
 
-        # Verificando se o colaborador tem permissão de admin
+        # Se o colaborador for admin, pode informar o id de outro colaborador
         if colaborador.is_admin:
-            # Se for admin, o admin pode usar o ID de colaborador fornecido no frontend
-            id_colaborador = data.get('id_colaborador')  # ID do colaborador no frontend
+            id_colaborador = data.get('id_colaborador')
             if not id_colaborador:
-                return jsonify({"message": "O campo 'id_colaborador' é obrigatorio para administradores."}), 400
+                return jsonify({"message": "O campo 'id_colaborador' é obrigatório para administradores."}), 400
             
             colaborador_destino = Colaboradores.query.filter_by(id_colaborador=id_colaborador).first()
             if not colaborador_destino:
-                return jsonify({"message": "Colaborador nao encontrado para o ID fornecido."}), 404
-            id_colaborador = colaborador_destino.id_colaborador  # Usa o id do colaborador enviado
+                return jsonify({"message": "Colaborador não encontrado para o ID fornecido."}), 404
+            id_colaborador = colaborador_destino.id_colaborador
         else:
-            # Se não for admin, usamos o id do colaborador logado
             id_colaborador = colaborador.id_colaborador
 
         # Verificando se o serviço é Pilates
         servico = Servicos.query.filter_by(id_servico=servico_id).first()
         if not servico or 'pilates' not in [tipo.tipo for tipo in servico.tipo_servicos]:
-            return jsonify({"message": "Serviço invalido ou nao e Pilates."}), 400
+            return jsonify({"message": "Serviço inválido ou não é Pilates."}), 400
 
-        # Criando novas aulas para cada dia na lista de dias
+        # Para cada dia selecionado, cria aulas em intervalos de "duracao_minutes" até atingir a hora de fim
         for dia in dias_semana:
-            nova_aula = Aulas(
-                id_colaborador=id_colaborador,
-                dia_semana=dia,
-                hora_inicio=hora_inicio,
-                hora_fim=hora_fim,
-                limite_alunos=limite_alunos
-            )
-            db.session.add(nova_aula)
+            current_time = hora_inicio_obj
+            while current_time + timedelta(minutes=duracao_minutes) <= hora_fim_obj:
+                interval_end = current_time + timedelta(minutes=duracao_minutes)
+                nova_aula = Aulas(
+                    id_colaborador=id_colaborador,
+                    dia_semana=dia,
+                    hora_inicio=current_time.time(),
+                    hora_fim=interval_end.time(),
+                    limite_alunos=limite_alunos
+                )
+                db.session.add(nova_aula)
+                current_time = interval_end  # Avança para o próximo intervalo
 
         db.session.commit()
-
         return jsonify({"message": "Aulas de Pilates criadas com sucesso!"}), 201
+
     except Exception as e:
         db.session.rollback()
         response = jsonify({"message": f"Ocorreu um erro: {str(e)}"})
@@ -120,14 +139,7 @@ def adicionar_cliente_aula_colaborador():
     # Adicionando o cliente à aula
     nova_inscricao = AulasClientes(id_cliente=id_cliente, id_aula=aula_id)
     db.session.add(nova_inscricao)
-    db.session.commit()
-
-    # Gerando pagamento mensal com base no plano do cliente
-    resultado_pagamento = gerar_pagamento_mensal(cliente.id_cliente, cliente.plano_id)
-
-    # Retornar a resposta do pagamento caso haja erro
-    if resultado_pagamento["status"] != 201:
-        return jsonify(resultado_pagamento), resultado_pagamento["status"]
+    db.session.commit()   
 
     return jsonify({"message": "Cliente adicionado com sucesso à aula!"}), 201
 
@@ -163,8 +175,6 @@ def vincular_plano_aluno():
     except Exception as e:
         db.session.rollback()
         return jsonify({"message": f"Erro ao vincular o plano ao aluno: {str(e)}"}), 500
-
-
     
 
 from datetime import datetime, timedelta
@@ -180,10 +190,13 @@ def cadastrar_aula_cliente():
         if not cliente_id or not aulas_selecionadas:
             return jsonify({"message": "Dados incompletos!"}), 400
 
+        # Busca o cliente
         cliente = Clientes.query.get(cliente_id)
         if not cliente:
             return jsonify({"message": "Cliente não encontrado!"}), 404
 
+        # Verifica se o cliente já possui um plano ativo;
+        # caso contrário, usa o plano informado e o associa ao cliente.
         if cliente.plano_id:
             plano = Planos.query.get(cliente.plano_id)
         else:
@@ -195,26 +208,45 @@ def cadastrar_aula_cliente():
             cliente.plano_id = plano_id
             db.session.add(cliente)
 
+        # 1. Verifica o limite semanal
         data_inicio_semana = datetime.utcnow() - timedelta(days=datetime.utcnow().weekday())
-        aulas_semana_atual = AulasClientes.query.join(Aulas).filter(
-            AulasClientes.id_cliente == cliente_id,
-            Aulas.data >= data_inicio_semana
-        ).count()
+        aulas_semana_atual = (
+            AulasClientes.query
+            .join(Aulas)
+            .filter(
+                AulasClientes.id_cliente == cliente_id,
+                Aulas.data >= data_inicio_semana
+            )
+            .count()
+        )
 
         if aulas_semana_atual + len(aulas_selecionadas) > plano.quantidade_aulas_por_semana:
-            return jsonify({"message": f"Limite de {plano.quantidade_aulas_por_semana} aulas semanais excedido!"}), 400
+            return jsonify({
+                "message": f"Limite de {plano.quantidade_aulas_por_semana} aulas semanais excedido!"
+            }), 400
 
+        # 2. Verifica o limite total (soma das aulas anteriores + novas)
+        aulas_totais = AulasClientes.query.filter_by(id_cliente=cliente_id).count()
+        if aulas_totais + len(aulas_selecionadas) > plano.limite_total_aulas:
+            return jsonify({
+                "message": f"Limite total de {plano.limite_total_aulas} aulas excedido!"
+            }), 400
+
+        # Percorre as aulas selecionadas e realiza as verificações individuais
         for aula_id in aulas_selecionadas:
             aula = Aulas.query.get(aula_id)
             if not aula:
                 return jsonify({"message": f"Aula ID {aula_id} não encontrada!"}), 404
 
+            # Verifica se o cliente já está inscrito nesta aula
             if AulasClientes.query.filter_by(id_cliente=cliente_id, id_aula=aula_id).first():
                 return jsonify({"message": f"Cliente já está inscrito na aula ID {aula_id}!"}), 400
 
+            # Verifica se a aula já atingiu o limite de alunos
             if len(aula.alunos) >= aula.limite_alunos:
                 return jsonify({"message": f"Aula ID {aula_id} lotada!"}), 400
 
+            # Cria a inscrição para a aula
             nova_inscricao = AulasClientes(
                 id_cliente=cliente_id,
                 id_aula=aula_id,
@@ -223,17 +255,10 @@ def cadastrar_aula_cliente():
             db.session.add(nova_inscricao)
 
         db.session.commit()
-        resultado_pagamento = gerar_pagamento_mensal(cliente_id, plano_id)
-        # Retornar a resposta do pagamento caso haja erro
-        if resultado_pagamento["status"] != 201:
-            return jsonify(resultado_pagamento), resultado_pagamento["status"]
 
-
-        # 🔹 **Chamada da nova rota após a inscrição**
+        # Após as inscrições, pode-se chamar uma função para agendar a semana atual, se necessário.
         response = criar_agendamentos_semana_atual(cliente_id)
-        
         return response
-        
 
     except Exception as e:
         db.session.rollback()
@@ -303,6 +328,35 @@ def listar_clientes_da_aula(aula_id):
     ]
 
     return jsonify({"clientes": clientes}), 200
+@pilates.route('/cliente/<int:cliente_id>/aulas', methods=['GET'])
+def listar_aulas_do_cliente(cliente_id):
+    # Verifica se o cliente existe
+    cliente = Clientes.query.get(cliente_id)
+    if not cliente:
+        return jsonify({"message": "Cliente não encontrado!"}), 404
+
+    # Obtém todas as inscrições desse cliente na tabela AulasClientes
+    inscricoes = AulasClientes.query.filter_by(id_cliente=cliente_id).all()
+
+    # Para cada inscrição, extrai os dados da aula associada
+    aulas = []
+    for inscricao in inscricoes:
+        aula = inscricao.aula  # Relação definida em AulasClientes (back_populates='aula')
+        if aula:
+            aulas.append({
+                "idAula": aula.id_aula,
+                "diaSemana": aula.dia_semana,
+                "horaInicio": aula.hora_inicio.strftime('%H:%M') if aula.hora_inicio else None,
+                "horaFim": aula.hora_fim.strftime('%H:%M') if aula.hora_fim else None,
+                "limiteAlunos": aula.limite_alunos,
+                "colaborador": {
+                    "idColaborador": aula.colaborador.id_colaborador if aula.colaborador else None,
+                    "nome": aula.colaborador.nome if aula.colaborador else None
+                }
+            })
+
+    return jsonify({"aulas": aulas}), 200
+
 
 
 
@@ -355,41 +409,47 @@ def listar_aulas():
         response.headers["Content-Type"] = "application/json; charset=utf-8"
         return response, 500
     
-@pilates.route('/excluir_aula/<int:id_aula>', methods=['DELETE'])
+
+
+@pilates.route('/excluir_aulas', methods=['DELETE'])
 @jwt_required()
-def excluir_aula(id_aula):
+def excluir_aulas():
     try:
+        data = request.get_json()
+        aulas_ids = data.get('aulas_ids')
+
+        if not aulas_ids or not isinstance(aulas_ids, list):
+            return jsonify({"message": "Nenhuma aula informada para exclusão ou formato inválido."}), 400
+
         # Obtendo o colaborador logado
         colaborador_email = get_jwt_identity()
         colaborador = Colaboradores.query.filter_by(email=colaborador_email).first()
-        
         if not colaborador:
             return jsonify({"message": "Colaborador não encontrado."}), 404
 
-        # Buscando a aula pelo ID
-        aula = Aulas.query.filter_by(id_aula=id_aula).first()
-        if not aula:
-            return jsonify({"message": "Aula não encontrada."}), 404
+        # Percorre cada aula para excluir
+        for id_aula in aulas_ids:
+            aula = Aulas.query.filter_by(id_aula=id_aula).first()
+            if not aula:
+                return jsonify({"message": f"Aula com ID {id_aula} não encontrada."}), 404
 
-        # Verificando se o colaborador é administrador ou o responsável pela aula
-        if not colaborador.is_admin and aula.id_colaborador != colaborador.id_colaborador:
-            return jsonify({"message": "Você não tem permissão para excluir esta aula."}), 403
+            # Verifica se o colaborador é administrador ou o responsável pela aula
+            if not colaborador.is_admin and aula.id_colaborador != colaborador.id_colaborador:
+                return jsonify({"message": f"Você não tem permissão para excluir a aula {id_aula}."}), 403
 
-        # Excluindo os alunos associados à aula
-        AulasClientes.query.filter_by(id_aula=id_aula).delete()
+            # Excluindo os registros relacionados na tabela AulasClientes
+            AulasClientes.query.filter_by(id_aula=id_aula).delete()
+            # Excluindo a aula
+            db.session.delete(aula)
 
-        # Excluindo a aula
-        db.session.delete(aula)
         db.session.commit()
-
-        return jsonify({"message": "Aula e seus relacionamentos excluídos com sucesso."}), 200
+        return jsonify({"message": "Aulas e seus relacionamentos excluídos com sucesso."}), 200
 
     except Exception as e:
         db.session.rollback()
         response = jsonify({"message": str(e)})
         response.headers["Content-Type"] = "application/json; charset=utf-8"
         return response, 500
-    
 
 
 @pilates.route('/listar_aulas/clinica/<int:clinica_id>', methods=['GET'])
@@ -449,8 +509,7 @@ def listar_aulas_por_clinica(clinica_id):
 from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify
 from sqlalchemy.orm import joinedload
-
-
+# Importe os modelos necessários: Aulas, Agendamentos, AulasClientes, etc.
 
 # Dicionário para tradução dos dias da semana para português
 dias_da_semana_pt = {
@@ -466,62 +525,81 @@ dias_da_semana_pt = {
 @pilates.route('/criar_agendamentos_aula/<int:aula_id>', methods=['POST'])
 def criar_agendamentos_para_aula(aula_id):
     try:
-        # Pegue a aula selecionada
+        # Obtém a aula selecionada
         aula = Aulas.query.get(aula_id)
         if not aula:
-            return jsonify({"message": "Aula nao encontrada"}), 404
-        
-        # Pegue todos os alunos vinculados à aula
+            return jsonify({"message": "Aula não encontrada"}), 404
+
+        # Obtém todos os alunos vinculados à aula
         alunos = aula.alunos
-        # Verificar se a lista de alunos não está vazia
         if len(alunos) == 0:
-            return jsonify({"message": "Nao ha alunos vinculados a esta aula."}), 400
-        
-        # Calcular as datas para o próximo mês, nos dias da semana da aula
-        dias_semana = aula.dia_semana  # Exemplo: "Segunda-feira"
+            return jsonify({"message": "Não há alunos vinculados a esta aula."}), 400
+
+        # Dados da aula
+        dia_da_aula = aula.dia_semana  # Exemplo: "Segunda-feira"
         hora_inicio = aula.hora_inicio
         hora_fim = aula.hora_fim
-        
+
         # Obter o primeiro dia do próximo mês
         hoje = datetime.today()
-        primeiro_dia_proximo_mes = datetime(hoje.year, hoje.month + 1, 1) if hoje.month < 12 else datetime(hoje.year + 1, 1, 1)
+        if hoje.month < 12:
+            primeiro_dia_proximo_mes = datetime(hoje.year, hoje.month + 1, 1)
+        else:
+            primeiro_dia_proximo_mes = datetime(hoje.year + 1, 1, 1)
 
-        # Acessa o serviço e a clínica do colaborador da aula
+        # Obtém o id do serviço e da clínica a partir do colaborador da aula
         servico_id = aula.colaborador.servicos[0].id_servico if aula.colaborador.servicos else None
         clinica_id = aula.colaborador.clinica.id_clinica if aula.colaborador.clinica else None
-        
+
+        # Contadores para informar quantos agendamentos foram criados ou ignorados
+        agendamentos_criados = 0
+        agendamentos_ignorados = 0
+
+        # Para cada aluno vinculado à aula
         for cliente in alunos:
-            # Calcular os dias da semana do próximo mês
-            dias_agendados = obter_dias_do_mes(primeiro_dia_proximo_mes, dias_semana)
+            # Obter os dias do próximo mês para o dia da semana desejado
+            dias_agendados = obter_dias_do_mes(primeiro_dia_proximo_mes, dia_da_aula)
             for dia in dias_agendados:
-                # Verificar se já existe um agendamento para esse dia e hora
+                # Define a data e hora do agendamento (usando a hora de início da aula)
+                data_e_hora_agendamento = dia.replace(
+                    hour=hora_inicio.hour,
+                    minute=hora_inicio.minute,
+                    second=0,
+                    microsecond=0
+                )
+
+                # Verifica se já existe um agendamento para este cliente nesse mesmo horário
                 agendamento_existente = Agendamentos.query.filter_by(
-                    data_e_hora=dia.replace(hour=hora_inicio.hour, minute=hora_inicio.minute, second=0, microsecond=0),
-                    id_colaborador=aula.id_colaborador
+                    data_e_hora=data_e_hora_agendamento,
+                    id_cliente=cliente.id_cliente
                 ).first()
 
                 if agendamento_existente:
-                    return jsonify({"message": f"Ja existe um agendamento para o colaborador nesse dia: {dia.strftime('%d/%m/%Y')}, {dias_da_semana_pt[dia.strftime('%A')]}."}), 400
+                    agendamentos_ignorados += 1
+                    continue  # Pula a criação para este cliente
 
-                # Traduzir o dia da semana para português
-                dia_em_portugues = dias_da_semana_pt[dia.strftime('%A')] 
+                # Traduz o dia da semana para português
+                dia_em_portugues = dias_da_semana_pt[dia.strftime('%A')]
 
-                # Criar o agendamento
+                # Cria o agendamento
                 agendamento = Agendamentos(
-                    data_e_hora=dia.replace(hour=hora_inicio.hour, minute=hora_inicio.minute, second=0, microsecond=0),  # Ajuste para a hora de início
-                    dias_e_horarios=f"{dia_em_portugues} - {hora_inicio.strftime('%H:%M')} até {hora_fim.strftime('%H:%M')}",  # Armazena o dia, hora de início e hora de fim
+                    data_e_hora=data_e_hora_agendamento,
+                    dias_e_horarios=f"{dia_em_portugues} - {hora_inicio.strftime('%H:%M')} até {hora_fim.strftime('%H:%M')}",
                     id_cliente=cliente.id_cliente,
-                    id_colaborador=aula.id_colaborador,                    
-                    id_servico=servico_id,  # Utiliza o id_servico do colaborador
-                    id_clinica=clinica_id,  # Utiliza o id_clinica do colaborador
-                    status="confirmado",
+                    id_colaborador=aula.id_colaborador,
+                    id_servico=servico_id,
+                    id_clinica=clinica_id,
+                    status="confirmado"
                 )
                 db.session.add(agendamento)
+                agendamentos_criados += 1
 
-        # Commit para salvar os agendamentos no banco
         db.session.commit()
-        
-        return jsonify({"message": "Agendamentos criados com sucesso!"}), 200
+        message = f"Agendamentos criados com sucesso! Criados: {agendamentos_criados}."
+        if agendamentos_ignorados > 0:
+            message += f" {agendamentos_ignorados} agendamentos já existiam e foram ignorados."
+        return jsonify({"message": message}), 200
+
     except Exception as e:
         db.session.rollback()
         response = jsonify({"message": str(e)})
@@ -531,7 +609,8 @@ def criar_agendamentos_para_aula(aula_id):
 
 def obter_dias_do_mes(data_inicial, dia_semana):
     """
-    Função que retorna os dias específicos da semana para o próximo mês
+    Retorna uma lista de datas (no próximo mês) correspondentes ao dia_semana informado.
+    Por exemplo, se dia_semana for "Segunda-feira", retorna as segundas do próximo mês.
     """
     dias_da_semana = {
         'Segunda-feira': 0,
@@ -546,13 +625,13 @@ def obter_dias_do_mes(data_inicial, dia_semana):
     dia_semana_num = dias_da_semana.get(dia_semana)
     dias = []
     
-    # Encontre o primeiro dia da semana correta
+    # Encontra o primeiro dia do mês que corresponda ao dia desejado
     data_atual = data_inicial
     while data_atual.weekday() != dia_semana_num:
         data_atual += timedelta(days=1)
 
-    # Adicione todos os dias no próximo mês
-    for i in range(4):  # Maximo de 4 semanas no mês
+    # Adiciona as datas correspondentes (supondo até 4 ocorrências no mês)
+    for _ in range(4):
         dias.append(data_atual)
         data_atual += timedelta(weeks=1)
 
@@ -700,47 +779,3 @@ def criar_agendamentos_semana_atual(cliente_id):
 
 
 
-from datetime import datetime, timedelta
-
-def gerar_pagamento_mensal(cliente_id, plano_id):
-    try:
-        if not cliente_id or not plano_id:
-            return {"message": "Dados incompletos!", "status": 400}
-
-        cliente = Clientes.query.get(cliente_id)
-        if not cliente:
-            return {"message": "Cliente não encontrado!", "status": 404}
-
-        plano = Planos.query.get(plano_id)
-        if not plano:
-            return {"message": "Plano não encontrado!", "status": 404}
-
-        # Verificar se já existe um pagamento no último mês
-        um_mes_atras = datetime.utcnow() - timedelta(days=30)
-        pagamento_existente = Pagamentos.query.filter(
-            Pagamentos.id_cliente == cliente_id,
-            Pagamentos.id_plano == plano_id,
-            Pagamentos.data_pagamento >= um_mes_atras
-        ).first()
-
-        if pagamento_existente:
-            return {"message": "Pagamento já realizado neste mês.", "status": 200}
-
-        # Criar novo pagamento
-        novo_pagamento = Pagamentos(
-            id_cliente=cliente_id,
-            id_plano=plano_id,
-            id_servico=plano.servico_id,
-            valor=plano.valor,
-            metodo_pagamento='a definir',
-            status='pendente',
-            data_pagamento=datetime.utcnow()
-        )
-        db.session.add(novo_pagamento)
-        db.session.commit()
-
-        return {"message": "Pagamento gerado com sucesso!", "status": 201, "id_pagamento": novo_pagamento.id_pagamento}
-    
-    except Exception as e:
-        db.session.rollback()
-        return {"message": f"Erro ao gerar pagamento: {str(e)}", "status": 500}

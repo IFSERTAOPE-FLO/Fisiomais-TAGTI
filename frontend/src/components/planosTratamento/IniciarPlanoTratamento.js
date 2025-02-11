@@ -9,7 +9,7 @@ const apiBaseUrl = "http://localhost:5000/";
 const IniciarPlanoTratamento = ({ idCliente, onSelectPlano }) => {
   const [planos, setPlanos] = useState([]);
   const [selectedPlano, setSelectedPlano] = useState(null);
-  
+
   // Estado para controlar o modal de novo plano
   const [showNewPlanModal, setShowNewPlanModal] = useState(false);
   // Estado para o formulário de novo plano (incluindo o campo 'servicos')
@@ -21,7 +21,7 @@ const IniciarPlanoTratamento = ({ idCliente, onSelectPlano }) => {
     valor: "",
     servicos: []  // Campo para os serviços selecionados
   });
-  
+
   // Exemplo: estado para os serviços disponíveis (deve ser carregado do backend)
   const [servicos, setServicos] = useState([]);
 
@@ -244,39 +244,48 @@ const IniciarPlanoTratamento = ({ idCliente, onSelectPlano }) => {
             {/* Linha para seleção dos serviços */}
             <Form.Group className="mb-3">
               <Form.Label>Serviços Associados</Form.Label>
-              <div>
+              <div className="row">
                 {servicos.map(servico => (
-                  <div key={servico.id_servico} className="form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id={`servico-${servico.id_servico}`}
-                      checked={newPlanForm.servicos.some(s => s.id_servico === servico.id_servico)}
-                      onChange={(e) =>
-                        handleServicoCheckboxChange(servico.id_servico, e.target.checked)
-                      }
-                    />
-                    <label className="form-check-label text-dark" htmlFor={`servico-${servico.id_servico}`}>
-                      {servico.nome}
-                    </label>
-                    {newPlanForm.servicos.some(s => s.id_servico === servico.id_servico) && (
+                  <div key={servico.id_servico} className="col-md-6 mb-3">
+                    <div className="form-check">
                       <input
-                        type="number"
-                        placeholder="Qtd."
-                        value={
-                          newPlanForm.servicos.find(s => s.id_servico === servico.id_servico)
-                            ?.quantidade_sessoes || ""
-                        }
+                        type="checkbox"
+                        className="form-check-input"
+                        id={`servico-${servico.id_servico}`}
+                        checked={newPlanForm.servicos.some(s => s.id_servico === servico.id_servico)}
                         onChange={(e) =>
-                          handleServicoQuantidadeChange(servico.id_servico, parseInt(e.target.value, 10))
+                          handleServicoCheckboxChange(servico.id_servico, e.target.checked)
                         }
-                        className="form-control mt-2 w-50"
-                        min="1"
                       />
+                      <label className="form-check-label text-dark" htmlFor={`servico-${servico.id_servico}`}>
+                        {servico.nome}
+                      </label>
+                    </div>
+                    {newPlanForm.servicos.some(s => s.id_servico === servico.id_servico) && (
+                      <div className="d-flex align-items-center mt-2">
+                        <label className="me-2 mb-0" style={{ minWidth: '80px', fontSize: '0.9rem' }}>
+                          Sessões:
+                        </label>
+                        <input
+                          type="number"
+                          placeholder="Qtd."
+                          value={
+                            newPlanForm.servicos.find(s => s.id_servico === servico.id_servico)
+                              ?.quantidade_sessoes || ""
+                          }
+                          onChange={(e) =>
+                            handleServicoQuantidadeChange(servico.id_servico, parseInt(e.target.value, 10))
+                          }
+                          className="form-control w-50"
+                          min="1"
+                        />
+                      </div>
                     )}
                   </div>
                 ))}
               </div>
+
+
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>

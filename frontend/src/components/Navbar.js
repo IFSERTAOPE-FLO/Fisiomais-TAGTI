@@ -59,12 +59,6 @@ function Navbar() {
         localStorage.setItem("admin_nivel", admin_nivel);
       }
 
-      // Fecha o modal de login
-      const modalElement = document.getElementById("loginModal");
-      const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
-      if (modalInstance) modalInstance.hide();
-      document.querySelectorAll(".modal-backdrop").forEach((backdrop) => backdrop.remove());
-
       // Redireciona com base no papel do usuário
       setTimeout(() => {
         navigate(role === "admin" ? "/adminpage" : "/clientepage");

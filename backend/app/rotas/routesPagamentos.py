@@ -28,11 +28,14 @@ pagamentos_faturas = Blueprint('pagamentos_faturas', __name__)
 
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
+from flask import jsonify, current_app
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
 @pagamentos_faturas.route('/listar', methods=['GET'])
 @jwt_required()
 def listar_pagamentos():
-    # Determina o papel do usuário logado
-    current_user_email = get_jwt_identity()  # Obtém o e-mail do usuário autenticado via JWT
+    # Obtém o e-mail do usuário autenticado via JWT
+    current_user_email = get_jwt_identity()
     colaborador = Colaboradores.query.filter_by(email=current_user_email).first()
 
     if colaborador and colaborador.is_admin:
@@ -46,9 +49,26 @@ def listar_pagamentos():
         cliente = Clientes.query.filter_by(email=current_user_email).first()
         pagamentos = Pagamentos.query.filter_by(id_cliente=cliente.id_cliente).all()
 
-    # Prepara os dados dos pagamentos para retorno
     dados_pagamentos = []
     for pagamento in pagamentos:
+        # Verifica se existe um agendamento e se ele possui clínica associada
+        if pagamento.agendamento and pagamento.agendamento.clinica:
+            endereco = None
+            if pagamento.agendamento.clinica.endereco:
+                # Concatena os dados de endereço se houver
+                endereco = (
+                    pagamento.agendamento.clinica.endereco.rua + ', ' +
+                    pagamento.agendamento.clinica.endereco.bairro
+                )
+            clinica = {
+                'nome': pagamento.agendamento.clinica.nome,
+                'telefone': pagamento.agendamento.clinica.telefone,
+                'endereco': endereco,
+            }
+        else:
+            # Se não existir agendamento ou clínica, atribui None
+            clinica = None
+
         pagamento_data = {
             'id_pagamento': pagamento.id_pagamento,
             'valor': str(pagamento.valor),
@@ -66,16 +86,11 @@ def listar_pagamentos():
                 'email': pagamento.colaborador.email if pagamento.colaborador else None,
                 'telefone': pagamento.colaborador.telefone if pagamento.colaborador else None,
             },
-            'clinica': {
-                'nome': pagamento.agendamento.clinica.nome,
-                'telefone': pagamento.agendamento.clinica.telefone,
-                'endereco': pagamento.agendamento.clinica.endereco.rua + ', ' + pagamento.agendamento.clinica.endereco.bairro,
-            },
+            'clinica': clinica,
             'servico': {
                 'nome': pagamento.servico.nome,
                 'descricao': pagamento.servico.descricao,
             },
-            # Adiciona o plano se existir
             'plano': {
                 'nome': pagamento.plano.nome if pagamento.plano else None,
                 'descricao': pagamento.plano.descricao if pagamento.plano else None,
@@ -84,8 +99,8 @@ def listar_pagamentos():
         }
         dados_pagamentos.append(pagamento_data)
 
-    # Retorna os dados em formato JSON
     return jsonify({'pagamentos': dados_pagamentos}), 200
+
 
 
 

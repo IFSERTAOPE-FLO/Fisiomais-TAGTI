@@ -3,6 +3,8 @@ import EditarUsuario from "./EditarUsuario";
 import EditarHorarios from "./EditarHorarios";
 import { Link, } from "react-router-dom";
 import Paginator from "./Paginator"; // Importe o componente Paginator
+import { Modal } from "react-bootstrap";
+import AulasDoCliente from "./pilates/usuariocolaborador/AulasDoCliente";
 
 const GerenciarUsuarios = () => {
     const [usuarios, setUsuarios] = useState([]);
@@ -20,8 +22,15 @@ const GerenciarUsuarios = () => {
     const itemsPerPage = 10; // Defina o número de itens por página
 
     const isRoleValid = savedRole === "admin" || savedRole === "colaborador";
+    // Estados para modal de aulas do cliente
+    const [showAulasModal, setShowAulasModal] = useState(false);
+    const [clienteAulasId, setClienteAulasId] = useState(null);
 
-
+    // Função para abrir modal que lista as aulas de um cliente (usuário com role "cliente")
+    const handleVerAulasCliente = (clienteId) => {
+        setClienteAulasId(clienteId);
+        setShowAulasModal(true);
+    };
 
     const buscarUsuarios = async () => {
         if (!isRoleValid) {
@@ -119,7 +128,7 @@ const GerenciarUsuarios = () => {
     const handleCloseHorariosModal = () => {
         setHorariosEditando(null); // Fecha o modal de horários
     };
-    
+
     // Função para ordenar os usuários
     const handleSort = (key) => {
         let direction = "ascending";
@@ -251,7 +260,7 @@ const GerenciarUsuarios = () => {
                                 Email
                                 {sortConfig.key === "email" && (sortConfig.direction === "ascending" ? " ↑" : " ↓")}
                             </th>
-                            <th onClick={toggleTipo} style={{ cursor: "pointer" }}>
+                            <th onClick={toggleTipo} style={{ cursor: "pointer" }} title="Clique para mudar o tipo de usuário">
                                 Tipo ({tipoAlternado === "cliente" ? "Cliente" : "Colaborador"})
                                 <span className="ms-2">
                                     <i
@@ -267,10 +276,10 @@ const GerenciarUsuarios = () => {
                             </th>
                             <th>telefone</th>
                             {tipoAlternado === 'colaborador' && (<><th>Cargo</th>
-                            <th>Clínica</th>
+                                <th>Clínica</th>
                             </>
-                        
-                        )}
+
+                            )}
                             {savedRole === 'admin' && (
                                 <th>Ações</th>
                             )}
@@ -286,16 +295,23 @@ const GerenciarUsuarios = () => {
                                 <td>{usuario.telefone}</td>
                                 {tipoAlternado === 'colaborador' && (
                                     <>
-                                    <td>{usuario.cargo ? usuario.cargo : 'Sem Cargo'}</td>
-                                    <td>{usuario.clinica ? usuario.clinica.nome : "Nenhuma"}</td>
+                                        <td>{usuario.cargo ? usuario.cargo : 'Sem Cargo'}</td>
+                                        <td>{usuario.clinica ? usuario.clinica.nome : "Nenhuma"}</td>
+                                        {usuario.role === "cliente" && (
+                                            <button
+                                                className="btn btn-info btn-sm me-1"
+                                                onClick={() => handleVerAulasCliente(usuario.id)}
+                                            >
+                                                <i className="bi bi-book"></i> Ver Aulas
+                                            </button>
+                                        )}
+
                                     </>
                                 )}
 
                                 {savedRole === 'admin' && (
                                     <>
                                         <td>
-
-
                                             <button
                                                 className="btn btn-warning btn-sm me-1"
                                                 onClick={() => handleEditarUsuario(usuario)}
@@ -318,7 +334,18 @@ const GerenciarUsuarios = () => {
                                                     <i className="bi bi-clock"></i>
                                                 </button>
                                             )}
+                                            {usuario.role === "cliente" && (
+                                                <button
+                                                    className="btn btn-info btn-sm me-1"
+                                                    onClick={() => handleVerAulasCliente(usuario.id)}
+                                                >
+                                                    <i className="bi bi-calendar-plus"></i> Aulas Pilates
+
+                                                </button>
+                                            )}
+
                                         </td>
+
                                     </>
                                 )}
 
@@ -352,6 +379,21 @@ const GerenciarUsuarios = () => {
                     onSave={handleSaveHorarios} // Salvar sem fecha
                 />
             )}
+
+
+            {/* Modal para exibir as aulas do cliente */}
+            <Modal
+                show={showAulasModal}
+                onHide={() => setShowAulasModal(false)}
+                size="lg"
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>Aulas do Cliente</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {clienteAulasId && <AulasDoCliente clienteId={clienteAulasId} />}
+                </Modal.Body>
+            </Modal>
 
 
         </div>

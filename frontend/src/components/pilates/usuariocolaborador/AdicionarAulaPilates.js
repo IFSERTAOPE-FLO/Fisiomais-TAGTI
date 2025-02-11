@@ -6,7 +6,6 @@ import { FaPlusCircle } from "react-icons/fa";
 const AdicionarAulaPilates = ({ onAulaAdicionada }) => {
     const [servicoId, setServicoId] = useState("");
     const [servicos, setServicos] = useState([]);
-    const [diaSemana, setDiaSemana] = useState("");
     const [horaInicio, setHoraInicio] = useState("");
     const [horaFim, setHoraFim] = useState("");
     const [limiteAlunos, setLimiteAlunos] = useState("");
@@ -14,11 +13,16 @@ const AdicionarAulaPilates = ({ onAulaAdicionada }) => {
     const [colaboradorSelecionado, setColaboradorSelecionado] = useState("");
     const [erro, setErro] = useState("");
     const [sucesso, setSucesso] = useState("");
+    const [diasSemana, setDiasSemana] = useState([]);
+    const [diasUteis, setDiasUteis] = useState(false);
+
+    // Estados para a duração da aula
+    const [duracaoAula, setDuracaoAula] = useState(""); // Valor do select ("30", "45", "60" ou "custom")
+    const [customDuracao, setCustomDuracao] = useState(""); // Quando "custom" for selecionado
+
     const navigate = useNavigate();
     const token = localStorage.getItem("token");
     const apiBaseUrl = "http://localhost:5000/pilates/";
-    const [diasSemana, setDiasSemana] = useState([]);
-    const [diasUteis, setDiasUteis] = useState(false);
 
     useEffect(() => {
         const fetchServicos = async () => {
@@ -73,6 +77,16 @@ const AdicionarAulaPilates = ({ onAulaAdicionada }) => {
 
     const handleSubmitAula = async (e) => {
         e.preventDefault();
+        // Define a duração a ser enviada: se for "custom", usa o valor do campo personalizado
+        let duracaoSelecionada = duracaoAula;
+        if (duracaoAula === "custom") {
+            if (!customDuracao) {
+                setErro("Informe a duração personalizada da aula (em minutos).");
+                return;
+            }
+            duracaoSelecionada = customDuracao;
+        }
+
         try {
             const response = await fetch(`${apiBaseUrl}adicionar_aula_pilates`, {
                 method: "POST",
@@ -82,11 +96,12 @@ const AdicionarAulaPilates = ({ onAulaAdicionada }) => {
                 },
                 body: JSON.stringify({
                     servico_id: servicoId,
-                    dias_semana: diasSemana, // Agora envia um array
+                    dias_semana: diasSemana, // Envia um array com os dias selecionados
                     hora_inicio: horaInicio,
                     hora_fim: horaFim,
                     id_colaborador: colaboradorSelecionado,
                     limite_alunos: limiteAlunos,
+                    duracao_aula: duracaoSelecionada, // Envia a duração (em minutos)
                 }),
             });
 
@@ -96,11 +111,14 @@ const AdicionarAulaPilates = ({ onAulaAdicionada }) => {
                 setSucesso("Aula criada com sucesso!");
                 setErro("");
                 setServicoId("");
-                setDiaSemana("");
                 setHoraInicio("");
                 setHoraFim("");
                 setLimiteAlunos("");
                 setColaboradorSelecionado("");
+                setDuracaoAula("");
+                setCustomDuracao("");
+                // Opcional: resetar os dias da semana, se necessário
+                setDiasSemana([]);
                 if (onAulaAdicionada) {
                     onAulaAdicionada();
                 }
@@ -116,7 +134,6 @@ const AdicionarAulaPilates = ({ onAulaAdicionada }) => {
 
     return (
         <div className="container mt-4">
-            
             <h4 className="mb-4 text-secondary text-center">Adicionar Aula de Pilates</h4>
             {erro && <div className="alert alert-danger">{erro}</div>}
             {sucesso && <div className="alert alert-success">{sucesso}</div>}
@@ -125,10 +142,17 @@ const AdicionarAulaPilates = ({ onAulaAdicionada }) => {
                 <div className="row g-3">
                     <div className="col-md-6">
                         <label className="form-label">Serviço de Pilates</label>
-                        <select className="form-select" value={servicoId} onChange={(e) => setServicoId(e.target.value)} required>
+                        <select
+                            className="form-select"
+                            value={servicoId}
+                            onChange={(e) => setServicoId(e.target.value)}
+                            required
+                        >
                             <option value="">Selecione um serviço</option>
                             {servicos.map((servico) => (
-                                <option key={servico.ID_Servico} value={servico.ID_Servico}>{servico.Nome_servico}</option>
+                                <option key={servico.ID_Servico} value={servico.ID_Servico}>
+                                    {servico.Nome_servico}
+                                </option>
                             ))}
                         </select>
                     </div>
@@ -145,13 +169,7 @@ const AdicionarAulaPilates = ({ onAulaAdicionada }) => {
                                     setDiasUteis(isChecked);
                                     setDiasSemana(
                                         isChecked
-                                            ? [
-                                                "Segunda-feira",
-                                                "Terça-feira",
-                                                "Quarta-feira",
-                                                "Quinta-feira",
-                                                "Sexta-feira",
-                                            ]
+                                            ? ["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira"]
                                             : []
                                     );
                                 }}
@@ -167,12 +185,11 @@ const AdicionarAulaPilates = ({ onAulaAdicionada }) => {
                                 multiple
                                 value={diasSemana}
                                 onChange={(e) => {
-                                    const selected = Array.from(e.target.selectedOptions).map(
-                                        (opt) => opt.value
-                                    );
+                                    const selected = Array.from(e.target.selectedOptions).map(opt => opt.value);
                                     setDiasSemana(selected);
                                 }}
                                 required={!diasUteis}
+                                title="Para selecionar múltiplos dias, mantenha pressionada a tecla Ctrl (ou Command no Mac) enquanto clica nas opções."
                             >
                                 {["Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado", "Domingo"].map(
                                     (dia, index) => (
@@ -185,20 +202,52 @@ const AdicionarAulaPilates = ({ onAulaAdicionada }) => {
                         )}
                     </div>
 
-                    <div className="col-md-3">
+
+                    <div className="col-md-2">
                         <label className="form-label">Hora de Início</label>
-                        <input type="time" className="form-control" value={horaInicio} onChange={(e) => setHoraInicio(e.target.value)} required />
+                        <input
+                            type="time"
+                            className="form-control"
+                            value={horaInicio}
+                            onChange={(e) => setHoraInicio(e.target.value)}
+                            required
+                        />
                     </div>
 
-                    <div className="col-md-3">
+                    <div className="col-md-2">
                         <label className="form-label">Hora de Fim</label>
-                        <input type="time" className="form-control" value={horaFim} onChange={(e) => setHoraFim(e.target.value)} required />
+                        <input
+                            type="time"
+                            className="form-control"
+                            value={horaFim}
+                            onChange={(e) => setHoraFim(e.target.value)}
+                            required
+                        />
+                    </div>
+
+                    <div className="col-md-2">
+                        <label className="form-label">Limite de Alunos</label>
+                        <input
+                            type="number"
+                            className="form-control"
+                            value={limiteAlunos}
+                            onChange={(e) => setLimiteAlunos(e.target.value)}
+                            required
+                        />
                     </div>
 
                     <div className="col-md-3">
-                        <label className="form-label">Limite de Alunos</label>
-                        <input type="number" className="form-control" value={limiteAlunos} onChange={(e) => setLimiteAlunos(e.target.value)} required />
+                        <label className="form-label">Duração da Aula (min)</label>
+                        <input
+                            type="number"
+                            className="form-control"
+                            value={duracaoAula}
+                            onChange={(e) => setDuracaoAula(e.target.value)}
+                            required
+                        />
                     </div>
+
+
                     <div className="col-md-3">
                         <label className="form-label">Selecione o Colaborador</label>
                         <select
@@ -217,7 +266,9 @@ const AdicionarAulaPilates = ({ onAulaAdicionada }) => {
                     </div>
                 </div>
 
-                <button type="submit" className="btn btn-login mt-3 "> <i className="bi bi-plus-circle me-2"></i>Adicionar Aula</button>
+                <button type="submit" className="btn btn-login mt-3">
+                    <i className="bi bi-plus-circle me-2"></i>Adicionar Aula
+                </button>
             </form>
         </div>
     );

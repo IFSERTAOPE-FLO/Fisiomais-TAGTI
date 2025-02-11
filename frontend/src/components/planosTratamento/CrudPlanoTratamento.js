@@ -321,7 +321,7 @@ const CrudPlanosTratamento = () => {
                                                         htmlFor={`servico-${servico.id_servico}`}
                                                         className="form-check-label text-dark" // Classe para garantir texto escuro
                                                     >
-                                                        {servico.nome}
+                                                        {servico.nome} <small>número de sessões</small>
                                                     </label>
                                                 </div>
 

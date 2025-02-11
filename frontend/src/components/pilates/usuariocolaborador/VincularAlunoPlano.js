@@ -74,7 +74,8 @@ const VincularAlunoPlano = ({ showModal, handleClose }) => {
               });
             }
           });
-
+          setError('');
+          setSuccess('');
           setPlanoOptions(planosExtraidos);
         } else {
           setError(data.message || "Erro ao carregar serviços e planos.");

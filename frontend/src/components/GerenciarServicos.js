@@ -427,6 +427,7 @@ const GerenciarServicos = () => {
                 onClick={toggleTipo}
                 className="text-center fw-semibold position-relative"
                 style={{ cursor: "pointer", userSelect: "none" }}
+                title="Clique para trocar o tipo de serviço"
               >
                 Tipo
                 <span className="ms-2">
