@@ -347,9 +347,9 @@ def populate_database_extra():
         plano_tratamento = PlanosTratamento(
             diagnostico='Dor lombar crônica',
             objetivos='Redução da dor e melhora da mobilidade',
-            metodologia='Exercícios terapêuticos e pilates',
+            metodologia='Exercícios terapêuticos e pilates, valor mensal',
             duracao_prevista=12,
-            valor=1500.00
+            valor=350.00
         )
         db.session.add(plano_tratamento)
         db.session.flush()

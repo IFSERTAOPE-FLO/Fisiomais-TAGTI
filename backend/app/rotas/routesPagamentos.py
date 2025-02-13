@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime, timedelta
 from sqlalchemy.exc import SQLAlchemyError
-from app.models import Agendamentos, Pagamentos, Faturas, Clientes, Servicos, Colaboradores, Clinicas
+from app.models import Agendamentos, Pagamentos, Faturas, Clientes, PlanosTratamento, Servicos, Colaboradores, Clinicas
 from app import db
 
 
@@ -299,90 +299,152 @@ def excluir_fatura(id):
 import calendar
 from datetime import datetime
 
-@pagamentos_faturas.route('/gerar_pagamentos_automaticos', methods=['POST'])
-@jwt_required()
-def gerar_pagamentos_automaticos():
-    try:
-        # Usamos a data atual (UTC) para definir o período de verificação
-        today = datetime.utcnow()
-        pagamentos_criados = 0
+import calendar
+from datetime import datetime
+from flask import jsonify
+from flask_jwt_extended import jwt_required
+from app import db
+# Certifique-se de importar os modelos: Clientes, Planos, PlanosTratamento, Pagamentos, Faturas
 
-        # Busca todos os clientes que possuem um plano associado
-        clientes = Clientes.query.filter(Clientes.plano_id.isnot(None)).all()
+@pagamentos_faturas.route('/gerar_faturas_automaticas', methods=['POST'])
+@jwt_required()
+def gerar_faturas_automaticas():
+    try:
+        today = datetime.utcnow()
+        faturas_criadas = 0
+
+        # Busca todos os clientes (para então verificar se possuem plano ou tratamento vinculado)
+        clientes = Clientes.query.all()
 
         for cliente in clientes:
-            # Recupera o plano associado ao cliente
-            plano = cliente.plano
-            if not plano:
-                continue  # Evita inconsistências
+            plan_used = None   # Pode ser um objeto de Planos ou PlanosTratamento
+            plan_type = None   # 'plano' ou 'tratamento'
 
-            # Converte o nome do plano para minúsculas para busca case-insensitive
-            plano_nome = plano.nome.lower()
+            # Se o cliente tem um plano regular vinculado, usamos-o.
+            if cliente.plano_id:
+                plan_used = cliente.plano
+                plan_type = 'plano'
+            else:
+                # Caso contrário, verifica se há algum plano de tratamento associado a este cliente
+                # (aqui, buscamos em histórico de sessões; utilize a lógica adequada à sua aplicação)
+                if cliente.historico_sessoes:
+                    for hs in cliente.historico_sessoes:
+                        if hs.id_plano_tratamento:
+                            plan_used = hs.plano_tratamento
+                            plan_type = 'tratamento'
+                            break
 
-            # Determina a frequência e define o período (início e fim) para verificação
+            if not plan_used:
+                # Se o cliente não tiver nenhum plano vinculado, pula para o próximo
+                continue
+
+            # Define a frequência e o período para a fatura com base no tipo de plano
             frequencia = None
             period_start = None
             period_end = None
 
-            if 'mensal' in plano_nome:
+            if plan_type == 'plano':
+                # Para o plano regular, usamos o nome para identificar a frequência
+                plano_nome = plan_used.nome.lower()
+                if 'mensal' in plano_nome:
+                    frequencia = 'mensal'
+                    period_start = datetime(today.year, today.month, 1)
+                    last_day = calendar.monthrange(today.year, today.month)[1]
+                    period_end = datetime(today.year, today.month, last_day, 23, 59, 59, 999999)
+                elif 'trimestral' in plano_nome:
+                    frequencia = 'trimestral'
+                    quarter = (today.month - 1) // 3
+                    quarter_start_month = quarter * 3 + 1
+                    quarter_end_month = quarter * 3 + 3
+                    period_start = datetime(today.year, quarter_start_month, 1)
+                    last_day = calendar.monthrange(today.year, quarter_end_month)[1]
+                    period_end = datetime(today.year, quarter_end_month, last_day, 23, 59, 59, 999999)
+                elif 'semestral' in plano_nome:
+                    frequencia = 'semestral'
+                    if today.month <= 6:
+                        period_start = datetime(today.year, 1, 1)
+                        period_end = datetime(today.year, 6, 30, 23, 59, 59, 999999)
+                    else:
+                        period_start = datetime(today.year, 7, 1)
+                        period_end = datetime(today.year, 12, 31, 23, 59, 59, 999999)
+                elif 'anual' in plano_nome:
+                    frequencia = 'anual'
+                    period_start = datetime(today.year, 1, 1)
+                    period_end = datetime(today.year, 12, 31, 23, 59, 59, 999999)
+                else:
+                    # Caso não identifique a frequência, usa mensal como padrão
+                    frequencia = 'mensal'
+                    period_start = datetime(today.year, today.month, 1)
+                    last_day = calendar.monthrange(today.year, today.month)[1]
+                    period_end = datetime(today.year, today.month, last_day, 23, 59, 59, 999999)
+            elif plan_type == 'tratamento':
+                # Para o plano de tratamento, assumimos faturamento mensal
                 frequencia = 'mensal'
-                period_start = datetime(today.year, today.month, 1, 0, 0, 0)
+                period_start = datetime(today.year, today.month, 1)
                 last_day = calendar.monthrange(today.year, today.month)[1]
                 period_end = datetime(today.year, today.month, last_day, 23, 59, 59, 999999)
-            elif 'trimestral' in plano_nome:
-                frequencia = 'trimestral'
-                # Calcula o trimestre atual: Q1 (Jan-Mar), Q2 (Abr-Jun), Q3 (Jul-Set) ou Q4 (Out-Dez)
-                quarter = (today.month - 1) // 3
-                quarter_start_month = quarter * 3 + 1
-                quarter_end_month = quarter * 3 + 3
-                period_start = datetime(today.year, quarter_start_month, 1, 0, 0, 0)
-                last_day = calendar.monthrange(today.year, quarter_end_month)[1]
-                period_end = datetime(today.year, quarter_end_month, last_day, 23, 59, 59, 999999)
-            elif 'semestral' in plano_nome:
-                frequencia = 'semestral'
-                if today.month <= 6:
-                    period_start = datetime(today.year, 1, 1, 0, 0, 0)
-                    period_end = datetime(today.year, 6, 30, 23, 59, 59, 999999)
-                else:
-                    period_start = datetime(today.year, 7, 1, 0, 0, 0)
-                    period_end = datetime(today.year, 12, 31, 23, 59, 59, 999999)
-            elif 'anual' in plano_nome:
-                frequencia = 'anual'
-                period_start = datetime(today.year, 1, 1, 0, 0, 0)
-                period_end = datetime(today.year, 12, 31, 23, 59, 59, 999999)
-
-            # Se o nome do plano não contiver nenhuma palavra-chave definida, ignora este cliente
-            if not frequencia:
+            else:
                 continue
 
-            # Verifica se já existe um pagamento para este cliente e plano dentro do período definido
-            existing_payment = Pagamentos.query.filter(
-                Pagamentos.id_cliente == cliente.id_cliente,
-                Pagamentos.id_plano == plano.id_plano,
-                Pagamentos.data_pagamento >= period_start,
-                Pagamentos.data_pagamento <= period_end
-            ).first()
+            # Verifica se já existe uma fatura (via pagamento) para este cliente e plano dentro do período
+            if plan_type == 'plano':
+                existing_invoice = Faturas.query.join(Pagamentos).filter(
+                    Faturas.id_cliente == cliente.id_cliente,
+                    Pagamentos.id_plano == plan_used.id_plano,
+                    Pagamentos.data_pagamento >= period_start,
+                    Pagamentos.data_pagamento <= period_end
+                ).first()
+            else:
+                existing_invoice = Faturas.query.join(Pagamentos).filter(
+                    Faturas.id_cliente == cliente.id_cliente,
+                    Pagamentos.id_plano_tratamento == plan_used.id_plano_tratamento,
+                    Pagamentos.data_pagamento >= period_start,
+                    Pagamentos.data_pagamento <= period_end
+                ).first()
 
-            if existing_payment:
-                # Se já existir um pagamento no período, não cria um novo
+            if existing_invoice:
                 continue
 
-            # Cria um novo pagamento com base no plano do cliente
-            novo_pagamento = Pagamentos(
-                id_cliente=cliente.id_cliente,
-                id_servico=plano.servico_id,   # O plano está vinculado a um serviço
-                id_plano=plano.id_plano,
-                valor=plano.valor,
-                metodo_pagamento='a definir',  # Pode ser ajustado conforme sua lógica
-                status='pendente',
-                data_pagamento=datetime.utcnow()  # Data de criação do pagamento
-            )
+            # Cria um novo pagamento (registro necessário para associar à fatura)
+            if plan_type == 'plano':
+                novo_pagamento = Pagamentos(
+                    id_cliente=cliente.id_cliente,
+                    id_servico=plan_used.servico_id,  # O plano vincula o serviço correspondente
+                    id_plano=plan_used.id_plano,
+                    valor=plan_used.valor,
+                    metodo_pagamento='a definir',
+                    status='pendente',
+                    data_pagamento=datetime.utcnow()
+                )
+            else:  # plano de tratamento
+                novo_pagamento = Pagamentos(
+                    id_cliente=cliente.id_cliente,
+                    # Se houver mais de um serviço relacionado, pode ser ajustado conforme a lógica de negócio
+                    id_servico=plan_used.servicos_relacionados[0].servico.id_servico if plan_used.servicos_relacionados else None,
+                    id_plano_tratamento=plan_used.id_plano_tratamento,
+                    valor=plan_used.valor,
+                    metodo_pagamento='a definir',
+                    status='pendente',
+                    data_pagamento=datetime.utcnow()
+                )
             db.session.add(novo_pagamento)
-            pagamentos_criados += 1
+            db.session.flush()  # Garante que o ID do pagamento seja gerado
+
+            # Cria a fatura associada ao pagamento recém-criado
+            nova_fatura = Faturas(
+                id_cliente=cliente.id_cliente,
+                id_pagamento=novo_pagamento.id_pagamento,
+                data_emissao=datetime.utcnow(),
+                vencimento=period_end,  # Vencimento definido para o fim do período
+                valor_total=plan_used.valor,
+                status='pendente'
+            )
+            db.session.add(nova_fatura)
+            faturas_criadas += 1
 
         db.session.commit()
-        return jsonify({'message': f'{pagamentos_criados} pagamentos gerados com sucesso!'}), 200
+        return jsonify({'message': f'{faturas_criadas} faturas geradas com sucesso!'}), 200
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({'message': f'Erro ao gerar pagamentos: {str(e)}'}), 500
+        return jsonify({'message': f'Erro ao gerar faturas: {str(e)}'}), 500

@@ -16,9 +16,12 @@ import Perfil from "./pages/Perfil";
 import VisualizarAgendamentos from "./pages/VisualizarAgendamentos";
 import AdminPage from "./pages/AdminPage";
 import Especialidades from "./pages/Especialidades";
-import GerenciarPagamentos from "./pages/GerenciarPagamentos";
+import GerenciarPagamentos from "./pages/GerenciarPagamentos.js";
 import CalendarioInterativo from "./pages/CalendarioInterativo";
 import ClientPage from "./pages/ClientPage";
+
+// Componentes Pagamentos
+
 
 // Componentes de Pilates
 import AdicionarAulaPilates from "./components/pilates/usuariocolaborador/AdicionarAulaPilates.js";
@@ -26,6 +29,7 @@ import AdicionarClienteAulaColaborador from "./components/pilates/usuariocolabor
 import CadastrarAulaCliente from "./components/pilates/usuariocliente/CadastrarAulaCliente.js";
 import GerenciarAulasPilates from "./components/pilates/usuariocolaborador/GerenciarAulasPilates.js";
 import MinhasAulasCliente from  "./components/pilates/usuariocliente/MinhasAulasCliente.js";
+
 function App() {
     return (
         <Router>
@@ -110,7 +114,7 @@ function App() {
                         path="/gerenciarPagamentos"
                         element={
                             <PageWrapper title="Gerenciar Pagamentos - Fisiomais">
-                                <GerenciarPagamentos />
+                                < GerenciarPagamentos/>
                             </PageWrapper>
                         }
                     />
