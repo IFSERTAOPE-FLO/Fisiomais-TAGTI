@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Card, Table, Badge, Alert, Button, ListGroup } from "react-bootstrap";
+import { Container, Row, Col, Card, ListGroup, Table, Badge, Alert, Modal, Button } from 'react-bootstrap';
 import axios from "axios";
 import Perfil from "./Perfil";
 import EditarHorarios from "../components/EditarHorarios";
@@ -362,6 +362,15 @@ const DashboardColaborador = () => {
                 </Card>
             </Col>
         </Row>
+        {/* Modal para edição do Perfil */}
+        <Modal show={showPerfil} onHide={handleClosePerfil} size="xl" centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Editar Perfil</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Perfil />
+                </Modal.Body>
+            </Modal>
         </Container >
     );
 };
