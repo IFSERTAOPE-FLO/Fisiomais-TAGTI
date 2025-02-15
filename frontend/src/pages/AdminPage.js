@@ -12,8 +12,6 @@ import Dashboard from "./Dashboard";
 import GerenciarPagamentos from "./GerenciarPagamentos";
 import GerenciarAulasPilates from "../components/pilates/usuariocolaborador/GerenciarAulasPilates";
 import CrudPlanoTratamento from "../components/planosTratamento/CrudPlanoTratamento";  // Importação do componente
-import CriarPlanoTratamento from "../components/planosTratamento/CriarPlanoTratamento";
-import HistoricoPlanos from "../components/planosTratamento/HistoricoPlanos";
 import HistoricoSessoes from "../components/planosTratamento/HistoricoSessoes";  // Importação do componente
 import DashboardColaborador from './DashboardColaborador';
 
@@ -101,24 +99,8 @@ const AdminPage = () => {
                     <i className="bi bi-clipboard2-pulse"></i> Gerenciar Planos de Tratamento
                   </a>
                 </li>
-                <li>
-                  <a
-                    className={`dropdown-item z-top ${opcaoSelecionada === "historicoPlano" ? "active" : ""}`}
-                    href="#historicoPlano"
-                    onClick={() => handleOpcaoChange("historicoPlano")}
-                  >
-                    <i className="bi bi-clipboard2-pulse"></i> Historico Plano
-                  </a>
-                </li>
-                <li>
-                  <a
-                    className={`dropdown-item z-top ${opcaoSelecionada === "criarPlanoTratamento" ? "active" : ""}`}
-                    href="#CriarPlanoTratamento"
-                    onClick={() => handleOpcaoChange("criarPlanoTratamento")}
-                  >
-                    <i className="bi bi-clipboard2-pulse"></i> Gerenciar Planos de Tratamento
-                  </a>
-                </li>
+                
+            
 
                 <li>
                   <a
@@ -217,8 +199,6 @@ const AdminPage = () => {
       {opcaoSelecionada === "gerenciarPagamentos" && <GerenciarPagamentos />}
       {opcaoSelecionada === "aulasPilates" && <GerenciarAulasPilates />}
       {opcaoSelecionada === "planosTratamento" && <CrudPlanoTratamento />}  {/* Renderização do CRUD de Planos de Tratamento */}
-      {opcaoSelecionada === "criarPlanoTratamento" && <CriarPlanoTratamento />}  {/* Renderização do CRUD de Planos de Tratamento */}
-      {opcaoSelecionada === "historicoPlano" && <HistoricoPlanos />}  {/* Renderização do CRUD de Planos de Tratamento */}
       {opcaoSelecionada === "historicoSessoes" && <HistoricoSessoes />}
       {opcaoSelecionada === "dashboardColaborador" && <DashboardColaborador />}
     </div>

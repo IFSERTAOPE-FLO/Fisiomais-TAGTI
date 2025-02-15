@@ -14,3 +14,23 @@
     padding: 20px;
 }
 
+.btn-custom {
+    background-color: #36ab9c;
+    color: white; /* Para garantir boa visibilidade */
+    border: none;
+}
+
+.btn-custom:hover {
+    background-color: #2e9588; /* Um tom um pouco mais escuro para o efeito hover */
+}
+ 
+.btn2-custom {
+    background-color: #bc155b;
+    color: white; /* Para garantir boa visibilidade */
+    border: none;
+}
+
+.btn2-custom:hover {
+    background-color: #a3124e; /* Um tom um pouco mais escuro para o efeito hover */
+}
+

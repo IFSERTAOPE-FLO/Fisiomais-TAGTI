@@ -501,12 +501,12 @@ function Navbar() {
                   {/* Planos de Tratamento (submenu) */}
                   <li className="mt-3">
                     <button
-                      className={`sidebar-item d-flex align-items-center w-100 ${["planosTratamento", "criarPlanoTratamento", "historicoPlano"].includes(currentOption) ? "active" : ""}`}
+                      className={`sidebar-item d-flex align-items-center w-100 ${["planosTratamento"].includes(currentOption) ? "active" : ""}`}
                       onClick={() => setPlanosOpen(!planosOpen)}
                     >
                       <i className="bi bi-file-earmark-text"></i>
                       {sidebarVisible && " Planos de Tratamento"}
-                      <i className={`ms-auto bi ${planosOpen || ["planosTratamento", "criarPlanoTratamento", "historicoPlano"].includes(currentOption) ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
+                      <i className={`ms-auto bi ${planosOpen || ["planosTratamento"].includes(currentOption) ? "bi-chevron-up" : "bi-chevron-down"}`}></i>
                     </button>
                     {planosOpen && (
                       <ul className="submenu">
@@ -519,24 +519,8 @@ function Navbar() {
                             {sidebarVisible && " Visualizar Planos"}
                           </Link>
                         </li>
-                        <li>
-                          <Link
-                            to="/adminPage?opcaoSelecionada=criarPlanoTratamento"
-                            className={`sidebar-item ${currentOption === "criarPlanoTratamento" ? "active" : ""}`}
-                          >
-                            <i className="bi bi-plus-circle"></i>
-                            {sidebarVisible && " Criar Plano"}
-                          </Link>
-                        </li>
-                        <li>
-                          <Link
-                            to="/adminPage?opcaoSelecionada=historicoPlano"
-                            className={`sidebar-item ${currentOption === "historicoPlano" ? "active" : ""}`}
-                          >
-                            <i className="bi bi-clock-history"></i>
-                            {sidebarVisible && " Histórico de Planos"}
-                          </Link>
-                        </li>
+                        
+                        
                       </ul>
                     )}
                   </li>

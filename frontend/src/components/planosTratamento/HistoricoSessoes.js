@@ -3,6 +3,7 @@ import { Form, Button, Table, Modal, Alert, Card, Row, Col } from 'react-bootstr
 import { FaCalendarAlt, FaUser, FaEdit, FaTrash, FaPlus, FaFileMedical, FaFilePdf } from 'react-icons/fa';
 import axios from 'axios';
 import IniciarPlanoTratamento from './IniciarPlanoTratamento';
+import "./css/Planosdetratamento.css";
 
 import Paginator from '../Paginator'; // Certifique-se de que o caminho está correto
 import CriarAgendamento from "../../pages/CriarAgendamento";
@@ -200,10 +201,9 @@ const HistoricoSessoes = () => {
                             <div className="table-responsive">
                                 {currentSessoes.length === 0 ? (
                                     <div className="alert alert-info text-center my-4" role="alert">
-                                        <h5 className="alert-heading">Tudo está prestes a começar!</h5>
+                                        <h5 className="alert-heading">Não existe registros de sessões para o paciente!</h5>
                                         <p>
-                                            Ainda não há registros de sessões, mas logo teremos novidades e os primeiros
-                                            momentos dessa jornada serão exibidos aqui.
+                                            Ainda não há registros de sessões. Por favor, verifique mais tarde ou registre uma nova sessão.
                                         </p>
                                     </div>
                                 ) : (
@@ -409,7 +409,7 @@ const HistoricoSessoes = () => {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={handleCloseModal}>Cancelar</Button>
-                    <Button variant="primary" onClick={handleSubmit}>Salvar Registro</Button>
+                    <Button className="btn btn2-custom" onClick={handleSubmit}>Salvar Registro</Button>
                 </Modal.Footer>
             </Modal>
         </div>

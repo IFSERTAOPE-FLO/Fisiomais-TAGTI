@@ -3,6 +3,7 @@ import Select from 'react-select';
 import axios from 'axios';
 import { Form, Button, Modal } from 'react-bootstrap';
 import { FaClipboardList, FaClipboardCheck, FaPlus } from 'react-icons/fa';
+import "./css/Planosdetratamento.css";
 
 const apiBaseUrl = "http://localhost:5000/";
 
@@ -138,9 +139,15 @@ const IniciarPlanoTratamento = ({ idCliente, onSelectPlano }) => {
         <h6 className="text-secondary d-flex align-items-center mb-0">
           <FaClipboardCheck className="me-2" /> Diagnóstico:
         </h6>
-        <Button variant="outline-primary" size="sm" onClick={() => setShowNewPlanModal(true)}>
-          <FaPlus className="me-1" /> Adicionar novo plano de tratamento
-        </Button>
+        <Button 
+          variant="outline-primary" 
+           size="sm" 
+           onClick={() => setShowNewPlanModal(true)}
+            style={{ borderColor: "#36ab9c", color: "#36ab9c", fontWeight: "bold", borderRadius: "8px" }}
+            >
+             <FaPlus className="me-1" /> Adicionar novo plano de tratamento
+             </Button>
+
       </div>
 
       {/* Select pesquisável para escolher um plano existente */}
@@ -292,7 +299,7 @@ const IniciarPlanoTratamento = ({ idCliente, onSelectPlano }) => {
             <Button variant="secondary" onClick={() => setShowNewPlanModal(false)}>
               Cancelar
             </Button>
-            <Button variant="primary" type="submit">
+            <Button className="btn btn2-custom" type="submit">
               Salvar
             </Button>
           </Modal.Footer>
