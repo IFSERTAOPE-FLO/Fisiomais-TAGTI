@@ -119,6 +119,7 @@ const DashboardClientes = () => {
           </Card>
         </Col>
 
+
         {/* Histórico de Pagamentos */}
         <Col md={6} lg={4}>
           <Card>
@@ -132,12 +133,15 @@ const DashboardClientes = () => {
             >
               {pagamentos.length ? (
                 pagamentos.map((pagamento) => (
-                  <ListGroup.Item key={pagamento.id} className="d-flex justify-content-between">
+                  <ListGroup.Item key={pagamento.id_pagamento} className="d-flex justify-content-between">
                     <div>
-                      <strong>{pagamento.servico}</strong>
+                      <strong>{pagamento.servico.nome}</strong>
                       <div className="text-muted small">
-                        {new Date(pagamento.data).toLocaleDateString("pt-BR")}
+                        {pagamento.data_pagamento
+                          ? new Date(pagamento.data_pagamento).toLocaleDateString("pt-BR")
+                          : "Pagamento Pendente"}
                       </div>
+
                     </div>
                     <div>
                       <Badge bg={pagamento.status === 'pago' ? 'success' : 'warning'}>
@@ -149,6 +153,7 @@ const DashboardClientes = () => {
               ) : (
                 <ListGroup.Item className="text-muted">Nenhum pagamento</ListGroup.Item>
               )}
+
             </ListGroup>
           </Card>
         </Col>

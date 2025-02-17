@@ -6,7 +6,6 @@ import Paginator from '../components/Paginator';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faFilter, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
 
-
 const GerenciarPagamentos = () => {
   const [pagamentos, setPagamentos] = useState([]);
   const [erro, setErro] = useState(null);
@@ -21,48 +20,49 @@ const GerenciarPagamentos = () => {
   const [pesquisaValor, setPesquisaValor] = useState(''); // Valor da pesquisa
   const [pesquisaStatus, setPesquisaStatus] = useState(''); // Status do pagamento
 
-
   const role = localStorage.getItem('role');  // 'cliente', 'colaborador', 'admin'
-
   const isCliente = role === 'cliente';
   const isColaborador = role === 'colaborador';
   const isAdmin = role === 'admin';
 
-  // Captura o ID do agendamento da URL
+  // Captura o ID do pagamento da URL
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const pagamentoId = queryParams.get('pagamentoId');
-  // Efeito para aplicar o filtro automaticamente ao carregar a página
+
   useEffect(() => {
     if (pagamentoId) {
-      setPesquisaTipo('id_pagamento'); // Define o tipo de pesquisa como "agendamento"
-      setPesquisaValor(pagamentoId); // Define o valor da pesquisa como o ID do agendamento
+      setPesquisaTipo('id_pagamento'); // Define o tipo de pesquisa como "id_pagamento"
+      setPesquisaValor(pagamentoId); // Define o valor da pesquisa como o ID
     }
   }, [pagamentoId]);
 
-// Função para chamar a rota de geração de pagamentos automáticos
-const handleGerarPagamentos = async () => {
-  setLoading(true);
-  setSucesso(null);
-  setErro(null);
-  try {
-    const response = await axios.post('http://localhost:5000/pagamentos/gerar_pagamentos_automaticos', {}, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-    });
-    setSucesso(response.data.message);
+  // Função para chamar a rota de geração de faturas automáticas
+  const handleGerarFaturas = async () => {
+    setLoading(true);
+    setSucesso(null);
+    setErro(null);
+    try {
+      const response = await axios.post(
+        'http://localhost:5000/pagamentos/gerar_faturas_automaticas',
+        {},
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+      );
+      setSucesso(response.data.message);
 
-    // Opcional: atualiza a lista de pagamentos após a geração
-    const pagamentosResponse = await axios.get('http://localhost:5000/pagamentos/listar', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-    });
-    setPagamentos(pagamentosResponse.data.pagamentos);
-  } catch (error) {
-    console.error('Erro ao gerar pagamentos:', error);
-    setErro(error.response?.data?.message || 'Erro ao gerar pagamentos.');
-  }
-  setLoading(false);
-};
+      // Opcional: atualiza a lista de pagamentos após a geração
+      const pagamentosResponse = await axios.get('http://localhost:5000/pagamentos/listar', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      setPagamentos(pagamentosResponse.data.pagamentos);
+    } catch (error) {
+      console.error('Erro ao gerar faturas:', error);
+      setErro(error.response?.data?.message || 'Erro ao gerar faturas.');
+    }
+    setLoading(false);
+  };
 
+  // Função para buscar os pagamentos
   useEffect(() => {
     const fetchPagamentos = async () => {
       try {
@@ -94,29 +94,21 @@ const handleGerarPagamentos = async () => {
     setLoading(true);
     setSucesso('');
     try {
-      // Envia a requisição PUT para o backend
       const response = await axios.put(
         `http://localhost:5000/pagamentos/editar/${selectedPagamento.id_pagamento}`,
         selectedPagamento,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        }
+        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
-
-      // Verifica se a resposta do backend foi de sucesso
       if (response.status === 200) {
-        setShowModal(false); // Fecha o modal
-        setLoading(false); // Desativa o carregamento
-        setSucesso(response.data.message); // Exibe a mensagem de sucesso recebida do backend
-
-        // Atualiza a lista de pagamentos
+        setShowModal(false);
+        setLoading(false);
+        setSucesso(response.data.message);
         const pagamentosResponse = await axios.get('http://localhost:5000/pagamentos/listar', {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         setPagamentos(pagamentosResponse.data.pagamentos);
         setErro('');
       } else {
-        // Caso não seja sucesso, exibe a mensagem de erro
         setErro(response.data.message || 'Erro desconhecido. Tente novamente.');
         setLoading(false);
       }
@@ -126,22 +118,23 @@ const handleGerarPagamentos = async () => {
       setLoading(false);
     }
   };
+
   // Função para formatar data UTC para o formato datetime-local
   const formatDateToLocal = (date) => {
     if (!date) return '';
     const localDate = new Date(date);
     return localDate.toISOString().slice(0, 16); // 'YYYY-MM-DDTHH:mm'
   };
+
   // Filtra os pagamentos com base nos critérios selecionados
   const pagamentosFiltrados = pagamentos.filter((pagamento) => {
-    // Filtro por tipo de pesquisa
     const matchesPesquisaTipo = () => {
       switch (pesquisaTipo) {
         case 'id_pagamento':
           if (pagamentoId) {
-            return pagamento.id_pagamento.toString() === pesquisaValor; // Busca exata
+            return pagamento.id_pagamento.toString() === pesquisaValor;
           }
-          return pagamento.id_pagamento.toString().includes(pesquisaValor); // Busca por inclusão em outros casos
+          return pagamento.id_pagamento.toString().includes(pesquisaValor);
         case 'cliente':
           return pagamento.cliente.nome.toLowerCase().includes(pesquisaValor.toLowerCase());
         case 'servico':
@@ -153,217 +146,197 @@ const handleGerarPagamentos = async () => {
       }
     };
 
-    // Filtro por status
     const matchesPesquisaStatus = () => {
-      if (pesquisaStatus === '') return true; // Se nenhum status for selecionado, retorna todos
+      if (pesquisaStatus === '') return true;
       return pagamento.status === pesquisaStatus;
     };
 
-
     return matchesPesquisaTipo() && matchesPesquisaStatus();
   });
+
   const resetPesquisa = () => {
-    setPesquisaTipo(''); // Limpa o tipo de pesquisa
-    setPesquisaValor(''); // Limpa o valor da pesquisa
+    setPesquisaTipo('');
+    setPesquisaValor('');
   };
-
-
-
 
   return (
     <div className="container my-2">
-      
-        
-      <h2 className=" mb-4 text-center text-secondary ">Gerenciar Pagamentos</h2>
-        
+      <h2 className="mb-4 text-center text-secondary">Gerenciar Pagamentos</h2>
+      <div className="card-body">
+        {erro && <div className="alert alert-danger">{erro}</div>}
+        {sucesso && <div className="alert alert-success">{sucesso}</div>}
 
-        <div className="card-body">
-          {erro && <div className="alert alert-danger">{erro}</div>}
-          {sucesso && <div className="alert alert-success">{sucesso}</div>}
-      
-          <div className="row g-3 align-items-center mb-3">
-            {/* Tipo de pesquisa */}
-            <div className="col-md-3">
-              <div className="input-group">
-                <span className="input-group-text">
-                  <FontAwesomeIcon icon={faFilter} />
-                </span>
-                <select
-                  className="form-select"
-                  value={pesquisaTipo}
-                  onChange={(e) => setPesquisaTipo(e.target.value)}
-                >
-                  <option value="id_pagamento">ID do Pagamento</option>
-                  <option value="cliente">Cliente</option>
-                  <option value="servico">Serviço</option>
-                  <option value="clinica">Clínica</option>
-                </select>
-              </div>
+        <div className="row g-3 align-items-center mb-3">
+          {/* Tipo de pesquisa */}
+          <div className="col-md-3">
+            <div className="input-group">
+              <span className="input-group-text">
+                <FontAwesomeIcon icon={faFilter} />
+              </span>
+              <select
+                className="form-select"
+                value={pesquisaTipo}
+                onChange={(e) => setPesquisaTipo(e.target.value)}
+              >
+                <option value="id_pagamento">ID do Pagamento</option>
+                <option value="cliente">Cliente</option>
+                <option value="servico">Serviço</option>
+                <option value="clinica">Clínica</option>
+              </select>
             </div>
-
-            {/* Campo de pesquisa */}
-            <div className="col-md-3">
-              <div className="input-group">
-                <span className="input-group-text">
-                  <FontAwesomeIcon icon={faSearch} />
-                </span>
-                <input
-                  type="text"
-                  className="form-control py-2"
-                  placeholder="Pesquisar..."
-                  value={pesquisaValor}
-                  onChange={(e) => setPesquisaValor(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Status do pagamento */}
-            <div className="col-md-3">
-              <div className="input-group">
-                <span className="input-group-text">
-                  <FontAwesomeIcon icon={faCheckCircle} />
-                </span>
-                <select
-                  className="form-select"
-                  value={pesquisaStatus}
-                  onChange={(e) => setPesquisaStatus(e.target.value)}
-                >
-                  <option value="">Todos os Status</option>
-                  <option value="Pendente">Pendente</option>
-                  <option value="Pago">Pago</option>
-                  <option value="Cancelado">Cancelado</option>
-                  <option value="Atrasado">Atrasado</option>
-                </select>
-              </div>
-
-            </div>
-            
-            <div className="col-md-1">
-              <button onClick={resetPesquisa} className="btn btn-secondary py-1 d-flex align-items-center">
-                <i className="bi bi-x-circle me-2"></i> Limpar
-              </button>
-            </div>
-            {(isAdmin || isColaborador) && (   
-      <div className="col-md-2">
-        <button
-          className="btn btn-login"
-          onClick={handleGerarPagamentos}
-          disabled={loading}
-        >
-          {loading ? 'Gerando pagamentos...' : 'Gerar Pagamentos Automáticos'}
-        </button>
-      </div>
-      )}
-
-
           </div>
 
-          <div className="table-responsive">
-            <table className="table table-striped table-bordered mt-4 agendamento-header">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Cliente</th>
-                  <th>Serviço</th>
-                  <th>Clínica</th>
-                  <th>Valor</th>
-                  <th>Método de Pagamento</th>
-                  <th>Status</th>
-                  <th>Data de Pagamento</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody className="text-center">
-                {pagamentosFiltrados.map((pagamento) => (
-                  <tr key={pagamento.id_pagamento}>
-                    <td>{pagamento.id_pagamento}</td>
-                    <td>{pagamento.cliente.nome}</td>
-                    <td>
-                      {pagamento.servico.nome}
-                      {/* Exibe o nome e a descrição do plano, se houver */}
-                      {pagamento.plano && (
-                        <div>
-                          <strong>{pagamento.plano.nome}</strong><br />
-                          {pagamento.plano.descricao}
-                        </div>
-                      )}
-                    </td>
-                    <td>{pagamento.clinica?.nome}</td>
-                    <td>
-                      {new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL',
-                      }).format(pagamento.valor)}
-                    </td>
-                    <td>{pagamento.metodo_pagamento}</td>
-                    <td>
-                      {
-                        pagamento.status === "Pendente" ? (
-                          <>
-                            <i className="bi bi-hourglass-split" style={{ color: 'gray' }}></i>
-                            <span style={{ color: 'gray' }}> </span>
-                          </>
-                        ) : pagamento.status === "Pago" ? (
-                          <>
-                            <i className="bi bi-check-circle" style={{ color: 'green' }}></i>
-                            <span style={{ color: 'green' }}></span>
-                          </>
-                        ) : pagamento.status === "Cancelado" ? (
-                          <>
-                            <i className="bi bi-x-circle" style={{ color: 'red' }}></i>
-                            <span style={{ color: 'red' }}></span>
-                          </>
-                        ) : pagamento.status === "Atrasado" ? (
-                          <>
-                            <i className="bi bi-clock" style={{ color: 'orange' }}></i> {/* Ícone de relógio */}
-                            <span style={{ color: 'orange' }}>Atrasado</span>
-                          </>
-                        ) : null
-                      }
-                    </td>
+          {/* Campo de pesquisa */}
+          <div className="col-md-3">
+            <div className="input-group">
+              <span className="input-group-text">
+                <FontAwesomeIcon icon={faSearch} />
+              </span>
+              <input
+                type="text"
+                className="form-control py-2"
+                placeholder="Pesquisar..."
+                value={pesquisaValor}
+                onChange={(e) => setPesquisaValor(e.target.value)}
+              />
+            </div>
+          </div>
 
+          {/* Status do pagamento */}
+          <div className="col-md-3">
+            <div className="input-group">
+              <span className="input-group-text">
+                <FontAwesomeIcon icon={faCheckCircle} />
+              </span>
+              <select
+                className="form-select"
+                value={pesquisaStatus}
+                onChange={(e) => setPesquisaStatus(e.target.value)}
+              >
+                <option value="">Todos os Status</option>
+                <option value="Pendente">Pendente</option>
+                <option value="Pago">Pago</option>
+                <option value="Cancelado">Cancelado</option>
+                <option value="Atrasado">Atrasado</option>
+              </select>
+            </div>
+          </div>
 
+          <div className="col-md-1">
+            <button onClick={resetPesquisa} className="btn btn-secondary py-1 d-flex align-items-center">
+              <i className="bi bi-x-circle me-2"></i> Limpar
+            </button>
+          </div>
 
-                    <td>
-                      {pagamento.data_pagamento && new Date(pagamento.data_pagamento).toLocaleString('pt-BR', {
+          {(isAdmin || isColaborador) && (
+            <>
+              <div className="col-md-2">
+                <button
+                  className="btn btn-login"
+                  onClick={handleGerarFaturas}
+                  disabled={loading}
+                >
+                  {loading ? 'Gerando faturas...' : 'Gerar Faturas Automáticas'}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="table-responsive">
+          <table className="table table-striped table-bordered mt-4 agendamento-header">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Cliente</th>
+                <th>Serviço</th>
+                <th>Clínica</th>
+                <th>Valor</th>
+                <th>Método de Pagamento</th>
+                <th>Status</th>
+                <th>Data de Pagamento</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody className="text-center">
+              {pagamentosFiltrados.map((pagamento) => (
+                <tr key={pagamento.id_pagamento}>
+                  <td>{pagamento.id_pagamento}</td>
+                  <td>{pagamento.cliente.nome}</td>
+                  <td>
+                    {pagamento.servico.nome}
+                    {pagamento.plano && (
+                      <div>
+                        <strong>{pagamento.plano.nome}</strong>
+                        <br />
+                        {pagamento.plano.descricao}
+                      </div>
+                    )}
+                  </td>
+                  <td>{pagamento.clinica?.nome}</td>
+                  <td>
+                    {new Intl.NumberFormat('pt-BR', {
+                      style: 'currency',
+                      currency: 'BRL',
+                    }).format(pagamento.valor)}
+                  </td>
+                  <td>{pagamento.metodo_pagamento}</td>
+                  <td>
+                    {pagamento.status === "Pendente" ? (
+                      <>
+                        <i className="bi bi-hourglass-split" style={{ color: 'gray' }}></i>
+                        <span style={{ color: 'gray' }}> Pendente</span>
+                      </>
+                    ) : pagamento.status === "Pago" ? (
+                      <>
+                        <i className="bi bi-check-circle" style={{ color: 'green' }}></i>
+                        <span style={{ color: 'green' }}> Pago</span>
+                      </>
+                    ) : pagamento.status === "Cancelado" ? (
+                      <>
+                        <i className="bi bi-x-circle" style={{ color: 'red' }}></i>
+                        <span style={{ color: 'red' }}> Cancelado</span>
+                      </>
+                    ) : pagamento.status === "Atrasado" ? (
+                      <>
+                        <i className="bi bi-clock" style={{ color: 'orange' }}></i>
+                        <span style={{ color: 'orange' }}> Atrasado</span>
+                      </>
+                    ) : null}
+                  </td>
+                  <td>
+                    {pagamento.data_pagamento &&
+                      new Date(pagamento.data_pagamento).toLocaleString('pt-BR', {
                         day: '2-digit',
                         month: '2-digit',
                         year: 'numeric',
                         hour: '2-digit',
                         minute: '2-digit'
                       })}
-                    </td>
-
-
-                    <td>
-                      {(isAdmin || isColaborador) && (
-                        <button
-                          className="btn btn-warning btn-sm"
-                          onClick={() => handleShowEditModal(pagamento)}
-                        >
-                          <i className="bi bi-pencil-square"></i>
-                        </button>
-                      )}
+                  </td>
+                  <td>
+                    {(isAdmin || isColaborador) && (
                       <button
-                        className="btn btn-info btn-sm"
+                        className="btn btn-warning btn-sm"
+                        onClick={() => handleShowEditModal(pagamento)}
                       >
-                        <i className="bi bi-file-earmark-text"></i> Gerar fatura
+                        <i className="bi bi-pencil-square"></i>
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <Paginator
-            currentPage={currentPage}
-            totalItems={pagamentos.length}
-            itemsPerPage={itemsPerPage}
-            setCurrentPage={setCurrentPage}
-          />
+                    )}                   
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      
+
+        <Paginator
+          currentPage={currentPage}
+          totalItems={pagamentos.length}
+          itemsPerPage={itemsPerPage}
+          setCurrentPage={setCurrentPage}
+        />
+      </div>
 
       {/* Modal de Edição de Pagamento */}
       <Modal show={showModal} onHide={handleCloseModal}>
@@ -387,7 +360,6 @@ const handleGerarPagamentos = async () => {
                       ...prevState,
                       valor: parseFloat(e.target.value) || null,
                     }));
-
                   }}
                   disabled={isCliente}
                 />
@@ -417,8 +389,6 @@ const handleGerarPagamentos = async () => {
                 </select>
               </div>
 
-
-              {/* Status */}
               {(isAdmin || isColaborador) && (
                 <div className="mb-3">
                   <label htmlFor="status" className="form-label">Status</label>
@@ -438,7 +408,6 @@ const handleGerarPagamentos = async () => {
                 </div>
               )}
 
-              {/* Data de Pagamento */}
               <div className="mb-3">
                 <label htmlFor="data_pagamento" className="form-label">Data de Pagamento</label>
                 <input
@@ -447,18 +416,16 @@ const handleGerarPagamentos = async () => {
                   id="data_pagamento"
                   value={formatDateToLocal(selectedPagamento.data_pagamento)}
                   onChange={(e) => {
-                    // Converte a data para o formato UTC ao enviar para o backend
                     const localDate = new Date(e.target.value);
                     setSelectedPagamento((prevState) => ({
                       ...prevState,
-                      data_pagamento: localDate.toISOString(), // Envia para o backend no formato UTC
+                      data_pagamento: localDate.toISOString(),
                     }));
                   }}
                   disabled={isCliente}
                 />
               </div>
 
-              {/* Referência de Pagamento */}
               <div className="mb-3">
                 <label htmlFor="referencia_pagamento" className="form-label">Referência de Pagamento</label>
                 <input
@@ -483,8 +450,7 @@ const handleGerarPagamentos = async () => {
           <button className="btn btn-primary" onClick={handleSalvarAlteracoes}>Salvar alterações</button>
         </Modal.Footer>
       </Modal>
-
-    </div >
+    </div>
   );
 };
 

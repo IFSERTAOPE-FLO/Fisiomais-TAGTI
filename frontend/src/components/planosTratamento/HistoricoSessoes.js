@@ -3,6 +3,7 @@ import { Form, Button, Table, Modal, Alert, Card, Row, Col } from 'react-bootstr
 import { FaCalendarAlt, FaUser, FaEdit, FaTrash, FaPlus, FaFileMedical, FaFilePdf } from 'react-icons/fa';
 import axios from 'axios';
 import IniciarPlanoTratamento from './IniciarPlanoTratamento';
+import "./css/Planosdetratamento.css";
 
 import Paginator from '../Paginator'; // Certifique-se de que o caminho está correto
 import CriarAgendamento from "../../pages/CriarAgendamento";
@@ -162,18 +163,23 @@ const HistoricoSessoes = () => {
                             {selectedCliente && (
                                 <div className="d-flex justify-content-end mb-3">
                                     <Button className="btn btn-login" onClick={() => handleShowModal()}>
-                                        <FaPlus className="me-2" />Nova Sessão
+                                        <FaPlus className="me-2" />
+                                        Iniciar Novo Tratamento
                                     </Button>
-                                    {!showCriarAgendamento ? (
-                                        <button className="btn btn-signup ms-2" onClick={() => setShowCriarAgendamento(true)}>
-                                            <FaPlus className="me-2" />Criar Agendamento
-                                        </button>
-                                    ) : (
-                                        <button className="btn btn-signup ms-2 " onClick={() => setShowCriarAgendamento(false)}>
-                                            Voltar
-                                        </button>
+                                    {sessoes.length > 0 && (
+                                        !showCriarAgendamento ? (
+                                            <button className="btn btn-signup ms-2" onClick={() => setShowCriarAgendamento(true)}>
+                                                <FaPlus className="me-2" />Criar Agendamento
+                                            </button>
+                                        ) : (
+                                            <button className="btn btn-signup ms-2" onClick={() => setShowCriarAgendamento(false)}>
+                                                Voltar
+                                            </button>
+                                        )
                                     )}
-                                </div>)}
+                                </div>
+                            )}
+
 
                         </Col>
                     </Row>
@@ -181,110 +187,130 @@ const HistoricoSessoes = () => {
                     {selectedCliente && (
                         <>
                             {showCriarAgendamento && (
-
-                                <CriarAgendamento />
-
+                                <CriarAgendamento
+                                    historicoAgendamento={true}
+                                    idCliente={selectedCliente}
+                                    // Aqui, após o agendamento, atualiza as sessões (passando o id do cliente)
+                                    onAgendamentoSuccess={() => fetchSessoes(selectedCliente)}
+                                />
                             )}
 
 
 
+
                             <div className="table-responsive">
-                                <table className="table table-striped table-bordered mt-4 agendamento-header" >
-                                    <thead >
-                                        <tr>
-                                            <th>
-                                                <FaCalendarAlt className="me-2" />Data
-                                            </th>
-                                            <th>Detalhes da Sessão</th>
-                                            <th>Plano de Tratamento</th>
-                                            <th>Ficha de Anamnese</th>
-                                            <th>Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {currentSessoes.map(sessao => (
-                                            <tr key={sessao.id_sessao}>
-                                                <td>
-                                                    {new Date(sessao.data_sessao).toLocaleDateString('pt-BR', {
-                                                        day: '2-digit',
-                                                        month: 'long',
-                                                        year: 'numeric'
-                                                    })}
-                                                </td>
-                                                <td className="text-muted">{sessao.detalhes}</td>
-                                                <td>
-                                                    {sessao.plano_tratamento ? (
-                                                        <div>
-                                                            <p className="mb-1">
-                                                                <strong>Diagnóstico:</strong> {sessao.plano_tratamento.diagnostico}
-                                                            </p>
-                                                            <p className="mb-1">
-                                                                <strong>Objetivos:</strong> {sessao.plano_tratamento.objetivos}
-                                                            </p>
-                                                            <p className="mb-1">
-                                                                <strong>Metodologia:</strong> {sessao.plano_tratamento.metodologia}
-                                                            </p>
-                                                            <p className="mb-1">
-                                                                <strong>Duração:</strong> {sessao.plano_tratamento.duracao_prevista} semanas
-                                                            </p>
-                                                            <p className="mb-1">
-                                                                <strong>Valor:</strong>{' '}
-                                                                {sessao.plano_tratamento.valor
-                                                                    ? `R$ ${sessao.plano_tratamento.valor.toFixed(2)}`
-                                                                    : 'N/A'}
-                                                            </p>
-                                                            {sessao.plano_tratamento.servicos &&
-                                                                sessao.plano_tratamento.servicos.length > 0 && (
-                                                                    <div>
-                                                                        <strong>Serviços:</strong>
-                                                                        <ul className="list-unstyled mb-0">
-                                                                            {sessao.plano_tratamento.servicos.map(servico => (
-                                                                                <li key={servico.id_servico} className="small">
-                                                                                    {servico.nome} (Sessões: {servico.quantidade_sessoes})
-                                                                                </li>
-                                                                            ))}
-                                                                        </ul>
-                                                                    </div>
-                                                                )}
-                                                        </div>
-                                                    ) : (
-                                                        "N/A"
-                                                    )}
-                                                </td>
-                                                <td>
-                                                    {sessao.ficha_anamnese && (
-                                                        <a
-                                                            href={`${apiBaseUrl}${sessao.ficha_anamnese}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="text-primary"
-                                                        >
-                                                            <FaFilePdf className="me-1" />
-                                                            Visualizar
-                                                        </a>
-                                                    )}
-                                                </td>
-                                                <td>
-                                                    <Button
-                                                        variant="outline-warning"
-                                                        size="sm"
-                                                        className="me-2"
-                                                        onClick={() => handleShowModal(sessao)}
-                                                    >
-                                                        <FaEdit />
-                                                    </Button>
-                                                    <Button
-                                                        variant="outline-danger"
-                                                        size="sm"
-                                                        onClick={() => handleDelete(sessao.id_sessao)}
-                                                    >
-                                                        <FaTrash />
-                                                    </Button>
-                                                </td>
+                                {currentSessoes.length === 0 ? (
+                                    <div className="alert alert-info text-center my-4" role="alert">
+                                        <h5 className="alert-heading">Não existe registros de sessões para o paciente!</h5>
+                                        <p>
+                                            Ainda não há registros de sessões. Por favor, verifique mais tarde ou registre uma nova sessão.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <table className="table table-hover table-bordered mt-4 agendamento-header shadow-sm">
+                                        <thead className="table-dark">
+                                            <tr>
+                                                <th>
+                                                    <FaCalendarAlt className="me-2" />Data
+                                                </th>
+                                                <th>Detalhes da Sessão</th>
+                                                <th>Plano de Tratamento</th>
+                                                <th>Ficha de Anamnese</th>
+                                                <th>Observações</th>
+                                                <th>Ações</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            {currentSessoes.map((sessao) => (
+                                                <tr key={sessao.id_sessao}>
+                                                    <td className="fw-bold text-primary">
+                                                        {new Date(sessao.data_sessao).toLocaleDateString("pt-BR", {
+                                                            day: "2-digit",
+                                                            month: "long",
+                                                            year: "numeric",
+                                                        })}
+                                                    </td>
+                                                    <td className="text-muted">{sessao.detalhes || "Sem detalhes"}</td>
+                                                    <td>
+                                                        {sessao.plano_tratamento ? (
+                                                            <div className="bg-light p-2 rounded">
+                                                                <p className="mb-1">
+                                                                    <strong>Diagnóstico:</strong> {sessao.plano_tratamento.diagnostico}
+                                                                </p>
+                                                                <p className="mb-1">
+                                                                    <strong>Objetivos:</strong> {sessao.plano_tratamento.objetivos}
+                                                                </p>
+                                                                <p className="mb-1">
+                                                                    <strong>Metodologia:</strong> {sessao.plano_tratamento.metodologia}
+                                                                </p>
+                                                                <p className="mb-1">
+                                                                    <strong>Duração:</strong> {sessao.plano_tratamento.duracao_prevista} semanas
+                                                                </p>
+                                                                <p className="mb-1">
+                                                                    <strong>Valor:</strong>{" "}
+                                                                    {sessao.plano_tratamento.valor
+                                                                        ? `R$ ${sessao.plano_tratamento.valor.toFixed(2)}`
+                                                                        : "N/A"}
+                                                                </p>
+                                                                {sessao.plano_tratamento.servicos &&
+                                                                    sessao.plano_tratamento.servicos.length > 0 && (
+                                                                        <div>
+                                                                            <strong>Serviços:</strong>
+                                                                            <ul className="list-unstyled mb-0">
+                                                                                {sessao.plano_tratamento.servicos.map((servico) => (
+                                                                                    <li key={servico.id_servico} className="small text-secondary">
+                                                                                        {servico.nome} (Sessões: {servico.quantidade_sessoes})
+                                                                                    </li>
+                                                                                ))}
+                                                                            </ul>
+                                                                        </div>
+                                                                    )}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-danger">N/A</span>
+                                                        )}
+                                                    </td>
+                                                    <td>
+                                                        {sessao.ficha_anamnese ? (
+                                                            <a
+                                                                href={`${apiBaseUrl}${sessao.ficha_anamnese}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-primary fw-bold"
+                                                            >
+                                                                <FaFilePdf className="me-1" />
+                                                                Visualizar
+                                                            </a>
+                                                        ) : (
+                                                            <span className="text-secondary">Sem ficha</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="text-muted">
+                                                        {sessao.observacoes || <span className="text-secondary">Sem observações</span>}
+                                                    </td>
+                                                    <td>
+                                                        <Button
+                                                            variant="outline-warning"
+                                                            size="sm"
+                                                            className="me-2"
+                                                            onClick={() => handleShowModal(sessao)}
+                                                        >
+                                                            <FaEdit />
+                                                        </Button>
+                                                        <Button
+                                                            variant="outline-danger"
+                                                            size="sm"
+                                                            onClick={() => handleDelete(sessao.id_sessao)}
+                                                        >
+                                                            <FaTrash />
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
+
                             </div>
 
                         </>
@@ -383,7 +409,7 @@ const HistoricoSessoes = () => {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={handleCloseModal}>Cancelar</Button>
-                    <Button variant="primary" onClick={handleSubmit}>Salvar Registro</Button>
+                    <Button className="btn btn2-custom" onClick={handleSubmit}>Salvar Registro</Button>
                 </Modal.Footer>
             </Modal>
         </div>

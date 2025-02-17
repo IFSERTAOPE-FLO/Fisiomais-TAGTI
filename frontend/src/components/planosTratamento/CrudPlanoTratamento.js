@@ -172,7 +172,7 @@ const CrudPlanosTratamento = () => {
             {success && <Alert variant="success">{success}</Alert>}
 
             <div className="mb-3">
-                <Button variant="primary" onClick={() => setShowModal(true)}>
+                <Button className="btn btn-custom" onClick={() => setShowModal(true)}>
                     Novo Plano
                 </Button>
                 <Form.Control
@@ -321,7 +321,7 @@ const CrudPlanosTratamento = () => {
                                                         htmlFor={`servico-${servico.id_servico}`}
                                                         className="form-check-label text-dark" // Classe para garantir texto escuro
                                                     >
-                                                        {servico.nome}
+                                                        {servico.nome} <small>número de sessões</small>
                                                     </label>
                                                 </div>
 
@@ -350,7 +350,7 @@ const CrudPlanosTratamento = () => {
                         <Button variant="secondary" onClick={handleClose}>
                             Cancelar
                         </Button>
-                        <Button variant="primary" type="submit">
+                        <Button className="btn btn2-custom" type="submit">
                             Salvar
                         </Button>
                     </Modal.Footer>

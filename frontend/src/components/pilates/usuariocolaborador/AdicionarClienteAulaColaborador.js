@@ -1,226 +1,193 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Modal, } from "react-bootstrap";
-import { FaUserMinus } from 'react-icons/fa'; // Ícones de adicionar e remover
-import Select from 'react-select';
+import { Modal } from "react-bootstrap";
+import { FaUserMinus } from "react-icons/fa";
+import Select from "react-select";
 
-const AdicionarClienteAulaColaborador = ({ aulaId, showModal, handleClose }) => {
-    const [colaboradorId, setColaboradorId] = useState("");
-    const [clienteId, setClienteId] = useState("");
-    const [clientes, setClientes] = useState([]);
-    const [clienteOptions, setClienteOptions] = useState([]);
-    const [aulas, setAulas] = useState([]);
-    const [clientesNaAula, setClientesNaAula] = useState([]); // Clientes já associados à aula
-    const [erro, setErro] = useState("");
-    const [sucesso, setSucesso] = useState("");
-    const [aulaSelecionada, setAulaSelecionada] = useState('');  // Estado para a aula selecionada
-    const token = localStorage.getItem("token");
-    const apiBaseUrl = "http://localhost:5000/";
+const AdicionarClienteAulaColaborador = ({ showModal, handleClose }) => {
+  // Estado para clientes selecionados (multi-select)
+  const [clienteIds, setClienteIds] = useState([]);
+  // Estado para aulas selecionadas (multi-select)
+  const [aulaIds, setAulaIds] = useState([]);
+  const [clientes, setClientes] = useState([]);
+  const [clienteOptions, setClienteOptions] = useState([]);
+  const [aulas, setAulas] = useState([]);
+  const [aulaOptions, setAulaOptions] = useState([]);
+  const [erro, setErro] = useState("");
+  const [sucesso, setSucesso] = useState("");
+  const token = localStorage.getItem("token");
+  const apiBaseUrl = "http://localhost:5000/";
 
-    useEffect(() => {
-        if (aulaId) {
-            setAulaSelecionada(aulaId);
-            buscarClientesDaAula(aulaId);
+  useEffect(() => {
+    // Função para buscar as aulas
+    const fetchAulas = async () => {
+      try {
+        const response = await fetch(`${apiBaseUrl}pilates/listar_aulas`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await response.json();
+        if (response.ok) {
+          setAulas(data);
+          // Cada aula deve exibir o dia, horário e o nome do instrutor (colaborador)
+          const options = data.map((aula) => ({
+            value: aula.id_aula,
+            label: `${aula.dia_semana} (${aula.hora_inicio} - ${aula.hora_fim}) | Instrutor: ${aula.colaborador && aula.colaborador.nome ? aula.colaborador.nome : "N/D"}`,
+          }));
+          setAulaOptions(options);
+        } else {
+          setErro(data.message || "Erro ao carregar as aulas.");
         }
-    }, [aulaId]);
-
-    useEffect(() => {
-        const fetchAulas = async () => {
-            try {
-                const response = await fetch(`${apiBaseUrl}pilates/listar_aulas`, {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                });
-                const data = await response.json();
-                if (response.ok) setAulas(data);
-                else setErro(data.message || "Erro ao carregar as aulas.");
-            } catch (err) {
-                setErro("Erro ao carregar as aulas.");
-            }
-        };
-
-        const fetchClientes = async () => {
-            try {
-                const response = await fetch(`${apiBaseUrl}clientes/`, {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                });
-                const data = await response.json();
-
-                if (response.ok) {
-                    setClientes(data); // Supondo que a resposta seja um array de clientes
-                    setClienteOptions(
-                        data.map(cliente => ({ value: cliente.ID_Cliente, label: cliente.Nome }))
-                    );
-                }
-                else setErro(data.message || "Erro ao carregar os clientes.");
-            } catch (err) {
-                setErro("Erro ao carregar os clientes.");
-            }
-        };
-        setErro("");
-        setSucesso("");
-        fetchAulas();
-        fetchClientes();
-    }, [token]);
-
-    useEffect(() => {
-        if (aulaSelecionada) {
-            buscarClientesDaAula(aulaSelecionada);
-        }
-    }, [aulaSelecionada]);
-
-    const buscarClientesDaAula = async (aulaId) => {
-        try {
-            const response = await fetch(`${apiBaseUrl}pilates/aula/${aulaId}/clientes`, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-            });
-            const data = await response.json();
-            if (response.ok) setClientesNaAula(data.clientes || []);
-            else setErro(data.message || "Erro ao buscar clientes da aula.");
-        } catch (err) {
-            setErro("Erro ao carregar clientes da aula.");
-        }
-    };
-    const handleClienteChange = selectedOption => {
-        setClienteId(selectedOption ? selectedOption.value : "");
+      } catch (err) {
+        setErro("Erro ao carregar as aulas.");
+      }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await fetch(`${apiBaseUrl}pilates/colaborador/adicionar_cliente_aula`, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    colaborador_id: colaboradorId,
-                    cliente_id: clienteId,
-                    aula_id: aulaSelecionada,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setSucesso("Cliente adicionado à aula com sucesso!");
-                setClienteId("");
-                buscarClientesDaAula(aulaSelecionada); // Atualiza a lista de clientes
-            } else {
-                setErro(data.message || "Erro ao adicionar cliente à aula.");
-            }
-        } catch (err) {
-            setErro("Erro na requisição.");
+    // Função para buscar os clientes
+    const fetchClientes = async () => {
+      try {
+        const response = await fetch(`${apiBaseUrl}clientes/`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await response.json();
+        if (response.ok) {
+          setClientes(data);
+          const options = data.map((cliente) => ({
+            value: cliente.ID_Cliente, // Certifique-se de que o backend retorna 'id_cliente'
+            label: cliente.Nome,         // e 'nome'
+          }));
+          setErro('');
+          setSucesso('');
+          setClienteOptions(options);
+        } else {
+          setErro(data.message || "Erro ao carregar os clientes.");          
+          setSucesso('');
         }
+      } catch (err) {
+        setErro("Erro ao carregar os clientes.");
+      }
     };
 
-    const handleRemoveCliente = async (clienteId) => {
-        try {
-            const response = await fetch(`${apiBaseUrl}pilates/colaborador/remover_cliente_aula`, {
-                method: "DELETE",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    cliente_id: clienteId,
-                    aula_id: aulaSelecionada,
-                }),
-            });
+    setErro("");
+    setSucesso("");
+    fetchAulas();
+    fetchClientes();
+  }, [token, apiBaseUrl]);
 
-            const data = await response.json();
+  // Atualiza o array de clientes selecionados (multi-select)
+  const handleClienteChange = (selectedOptions) => {
+    setClienteIds(selectedOptions ? selectedOptions.map((option) => option.value) : []);
+  };
 
-            if (response.ok) {
-                setSucesso("Cliente removido com sucesso da aula!");
-                buscarClientesDaAula(aulaSelecionada); // Atualiza a lista de clientes
-            } else {
-                setErro(data.message || "Erro ao remover cliente da aula.");
-            }
-        } catch (err) {
-            setErro("Erro na requisição.");
+  // Atualiza o array de aulas selecionadas (multi-select)
+  const handleAulasChange = (selectedOptions) => {
+    setAulaIds(selectedOptions ? selectedOptions.map((option) => option.value) : []);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      // Envia os dados com forcarCadastro = false inicialmente
+      const bodyData = {
+        cliente_id: clienteIds,
+        aula_id: aulaIds,
+        forcarCadastro: false,
+      };
+
+      const response = await fetch(`${apiBaseUrl}pilates/colaborador/adicionar_cliente_aula`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(bodyData),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setSucesso(data.message);
+        setClienteIds([]);
+        setAulaIds([]);
+      } else if (response.status === 409 && data.limitReached) {
+        // Se o limite do plano foi atingido, pergunta se deseja continuar mesmo assim
+        if (window.confirm(data.message + " Deseja continuar mesmo assim?")) {
+          const forceResponse = await fetch(`${apiBaseUrl}pilates/colaborador/adicionar_cliente_aula`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              cliente_id: clienteIds,
+              aula_id: aulaIds,
+              forcarCadastro: true,
+            }),
+          });
+          const forceData = await forceResponse.json();
+          if (forceResponse.ok) {
+            setSucesso(forceData.message);
+            setClienteIds([]);
+            setAulaIds([]);
+          } else {
+            setErro(forceData.message || "Erro ao forçar o cadastro.");
+          }
         }
-    };
+      } else {
+        setErro(data.message || "Erro ao adicionar cliente à(s) aula(s).");
+      }
+    } catch (err) {
+      setErro("Erro na requisição.");
+    }
+  };
 
-    return (
-        <Modal show={showModal} onHide={handleClose}>
-            <Modal.Header closeButton>
-                <Modal.Title>Adicionar Cliente à Aula</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                {erro && <p className="alert alert-danger ">{erro}</p>}
-                {sucesso && <p className="alert alert-success">{sucesso}</p>}
-                <form onSubmit={handleSubmit}>
-                    {/* Campo de seleção da aula (somente leitura) */}
-                    <select
-                        className="form-control"
-                        value={aulaSelecionada.id_aula || ""}
-                        disabled  // Tornando o campo somente leitura
-                        required
-                        hidden
-                    >
-                    </select>
-
-                    {/* Campo de seleção de cliente */}
-                    <div className="form-group mb-3">
-                        <div className="d-flex justify-content-between">
-                            <Select
-                                className="form-control me-3" // Ajusta o tamanho
-                                value={clienteOptions.find(option => option.value === clienteId)}
-                                onChange={handleClienteChange}
-                                options={clienteOptions}
-                                placeholder="Pesquise e selecione um cliente"
-                                required
-                            />
-                            <button
-                                type="submit"
-                                className="btn btn-login btn-sm ml-1" // Adiciona margem à esquerda do botão
-                            >
-                                <i className="bi bi-person-plus "></i>
-                            </button>
-                        </div>
-                    </div>
-                </form>
-
-                <div className="container mt-4">
-                    <h5 className="text-secondary">Clientes na Aula</h5>
-                    <ul className="list-group">
-                        {clientesNaAula.length > 0 ? (
-                            <div className="row">
-                                {clientesNaAula.map((cliente) => (
-                                    <div key={cliente.id_cliente} className="col-md-6 mb-3">
-                                        <li className="list-group-item d-flex justify-content-between align-items-center">
-                                            <span>{cliente.nome}</span>
-                                            <button
-                                                className="btn btn-danger btn-sm"
-                                                onClick={() => handleRemoveCliente(cliente.id_cliente)}
-                                            >
-                                                <FaUserMinus size={14} /> {/* Ícone menor */}
-                                            </button>
-                                        </li>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-muted">Nenhum cliente cadastrado nesta aula.</p>
-                        )}
-                    </ul>
-                </div>
-            </Modal.Body>
-
-        </Modal>
-    );
+  return (
+    <Modal show={showModal} onHide={handleClose}>
+      <Modal.Header closeButton>
+        <Modal.Title>Adicionar Cliente à Aula(s)</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        {erro && <p className="alert alert-danger">{erro}</p>}
+        {sucesso && <p className="alert alert-success">{sucesso}</p>}
+        <form onSubmit={handleSubmit}>
+          {/* Seleção de Clientes */}
+          <div className="form-group mb-3">
+            <label>Selecione o(s) Cliente(s):</label>
+            <Select
+              isMulti
+              value={clienteOptions.filter((option) => clienteIds.includes(option.value))}
+              onChange={handleClienteChange}
+              options={clienteOptions}
+              placeholder="Pesquise e selecione um ou mais clientes"
+              isClearable
+              required
+            />
+          </div>
+          {/* Seleção de Aulas (permite múltipla seleção) */}
+          <div className="form-group mb-3">
+            <label>Selecione a(s) Aula(s):</label>
+            <Select
+              isMulti
+              value={aulaOptions.filter((option) => aulaIds.includes(option.value))}
+              onChange={handleAulasChange}
+              options={aulaOptions}
+              placeholder="Selecione uma ou mais aulas"
+              required
+            />
+          </div>
+          <button type="submit" className="btn btn-login btn-sm">
+            <i className="bi bi-person-plus"></i> Adicionar Cliente à(s) Aula(s)
+          </button>
+        </form>
+      </Modal.Body>
+    </Modal>
+  );
 };
 
 export default AdicionarClienteAulaColaborador;
