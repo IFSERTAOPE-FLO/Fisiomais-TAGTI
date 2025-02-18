@@ -307,13 +307,13 @@ const GerenciarAulasPilates = () => {
                         {selectedAulas.length > 0 && (
                             <>
                                 <button
-                                    className="btn btn-danger"
+                                    className="btn btn-signup  "
                                     onClick={excluirAulasSelecionadas}
                                 >
                                     <i className="bi bi-trash"></i> Excluir Aulas Selecionadas
                                 </button>
                                 <button
-                                    className="btn btn-success"
+                                    className="btn btn-login"
                                     onClick={criarAgendamentosSelecionados}
                                 >
                                     <i className="bi bi-calendar-plus"></i> Criar Agendamentos para Selecionadas
@@ -336,13 +336,13 @@ const GerenciarAulasPilates = () => {
                             </button>
                         )}
                         <button
-                            className="btn btn-signup"
+                            className="btn btn-login"
                             onClick={() => setAdicionandoAgendamento(true)}
                         >
                             <i className="bi bi-plus-circle"></i> Vincular plano
                         </button>
                         <button
-                            className="btn btn-primary"
+                            className="btn btn-login"
                             onClick={() => handleOpenModal()}
                             title="Clique para vincular alunos à aulas"
                         >

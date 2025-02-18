@@ -289,21 +289,24 @@ const HistoricoSessoes = () => {
                                                         {sessao.observacoes || <span className="text-secondary">Sem observações</span>}
                                                     </td>
                                                     <td>
-                                                        <Button
-                                                            variant="outline-warning"
-                                                            size="sm"
-                                                            className="me-2"
-                                                            onClick={() => handleShowModal(sessao)}
-                                                        >
-                                                            <FaEdit />
-                                                        </Button>
-                                                        <Button
-                                                            variant="outline-danger"
-                                                            size="sm"
-                                                            onClick={() => handleDelete(sessao.id_sessao)}
-                                                        >
-                                                            <FaTrash />
-                                                        </Button>
+                                                        <td>
+                                                            <div className="d-flex justify-content-end">
+                                                                <Button
+                                                                    className="btn btn-warning btn-sm me-2"
+                                                                    size="sm"
+                                                                    onClick={() => handleShowModal(sessao)}
+                                                                >
+                                                                    <i className="bi bi-pencil"></i>
+                                                                </Button>
+                                                                <Button
+                                                                    className='btn btn-danger btn-sm'
+                                                                    size="sm"
+                                                                    onClick={() => handleDelete(sessao.id_sessao)}
+                                                                >
+                                                                    <i className="bi bi-trash"></i>
+                                                                </Button>
+                                                            </div>
+                                                        </td>
                                                     </td>
                                                 </tr>
                                             ))}

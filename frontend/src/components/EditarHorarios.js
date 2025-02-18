@@ -34,6 +34,7 @@ const EditarHorarios = ({
   const [fillHoraFim, setFillHoraFim] = useState("");
   const [showFillModal, setShowFillModal] = useState(false);
 
+  // Lista de dias com a formatação exibida no front-end
   const diasSemana = [
     "Segunda-feira",
     "Terça-feira",
@@ -43,6 +44,11 @@ const EditarHorarios = ({
     "Sábado",
     "Domingo",
   ];
+
+  // Função para normalizar o nome do dia (removendo acentos e forçando minúsculo)
+  const normalizeDay = (dia) => {
+    return dia.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  };
 
   const listarHorarios = useCallback(async () => {
     try {
@@ -100,6 +106,13 @@ const EditarHorarios = ({
 
     try {
       const token = localStorage.getItem("token");
+
+      // Mapeia os horários para normalizar o nome do dia antes de enviar para o backend
+      const horariosEnvio = novoHorarios.map((horario) => ({
+        ...horario,
+        dia_semana: normalizeDay(horario.dia_semana),
+      }));
+
       const response = await fetch(
         "http://localhost:5000/colaboradores/horarios/configurar",
         {
@@ -110,7 +123,7 @@ const EditarHorarios = ({
           },
           body: JSON.stringify({
             colaborador_id: colaboradorId,
-            horarios: novoHorarios,
+            horarios: horariosEnvio,
           }),
         }
       );
