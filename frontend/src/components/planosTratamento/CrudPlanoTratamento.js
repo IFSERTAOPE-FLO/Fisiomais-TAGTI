@@ -203,11 +203,11 @@ const CrudPlanosTratamento = () => {
                             <td>R$ {plano.valor?.toFixed(2)}</td>
                             <td>
                                 <div className="d-flex justify-content-center gap-2">
-                                <Button className="btn btn-warning"  onClick={() => handleEdit(plano)}>
+                                <Button className="btn btn-warning btn-sm"  onClick={() => handleEdit(plano)}>
                                 <i className="bi bi-pencil"></i>
                                 
                                 </Button>
-                                <Button className="btn btn-danger" onClick={() => handleDelete(plano.id_plano_tratamento)}>
+                                <Button className="btn btn-danger btn-sm"  onClick={() => handleDelete(plano.id_plano_tratamento)}>
                                 <i className="bi bi-trash"></i>
                                 </Button>
                                 </div>  
