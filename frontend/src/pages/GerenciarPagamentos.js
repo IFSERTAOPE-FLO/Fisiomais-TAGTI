@@ -119,11 +119,10 @@ const GerenciarPagamentos = () => {
     }
   };
 
-  // Função para formatar data UTC para o formato datetime-local
   const formatDateToLocal = (date) => {
-    if (!date) return '';
+    if (!date) return ''; // Retorna string vazia para valores null/undefined
     const localDate = new Date(date);
-    return localDate.toISOString().slice(0, 16); // 'YYYY-MM-DDTHH:mm'
+    return isNaN(localDate.getTime()) ? '' : localDate.toISOString().slice(0, 16);
   };
 
   // Filtra os pagamentos com base nos critérios selecionados
@@ -322,7 +321,7 @@ const GerenciarPagamentos = () => {
                       >
                         <i className="bi bi-pencil-square"></i>
                       </button>
-                    )}                   
+                    )}
                   </td>
                 </tr>
               ))}
@@ -416,9 +415,28 @@ const GerenciarPagamentos = () => {
                   id="data_pagamento"
                   value={formatDateToLocal(selectedPagamento.data_pagamento)}
                   onChange={(e) => {
-                    const localDate = new Date(e.target.value);
-                    setSelectedPagamento((prevState) => ({
-                      ...prevState,
+                    const value = e.target.value;
+                    setErro(null); // Limpa erros anteriores
+
+                    if (value === '') {
+                      // Se o campo for limpo, define data_pagamento como null
+                      setSelectedPagamento((prev) => ({
+                        ...prev,
+                        data_pagamento: null,
+                      }));
+                      return;
+                    }
+
+                    const localDate = new Date(value);
+                    if (isNaN(localDate.getTime())) {
+                      // Data inválida: mostra erro e não atualiza o estado
+                      setErro('Data inválida. Por favor, insira uma data válida.');
+                      return;
+                    }
+
+                    // Data válida: atualiza o estado com a data em ISO
+                    setSelectedPagamento((prev) => ({
+                      ...prev,
                       data_pagamento: localDate.toISOString(),
                     }));
                   }}
