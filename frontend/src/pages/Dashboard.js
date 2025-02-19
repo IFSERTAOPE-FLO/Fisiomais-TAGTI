@@ -1,520 +1,385 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Bar, Pie } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend } from 'chart.js';
-import { Container, Row, Col, Card, ListGroup } from 'react-bootstrap';
-import { Form } from 'react-bootstrap';
-import Calendar from 'react-calendar'; // Import the Calendar component
-import "react-calendar/dist/Calendar.css"; // Import Calendar's CSS for styling
+import { Bar, Pie, Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+import { Container, Row, Col, Card, ListGroup, Alert, Button, Form } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCalendarAlt, faUsers, faUserMd, faClinicMedical, faDollarSign } from '@fortawesome/free-solid-svg-icons';
+import Calendar from 'react-calendar';
+import "react-calendar/dist/Calendar.css";
 
-
+// Registrar elementos necessários no Chart.js
 ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
   ArcElement,
+  PointElement,
+  LineElement,
   Title,
   Tooltip,
   Legend
 );
 
+// Constantes de configuração
+const CHART_COLORS = {
+  primary: '#4e73df',
+  success: '#1cc88a',
+  info: '#36b9cc',
+  warning: '#f6c23e',
+  danger: '#e74a3b'
+};
+
+const LoadingSpinner = () => (
+  <div className="text-center my-5">
+    <div className="spinner-border text-primary" role="status">
+      <span className="visually-hidden">Carregando...</span>
+    </div>
+    <p className="mt-2">Carregando dados...</p>
+  </div>
+);
+
+const MetricCard = ({ title, value, icon, color }) => (
+  <Col md={3} className="mb-4">
+    <Card className={`border-left-${color} shadow h-100 py-2`}>
+      <Card.Body>
+        <Row className="no-gutters align-items-center">
+          <Col className="col-auto mr-3">
+            <FontAwesomeIcon icon={icon} className={`fa-2x text-${color}`} />
+          </Col>
+          <Col>
+            <div className="text-xs font-weight-bold text-uppercase mb-1">
+              {title}
+            </div>
+            <div className="h5 mb-0 font-weight-bold text-gray-800">
+              {value}
+            </div>
+          </Col>
+        </Row>
+      </Card.Body>
+    </Card>
+  </Col>
+);
+
 const DashboardOverview = () => {
-  const [dashboardData, setDashboardData] = useState({
-    total_agendamentos: 0,
-    total_clientes: 0,
-    total_colaboradores: 0,
-    total_servicos: 0,
-    total_receita: '0',
-  });
-
-  const [servicosData, setServicosData] = useState([]);
-  const [agendamentosPorClinica, setAgendamentosPorClinica] = useState([]);
-  const [agendamentosPorColaborador, setAgendamentosPorColaborador] = useState([]);
+  const [dashboardData, setDashboardData] = useState({});
+  const [servicosData, setServicosData] = useState({});
+  const [agendamentosData, setAgendamentosData] = useState({ clinica: {}, colaborador: {} });
   const [receitaPorMes, setReceitaPorMes] = useState({});
-  // Declare missing state variables
-  const [mesSelecionado, setMesSelecionado] = useState(''); // Month selected
-  const [mesInicio, setMesInicio] = useState(''); // Start month
-  const [mesFim, setMesFim] = useState(''); // End month
+  const [filtro, setFiltro] = useState({ tipo: 'todos', mesUnico: '', intervalo: { inicio: '', fim: '' } });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showServicosPopulares, setShowServicosPopulares] = useState(false);
+  const [showAgendamentosClinica, setShowAgendamentosClinica] = useState(false);
+  const [showAgendamentosColaborador, setShowAgendamentosColaborador] = useState(false);
+
   const savedRole = localStorage.getItem("role");
-  useEffect(() => {
-    document.title = "Fisiomais - Dashboards ";
-}, []);
+
+  const getColorPalette = (length) => {
+    const palette = Object.values(CHART_COLORS);
+    return Array.from({ length }, (_, i) => palette[i % palette.length]);
+  };
+
+  const handleError = (error) => {
+    if (error.response) {
+      switch (error.response.status) {
+        case 401:
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+          break;
+        case 403:
+          setError('Acesso negado. Permissões insuficientes.');
+          break;
+        case 500:
+          setError('Erro interno do servidor. Tente novamente mais tarde.');
+          break;
+        default:
+          setError('Ocorreu um erro inesperado.');
+      }
+    } else {
+      setError('Não foi possível conectar ao servidor. Verifique sua conexão.');
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    if (savedRole === "cliente")  {
-      
-      return; 
-    }
-  
-    const fetchDashboardData = async () => {
+    document.title = "Fisiomais - Dashboards";
+
+    if (savedRole === "cliente") return;
+
+    const fetchData = async () => {
       try {
-        const overviewResponse = await axios.get('http://localhost:5000/dashboards/overview', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        const endpoints = [
+          'overview',
+          'servicos/populares',
+          'agendamentos_por_clinica',
+          'agendamentos_por_colaborador',
+          'receita_por_mes'
+        ];
+
+        const responses = await Promise.all(
+          endpoints.map(endpoint =>
+            axios.get(`http://localhost:5000/dashboards/${endpoint}`, {
+              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            })
+          )
+        );
+
+        setDashboardData(responses[0].data);
+        setServicosData(responses[1].data);
+        setAgendamentosData({
+          clinica: responses[2].data,
+          colaborador: responses[3].data
         });
-        setDashboardData(overviewResponse.data);
-  
-        const servicosResponse = await axios.get('http://localhost:5000/dashboards/servicos/populares', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        });
-        setServicosData(servicosResponse.data);
-  
-        const clinicaResponse = await axios.get('http://localhost:5000/dashboards/agendamentos_por_clinica', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        });
-        setAgendamentosPorClinica(clinicaResponse.data);
-  
-        const colaboradorResponse = await axios.get('http://localhost:5000/dashboards/agendamentos_por_colaborador', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        });
-        setAgendamentosPorColaborador(colaboradorResponse.data);
-  
-        const receitaMensalResponse = await axios.get('http://localhost:5000/dashboards/receita_por_mes', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        });
-        setReceitaPorMes(receitaMensalResponse.data);
-  
+        setReceitaPorMes(responses[4].data);
       } catch (error) {
-        if (error.response && error.response.status === 401) {
-          alert('Sua sessão expirou. Por favor, faça login novamente.');
-          localStorage.removeItem('token'); // Remove o token inválido
-          window.location.href = '/login'; // Redireciona para a página de login
-        } else {
-          console.error('Erro ao buscar dados do dashboard:', error);
-        }
+        handleError(error);
+      } finally {
+        setLoading(false);
       }
     };
-  
-    fetchDashboardData();
-  }, [savedRole]); 
-  
 
+    fetchData();
+  }, [savedRole]);
 
- 
+  const generateChartData = (labels, data, label, color) => ({
+    labels,
+    datasets: [{
+      label,
+      data,
+      backgroundColor: getColorPalette(labels.length),
+      borderColor: '#fff',
+      borderWidth: 1
+    }]
+  });
 
-  
-  
-
-  const overviewData = {
-    labels: [
-      'Agendamentos',
-      'Clientes',
-      'Colaboradores',
-      'Serviços',
-      'Clínicas'  // Adicionando clínicas
-    ],
-    datasets: [
-      {
-        label: 'Totais',
-        data: [
-          dashboardData.total_agendamentos,
-          dashboardData.total_clientes,
-          dashboardData.total_colaboradores,
-          dashboardData.total_servicos,
-          dashboardData.total_clinicas,  // Exibindo o total de clínicas
-        ],
-        backgroundColor: [
-          '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e',  // Dados de agendamentos, clientes, colaboradores e serviços
-          '#f39c12',  // Receita Total
-          '#3498db',  // Receita Ano Atual
-          '#e74c3c',  // Receita Mês Atual
-          '#2ecc71',  // Receita Último Ano
-          '#9b59b6',  // Receita Último Mês
-          '#8e44ad',  // Cor para Clínicas
-        ],
-        borderColor: '#fff',
-        borderWidth: 1,
-      },
-    ],
-  };
-  
-
-  const generateRandomColor = () => {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  };
-
-  const servicosPopularesData = {
-    labels: Object.keys(servicosData),
-    datasets: [
-      {
-        label: 'Serviços Populares',
-        data: Object.values(servicosData),
-        backgroundColor: Object.keys(servicosData).map(() => generateRandomColor()),
-        borderColor: '#fff',
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const agendamentosClinicaData = {
-    labels: Object.keys(agendamentosPorClinica),
-    datasets: [
-      {
-        label: 'Agendamentos por Clínica',
-        data: Object.values(agendamentosPorClinica),
-        backgroundColor: '#36b9cc',
-        borderColor: '#fff',
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const agendamentosColaboradorData = {
-    labels: Object.keys(agendamentosPorColaborador),
-    datasets: [
-      {
-        label: 'Agendamentos por Colaborador',
-        data: Object.values(agendamentosPorColaborador),
-        backgroundColor: '#f6c23e',
-        borderColor: '#fff',
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const options = {
+  const chartOptions = (title) => ({
     responsive: true,
     plugins: {
-      legend: {
-        position: 'top',
-      },
+      legend: { position: 'top' },
+      title: { display: true, text: title },
       tooltip: {
         callbacks: {
-          label: function (context) {
-            return `${context.dataset.label}: ${context.raw}`;
-          },
-        },
-      },
+          label: (ctx) => ` ${ctx.dataset.label}: R$ ${ctx.raw?.toFixed(2) || 0}`
+        }
+      }
     },
-    scales: {
-      y: {
-        beginAtZero: true,
-      },
-    },
+    scales: { y: { beginAtZero: true } }
+  });
+
+  const handleFilterChange = (newFilter) => {
+    setFiltro(prev => ({ ...prev, ...newFilter }));
   };
 
-
-  const receitaFiltrada = (() => {
-    if (mesSelecionado) {
-      // Retorna apenas o mês específico selecionado
-      return { [mesSelecionado]: receitaPorMes[mesSelecionado] || 0 };
-    }
-
-    if (!mesInicio && !mesFim) {
-      return receitaPorMes; // Nenhum intervalo selecionado
-    }
-
-    // Ordena os meses disponíveis de forma crescente (levando em consideração mês/ano)
+  const filteredRevenueData = () => {
     const meses = Object.keys(receitaPorMes).sort((a, b) => {
-      const [mesA, anoA] = a.split('/').map(Number);
-      const [mesB, anoB] = b.split('/').map(Number);
-      return anoA === anoB ? mesA - mesB : anoA - anoB;
+      const [ma, aa] = a.split('/').map(Number);
+      const [mb, ab] = b.split('/').map(Number);
+      return new Date(aa, ma) - new Date(ab, mb);
     });
 
-    const inicioIndex = mesInicio ? meses.indexOf(mesInicio) : 0;
-    const fimIndex = mesFim ? meses.indexOf(mesFim) : meses.length - 1;
-
-    // Retorna os meses dentro do intervalo
-    return meses
-      .slice(inicioIndex, fimIndex + 1)
-      .reduce((acc, mes) => {
-        acc[mes] = receitaPorMes[mes];
-        return acc;
-      }, {});
-  })();
-
-
-  const FiltroMesCalendario = ({ setMesSelecionado, setMesInicio, setMesFim }) => {
-    const handleDateChange = (date) => {
-      const selectedMonth = date.getMonth(); // Pega o mês selecionado (0 - janeiro, 11 - dezembro)
-      const selectedYear = date.getFullYear(); // Pega o ano selecionado
-
-      // Converte a data selecionada para o nome do mês no formato 'mm/yyyy'
-      const monthString = `${selectedMonth + 1 < 10 ? '0' : ''}${selectedMonth + 1}/${selectedYear}`;
-
-      // Atualiza os estados com o mês selecionado
-      setMesSelecionado(monthString); // Mês selecionado como "mm/yyyy"
-
-      // Configura mesInicio e mesFim para o intervalo de um único mês
-      setMesInicio(monthString); // Início e fim do intervalo são o mesmo mês
-      setMesFim(monthString);     // Isso garante que o gráfico mostre apenas esse mês
-    };
-
-    return (
-      <Container className="d-flex justify-content-center align-items-center" >
-        <div>
-          <Calendar
-            onChange={handleDateChange}
-            view="year" // Exibe o calendário por anos
-            minDetail="year" // A partir do nível de visualização de ano
-            maxDetail="year" // Limita a visualização para ano, sem mostrar os dias
-            showNavigation={true} // Permite navegação entre anos
-            showNeighboringMonth={false} // Remove os meses vizinhos
-            minDate={new Date(2020, 0, 1)} // Limita a seleção a partir de janeiro de 2020, pode ser alterado conforme necessário
-          />
-        </div>
-      </Container>
-    );
+    switch (filtro.tipo) {
+      case 'mes-unico':
+        return { [filtro.mesUnico]: receitaPorMes[filtro.mesUnico] || 0 };
+      case 'intervalo':
+        const start = meses.indexOf(filtro.intervalo.inicio);
+        const end = meses.indexOf(filtro.intervalo.fim);
+        return meses.slice(start, end + 1).reduce((acc, mes) => {
+          acc[mes] = receitaPorMes[mes];
+          return acc;
+        }, {});
+      default:
+        return receitaPorMes;
+    }
   };
 
-
-
-
-
-
-  // Dados do Gráfico Atualizados
-  const receitaMensalData = {
-    labels: Object.keys(receitaFiltrada),
-    datasets: [
-      {
-        label: 'Receita por Mês (R$)',
-        data: Object.values(receitaFiltrada),
-        backgroundColor: '#4e73df',
-        borderColor: '#fff',
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  // Meses disponíveis
-  const mesesDisponiveis = Object.keys(receitaPorMes);
-
-
+  if (loading) return <LoadingSpinner />;
+  if (error) return (
+    <Alert variant="danger" className="mt-4">
+      {error}
+      <Button variant="link" onClick={() => window.location.reload()}>
+        Tentar novamente
+      </Button>
+    </Alert>
+  );
 
   return (
-    <Container className="my-2 text-center">
-      <Row className="mt-9">
+    <Container className="my-4">
+      <Row className="mb-4">
+        <MetricCard
+          title="Agendamentos"
+          value={dashboardData.total_agendamentos}
+          icon={faCalendarAlt}
+          color="primary"
+        />
+        <MetricCard
+          title="Clientes"
+          value={dashboardData.total_clientes}
+          icon={faUsers}
+          color="success"
+        />
+        <MetricCard
+          title="Colaboradores"
+          value={dashboardData.total_colaboradores}
+          icon={faUserMd}
+          color="info"
+        />
+        <MetricCard
+          title="Clínicas"
+          value={dashboardData.total_clinicas}
+          icon={faClinicMedical}
+          color="warning"
+        />
+      </Row>
+
+      <Row className="mb-4">
         <Col md={8}>
           <Card className="shadow">
             <Card.Header className="bg-primary text-white">
-              <h3>Dashboard Overview</h3>
+              <h4>Desempenho Financeiro</h4>
             </Card.Header>
             <Card.Body>
-              <Bar data={overviewData} options={options} />
+              <Line
+                data={generateChartData(
+                  Object.keys(filteredRevenueData()),
+                  Object.values(filteredRevenueData()),
+                  'Receita Mensal',
+                  CHART_COLORS.primary
+                )}
+                options={chartOptions('Receita Mensal (R$)')}
+              />
             </Card.Body>
           </Card>
         </Col>
+
         <Col md={4}>
-          <Card className="shadow">
-            <Card.Header className="bg-warning text-white">
-              <h3>Receita Total</h3>
+          <Card className="shadow h-100">
+            <Card.Header className="bg-success text-white">
+              <h4>Resumo Financeiro</h4>
             </Card.Header>
             <Card.Body>
-              <Row className="mt-9 justify-content-center">
-                <Col xs={12}>
-                  <div className="text-center mb-2">
-                    <small className="text-muted"> Ano atual ({new Date().getFullYear()})</small>
-                  </div>
-                  <h4 className="text-success text-center font-weight-bold bg-light p-2 rounded shadow-sm d-flex flex-column align-items-center">
-
-                    <span className="ml-2">R$ {dashboardData.receita_ano_atual}</span>
-                  </h4>
-                </Col>
-
-              </Row>
-
-              <Row className="mt-9">
-                <Col xs={12} md={6}>
-                  <div className="text-center mb-2">
-                    <small className="text-muted"> Mês atual ({new Date().toLocaleString('pt-BR', { month: 'long' }).charAt(0).toUpperCase() + new Date().toLocaleString('pt-BR', { month: 'long' }).slice(1)})</small>
-                  </div>
-                  <h4 className="text-success text-center font-weight-bold bg-light p-1 rounded shadow-sm d-flex flex-column align-items-center">
-
-                    <span>R$ {dashboardData.receita_mes_atual}</span>
-                  </h4>
-
-                </Col>
-
-                <Col xs={12} md={6}>
-                  <div className="text-center mb-2">
-                    <small className="text-muted">
-                      Último Mês ({new Date(new Date().setMonth(new Date().getMonth() - 1)).toLocaleString('pt-BR', { month: 'long' }).replace(/^\w/, (c) => c.toUpperCase())})
-                    </small>
-                  </div>
-                  <h4 className="text-info text-center font-weight-bold bg-light p-1 rounded shadow-sm d-flex flex-column align-items-center">
-
-                    <span>R$ {dashboardData.receita_ultimo_mes}</span>
-                  </h4>
-                </Col>
-              </Row>
-              <Row className="mt-9 justify-content-center">
-                <Col xs={12} md={6}>
-                <small className="text-muted mt-2">Média mensal de {new Date().getFullYear()}</small> {/* Exibir média mensal */}
-                  <h4 className="text-success text-center font-weight-bold bg-light p-1 rounded shadow-sm d-flex flex-column align-items-center">
-                    <span>R$ {dashboardData.receita_mes_atual}</span>
-                    
-                  </h4>
-                </Col>
-                </Row>
-              <Row className="mt-9">
-                <Col xs={12} md={6}>
-                  <div className="text-center mb-2">
-                    <small className="text-muted"> Último Ano ({new Date().getFullYear() - 1})</small>
-                  </div>
-                  <h4 className="text-warning text-center font-weight-bold bg-light p-2 rounded shadow-sm d-flex flex-column align-items-center">
-                    <span>R$ {dashboardData.receita_ultimo_ano}</span>
-                  </h4>
-                </Col>
-                <Col xs={12} md={6}>
-                  <div className="text-center mb-2">
-                    <small className=" text-muted">Total acumulado</small>
-                  </div>
-                  <h4 className="text-danger text-center font-weight-bold bg-light p-2 rounded shadow-sm d-flex flex-column align-items-center">
-
-                    <span>R$ {dashboardData.total_receita}</span>
-                  </h4>
-                </Col>
-              </Row>
-
-
-            </Card.Body>
-          </Card>
-
-
-          <Card className="shadow mt-3">
-            <Card.Header className="bg-info text-white">
-              <h4>Informações</h4>
-            </Card.Header>
-            <Card.Body>
-              <ListGroup>
+              <ListGroup variant="flush">
                 <ListGroup.Item>
-                  <strong>Total de Agendamentos:</strong> {dashboardData.total_agendamentos}
+                  <strong>Receita Total:</strong> R$ {dashboardData.total_receita}
                 </ListGroup.Item>
                 <ListGroup.Item>
-                  <strong>Total de Clientes:</strong> {dashboardData.total_clientes}
+                  <strong>Média Mensal:</strong> R$ {dashboardData.media_mensal_ano_atual}
                 </ListGroup.Item>
                 <ListGroup.Item>
-                  <strong>Total de Colaboradores:</strong> {dashboardData.total_colaboradores}
+                  <strong>Último Mês:</strong> R$ {dashboardData.receita_ultimo_mes}
                 </ListGroup.Item>
                 <ListGroup.Item>
-                  <strong>Total de Serviços:</strong> {dashboardData.total_servicos}
-                </ListGroup.Item>
-                <ListGroup.Item>
-                  <strong>Total de Clinicas:</strong> {dashboardData.total_clinicas}
+                  <strong>Último Ano:</strong> R$ {dashboardData.receita_ultimo_ano}
                 </ListGroup.Item>
               </ListGroup>
             </Card.Body>
           </Card>
         </Col>
       </Row>
-      <Row className="mt-4">
-        <Col md={6}>
-          <Card className="shadow">
-            <Card.Header className="bg-info text-white">
-              <h4 >Serviços Populares</h4>
-            </Card.Header>
-            <Card.Body>
-              <Pie data={servicosPopularesData} options={options} />
-            </Card.Body>
-          </Card>
-        </Col>
 
-        <Col md={6}>
-          <Card className="shadow">
-            <Form>
-              {/* Filtro por Mês Específico */}
-              <Form.Group controlId="filtroMesEspecifico">
-                <Form.Label className='text-center'>Selecionar um Mês Específico</Form.Label>
-                <FiltroMesCalendario
-                  setMesSelecionado={setMesSelecionado}
-                  setMesInicio={setMesInicio}
-                  setMesFim={setMesFim}
+      <Row className="mb-4">
+        <Col>
+          <Button
+            variant="info"
+            className="me-2"
+            onClick={() => setShowServicosPopulares(!showServicosPopulares)}
+          >
+            {showServicosPopulares ? 'Ocultar Serviços Populares' : 'Exibir Serviços Populares'}
+          </Button>
+          <Button
+            variant="success"
+            className="me-2"
+            onClick={() => setShowAgendamentosClinica(!showAgendamentosClinica)}
+          >
+            {showAgendamentosClinica ? 'Ocultar Agendamentos por Clínica' : 'Exibir Agendamentos por Clínica'}
+          </Button>
+          <Button
+            variant="danger"
+            onClick={() => setShowAgendamentosColaborador(!showAgendamentosColaborador)}
+          >
+            {showAgendamentosColaborador ? 'Ocultar Agendamentos por Colaborador' : 'Exibir Agendamentos por Colaborador'}
+          </Button>
+        </Col>
+      </Row>
+
+      {showServicosPopulares && (
+        <Row className="mb-4">
+          <Col md={6}>
+            <Card className="shadow">
+              <Card.Header className="bg-info text-white">
+                <h4>Serviços Populares</h4>
+              </Card.Header>
+              <Card.Body>
+                <Pie
+                  data={generateChartData(
+                    Object.keys(servicosData),
+                    Object.values(servicosData),
+                    'Agendamentos por Serviço'
+                  )}
+                  options={chartOptions('Distribuição de Serviços')}
                 />
-              </Form.Group>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      )}
 
-              <Row className="mt-2">
-                {/* Filtro Mês Inicial */}
-                <Form.Label className='text-center'>Intervalo entre meses</Form.Label>
-                <Col md={6}>
+      {showAgendamentosClinica && (
+        <Row className="mb-4">
+          <Col md={6}>
+            <Card className="shadow">
+              <Card.Header className="bg-success text-white">
+                <h4>Agendamentos por Clínica</h4>
+              </Card.Header>
+              <Card.Body>
+                <Bar
+                  data={generateChartData(
+                    Object.keys(agendamentosData.clinica),
+                    Object.values(agendamentosData.clinica),
+                    'Agendamentos'
+                  )}
+                  options={chartOptions('Distribuição por Clínica')}
+                />
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      )}
 
-                  <Form.Group controlId="filtroInicio">
-                    <Form.Label className='text-center'>Mês Inicial</Form.Label>
-                    <Form.Control
-                      as="select"
-                      value={mesInicio}
-                      onChange={(e) => {
-                        setMesInicio(e.target.value);
-                        setMesSelecionado(''); // Limpa a seleção de mês específico ao selecionar um intervalo
-                      }}
-                    >
-                      <option value="">Todos os Meses</option>
-                      {mesesDisponiveis.map((mes) => (
-                        <option key={mes} value={mes}>
-                          {mes}
-                        </option>
-                      ))}
-                    </Form.Control>
-                  </Form.Group>
-                </Col>
-
-                {/* Filtro Mês Final */}
-                <Col md={6}>
-                  <Form.Group controlId="filtroFim">
-                    <Form.Label className='text-center'>Mês Final</Form.Label>
-                    <Form.Control
-                      as="select"
-                      value={mesFim}
-                      onChange={(e) => {
-                        setMesFim(e.target.value);
-                        setMesSelecionado(''); // Limpa a seleção de mês específico ao selecionar um intervalo
-                      }}
-                    >
-                      <option value="">Todos os Meses</option>
-                      {mesesDisponiveis.map((mes) => (
-                        <option key={mes} value={mes}>
-                          {mes}
-                        </option>
-                      ))}
-                    </Form.Control>
-                  </Form.Group>
-                </Col>
-              </Row>
-            </Form>
-
-            <Card.Header className="bg-primary text-white">
-              <h4>Receita Mensal</h4>
-            </Card.Header>
-            <Card.Body>
-              {/* Gráfico */}
-              <Bar data={receitaMensalData} options={options} />
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-
-      <Row className="mt-4">
-
-        <Col md={6}>
-          <Card className="shadow">
-            <Card.Header className="bg-success text-white">
-              <h4>Agendamentos por Clínica</h4>
-            </Card.Header>
-            <Card.Body>
-              <Bar data={agendamentosClinicaData} options={options} />
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={6}>
-          <Card className="shadow">
-            <Card.Header className="bg-danger text-white">
-              <h4>Agendamentos por Colaborador</h4>
-            </Card.Header>
-            <Card.Body>
-              <Bar data={agendamentosColaboradorData} options={options} />
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-
+      {showAgendamentosColaborador && (
+        <Row className="mb-4">
+          <Col md={6}>
+            <Card className="shadow">
+              <Card.Header className="bg-danger text-white">
+                <h4>Agendamentos por Colaborador</h4>
+              </Card.Header>
+              <Card.Body>
+                <Bar
+                  data={generateChartData(
+                    Object.keys(agendamentosData.colaborador),
+                    Object.values(agendamentosData.colaborador),
+                    'Agendamentos'
+                  )}
+                  options={chartOptions('Distribuição por Colaborador')}
+                />
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      )}
     </Container>
   );
 };
 
 export default DashboardOverview;
-
