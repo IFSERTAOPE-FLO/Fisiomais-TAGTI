@@ -18,13 +18,13 @@ function Home() {
   return (
 
     <div className="container mt-4 ">
-      
-      
+
+
       <h1 className="text-center fw-bold text-primary mb-3">Bem-vindo à nossa clínica de Fisioterapia e Pilates!</h1>
       <p className="text-center  text-primary mb-3">Na <strong className="cor-pink"> FISIOMAIS</strong>, cuidamos de você com profissionalismo e dedicação.
-        < br/>Nossa missão é promover a sua saúde, reabilitação e qualidade de vida por meio de tratamentos personalizados, unindo as melhores prátcias de  <strong className="cor-pink">Fisioterapia</strong> e os benefícios do <strong className="cor-pink">Pilates</strong>.</p>
+        < br />Nossa missão é promover a sua saúde, reabilitação e qualidade de vida por meio de tratamentos personalizados, unindo as melhores prátcias de  <strong className="cor-pink">Fisioterapia</strong> e os benefícios do <strong className="cor-pink">Pilates</strong>.</p>
 
-        <div className="mt-5 text-center p-4 bg-light rounded shadow">
+      <div className="mt-5 text-center p-4 bg-light rounded shadow">
         <h3 className="fw-bold text-primary mb-3">
           Não perca tempo!
         </h3>
@@ -33,20 +33,17 @@ function Home() {
           Nossos profissionais estão prontos para ajudar você a alcançar seus objetivos!
         </p>
         <div className="mt-4 text-center">
-          <Link
-            to={isLoggedIn ? "/criaragendamento" : ""}
-            className="btn btn-signup gap-2"
-          >
-            {isLoggedIn ? (
-              <>
-                <i className="bi bi-calendar-check"></i> Agendar Sessão
-              </>
-            ) : (
-              <>
-                <i className="bi bi-person-plus"></i> Inscreva-se
-              </>
-            )}
-          </Link>
+          {isLoggedIn ? (
+            <Link to="/criaragendamento" className="btn btn-signup gap-2">
+              <i className="bi bi-calendar-check"></i> Agendar Sessão
+            </Link>
+          ) : (
+            <div className="inscrever-texto">
+              <p className="fs-5 text-secondary">
+                 Clique em "Inscrever-se" no menu acima para começar! <i className="bi bi-arrow-up"></i>
+              </p>
+            </div>
+          )}
         </div>
       </div>
       {/* Carrossel de Colaboradores */}
@@ -145,9 +142,9 @@ function Home() {
       {/* Carrossel de Serviços */}
       <div className="mt-5">
         <h2 className="text-center  text-primary mb-3">Nossos Serviços</h2>
-        <p className="text-center  text-primary mb-3">Sinta-se em casa e descubra como podemos ajudar 
+        <p className="text-center  text-primary mb-3">Sinta-se em casa e descubra como podemos ajudar
           você a se movimentar com mais <strong className="cor-pink">força</strong>, <strong className="cor-pink">equilíbrio</strong> e <strong className="cor-pink">bem-estar</strong>.  </p>
-        
+
         <div id="carouselServicos" className="carousel slide" data-bs-ride="carousel">
           <div className="carousel-inner">
             <div className="carousel-item active">
@@ -236,7 +233,7 @@ function Home() {
         </div>
       </div>
 
-      
+
     </div>
 
   );
