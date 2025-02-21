@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useNavigate } from "react-router-dom";
-import { FaPlusCircle } from "react-icons/fa";
 
 const AdicionarAulaPilates = ({ onAulaAdicionada }) => {
     const [servicoId, setServicoId] = useState("");

@@ -49,9 +49,9 @@ const CalendarioInterativo = () => {
         title: agendamento.servico,
         start: `${agendamento.data}T${agendamento.hora}`,
         backgroundColor:
-        agendamento.status === "confirmado" || agendamento.status === "Confirmado"
-        ? "#2d9184"    
-      
+          agendamento.status === "confirmado" || agendamento.status === "Confirmado"
+            ? "#2d9184"
+
             : agendamento.status === "Pendente" || agendamento.status === "pendente"
               ? "#6c757d"
               : agendamento.status === "Pedido de Remarcação"
@@ -60,7 +60,10 @@ const CalendarioInterativo = () => {
         textColor: "#ffffff",
         description: `Agendamento: ${agendamento.id}\nServiço: ${agendamento.servico}\nCliente: ${agendamento.cliente || "Não informado"}
 Colaborador: ${agendamento.colaborador || "Não informado"}\nStatus: ${agendamento.status}
-Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e horário pretendido: ${formatarDataBrasileira(agendamento.dias_e_horarios)}` : ''}`,
+Horário: ${agendamento.hora}${agendamento.status === "Pedido de Remarcação" && agendamento.dias_e_horarios
+            ? `\n\nNovo dia e horário pretendido: ${formatarDataBrasileira(agendamento.dias_e_horarios)}`
+            : ""
+          }`,
         extendedProps: {
           cliente: agendamento.cliente || "Não informado",
           colaborador: agendamento.colaborador || "Não informado",
@@ -80,7 +83,7 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
   }, []);
 
   const handleEventDrop = async (info) => {
-    const { id, start, end, delta } = info.event;
+    const { id, start, end } = info.event;
 
     // Verificando se o evento foi movido para outro mês
     const startBR = new Date(start);
@@ -105,9 +108,6 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
       novoHorarioFim: endBR.toISOString().split("T")[1].slice(0, 5), // Atualiza o horário de fim
     });
   };
-
-
-
 
   const handleSalvarHorario = async () => {
     setLoading(true); // Ativa o carregamento
@@ -160,7 +160,7 @@ Horário: ${agendamento.hora}${agendamento.dias_e_horarios ? `\n \nNovo dia e ho
     console.log("Evento Selecionado ID: ", evento.id);  // Verifique o ID aqui
     setShowModalDetalhes(true);
   };
-  
+
 
 
 

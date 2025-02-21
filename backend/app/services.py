@@ -10,9 +10,11 @@ from app.models import (
     Clientes,       # Importando a classe de clientes
     Horarios,       # Importando a classe de horários
     TipoServico,     # Importando a classe de relacionamento do tipo com servico
-    ServicosTipoServico
+    ServicosTipoServico,
+    Aulas, 
+    AulasClientes,
 )
-
+from datetime import datetime, time
 
 def populate_database():
     # Criar o administrador se não existir
@@ -312,6 +314,138 @@ def populate_database():
             db.session.add(new_cliente)
 
     
+    db.session.commit()
+    import pytz
+    # Definir o fuso horário BRT
+    brt = pytz.timezone('America/Sao_Paulo')
+    hoje = datetime.now(brt)
+    
+    # Mapeamento dos dias da semana (segunda=0, terça=1, etc.)
+    weekday_map = {
+        "segunda-feira": 0,
+        "terca-feira": 1,
+        "quarta-feira": 2,
+        "quinta-feira": 3,
+        "sexta-feira": 4,
+        "sabado": 5,
+        "domingo": 6
+    }
+    
+    # Buscar os colaboradores Aline e Manases
+    aline = Colaboradores.query.filter_by(nome="Aline Rayane").first()
+    manases = Colaboradores.query.filter_by(nome="Manases Silva").first()
+
+    if not aline or not manases:
+        print("Colaboradores Aline ou Manases não encontrados. Certifique-se de que eles já estão cadastrados.")
+        return
+
+    # Calcular o início da semana atual (segunda-feira)
+    inicio_semana = hoje - timedelta(days=hoje.weekday())
+
+    # Para a aula de Aline (segunda-feira, 09:00 - 10:00)
+    dia_aline = "segunda-feira"
+    dia_num_aline = weekday_map[dia_aline]
+    data_aline = inicio_semana + timedelta(days=dia_num_aline)
+    # Cria a data completa com o horário de início desejado
+    aula_aline_datetime = data_aline.replace(hour=9, minute=0, second=0, microsecond=0)
+
+    # Para a aula de Manases (quarta-feira, 11:00 - 12:00)
+    dia_manases = "quarta-feira"
+    dia_num_manases = weekday_map[dia_manases]
+    data_manases = inicio_semana + timedelta(days=dia_num_manases)
+    aula_manases_datetime = data_manases.replace(hour=11, minute=0, second=0, microsecond=0)
+
+    # Criar a aula de Pilates para Aline, se não existir
+    aula_aline = Aulas.query.filter_by(
+        id_colaborador=aline.id_colaborador,
+        dia_semana=dia_aline,
+        hora_inicio=time(9, 0, 0)
+    ).first()
+    if not aula_aline:
+        aula_aline = Aulas(
+            id_colaborador=aline.id_colaborador,
+            dia_semana=dia_aline,
+            hora_inicio=time(9, 0, 0),
+            hora_fim=time(10, 0, 0),
+            limite_alunos=10,
+            data=aula_aline_datetime  # Data definida corretamente e timezone aware
+        )
+        db.session.add(aula_aline)
+
+    # Criar a aula de Pilates para Manases, se não existir
+    aula_manases = Aulas.query.filter_by(
+        id_colaborador=manases.id_colaborador,
+        dia_semana=dia_manases,
+        hora_inicio=time(11, 0, 0)
+    ).first()
+    if not aula_manases:
+        aula_manases = Aulas(
+            id_colaborador=manases.id_colaborador,
+            dia_semana=dia_manases,
+            hora_inicio=time(11, 0, 0),
+            hora_fim=time(12, 0, 0),
+            limite_alunos=8,
+            data=aula_manases_datetime  # Data definida corretamente e timezone aware
+        )
+        db.session.add(aula_manases)
+
+    db.session.commit()
+
+    # Associar alguns clientes já cadastrados às aulas de Pilates
+    # Exemplo: associar os dois primeiros clientes encontrados
+    clientes = Clientes.query.limit(2).all()
+    for cliente in clientes:
+        # Associar cliente à aula de Aline
+        associacao_aline = AulasClientes.query.filter_by(
+            id_aula=aula_aline.id_aula,
+            id_cliente=cliente.id_cliente
+        ).first()
+        if not associacao_aline:
+            nova_assoc = AulasClientes(
+                id_aula=aula_aline.id_aula,
+                id_cliente=cliente.id_cliente,
+                data_inscricao=datetime.now(brt)
+            )
+            db.session.add(nova_assoc)
+
+        # Associar cliente à aula de Manases
+        associacao_manases = AulasClientes.query.filter_by(
+            id_aula=aula_manases.id_aula,
+            id_cliente=cliente.id_cliente
+        ).first()
+        if not associacao_manases:
+            nova_assoc = AulasClientes(
+                id_aula=aula_manases.id_aula,
+                id_cliente=cliente.id_cliente,
+                data_inscricao=datetime.now(brt)
+            )
+            db.session.add(nova_assoc)
+
+    db.session.commit()
+    print("Aulas de Pilates e associações de clientes populadas com sucesso.")
+     # Associa os clientes 1 e 2 a um plano de Pilates
+    emails = ["cliente1@teste.com", "cliente2@teste.com"]
+    for email in emails:
+        aluno = Clientes.query.filter_by(email=email).first()
+        if aluno:
+            if not aluno.plano_id:                
+               # Buscar um plano de Pilates corretamente
+                plano_pilates = Planos.query.join(Servicos).filter(
+                    Servicos.tipo_servicos.any(tipo="pilates")  # Verifica se algum tipo de serviço é "pilates"
+                ).first()
+
+
+                if plano_pilates:
+                    aluno.plano_id = plano_pilates.id_plano
+                    db.session.add(aluno)
+                    print(f"Aluno {aluno.nome} atribuído ao plano {plano_pilates.nome}.")
+                else:
+                    print("Nenhum plano de Pilates encontrado para atribuição.")
+            else:
+                print(f"O aluno {aluno.nome} já possui um plano atribuído.")
+        else:
+            print(f"Aluno com email {email} não encontrado.")
+
     db.session.commit()
 
 

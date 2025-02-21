@@ -5,7 +5,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import bootstrap from "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 import "../css/Navbar.css";
-import CadastroClienteModal from './CadastroClienteModal'; // Atualize o caminho conforme necessário
+import CadastroClienteModal from './CadastroClienteModal'; 
 
 function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -18,7 +18,7 @@ function Navbar() {
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [emailConfirmed, setEmailConfirmed] = useState(true);
   const [rememberMe, setRememberMe] = useState(false);
-  const [isEmailConfirmed, setIsEmailConfirmed] = useState(false); // Inicialmente assumimos que não está confirmado
+  const [isEmailConfirmed, setIsEmailConfirmed] = useState(false); 
   const [showCadastroModal, setShowCadastroModal] = useState(false);
   const [sidebarVisible, setSidebarVisible] = React.useState(false);
   const [agendamentosOpen, setAgendamentosOpen] = useState(false);
@@ -61,7 +61,7 @@ function Navbar() {
 
       // Redireciona com base no papel do usuário
       setTimeout(() => {
-        navigate(role === "admin" ? "/adminpage" : "/clientepage");
+        navigate(role === "cliente" ? "/clientepage" : "/adminpage");
         window.location.reload();
       }, 300);
 
@@ -180,7 +180,16 @@ function Navbar() {
         const modalInstance = window.bootstrap.Modal.getInstance(modalElement);
         if (modalInstance) modalInstance.hide();
       }
-
+  
+      // Fechar todos os dropdowns abertos do Bootstrap
+      const dropdowns = document.querySelectorAll('.dropdown-menu.show');
+      dropdowns.forEach((dropdown) => {
+        const dropdownInstance = window.bootstrap.Dropdown.getInstance(dropdown);
+        if (dropdownInstance) {
+          dropdownInstance.hide(); // Fecha o dropdown
+        }
+      });
+  
       // Limpar o localStorage e estados
       localStorage.clear();
       setAgendamentosOpen(false);
@@ -268,7 +277,6 @@ function Navbar() {
               <li className="nav-item">
                 <Link className="nav-link" to="/">Início</Link>
               </li>
-
               <li className="nav-item">
                 <Link className="nav-link" to="/sobrenos">Sobre Nós</Link>
               </li>

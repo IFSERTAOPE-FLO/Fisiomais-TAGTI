@@ -254,7 +254,7 @@ const GerenciarPagamentos = () => {
                 <th>Método de Pagamento</th>
                 <th>Status</th>
                 <th>Data de Pagamento</th>
-                <th>Ações</th>
+                {( !isCliente && <th>Ações</th>)}
               </tr>
             </thead>
             <tbody className="text-center">
@@ -313,16 +313,18 @@ const GerenciarPagamentos = () => {
                         minute: '2-digit'
                       })}
                   </td>
+                  {(isAdmin || isColaborador) && (
                   <td>
-                    {(isAdmin || isColaborador) && (
+                    
                       <button
                         className="btn btn-warning btn-sm"
                         onClick={() => handleShowEditModal(pagamento)}
                       >
                         <i className="bi bi-pencil"></i>
                       </button>
-                    )}
+                    
                   </td>
+                  )}
                 </tr>
               ))}
             </tbody>

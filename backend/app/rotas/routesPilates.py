@@ -628,9 +628,16 @@ dias_da_semana_pt = {
     'Sunday': 'Domingo'
 }
 
+import pytz
+from datetime import datetime, time, timedelta
+from app import db
+from app.models import Aulas, AulasClientes, Agendamentos, Clientes
+
 @pilates.route('/criar_agendamentos_aula/<int:aula_id>', methods=['POST'])
 def criar_agendamentos_para_aula(aula_id):
     try:
+        # Definir o fuso horário BRT
+        brt = pytz.timezone('America/Sao_Paulo')
         # Obtém a aula selecionada
         aula = Aulas.query.get(aula_id)
         if not aula:
@@ -646,12 +653,13 @@ def criar_agendamentos_para_aula(aula_id):
         hora_inicio = aula.hora_inicio
         hora_fim = aula.hora_fim
 
-        # Obter o primeiro dia do próximo mês
-        hoje = datetime.today()
+        # Obter o primeiro dia do próximo mês (timezone aware)
+        hoje = datetime.now(brt)
         if hoje.month < 12:
             primeiro_dia_proximo_mes = datetime(hoje.year, hoje.month + 1, 1)
         else:
             primeiro_dia_proximo_mes = datetime(hoje.year + 1, 1, 1)
+        primeiro_dia_proximo_mes = brt.localize(primeiro_dia_proximo_mes)
 
         # Obtém o id do serviço e da clínica a partir do colaborador da aula
         servico_id = aula.colaborador.servicos[0].id_servico if aula.colaborador.servicos else None
@@ -664,9 +672,12 @@ def criar_agendamentos_para_aula(aula_id):
         # Para cada aluno vinculado à aula
         for cliente in alunos:
             # Obter os dias do próximo mês para o dia da semana desejado
-            dias_agendados = obter_dias_do_mes(primeiro_dia_proximo_mes, dia_da_aula)
+            dias_agendados = obter_dias_do_mes(primeiro_dia_proximo_mes, dia_da_aula, brt)
             for dia in dias_agendados:
-                # Define a data e hora do agendamento (usando a hora de início da aula)
+                # Se o dia for naive (não possui tzinfo), localizamos no fuso BRT
+                if dia.tzinfo is None:
+                    dia = brt.localize(dia)
+                # Define a data e hora do agendamento usando a hora de início da aula
                 data_e_hora_agendamento = dia.replace(
                     hour=hora_inicio.hour,
                     minute=hora_inicio.minute,
@@ -685,8 +696,7 @@ def criar_agendamentos_para_aula(aula_id):
                     continue  # Pula a criação para este cliente
 
                 # Traduz o dia da semana para português
-                dia_em_portugues = dias_da_semana_pt[dia.strftime('%A')]
-
+                dia_em_portugues = dias_da_semana_pt[data_e_hora_agendamento.strftime('%A')]
                 # Cria o agendamento
                 agendamento = Agendamentos(
                     data_e_hora=data_e_hora_agendamento,
@@ -713,10 +723,11 @@ def criar_agendamentos_para_aula(aula_id):
         return response, 500
 
 
-def obter_dias_do_mes(data_inicial, dia_semana):
+def obter_dias_do_mes(data_inicial, dia_semana, timezone):
     """
     Retorna uma lista de datas (no próximo mês) correspondentes ao dia_semana informado.
     Por exemplo, se dia_semana for "Segunda-feira", retorna as segundas do próximo mês.
+    Cada data retornada será timezone aware no fuso indicado.
     """
     dias_da_semana = {
         'Segunda-feira': 0,
@@ -728,20 +739,29 @@ def obter_dias_do_mes(data_inicial, dia_semana):
         'Domingo': 6
     }
     
+    # Normaliza o dia da semana para capitalização correta
+    dia_semana = dia_semana.capitalize()
     dia_semana_num = dias_da_semana.get(dia_semana)
+    if dia_semana_num is None:
+        raise ValueError("Dia da semana inválido.")
+
     dias = []
-    
-    # Encontra o primeiro dia do mês que corresponda ao dia desejado
     data_atual = data_inicial
+    # Caso a data_inicial seja naive, localizamos no fuso indicado
+    if data_atual.tzinfo is None:
+        data_atual = timezone.localize(data_atual)
+    
+    # Ajusta até encontrar o primeiro dia desejado
     while data_atual.weekday() != dia_semana_num:
         data_atual += timedelta(days=1)
 
-    # Adiciona as datas correspondentes (supondo até 4 ocorrências no mês)
+    # Adiciona as próximas 4 ocorrências
     for _ in range(4):
         dias.append(data_atual)
         data_atual += timedelta(weeks=1)
 
     return dias
+
 
 
 from flask_jwt_extended import jwt_required, get_jwt_identity
