@@ -20,6 +20,7 @@ const EditarUsuario = ({ usuario, role, onClose, onSave }) => {
   const [clinicas, setClinicas] = useState([]);
   const [cidades, setCidades] = useState([]);
   const [erro, setErro] = useState('');
+  
 
   useEffect(() => {
     const buscarClinicas = async () => {
