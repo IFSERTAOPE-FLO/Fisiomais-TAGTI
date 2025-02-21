@@ -38,13 +38,15 @@ const GerenciarUsuarios = () => {
     const renderActiveComponent = () => {
         switch (activeComponent) {
             case "cliente":
-                return <AddCliente onClose={() => setActiveComponent(null)} />;
+                return <AddCliente onClose={() => setActiveComponent(null)} onSucesso={buscarUsuarios} />;
             case "colaborador":
-                return <AddColaborador onClose={() => setActiveComponent(null)} />;
+                return <AddColaborador onClose={() => setActiveComponent(null) } onSucesso={buscarUsuarios} />;
             default:
                 return null;
         }
     };
+    
+    
     
 
     const buscarUsuarios = async () => {

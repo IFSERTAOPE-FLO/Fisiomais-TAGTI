@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { Link } from "react-router-dom";
 
-function AddColaborador({ onClose }) {
+function AddColaborador({ onClose, onSucesso  }) {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -130,6 +129,10 @@ function AddColaborador({ onClose }) {
         setClinica('');
         setPhoto('');
         setAdminNivel('');
+        setMessage('');
+        if (onSucesso) {
+          onSucesso();
+        }
       }
     } catch (error) {
       console.error('Erro ao cadastrar colaborador:', error);
@@ -149,254 +152,279 @@ function AddColaborador({ onClose }) {
 
 
   return (
-    <div className="container ">
+    <div className="container mt-4">
       {message && <div className={`alert ${message.includes('sucesso') ? 'alert-success' : 'alert-danger'}`}>{message}</div>}
-      <div className="card shadow">
-        <div className="card-header">
-          <h2 className="text-center text-primary">Adicionar Colaborador</h2>
+      <div className="card shadow-lg">
+        <div className="card-header bg-light text-primary">
+          <h2 className="mb-0">Adicionar Colaborador</h2>
+          <small className="text-secondary-50">Campos marcados com * são obrigatórios</small>
         </div>
         <div className="card-body">
           <form onSubmit={(e) => { e.preventDefault(); handleRegister(); }}>
-            {/* Nome, Email e Senha */}
-            <div className="row mb-3">
-              <div className="col-md-4">
-                <label htmlFor="nome" className="form-label">Nome*</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="nome"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="col-md-4">
-                <label htmlFor="email" className="form-label">Email*</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="col-md-4">
-                <label htmlFor="senha" className="form-label">Senha*</label>
-                <input
-                  type="password"
-                  className="form-control"
-                  id="senha"
-                  value={senha}
-                  onChange={(e) => setSenha(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Telefone e CPF */}
-            <div className="row mb-3">
-              <div className="col-md-4">
-                <label htmlFor="telefone" className="form-label">Telefone</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="telefone"
-                  value={telefone}
-                  onChange={(e) => setTelefone(e.target.value)}
-                />
-              </div>
-              <div className="col-md-4">
-                <label htmlFor="cpf" className="form-label">CPF*</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="cpf"
-                  value={cpf}
-                  onChange={(e) => setCpf(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="col-md-2">
-                <label htmlFor="dtNasc" className="form-label">Data de Nascimento</label>
-                <input
-                  type="date"
-                  className="form-control"
-                  id="dtNasc"
-                  value={dtNasc}
-                  onChange={(e) => setDtNasc(e.target.value)}
-                />
-              </div>
-              {/* Data de Nascimento */}
-              <div className="col-md-2">
-                <label htmlFor="sexo" className="form-label">Sexo</label>
-                <select
-                  id="sexo"
-                  className="form-control"
-                  value={sexo}
-                  onChange={(e) => setSexo(e.target.value)}
-                >
-                  <option value="">Selecione o sexo</option>
-                  <option value="Masculino">Masculino</option>
-                  <option value="Feminino">Feminino</option>
-                  <option value="Outro">Outro</option>
-                </select>
-              </div>
-            </div>
-
-
-
-
-            {/* Endereço */}
-            <div className="row mb-3">
-              <div className="col-md-4">
-                <label htmlFor="estado" className="form-label">Estado*</label>
-                <select
-                  className="form-select"
-                  id="estado"
-                  value={estado}
-                  onChange={(e) => setEstado(e.target.value)}
-                  required
-                >
-                  <option value="">Selecione</option>
-                  {estados.map((uf) => (
-                    <option key={uf.sigla} value={uf.sigla}>{uf.nome}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-md-4">
-                <label htmlFor="cidade" className="form-label">Cidade*</label>
-                <select
-                  className="form-select"
-                  id="cidade"
-                  value={cidade}
-                  disabled={!estado}
-                  onChange={(e) => setCidade(e.target.value)}
-                  required
-                >
-                  <option value="">Selecione</option>
-                  {cidades.map((cidade) => (
-                    <option key={cidade} value={cidade}>{cidade}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-md-4">
-                <label htmlFor="bairro" className="form-label">Bairro</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="bairro"
-                  value={bairro}
-                  onChange={(e) => setBairro(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Rua e Número */}
-            <div className="row mb-3">
-              <div className="col-md-8">
-                <label htmlFor="rua" className="form-label">Rua</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="rua"
-                  value={rua}
-                  onChange={(e) => setRua(e.target.value)}
-                />
-              </div>
-              <div className="col-md-4">
-                <label htmlFor="numero" className="form-label">Número</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="numero"
-                  value={numero}
-                  onChange={(e) => setNumero(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Cargo e Referências */}
-            <div className="row mb-3">
-              <div className="col-md-6">
-                <label htmlFor="cargo" className="form-label">Cargo</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="cargo"
-                  value={cargo}
-                  onChange={(e) => setCargo(e.target.value)}
-                />
-              </div>
-              <div className="col-md-6">
-                <label htmlFor="referencias" className="form-label">Referências</label>
-                <textarea
-                  className="form-control"
-                  id="referencias"
-                  value={referencias}
-                  onChange={(e) => setReferencias(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Admin e Clínica */}
-            <div className="row mb-3">
-              <div className="col-md-5">
-                <label htmlFor="clinica" className="form-label">Clínica</label>
-                <select
-                  className="form-select"
-                  id="clinica"
-                  value={clinica}
-                  onChange={(e) => setClinica(e.target.value)}
-                >
-                  <option value="">Selecione</option>
-                  {clinicas.map((clinica) => (
-                    <option key={clinica.ID_Clinica} value={clinica.ID_Clinica}>{clinica.Nome}</option>
-                  ))}
-                </select>
-              </div>
-              {role === "admin" ? (
-                <div className="col-md-2 d-flex align-items-center">
-                  <div className="form-check">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="isAdmin"
-                      checked={isAdmin}
-                      onChange={(e) => {
-                        setIsAdmin(e.target.checked);
-                        setAdminNivel(e.target.checked ? "geral" : "restrito"); // Atualiza adminNivel corretamente
-                      }}
-                    />
-                    <label htmlFor="isAdmin" className="form-check-label text-dark">
-                      É Administrador?
-                    </label>
-                  </div>
+            {/* Seção: Informações Pessoais */}
+            <fieldset className="border p-3 mb-4">
+              <legend className="w-auto fs-6 text-primary">Informações Pessoais</legend>
+              
+              <div className="row g-3 mb-3">
+                <div className="col-md-4">
+                  <label htmlFor="nome" className="form-label">Nome completo *</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="nome"
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                    required
+                  />
                 </div>
-              ) : (
-                <input type="hidden" id="isAdmin" value="false" />
-              )}
 
-              {/* Exibe o select para escolher o nível de admin quando o checkbox for marcado */}
-              {isAdmin && (
-                <div className="col-md-5 ">
-                  <label htmlFor="adminNivel" className="form-label">Nível de Administrador</label>
+                <div className="col-md-4">
+                  <label htmlFor="email" className="form-label">E-mail *</label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="col-md-4">
+                  <label htmlFor="senha" className="form-label">Senha *</label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    id="senha"
+                    value={senha}
+                    onChange={(e) => setSenha(e.target.value)}
+                    required
+                  />
+                  <div className="form-text">Mínimo 6 caracteres</div>
+                </div>
+              </div>
+
+              <div className="row g-3 mb-3">
+                <div className="col-md-3">
+                  <label htmlFor="cpf" className="form-label">CPF *</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="cpf"
+                    value={cpf}
+                    onChange={(e) => setCpf(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="col-md-3">
+                  <label htmlFor="telefone" className="form-label">Telefone</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="telefone"
+                    value={telefone}
+                    onChange={(e) => setTelefone(e.target.value)}
+                  />
+                </div>
+
+                <div className="col-md-3">
+                  <label htmlFor="dtNasc" className="form-label">Data de Nascimento</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    id="dtNasc"
+                    value={dtNasc}
+                    onChange={(e) => setDtNasc(e.target.value)}
+                  />
+                </div>
+
+                <div className="col-md-3">
+                  <label htmlFor="sexo" className="form-label">Sexo</label>
                   <select
-                    id="adminNivel"
+                    id="sexo"
                     className="form-select"
-                    value={adminNivel}
-                    onChange={(e) => setAdminNivel(e.target.value)}
+                    value={sexo}
+                    onChange={(e) => setSexo(e.target.value)}
                   >
-                    <option value="geral">Geral</option>
-                    <option value="restrito">Restrito</option>
+                    <option value="">Selecione...</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Feminino">Feminino</option>
+                    <option value="Outro">Outro</option>
                   </select>
                 </div>
+              </div>
+            </fieldset>
+
+            {/* Seção: Endereço */}
+            <fieldset className="border p-3 mb-4">
+              <legend className="w-auto fs-6 text-primary">Endereço</legend>
+              
+              <div className="row g-3 mb-3">
+                <div className="col-md-3">
+                  <label htmlFor="estado" className="form-label">Estado *</label>
+                  <select
+                    className="form-select"
+                    id="estado"
+                    value={estado}
+                    onChange={(e) => setEstado(e.target.value)}
+                    required
+                  >
+                    <option value="">Selecione...</option>
+                    {estados.map((uf) => (
+                      <option key={uf.sigla} value={uf.sigla}>{uf.nome}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-3">
+                  <label htmlFor="cidade" className="form-label">Cidade *</label>
+                  <select
+                    className="form-select"
+                    id="cidade"
+                    value={cidade}
+                    disabled={!estado}
+                    onChange={(e) => setCidade(e.target.value)}
+                    required
+                  >
+                    <option value="">Selecione...</option>
+                    {cidades.map((cidade) => (
+                      <option key={cidade} value={cidade}>{cidade}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-3">
+                  <label htmlFor="bairro" className="form-label">Bairro</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="bairro"
+                    value={bairro}
+                    onChange={(e) => setBairro(e.target.value)}
+                  />
+                </div>
+
+                <div className="col-md-3">
+                  <label htmlFor="rua" className="form-label">Rua</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="rua"
+                    value={rua}
+                    onChange={(e) => setRua(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="row g-3">
+                <div className="col-md-2">
+                  <label htmlFor="numero" className="form-label">Número</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="numero"
+                    value={numero}
+                    onChange={(e) => setNumero(e.target.value)}
+                  />
+                </div>
+
+                <div className="col-md-10">
+                  <label htmlFor="referencias" className="form-label">Referências</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="referencias"
+                    value={referencias}
+                    onChange={(e) => setReferencias(e.target.value)}
+                  />
+                </div>
+              </div>
+            </fieldset>
+
+            {/* Seção: Informações Profissionais */}
+            <fieldset className="border p-3 mb-4">
+              <legend className="w-auto fs-6 text-primary">Informações Profissionais</legend>
+              
+              <div className="row g-3 mb-3">
+                <div className="col-md-4">
+                  <label htmlFor="cargo" className="form-label">Cargo</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="cargo"
+                    value={cargo}
+                    onChange={(e) => setCargo(e.target.value)}
+                  />
+                </div>
+
+                <div className="col-md-4">
+                  <label htmlFor="clinica" className="form-label">Clínica</label>
+                  <select
+                    className="form-select"
+                    id="clinica"
+                    value={clinica}
+                    onChange={(e) => setClinica(e.target.value)}
+                  >
+                    <option value="">Selecione...</option>
+                    {clinicas.map((clinica) => (
+                      <option key={clinica.ID_Clinica} value={clinica.ID_Clinica}>{clinica.Nome}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-4">
+                  <label htmlFor="photo" className="form-label">Foto</label>
+                  <input
+                    type="file"
+                    className="form-control"
+                    id="photo"
+                    accept="image/*"
+                    onChange={(e) => setPhoto(e.target.files[0])}
+                  />
+                </div>
+              </div>
+
+              {role === "admin" && (
+                <div className="row g-3 align-items-center">
+                  <div className="col-md-4">
+                    <div className="form-check">
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        id="isAdmin"
+                        checked={isAdmin}
+                        onChange={(e) => {
+                          setIsAdmin(e.target.checked);
+                          setAdminNivel(e.target.checked ? "geral" : "restrito");
+                        }}
+                      />
+                      <label htmlFor="isAdmin" className="form-check-label text-dark">
+                        É Administrador?
+                      </label>
+                    </div>
+                  </div>
+
+                  {isAdmin && (
+                    <div className="col-md-8">
+                      <label htmlFor="adminNivel" className="form-label">Nível de Acesso</label>
+                      <select
+                        id="adminNivel"
+                        className="form-select"
+                        value={adminNivel}
+                        onChange={(e) => setAdminNivel(e.target.value)}
+                      >
+                        <option value="geral">Geral</option>
+                        <option value="restrito">Restrito</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
               )}
+            </fieldset>
 
-            </div>
-
-            {/* Botão de Cadastro */}
-            <div className="d-flex justify-content-end gap-2 mt-2">
+           {/* Botões de Ação */}
+           <div className="d-flex justify-content-end gap-2 mt-2">
               <button className="btn btn-login" type="submit" disabled={loading}>
                 {loading ? 'Cadastrando...' : 'Cadastrar'}
               </button>
@@ -404,13 +432,11 @@ function AddColaborador({ onClose }) {
                 Fechar
               </button>
             </div>
-
           </form>
         </div>
       </div>
     </div>
   );
-
 }
 
 export default AddColaborador;
