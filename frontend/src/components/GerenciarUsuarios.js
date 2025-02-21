@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import EditarUsuario from "./EditarUsuario";
 import EditarHorarios from "./EditarHorarios";
-import { Link, } from "react-router-dom";
 import Paginator from "./Paginator"; // Importe o componente Paginator
 import { Modal } from "react-bootstrap";
 import AulasDoCliente from "./pilates/usuariocolaborador/AulasDoCliente";
+import AddCliente from "../pages/AddCliente";
+import AddColaborador from "../pages/AddColaborador";
 
 const GerenciarUsuarios = () => {
     const [usuarios, setUsuarios] = useState([]);
@@ -31,6 +32,20 @@ const GerenciarUsuarios = () => {
         setClienteAulasId(clienteId);
         setShowAulasModal(true);
     };
+
+    const [activeComponent, setActiveComponent] = useState(null);
+
+    const renderActiveComponent = () => {
+        switch (activeComponent) {
+            case "cliente":
+                return <AddCliente onClose={() => setActiveComponent(null)} />;
+            case "colaborador":
+                return <AddColaborador onClose={() => setActiveComponent(null)} />;
+            default:
+                return null;
+        }
+    };
+    
 
     const buscarUsuarios = async () => {
         if (!isRoleValid) {
@@ -187,6 +202,8 @@ const GerenciarUsuarios = () => {
 
 
 
+
+
     return (
         <div className="container">
             <h2 className="mb-3 text-secondary text-center">Gerenciar Usuários</h2>
@@ -194,8 +211,8 @@ const GerenciarUsuarios = () => {
             {erro && <p className="alert alert-danger">{erro}</p>}
             <div className="container mb-3">
                 <div className="row align-items-center g-2">
-                    {/* Campo de pesquisa - Ocupa mais espaço quando não há botões extras */}
-                    <div className={`${savedRole === "admin" ? "col-md-8 col-lg-9" : "col-md-6 col-lg-5"}`}>
+                    {/* Coluna para o campo de pesquisa */}
+                    <div className="col-md-6 col-lg-5">
                         <div className="input-group">
                             <input
                                 type="text"
@@ -204,41 +221,56 @@ const GerenciarUsuarios = () => {
                                 value={pesquisaNome}
                                 onChange={(e) => setPesquisaNome(e.target.value)}
                             />
-                            <button className="btn btn-secondary z-bot" type="button">
+                            <button className="btn btn-secondary z-bot" type="button" id="button-addon2">
                                 <i className="bi bi-search z-bot"></i>
                             </button>
+
                         </div>
                     </div>
 
-                    {/* Grupo de botões - Layout adaptável */}
-                    <div className={`${savedRole === "admin" ? "col-md-4 col-lg-3" : "col-md-6 col-lg-7"}`}>
-                        <div className="d-flex flex-wrap gap-2 justify-content-end">
-                            {/* Botões comuns a todos os perfis */}
-                            <Link className="btn-login btn-sm text-decoration-none" to="/addcliente">
-                                <i className="bi bi-person-plus"></i> Cliente
-                            </Link>
 
-                            {/* Ocultar botão Colaborador para admin */}
-                            {savedRole !== "admin" && (
-                                <Link className="btn-login btn-sm text-decoration-none" to="/addcolaborador">
-                                    <i className="bi bi-person-workspace"></i> Colaborador
-                                </Link>
-                            )}
-
-                            {/* Botões específicos para colaborador */}
-                            {savedRole === "colaborador" && (
-                                <>
-                                    <button className="btn-login btn-sm" onClick={() => handleEditarUsuario(usuarioLogado)}>
-                                        <i className="bi bi-pencil"></i> Perfil
-                                    </button>
-                                    <button className="btn-login btn-sm" onClick={() => handleEditarHorarios(usuarioLogado)}>
-                                        <i className="bi bi-clock"></i> Horários
-                                    </button>
-                                </>
-                            )}
-                        </div>
+                    <div className="col-auto">
+                        <button
+                            className="btn-login btn-sm me-2 text-decoration-none"
+                            onClick={() => setActiveComponent("cliente")}
+                            title="Adicione um novo cliente"
+                        >
+                            <i className="bi bi-person-plus"></i> Cliente
+                        </button>
                     </div>
+                    <div className="col-auto">
+                        <button
+                            className="btn-login btn-sm me-2 text-decoration-none"
+                            onClick={() => setActiveComponent("colaborador")}
+                            title="Adicione um novo colaborador"
+                        >
+                            <i className="bi bi-person-workspace"></i> Colaborador
+                        </button>
+                    </div>
+                    {savedRole === "colaborador" && (
+                        <>
+                            <div className="col-auto">
+                                <button
+                                    className="btn-login btn-sm me-2"
+                                    onClick={() => handleEditarUsuario(usuarioLogado)}
+                                >
+                                    <i className="bi bi-pencil"></i> Editar Perfil e Clinica
+                                </button>
+                            </div>
+                            <div className="col-auto">
+                                <button
+                                    className="btn-login btn-sm me-2"
+                                    onClick={() => handleEditarHorarios(usuarioLogado)}
+                                >
+                                    <i className="bi bi-clock"></i> Editar seus horários
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </div>
+            </div>
+            <div className="mt-4">
+                {renderActiveComponent()}
             </div>
             <div className="table-responsive">
                 <table className="table table-striped table-bordered mt-4">

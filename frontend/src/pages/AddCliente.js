@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Form, Button, Col, Row, Spinner } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
 
-const AddCliente = () => {
+const AddCliente = ({ onClose }) => {
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
@@ -87,7 +86,7 @@ const AddCliente = () => {
   };
 
   return (
-    <div className="container col-md-9 my-5">
+    <div className="container ">
       {modalMessage && <div className="alert alert-info">{modalMessage}</div>}
       <div className="card shadow">
         <div className="card-header">
@@ -302,16 +301,15 @@ const AddCliente = () => {
                 </Form.Group>
               </Col>
             </Row>
-            <div className="d-flex justify-content-end mt-3">
-              <Button className='btn btn-login' type="submit" disabled={loading}>
-                {loading ? <Spinner animation="border" size="sm" /> : 'Cadastrar'}
-              </Button>
-
-
-              <Link className="btn btn-signup" to="/adminPage?opcaoSelecionada=usuarios"                >
-                <i className="bi bi-arrow-return-left me-2"></i> Voltar
-              </Link>
+            <div className="d-flex justify-content-end gap-2 mt-2">
+              <button className="btn btn-login" type="submit" disabled={loading}>
+                {loading ? 'Cadastrando...' : 'Cadastrar'}
+              </button>
+              <button className="btn btn-signup" onClick={onClose}>
+                Fechar
+              </button>
             </div>
+
           </Form>
 
 
