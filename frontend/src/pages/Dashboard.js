@@ -13,10 +13,10 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
-import { Container, Row, Col, Card, ListGroup, Alert, Button, Form } from 'react-bootstrap';
+import { Container, Row, Col, Card, ListGroup, Alert, Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCalendarAlt, faUsers, faUserMd, faClinicMedical, faDollarSign } from '@fortawesome/free-solid-svg-icons';
-import Calendar from 'react-calendar';
+import { faCalendarAlt, faUsers, faUserMd, faClinicMedical} from '@fortawesome/free-solid-svg-icons';
+
 import "react-calendar/dist/Calendar.css";
 
 // Registrar elementos necessários no Chart.js

@@ -237,7 +237,7 @@ function Navbar() {
   useEffect(() => {
     const cleanup = autoRefreshToken();
     return cleanup; // Limpa os temporizadores ao desmontar
-  }, []);
+  }, [autoRefreshToken()]);
 
 
   return (
@@ -318,7 +318,7 @@ function Navbar() {
                 <li className="nav-item dropdown btn-user" >
                   <a
                     className="nav-link dropdown-toggle  btn-user"
-                    href="#"
+                    href="#dropdownUser"
 
                     role="button"
                     data-bs-toggle="dropdown"
