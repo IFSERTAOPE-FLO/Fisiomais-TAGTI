@@ -181,14 +181,7 @@ function Navbar() {
         if (modalInstance) modalInstance.hide();
       }
   
-      // Fechar todos os dropdowns abertos do Bootstrap
-      const dropdowns = document.querySelectorAll('.dropdown-menu.show');
-      dropdowns.forEach((dropdown) => {
-        const dropdownInstance = window.bootstrap.Dropdown.getInstance(dropdown);
-        if (dropdownInstance) {
-          dropdownInstance.hide(); // Fecha o dropdown
-        }
-      });
+      
   
       // Limpar o localStorage e estados
       localStorage.clear();

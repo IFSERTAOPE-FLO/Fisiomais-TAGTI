@@ -6,6 +6,7 @@ import '../css/Home.css';
 
 function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const role = localStorage.getItem('role');
 
   // Verifica se o usuário está logado
   useEffect(() => {
@@ -32,19 +33,28 @@ function Home() {
           Agende uma sessão conosco para melhorar sua saúde e bem-estar.
           Nossos profissionais estão prontos para ajudar você a alcançar seus objetivos!
         </p>
-        <div className="mt-4 text-center">
-          {isLoggedIn ? (
-            <Link to="/criaragendamento" className="btn btn-signup gap-2">
+        {role === "cliente" ? (
+          isLoggedIn ? (
+            <Link
+              to="/clientepage?opcaoSelecionada=criarAgendamento"
+              className="btn btn-signup gap-2"
+            >
               <i className="bi bi-calendar-check"></i> Agendar Sessão
             </Link>
           ) : (
             <div className="inscrever-texto">
               <p className="fs-5 text-secondary">
-                 Clique em "Inscrever-se" no menu acima para começar! <i className="bi bi-arrow-up"></i>
+                Clique em "Inscrever-se" no menu acima para começar!{" "}
+                <i className="bi bi-arrow-up"></i>
               </p>
             </div>
-          )}
-        </div>
+          )
+        ) : (
+          <Link className="btn btn-login" to="/adminPage">
+            Central de Controle
+          </Link>
+        )}
+
       </div>
       {/* Carrossel de Colaboradores */}
       <div className="mt-5">
