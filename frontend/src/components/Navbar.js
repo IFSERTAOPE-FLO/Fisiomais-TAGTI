@@ -97,7 +97,7 @@ function Navbar() {
 
       setShowCadastroModal(false);
 
-      navigate("/criarAgendamento");
+      navigate("/clientepage");
     } else {
       console.error('Erro: Dados incompletos ou ausentes', data);
       alert("Erro ao cadastrar o usuário. Tente novamente.");

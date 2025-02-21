@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Form, Alert, Row, Col } from 'react-bootstrap'; // Corrigido para importar Row e Col separadamente
+import { Modal, Form, Alert, Row, Col, Button, Spinner } from 'react-bootstrap'; // Corrigido para importar Row e Col separadamente
 import axios from 'axios';
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
@@ -69,182 +69,177 @@ const CadastroClienteModal = ({ show, onHide, onRegisterSuccess }) => {
 
 
   return (
-    <div className="modal-dialog">
-      <Modal show={show} onHide={onHide}>
-        <Modal.Header closeButton>
-          <Modal.Title className='text-center'>Cadastro de Cliente</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
-          <Form onSubmit={handleSubmit}>
-            <Row>
-              <Col>
-                <Form.Group controlId="nome">
-                  <Form.Label>Nome</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="nome"
-                    value={formData.nome}
-                    onChange={handleChange}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-
-              <Col>
-                <Form.Group controlId="sexo">
-                  <Form.Label>Sexo</Form.Label>
-                  <Form.Control
-                    as="select"
-                    name="sexo"
-                    value={formData.sexo}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">Selecione...</option>
-                    <option value="Masculino">Masculino</option>
-                    <option value="Feminino">Feminino</option>
-                    <option value="Outro">Outro</option>
-                  </Form.Control>
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row>
-              <Col>
-                <Form.Group controlId="email">
-                  <Form.Label>Email</Form.Label>
-                  <Form.Control
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-
-              <Col>
-                <Form.Group controlId="confirmarEmail">
-                  <Form.Label>Confirmar Email</Form.Label>
-                  <Form.Control
-                    type="email"
-                    name="confirmarEmail"
-                    value={formData.confirmarEmail}
-                    onChange={handleChange}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row>
-              <Col>
-                <Form.Group controlId="senha">
-                  <Form.Label>Senha</Form.Label>
-                  <Form.Control
-                    type="password"
-                    name="senha"
-                    value={formData.senha}
-                    onChange={handleChange}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-
-              <Col>
-                <Form.Group controlId="confirmarSenha">
-                  <Form.Label>Confirmar Senha</Form.Label>
-                  <Form.Control
-                    type="password"
-                    name="confirmarSenha"
-                    value={formData.confirmarSenha}
-                    onChange={handleChange}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row>
-              <Col>
-                <Form.Group controlId="telefone">
-                  <Form.Label>Telefone</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="telefone"
-                    value={formData.telefone}
-                    onChange={handleChange}
-                  />
-                </Form.Group>
-              </Col>
-
-              <Col>
-                <Form.Group controlId="cpf">
-                  <Form.Label>CPF</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="cpf"
-                    value={formData.cpf}
-                    onChange={handleChange}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row>
-              <Col >
-                <Form.Group controlId="nascimento">
-                  <Form.Label>Data de Nascimento</Form.Label>
-                  <Form.Control
-                    type="date"
-                    name="dt_nasc"
-                    value={formData.dt_nasc}
-                    onChange={handleChange}
-                  />
-                </Form.Group>
-              </Col>
-              <Col>
+    <Modal show={show} onHide={onHide} centered>
+      <Modal.Header closeButton>
+        <Modal.Title className="w-100 text-center">Cadastro de Cliente</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
+        <Form onSubmit={handleSubmit}>
+          {/* Linha 1: Nome e Data de Nascimento (data menor) */}
+          <Row className="mb-3 align-items-end">
+            <Col>
+              <Form.Group controlId="nome">
+                <Form.Label>Nome</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="nome"
+                  value={formData.nome}
+                  onChange={handleChange}
+                  placeholder="Digite seu nome"
+                  required
+                />
+              </Form.Group>
+            </Col>
+            <Col xs="auto">
+              <Form.Group controlId="nascimento" className="mb-0">
+                <Form.Label>Data de Nascimento</Form.Label>
+                <Form.Control
+                  type="date"
+                  name="dt_nasc"
+                  value={formData.dt_nasc}
+                  onChange={handleChange}
+                  className="w-auto"
+                />
+              </Form.Group>
+            </Col>
+          </Row>
 
 
+          {/* Linha 2: Sexo e CPF */}
+          <Row className="mb-3">
+            <Col md={6}>
+              <Form.Group controlId="sexo">
+                <Form.Label>Sexo</Form.Label>
+                <Form.Select
+                  name="sexo"
+                  value={formData.sexo}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Selecione...</option>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Feminino">Feminino</option>
+                  <option value="Outro">Outro</option>
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group controlId="cpf">
+                <Form.Label>CPF</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="cpf"
+                  value={formData.cpf}
+                  onChange={handleChange}
+                  placeholder="xxx.xxx.xxx-xx"
+                  required
+                />
+              </Form.Group>
+            </Col>
+          </Row>
 
+          {/* Linha 3: Telefone */}
+          <Row className="mb-3">
+            <Col>
+              <Form.Group controlId="telefone">
+                <Form.Label>Telefone</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="telefone"
+                  value={formData.telefone}
+                  onChange={handleChange}
+                  placeholder="(xx) xxxxx-xxxx"
+                />
+              </Form.Group>
+            </Col>
+          </Row>
 
-              </Col>
-            </Row>
+          {/* Linha 4: Email e Confirmar Email */}
+          <Row className="mb-3">
+            <Col md={6}>
+              <Form.Group controlId="email">
+                <Form.Label>Email</Form.Label>
+                <Form.Control
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="exemplo@dominio.com"
+                  required
+                />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group controlId="confirmarEmail">
+                <Form.Label>Confirmar Email</Form.Label>
+                <Form.Control
+                  type="email"
+                  name="confirmarEmail"
+                  value={formData.confirmarEmail}
+                  onChange={handleChange}
+                  placeholder="Confirme seu email"
+                  required
+                />
+              </Form.Group>
+            </Col>
+          </Row>
 
-          </Form>
-        </Modal.Body>
-        <Modal.Footer className="d-flex justify-content-between align-items-center">
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isLoading}
-            className="btn btn-signup"
-          >
-            {isLoading ? (
-              <i className="bi bi-arrow-repeat spinner"></i>
-            ) : (
-              <i className="bi bi-person-plus"></i>
-            )}
-            {' '}
-            {isLoading ? 'Carregando...' : 'Cadastrar'}
-          </button>
-
-
-          <div className="d-flex gap-3 social-icons">
-            <button className="btn btn-outline-primary btn-social">
-              <i className="bi bi-facebook"></i>
-            </button>
-            <button className="btn btn-outline-danger btn-social">
-              <i className="bi bi-google"></i>
-            </button>
-          </div>
-        </Modal.Footer>
-
-      </Modal>
-    </div>
+          {/* Linha 5: Senha e Confirmar Senha */}
+          <Row className="mb-3">
+            <Col md={6}>
+              <Form.Group controlId="senha">
+                <Form.Label>Senha</Form.Label>
+                <Form.Control
+                  type="password"
+                  name="senha"
+                  value={formData.senha}
+                  onChange={handleChange}
+                  placeholder="Digite sua senha"
+                  required
+                />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group controlId="confirmarSenha">
+                <Form.Label>Confirmar Senha</Form.Label>
+                <Form.Control
+                  type="password"
+                  name="confirmarSenha"
+                  value={formData.confirmarSenha}
+                  onChange={handleChange}
+                  placeholder="Confirme sua senha"
+                  required
+                />
+              </Form.Group>
+            </Col>
+          </Row>
+        </Form>
+      </Modal.Body>
+      <Modal.Footer className="d-flex justify-content-between align-items-center">
+        <Button className='btn btn-signup' type="submit" onClick={handleSubmit} disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" /> Carregando...
+            </>
+          ) : (
+            <>
+              <i className="bi bi-person-plus"></i> Cadastrar
+            </>
+          )}
+        </Button>
+        <div className="d-flex gap-2">
+          <Button variant="outline-primary" className="btn-social">
+            <i className="bi bi-facebook"></i>
+          </Button>
+          <Button variant="outline-danger" className="btn-social">
+            <i className="bi bi-google"></i>
+          </Button>
+        </div>
+      </Modal.Footer>
+    </Modal>
   );
+
 };
 
 export default CadastroClienteModal;
