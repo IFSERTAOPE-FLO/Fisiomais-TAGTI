@@ -351,46 +351,80 @@
     color: #36ab9c !important;
   }
 
-  /* Estilos para os ícones de redes sociais */
-  /* Estilos de hover para redes sociais */
-  .social-icons a:hover {
-    color: #fff;
-  }
+  /* Container dos ícones sociais */
+.social-icons {
+  display: flex;
+  gap: 12px; /* Espaçamento entre os ícones */
+  padding: 0;
+  margin: 0;
+}
 
-  .social-icons a:hover.bi-facebook {
-    background-color: #1877F2;
-  }
+/* Estilo base dos botões sociais */
+.social-icons .btn-social {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%; /* Botões completamente redondos */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid transparent; /* Borda transparente */
+  transition: all 0.3s ease; /* Transição suave */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+}
 
-  .social-icons a:hover.bi-google {
-    background-color: #db4437;
-  }
+/* Efeitos de hover */
+.social-icons .btn-social:hover {
+  color: #fff !important; /* Cor do ícone ao passar o mouse */
+  transform: translateY(-2px); /* Efeito de levitação */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Sombra mais intensa */
+}
 
-  .social-icons a:hover.bi-linkedin {
-    background-color: #0077B5;
-  }
+/* Facebook */
+.social-icons .btn-social.bi-facebook {
+  color: #1877F2; /* Cor do ícone */
+  border-color: #1877F2; /* Cor da borda */
+}
 
-  .social-icons a:hover.bi-instagram {
-    background-color: #E4405F;
-  }
+.social-icons .btn-social.bi-facebook:hover {
+  background-color: #1877F2; /* Cor de fundo ao passar o mouse */
+}
 
+/* Google */
+.social-icons .btn-social.bi-google {
+  color: #DB4437; /* Cor do ícone */
+  border-color: #DB4437; /* Cor da borda */
+}
 
+.social-icons .btn-social.bi-google:hover {
+  background-color: #DB4437; /* Cor de fundo ao passar o mouse */
+}
 
-  .social-icons {
+/* LinkedIn */
+.social-icons .btn-social.bi-linkedin {
+  color: #0077B5; /* Cor do ícone */
+  border-color: #0077B5; /* Cor da borda */
+}
 
-    gap: 10px;
-    border: 0px;
-  }
+.social-icons .btn-social.bi-linkedin:hover {
+  background-color: #0077B5; /* Cor de fundo ao passar o mouse */
+}
 
-  .modal-footer p {
-    margin: 0;
-    font-size: 1rem;
-  }
+/* Instagram */
+.social-icons .btn-social.bi-instagram {
+  color: #E4405F; /* Cor do ícone */
+  border-color: #E4405F; /* Cor da borda */
+}
 
-  .modal-footer .social-icons {
-    gap: 10px;
-    display: flex;
-    padding: 0;
-  }
+.social-icons .btn-social.bi-instagram:hover {
+  background-color: #E4405F; /* Cor de fundo ao passar o mouse */
+}
+
+/* Texto no modal-footer */
+.modal-footer p {
+  margin: 0;
+  font-size: 1rem;
+  color: #555; /* Cor mais suave para o texto */
+}
 
   /* Responsividade */
   @media (max-width: 576px) {

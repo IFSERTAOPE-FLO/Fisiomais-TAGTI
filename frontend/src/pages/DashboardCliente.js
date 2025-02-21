@@ -13,6 +13,7 @@ import {
   Button
 } from 'react-bootstrap';
 import Perfil from "./Perfil";
+import { Link } from "react-router-dom";
 
 const DashboardClientes = () => {
   const [agendamentos, setAgendamentos] = useState([]);
@@ -115,7 +116,12 @@ const DashboardClientes = () => {
                 <ListGroup.Item className="text-muted">Nenhum agendamento</ListGroup.Item>
               )}
             </ListGroup>
-
+            <Card.Footer className="text-center mt-3">
+              <Link className="btn btn-signup" to="/clientepage?opcaoSelecionada=CalendarioInterativo">
+                <i className="bi bi-calendar-event"></i>
+                <span> Ver Calendário</span>
+              </Link>
+            </Card.Footer>
           </Card>
         </Col>
 

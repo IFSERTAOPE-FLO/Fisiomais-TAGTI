@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Link } from "react-router-dom";
 import '../css/Estilos.css';
 
 function Especialidades() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const role = localStorage.getItem('role');
   return (
     <div className="container my-5 mt-5 text-center p-4 bg-light rounded shadow">
       {/* Título da Página */}
@@ -171,9 +173,27 @@ function Especialidades() {
         <p className="fs-5 text-secondary">
           Não perca tempo! Agende uma consulta e aproveite os benefícios dos nossos tratamentos.
         </p>
-        <Link to="/criaragendamento" className="btn btn-signup gap-2">
-          <i className="bi bi-calendar-check"></i> Agendar Sessão
-        </Link>
+         {isLoggedIn ? (
+                  role === "cliente" ? (
+                    <Link
+                      to="/clientepage?opcaoSelecionada=criarAgendamento"
+                      className="btn btn-signup gap-2"
+                    >
+                      <i className="bi bi-calendar-check"></i> Agendar Sessão
+                    </Link>
+                  ) : (
+                    <Link className="btn btn-signup" to="/adminPage">
+                      <i className="bi bi-gear-fill me-2"></i> Central de Controle
+                    </Link>
+                  )
+                ) : (
+                  <div className="inscrever-texto">
+                    <p className="fs-5 text-secondary">
+                      Clique em <strong className="cor-pink">"Inscrever-se"</strong> no menu acima para começar!{" "}
+                      <i className="bi bi-arrow-up"></i>
+                    </p>
+                  </div>
+                )}
       </div>
     </div>
   );

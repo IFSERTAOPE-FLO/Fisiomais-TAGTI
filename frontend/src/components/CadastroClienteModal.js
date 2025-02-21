@@ -66,52 +66,84 @@ const CadastroClienteModal = ({ show, onHide, onRegisterSuccess }) => {
       setIsLoading(false);
     }
   };
+  const [passwordVisible, setPasswordVisible] = useState({
+    senha: false,
+    confirmarSenha: false
+  });
+
+  // Função para alternar a visibilidade da senha
+  const togglePasswordVisibility = (field) => {
+    setPasswordVisible(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
 
 
   return (
-    <Modal show={show} onHide={onHide} centered>
-      <Modal.Header closeButton>
-        <Modal.Title className="w-100 text-center">Cadastro de Cliente</Modal.Title>
+    <Modal show={show} onHide={onHide} centered >
+      <Modal.Header closeButton className="border-bottom-0 pb-0">
+        <Modal.Title >
+          <div className="modal-header text-center justify-content-center">
+            <h5 className="modal-title  d-flex align-items-center gap-2" >
+              <i className="bi  bi-person-circle"></i>
+              Inscrever-se
+            </h5>
+          </div>
+
+        </Modal.Title>
       </Modal.Header>
-      <Modal.Body>
-        {errorMessage && <Alert variant="danger">{errorMessage}</Alert>}
-        <Form onSubmit={handleSubmit}>
-          {/* Linha 1: Nome e Data de Nascimento (data menor) */}
-          <Row className="mb-3 align-items-end">
-            <Col>
-              <Form.Group controlId="nome">
-                <Form.Label>Nome</Form.Label>
+
+      <Modal.Body className="pt-1">
+        {errorMessage && <Alert variant="danger" className="d-flex align-items-center">
+          <i className="bi bi-exclamation-triangle-fill me-2"></i>
+          {errorMessage}
+        </Alert>}
+
+        <Form onSubmit={handleSubmit} className="needs-validation" noValidate>
+          <Row className="g-3">
+            {/* Nome e Data Nascimento */}
+            <Col md={7}>
+              <Form.Group className="mb-3">
+                <Form.Label className="small text-muted">
+                  <i className="bi bi-person me-2"></i>Nome completo
+                </Form.Label>
                 <Form.Control
                   type="text"
+                  id="nome"
                   name="nome"
+                  placeholder="Digite seu nome completo"
                   value={formData.nome}
                   onChange={handleChange}
-                  placeholder="Digite seu nome"
                   required
                 />
               </Form.Group>
             </Col>
+
             <Col xs="auto">
-              <Form.Group controlId="nascimento" className="mb-0">
-                <Form.Label>Data de Nascimento</Form.Label>
+              <Form.Group className="mb-3">
+                <Form.Label className="small text-muted">
+                  <i className="bi bi-calendar3 me-2"></i>Data de Nascimento
+                </Form.Label>
                 <Form.Control
                   type="date"
+                  id="nascimento"
                   name="dt_nasc"
                   value={formData.dt_nasc}
                   onChange={handleChange}
-                  className="w-auto"
+                  required
                 />
               </Form.Group>
             </Col>
-          </Row>
 
-
-          {/* Linha 2: Sexo e CPF */}
-          <Row className="mb-3">
-            <Col md={6}>
-              <Form.Group controlId="sexo">
-                <Form.Label>Sexo</Form.Label>
+            {/* Sexo e CPF */}
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label className="small text-muted">
+                  <i className="bi bi-gender-ambiguous me-2"></i>Sexo
+                </Form.Label>
                 <Form.Select
+                  id="sexo"
                   name="sexo"
                   value={formData.sexo}
                   onChange={handleChange}
@@ -124,98 +156,151 @@ const CadastroClienteModal = ({ show, onHide, onRegisterSuccess }) => {
                 </Form.Select>
               </Form.Group>
             </Col>
-            <Col md={6}>
-              <Form.Group controlId="cpf">
-                <Form.Label>CPF</Form.Label>
+
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label className="small text-muted">
+                  <i className="bi bi-file-earmark-person me-2"></i>CPF
+                </Form.Label>
                 <Form.Control
                   type="text"
+                  id="cpf"
                   name="cpf"
+                  placeholder="000.000.000-00"
                   value={formData.cpf}
                   onChange={handleChange}
-                  placeholder="xxx.xxx.xxx-xx"
+                  pattern="\d{3}\.\d{3}\.\d{3}-\d{2}"
                   required
                 />
               </Form.Group>
             </Col>
-          </Row>
 
-          {/* Linha 3: Telefone */}
-          <Row className="mb-3">
-            <Col>
-              <Form.Group controlId="telefone">
-                <Form.Label>Telefone</Form.Label>
+            {/* Telefone */}
+            <Col md={4}>
+              <Form.Group className="mb-3">
+                <Form.Label className="small text-muted">
+                  <i className="bi bi-telephone me-2"></i>Telefone
+                </Form.Label>
                 <Form.Control
-                  type="text"
+                  type="tel"
+                  id="telefone"
                   name="telefone"
+                  placeholder="(00) 00000-0000"
                   value={formData.telefone}
                   onChange={handleChange}
-                  placeholder="(xx) xxxxx-xxxx"
+                  pattern="\([0-9]{2}\) [0-9]{5}-[0-9]{4}"
                 />
               </Form.Group>
             </Col>
-          </Row>
 
-          {/* Linha 4: Email e Confirmar Email */}
-          <Row className="mb-3">
+            {/* Email */}
             <Col md={6}>
-              <Form.Group controlId="email">
-                <Form.Label>Email</Form.Label>
+              <Form.Group className="mb-3">
+                <Form.Label className="small text-muted">
+                  <i className="bi bi-envelope me-2"></i>Email
+                </Form.Label>
                 <Form.Control
                   type="email"
+                  id="email"
                   name="email"
+                  placeholder="exemplo@dominio.com"
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="exemplo@dominio.com"
                   required
                 />
               </Form.Group>
             </Col>
+
+            {/* Confirmação Email */}
             <Col md={6}>
-              <Form.Group controlId="confirmarEmail">
-                <Form.Label>Confirmar Email</Form.Label>
+              <Form.Group className="mb-3">
+                <Form.Label className="small text-muted">
+                  <i className="bi bi-envelope-check me-2"></i>Confirme o Email
+                </Form.Label>
                 <Form.Control
                   type="email"
+                  id="confirmarEmail"
                   name="confirmarEmail"
+                  placeholder="Confirme seu email"
                   value={formData.confirmarEmail}
                   onChange={handleChange}
-                  placeholder="Confirme seu email"
                   required
                 />
               </Form.Group>
             </Col>
-          </Row>
 
-          {/* Linha 5: Senha e Confirmar Senha */}
-          <Row className="mb-3">
+            {/* Senha */}
+            {/* Senha */}
             <Col md={6}>
-              <Form.Group controlId="senha">
-                <Form.Label>Senha</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="senha"
-                  value={formData.senha}
-                  onChange={handleChange}
-                  placeholder="Digite sua senha"
-                  required
-                />
+              <Form.Group className="mb-3">
+                <Form.Label className="small text-muted">
+                  <i className="bi bi-lock me-2"></i>Senha
+                </Form.Label>
+                <div className="input-group">
+                  <Form.Control
+                    type={passwordVisible.senha ? "text" : "password"}
+                    id="senha"
+                    name="senha"
+                    placeholder="Digite sua senha"
+                    value={formData.senha}
+                    onChange={handleChange}
+                    required
+                  />
+                  <button
+                    className="btn btn-outline-secondary"
+                    type="button"
+                    onClick={() => togglePasswordVisibility('senha')}
+                  >
+                    <i className={`bi ${passwordVisible.senha ? 'bi-eye' : 'bi-eye-slash'}`}></i>
+                  </button>
+                </div>
               </Form.Group>
             </Col>
+
+            {/* Confirmação Senha */}
             <Col md={6}>
-              <Form.Group controlId="confirmarSenha">
-                <Form.Label>Confirmar Senha</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="confirmarSenha"
-                  value={formData.confirmarSenha}
-                  onChange={handleChange}
-                  placeholder="Confirme sua senha"
-                  required
-                />
+              <Form.Group className="mb-3">
+                <Form.Label className="small text-muted">
+                  <i className="bi bi-lock me-2"></i>Confirme a Senha
+                </Form.Label>
+                <div className="input-group">
+                  <Form.Control
+                    type={passwordVisible.confirmarSenha ? "text" : "password"}
+                    id="confirmarSenha"
+                    name="confirmarSenha"
+                    placeholder="Confirme sua senha"
+                    value={formData.confirmarSenha}
+                    onChange={handleChange}
+                    required
+                  />
+                  <button
+                    className="btn btn-outline-secondary"
+                    type="button"
+                    onClick={() => togglePasswordVisibility('confirmarSenha')}
+                  >
+                    <i className={`bi ${passwordVisible.confirmarSenha ? 'bi-eye' : 'bi-eye-slash'}`}></i>
+                  </button>
+                </div>
               </Form.Group>
             </Col>
+
+            <Col md={12}>
+              <div className="d-flex ">
+                <Form.Check
+                  type="checkbox"
+                  required
+                  className='gap-2 me-2'
+                  id="termos" // Adicionando id para associar com o label
+                />
+                <label htmlFor="termos" className="text-dark gap-2 me-2"> Aceito os Termos de Uso e Política de Privacidade</label>
+              </div>
+            </Col>
+
+
           </Row>
         </Form>
       </Modal.Body>
+
       <Modal.Footer className="d-flex justify-content-between align-items-center">
         <Button className='btn btn-signup' type="submit" onClick={handleSubmit} disabled={isLoading}>
           {isLoading ? (
@@ -228,16 +313,20 @@ const CadastroClienteModal = ({ show, onHide, onRegisterSuccess }) => {
             </>
           )}
         </Button>
-        <div className="d-flex gap-2">
-          <Button variant="outline-primary" className="btn-social">
-            <i className="bi bi-facebook"></i>
+        <div className="social-icons">
+          {/* Botão do Facebook */}
+          <Button variant="outline-primary" className="btn-social bi-facebook">
+            
           </Button>
-          <Button variant="outline-danger" className="btn-social">
-            <i className="bi bi-google"></i>
+
+          {/* Botão do Google */}
+          <Button variant="outline-danger" className="btn-social bi-google">
+           
           </Button>
         </div>
       </Modal.Footer>
     </Modal>
+
   );
 
 };
