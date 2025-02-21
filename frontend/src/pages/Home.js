@@ -22,7 +22,7 @@ function Home() {
 
 
       <h1 className="text-center fw-bold text-primary mb-3">Bem-vindo à nossa clínica de Fisioterapia e Pilates!</h1>
-      <p className="text-center  text-primary mb-3">Na <strong className="cor-pink"> FISIOMAIS</strong>, cuidamos de você com profissionalismo e dedicação.
+      <p className="text-center  fs-5 text-primary mb-3">Na <strong className="cor-pink"> FISIOMAIS</strong>, cuidamos de você com profissionalismo e dedicação.
         < br />Nossa missão é promover a sua saúde, reabilitação e qualidade de vida por meio de tratamentos personalizados, unindo as melhores prátcias de  <strong className="cor-pink">Fisioterapia</strong> e os benefícios do <strong className="cor-pink">Pilates</strong>.</p>
 
       <div className="mt-5 text-center p-4 bg-light rounded shadow">
@@ -42,17 +42,18 @@ function Home() {
               <i className="bi bi-calendar-check"></i> Agendar Sessão
             </Link>
           ) : (
-            <div className="inscrever-texto">
+            <Link className="btn btn-signup" to="/adminPage">
+            <i className="bi bi-gear-fill me-2"></i> Central de Controle
+          </Link>
+            
+          )
+        ) : (
+          <div className="inscrever-texto">
               <p className="fs-5 text-secondary">
-                Clique em "Inscrever-se" no menu acima para começar!{" "}
+                Clique em <strong className="cor-pink">"Inscrever-se"</strong> no menu acima para começar!{" "}
                 <i className="bi bi-arrow-up"></i>
               </p>
             </div>
-          )
-        ) : (
-          <Link className="btn btn-login" to="/adminPage">
-            Central de Controle
-          </Link>
         )}
 
       </div>
