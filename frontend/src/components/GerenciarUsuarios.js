@@ -213,14 +213,14 @@ const GerenciarUsuarios = () => {
 
 
                     <div className="col-auto">
-                        <Link className="btn-login btn-sm me-2 text-decoration-none" to="/addcliente">
+                        <Link className="btn-login btn-sm me-2 text-decoration-none" to="/addcliente" title="Adcione um novo cliente">
                             <i className="bi bi-person-plus"></i> Cliente
                         </Link>
                     </div>
 
 
                     <div className="col-auto">
-                        <Link className="btn-login btn-sm me-2 text-decoration-none" to="/addcolaborador">
+                        <Link className="btn-login btn-sm me-2 text-decoration-none" to="/addcolaborador" title="Adcione um novo colaborador">
                             <i className="bi bi-person-workspace"></i> Colaborador
                         </Link>
                     </div>

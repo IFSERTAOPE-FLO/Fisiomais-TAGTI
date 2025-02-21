@@ -20,4 +20,33 @@
   }
   
   
-  
+
+
+/* Ícone de seta com animação diagonal corrigida */
+.bi-arrow-up {
+  color: #bc155b;
+  font-size: 1.5rem;
+  transform: rotate(45deg);
+  display: inline-block;
+  animation: diagonal-flight 1.5s infinite ease-in-out;
+}
+
+/* Animação de voo na diagonal ↗ */
+@keyframes diagonal-flight {
+  0% {
+    transform: rotate(45deg) translate(0, 0);
+    opacity: 1;
+  }
+  50% {
+    transform: rotate(45deg) translate(25px, -25px); /* Movimento principal ↗ */
+    opacity: 0.7;
+  }
+  51% {
+    transform: rotate(45deg) translate(-25px, 25px); /* Reset suave */
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(45deg) translate(0, 0);
+    opacity: 1;
+  }
+}
