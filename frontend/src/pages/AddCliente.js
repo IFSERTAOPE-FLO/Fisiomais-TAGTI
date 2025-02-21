@@ -67,22 +67,22 @@ const AddCliente = () => {
     e.preventDefault();
     setLoading(true);
     setModalMessage('');
-    
+
 
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post('http://localhost:5000/clientes/register', formData, {
-        headers: {          
+        headers: {
           Authorization: `Bearer ${token}`,
-      },
+        },
       });
       setLoading(false);
       setModalMessage(response.data.message);
-      
+
     } catch (error) {
       setLoading(false);
       setModalMessage(error.response?.data?.message || 'Erro ao cadastrar cliente.');
-      
+
     }
   };
 
@@ -303,18 +303,18 @@ const AddCliente = () => {
               </Col>
             </Row>
             <div className="d-flex justify-content-end mt-3">
-            <Button className='btn btn-login' type="submit" disabled={loading}>
-              {loading ? <Spinner animation="border" size="sm" /> : 'Cadastrar'}
-            </Button>
+              <Button className='btn btn-login' type="submit" disabled={loading}>
+                {loading ? <Spinner animation="border" size="sm" /> : 'Cadastrar'}
+              </Button>
 
-            
-              <Link className="btn btn-signup" to="/adminpage">
+
+              <Link className="btn btn-signup" to="/adminPage?opcaoSelecionada=usuarios"                >
                 <i className="bi bi-arrow-return-left me-2"></i> Voltar
               </Link>
             </div>
           </Form>
 
-         
+
         </div>
       </div>
     </div>

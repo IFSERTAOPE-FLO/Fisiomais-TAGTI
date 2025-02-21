@@ -394,7 +394,7 @@
                   {loading ? 'Cadastrando...' : 'Cadastrar'}
 
                 </button>
-                <Link className="btn btn-signup   ms-2" to="/adminpage" disabled={loading}>
+                <Link className="btn btn-signup   ms-2" to="/adminPage?opcaoSelecionada=usuarios" disabled={loading}>
                   <i class="bi bi-arrow-return-left me-2"></i>
                   {loading ? "Carregando..." : "Voltar"}
                 </Link>

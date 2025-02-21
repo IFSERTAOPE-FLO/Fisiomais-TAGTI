@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const AdicionarAulaPilates = ({ onAulaAdicionada }) => {
     const [servicoId, setServicoId] = useState("");
@@ -134,7 +134,17 @@ const AdicionarAulaPilates = ({ onAulaAdicionada }) => {
     return (
         <div className="container mt-4">
             <h4 className="mb-4 text-secondary text-center">Adicionar Aula de Pilates</h4>
-            {erro && <div className="alert alert-danger">{erro}</div>}
+            {servicos.length === 0 ? (
+                <div className="alert alert-info">
+                Você não está vinculado a nenhum serviço de Pilates.{" "}
+                <Link to="/adminPage?opcaoSelecionada=servicos">
+                    Acesse a página de Gerenciar Serviços
+                </Link>{" "}
+                para ajustar.
+            </div>
+            ) : (
+                <>
+                { erro && <div className="alert alert-danger">{erro}</div>}
             {sucesso && <div className="alert alert-success">{sucesso}</div>}
 
             <form onSubmit={handleSubmitAula} className="card p-4 shadow-sm">
@@ -269,7 +279,10 @@ const AdicionarAulaPilates = ({ onAulaAdicionada }) => {
                     <i className="bi bi-plus-circle me-2"></i>Adicionar Aula
                 </button>
             </form>
+            </>
+              )}
         </div>
+
     );
 };
 
