@@ -33,8 +33,8 @@ function Home() {
           Agende uma sessão conosco para melhorar sua saúde e bem-estar.
           Nossos profissionais estão prontos para ajudar você a alcançar seus objetivos!
         </p>
-        {role === "cliente" ? (
-          isLoggedIn ? (
+        {isLoggedIn ? (
+          role === "cliente" ? (
             <Link
               to="/clientepage?opcaoSelecionada=criarAgendamento"
               className="btn btn-signup gap-2"
@@ -43,18 +43,18 @@ function Home() {
             </Link>
           ) : (
             <Link className="btn btn-signup" to="/adminPage">
-            <i className="bi bi-gear-fill me-2"></i> Central de Controle
-          </Link>
-            
+              <i className="bi bi-gear-fill me-2"></i> Central de Controle
+            </Link>
           )
         ) : (
           <div className="inscrever-texto">
-              <p className="fs-5 text-secondary">
-                Clique em <strong className="cor-pink">"Inscrever-se"</strong> no menu acima para começar!{" "}
-                <i className="bi bi-arrow-up"></i>
-              </p>
-            </div>
+            <p className="fs-5 text-secondary">
+              Clique em <strong className="cor-pink">"Inscrever-se"</strong> no menu acima para começar!{" "}
+              <i className="bi bi-arrow-up"></i>
+            </p>
+          </div>
         )}
+
 
       </div>
       {/* Carrossel de Colaboradores */}
