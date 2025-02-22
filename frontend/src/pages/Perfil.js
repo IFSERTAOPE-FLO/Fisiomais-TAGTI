@@ -20,7 +20,7 @@ const Perfil = () => {
   const token = localStorage.getItem("token");
   const apiBaseUrl = "http://localhost:5000/usuarios";
 
-  // Supondo que você tenha uma função fetch para obter as clínicas
+  
   const [clinicas, setClinicas] = useState([]);
   const [clinicaSelecionada, setClinicaSelecionada] = useState(dadosEdicao.clinica?.id || '');
 
@@ -308,309 +308,329 @@ const Perfil = () => {
     }
   };
 
-
   return (
-    <div className="container my-5">
-      <div className="card shadow ">
-        
-        <div className="card-body ">
-          {erro && <p className="alert alert-danger">{erro}</p>}
-          {sucesso && <p className="alert alert-success">{sucesso}</p>}
-
-          <div className="row justify-content-center">
-            <div className="col-md-12">
-              <div className="row">
-                <div className="col-12 col-md-4 text-center">
-                  {
-                    arquivoSelecionado ? (
-                      <img
-                        src={URL.createObjectURL(arquivoSelecionado)}
-                        alt="Foto Selecionada"
-                        className="img-fluid rounded-circle mb-3"
-                        style={{ width: "150px", height: "150px" }}
-                      />
-                    ) : dadosUsuario.photo && dadosUsuario.photo.trim() !== "" ? (
-                      <img
-                        src={`http://localhost:5000/usuarios/uploads/${dadosUsuario.photo}`}
-                        alt="Foto do Usuário"
-                        className="img-fluid rounded-circle mb-3"
-                        style={{ width: "200px", height: "160px" }}
-                      />
-                    ) : (
-                      <i className="bi bi-person-circle" style={{ fontSize: "150px" }}></i> // Exibe o ícone se não houver foto
-                    )
-                  }
-
-
-
-                  <input
-                    type="file"
-                    onChange={(e) => setArquivoSelecionado(e.target.files[0])}
-                    className="form-control mb-2  py-1"
-                  />
-                  <button className="btn btn-login  py-2" onClick={fazerUploadFoto}>
-                    Alterar Foto
-                  </button>
+    <div className="container p-4">
+      <div className="row">
+        {/* Seção de Foto */}
+        <div className="col-md-4 text-center mb-4 mb-md-0">
+          <div className="d-flex flex-column align-items-center">
+            <div className="position-relative mb-3">
+              {arquivoSelecionado ? (
+                <img
+                  src={URL.createObjectURL(arquivoSelecionado)}
+                  alt="Foto Selecionada"
+                  className="img-thumbnail rounded-circle shadow"
+                  style={{ width: "180px", height: "180px" }}
+                />
+              ) : dadosUsuario.photo && dadosUsuario.photo.trim() !== "" ? (
+                <img
+                  src={`http://localhost:5000/usuarios/uploads/${dadosUsuario.photo}`}
+                  alt="Foto do Usuário"
+                  className="img-thumbnail rounded-circle shadow"
+                  style={{ width: "180px", height: "180px" }}
+                />
+              ) : (
+                <div 
+                  className="bg-light rounded-circle d-flex align-items-center justify-content-center"
+                  style={{ width: "180px", height: "180px" }}
+                >
+                  <i className="bi bi-person-fill text-secondary" style={{ fontSize: "4rem" }}></i>
                 </div>
-                <div className="col-12 col-md-8">
-                  <form>
-                    <div className="row mb-3 py-0">
-                      <div className="col-12 col-md-6 py-0">
-                        <label htmlFor="nome" className="form-label py-0 ">Nome</label>
-                        <input
-                          type="text"
-                          className="form-control py-1"
-                          id="nome"
-                          name="nome"
-                          value={dadosEdicao.nome || ''}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                      <div className="col-12 col-md-6 py- py-1">
-                        <label htmlFor="email" className="form-label py-0">Email</label>
-                        <input
-                          type="email"
-                          className="form-control py-1 "
-                          id="email"
-                          name="email"
-                          value={dadosEdicao.email || ''}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="row mb-3">
-                      <div className="col-12 col-md-6 py-0">
-                        <label htmlFor="cpf" className="form-label py-0">CPF</label>
-                        <input
-                          type="text"
-                          className="form-control py-1"
-                          id="cpf"
-                          name="cpf"
-                          value={dadosEdicao.cpf || ''}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                      <div className="col-12 col-md-6 py-0">
-                        <label htmlFor="telefone" className="form-label py-0">Telefone</label>
-                        <input
-                          type="tel"
-                          className="form-control py-1"
-                          id="telefone"
-                          name="telefone"
-                          value={dadosEdicao.telefone || ''}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                    </div>
-
-
-
-                    <div className="row mb-3 ">
-                      <div className="col-md-12">
-                        <form>
-                          <div className="row mb-3">
-                            <div className="col-12 col-md-4 py-0">
-                              <label htmlFor="endereco.rua" className="form-label py-0">Logradouro</label>
-                              <input
-                                type="text"
-                                className="form-control py-1"
-                                id="endereco.rua"
-                                name="endereco.rua"
-                                value={dadosEdicao.endereco?.rua || ""}
-                                onChange={handleChange}
-                              />
-                            </div>
-                            <div className="col-12 col-md-4 py-0">
-                              <label htmlFor="endereco.numero" className="form-label py-0">Número</label>
-                              <input
-                                type="text"
-                                className="form-control py-1"
-                                id="endereco.numero"
-                                name="endereco.numero"
-                                value={dadosEdicao.endereco?.numero || ""}
-                                onChange={handleChange}
-                              />
-                            </div>
-                            <div className="col-12 col-md-4 py-0">
-                              <label htmlFor="endereco.complemento" className="form-label py-0">Complemento</label>
-                              <input
-                                type="text"
-                                className="form-control py-1"
-                                id="endereco.complemento"
-                                name="endereco.complemento"
-                                value={dadosEdicao.endereco?.complemento || ""}
-                                onChange={handleChange}
-                              />
-                            </div>
-                          </div>
-
-                          <div className="row mb-3">
-                            <div className="col-12 col-md-4 py-0">
-                              <label htmlFor="endereco.bairro" className="form-label py-0">Bairro</label>
-                              <input
-                                type="text"
-                                className="form-control py-1"
-                                id="endereco.bairro"
-                                name="endereco.bairro"
-                                value={dadosEdicao.endereco?.bairro || ""}
-                                onChange={handleChange}
-                              />
-                            </div>
-                            <div className="col-12 col-md-4 py-0">
-                              <label htmlFor="endereco.estado" className="form-label py-0">Estado</label>
-                              <select
-                                className="form-control py-1"
-                                id="endereco.estado"
-                                name="endereco.estado"
-                                value={dadosEdicao.endereco?.estado || ""}
-                                onChange={handleEstadoChange}
-                              >
-                                <option value="">Selecione o Estado</option>
-                                {estados.map((estado) => (
-                                  <option key={estado} value={estado}>
-                                    {estado}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                            <div className="col-12 col-md-4 py-0">
-                              <label htmlFor="endereco.cidade" className="form-label py-0">Cidade</label>
-                              <select
-                                className="form-control py-1"
-                                id="endereco.cidade"
-                                name="endereco.cidade"
-                                value={dadosEdicao.endereco?.cidade || ""}
-                                onChange={handleChange}
-                              >
-                                <option value="">Selecione a Cidade</option>
-                                {cidades.map((cidade, index) => (
-                                  <option key={index} value={cidade}>
-                                    {cidade}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
-
-                        </form>
-                      </div>
-
-                      {papelUsuario === 'colaborador' && (
-                        <div className="row mb-3">
-                          <div className="col-12 col-md-6 py-0">
-                            <label htmlFor="cargo" className="form-label py-0">Cargo</label>
-                            <input
-                              type="text"
-                              className="form-control py-1"
-                              id="cargo"
-                              name="cargo"
-                              value={dadosEdicao.cargo || ''}
-                              onChange={handleChange}
-
-                            />
-                          </div>
-
-                          <div className="col-12 col-md-3 py-0">
-                            <label htmlFor="clinica" className="form-label py-0">Clínica</label>
-                            <select
-                              className="form-control py-1"
-                              id="clinica"
-                              name="clinica.id"
-                              value={clinicaSelecionada}
-                              onChange={handleClinicaChange}
-                            >
-                              <option value="">Selecione uma clínica</option>
-                              {clinicas.map((clinica) => (
-                                <option key={clinica.ID_Clinica} value={clinica.ID_Clinica}>
-                                  {clinica.Nome}
-                                </option>
-                              ))}
-                            </select>
-
-                          </div>
-                          {/* Salvar a clínica */}
-                          <div className="col-12 col-md-3 py-2">
-                            < br />
-                            <button
-                              type="button"
-                              className="btn btn-signup  py-2"
-                              onClick={atualizarClinica} // Função para atualizar a clínica
-                            >
-                              Alterar Clinica
-                            </button>
-                          </div>
-
-
-                        </div>
-                      )}
-                      {/* Campos para alterar a senha */}
-
-                      <div className="row mb-3">
-                        <div className="col-12 col-md-3 py-0 ">
-                          <label htmlFor="senhaAtual" className="form-label py-0">Senha Atual</label>
-                          <input
-                            type="password"
-                            className="form-control py-1"
-                            id="senhaAtual"
-                            value={senhaAtual}
-                            onChange={(e) => setSenhaAtual(e.target.value)}
-                          />
-                        </div>
-                        <div className="col-12 col-md-3 py-0">
-                          <label htmlFor="novaSenha" className="form-label py-0">Nova Senha</label>
-                          <input
-                            type="password"
-                            className="form-control py-1"
-                            id="novaSenha"
-                            value={novaSenha}
-                            onChange={(e) => setNovaSenha(e.target.value)}
-                          />
-                        </div>
-                        <div className="col-12 col-md-3 py-0">
-                          <label htmlFor="confirmarSenha" className="form-label py-0">Confirmar Nova Senha</label>
-                          <input
-                            type="password"
-                            className="form-control py-1"
-                            id="confirmarSenha"
-                            value={confirmarSenha}
-                            onChange={(e) => setConfirmarSenha(e.target.value)}
-                          />
-                        </div>
-                        <div className="col-12 col-md-3 py-0">
-                          < br />
-                          <button
-                            type="button"
-                            className="btn btn-signup mb-3 py-2"
-                            onClick={atualizarSenha}
-                          >
-                            Alterar Senha
-                          </button>
-                        </div>
-                        <div className="row justify-content-center mt-4">
-                        <div className="col-12 col-md-3 text-center">
-                          <button
-                            type="button"
-                            className="btn btn-login py-2"
-                            onClick={atualizarUsuarioComEndereco}
-                          >
-                            Salvar Dados
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                      </div>
-                      
-                    
-                  </form>
+              )}
+            </div>
+  
+            <div className="d-grid gap-2">
+              <input
+                type="file"
+                onChange={(e) => setArquivoSelecionado(e.target.files[0])}
+                className="form-control form-control-sm"
+                accept="image/*"
+              />
+              <button 
+                className="btn btn-outline-primary btn-sm"
+                onClick={fazerUploadFoto}
+              >
+                <i className="bi bi-upload me-2"></i>Alterar Foto
+              </button>
+            </div>
+          </div>
+        </div>
+  
+        {/* Seção de Dados */}
+        <div className="col-md-8">
+          <form>
+            {/* Alertas */}
+            {erro && <div className="alert alert-danger mb-4">{erro}</div>}
+            {sucesso && <div className="alert alert-success mb-4">{sucesso}</div>}
+  
+            {/* Dados Pessoais */}
+            <div className="card border-0 shadow-sm mb-4">
+              <div className="card-body">
+                <h5 className="card-title mb-4 text-primary">
+                  <i className="bi bi-person-lines-fill me-2"></i>Dados Pessoais
+                </h5>
+                
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label htmlFor="nome" className="form-label">Nome Completo</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="nome"
+                      name="nome"
+                      value={dadosEdicao.nome || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
+  
+                  <div className="col-md-6">
+                    <label htmlFor="email" className="form-label">E-mail</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      id="email"
+                      name="email"
+                      value={dadosEdicao.email || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
+  
+                  <div className="col-md-6">
+                    <label htmlFor="cpf" className="form-label">CPF</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="cpf"
+                      name="cpf"
+                      value={dadosEdicao.cpf || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
+  
+                  <div className="col-md-6">
+                    <label htmlFor="telefone" className="form-label">Telefone</label>
+                    <input
+                      type="tel"
+                      className="form-control"
+                      id="telefone"
+                      name="telefone"
+                      value={dadosEdicao.telefone || ''}
+                      onChange={handleChange}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+  
+            {/* Endereço */}
+            <div className="card border-0 shadow-sm mb-4">
+              <div className="card-body">
+                <h5 className="card-title mb-4 text-primary">
+                  <i className="bi bi-geo-alt-fill me-2"></i>Endereço
+                </h5>
+  
+                <div className="row g-3">
+                  <div className="col-md-8">
+                    <label htmlFor="endereco.rua" className="form-label">Logradouro</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="endereco.rua"
+                      name="endereco.rua"
+                      value={dadosEdicao.endereco?.rua || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
+  
+                  <div className="col-md-2">
+                    <label htmlFor="endereco.numero" className="form-label">Número</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="endereco.numero"
+                      name="endereco.numero"
+                      value={dadosEdicao.endereco?.numero || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
+  
+                  <div className="col-md-2">
+                    <label htmlFor="endereco.complemento" className="form-label">Complemento</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="endereco.complemento"
+                      name="endereco.complemento"
+                      value={dadosEdicao.endereco?.complemento || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
+  
+                  <div className="col-md-4">
+                    <label htmlFor="endereco.bairro" className="form-label">Bairro</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      id="endereco.bairro"
+                      name="endereco.bairro"
+                      value={dadosEdicao.endereco?.bairro || ""}
+                      onChange={handleChange}
+                    />
+                  </div>
+  
+                  <div className="col-md-4">
+                    <label htmlFor="endereco.estado" className="form-label">Estado</label>
+                    <select
+                      className="form-select"
+                      id="endereco.estado"
+                      name="endereco.estado"
+                      value={dadosEdicao.endereco?.estado || ""}
+                      onChange={handleEstadoChange}
+                    >
+                      <option value="">Selecione...</option>
+                      {estados.map((estado) => (
+                        <option key={estado} value={estado}>{estado}</option>
+                      ))}
+                    </select>
+                  </div>
+  
+                  <div className="col-md-4">
+                    <label htmlFor="endereco.cidade" className="form-label">Cidade</label>
+                    <select
+                      className="form-select"
+                      id="endereco.cidade"
+                      name="endereco.cidade"
+                      value={dadosEdicao.endereco?.cidade || ""}
+                      onChange={handleChange}
+                    >
+                      <option value="">Selecione...</option>
+                      {cidades.map((cidade, index) => (
+                        <option key={index} value={cidade}>{cidade}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+  
+            {/* Seção Colaborador */}
+            {papelUsuario === 'colaborador' && (
+              <div className="card border-0 shadow-sm mb-4">
+                <div className="card-body">
+                  <h5 className="card-title mb-4 text-primary">
+                    <i className="bi bi-briefcase-fill me-2"></i>Dados Profissionais
+                  </h5>
+  
+                  <div className="row g-3 align-items-end">
+                    <div className="col-md-6">
+                      <label htmlFor="cargo" className="form-label">Cargo</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="cargo"
+                        name="cargo"
+                        value={dadosEdicao.cargo || ''}
+                        onChange={handleChange}
+                      />
+                    </div>
+  
+                    <div className="col-md-4">
+                      <label htmlFor="clinica" className="form-label">Clínica</label>
+                      <select
+                        className="form-select"
+                        id="clinica"
+                        name="clinica.id"
+                        value={clinicaSelecionada}
+                        onChange={handleClinicaChange}
+                      >
+                        <option value="">Selecione...</option>
+                        {clinicas.map((clinica) => (
+                          <option key={clinica.ID_Clinica} value={clinica.ID_Clinica}>
+                            {clinica.Nome}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+  
+                    <div className="col-md-2">
+                      <button
+                        type="button"
+                        className="btn btn-outline-primary w-100"
+                        onClick={atualizarClinica}
+                      >
+                        Atualizar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+  
+            {/* Alteração de Senha */}
+            <div className="card border-0 shadow-sm">
+              <div className="card-body">
+                <h5 className="card-title mb-4 text-primary">
+                  <i className="bi bi-shield-lock-fill me-2"></i>Alterar Senha
+                </h5>
+  
+                <div className="row g-3 align-items-end">
+                  <div className="col-md-3">
+                    <label htmlFor="senhaAtual" className="form-label">Senha Atual</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      id="senhaAtual"
+                      value={senhaAtual}
+                      onChange={(e) => setSenhaAtual(e.target.value)}
+                    />
+                  </div>
+  
+                  <div className="col-md-3">
+                    <label htmlFor="novaSenha" className="form-label">Nova Senha</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      id="novaSenha"
+                      value={novaSenha}
+                      onChange={(e) => setNovaSenha(e.target.value)}
+                    />
+                  </div>
+  
+                  <div className="col-md-3">
+                    <label htmlFor="confirmarSenha" className="form-label">Confirmar Senha</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      id="confirmarSenha"
+                      value={confirmarSenha}
+                      onChange={(e) => setConfirmarSenha(e.target.value)}
+                    />
+                  </div>
+  
+                  <div className="col-md-3">
+                    <button
+                      type="button"
+                      className="btn btn-outline-primary w-100"
+                      onClick={atualizarSenha}
+                    >
+                      Alterar Senha
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+  
+            {/* Botão de Salvar */}
+            <div className="d-grid gap-2 mt-4">
+              <button
+                type="button"
+                className="btn btn-signup btn-lg"
+                onClick={atualizarUsuarioComEndereco}
+              >
+                <i className="bi bi-save-fill me-2"></i>Salvar Alterações
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
