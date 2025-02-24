@@ -70,24 +70,23 @@ def create_app():
     from flask import request, current_app
     from datetime import datetime
 
-    # Registrar o before_request para logging em todas as rotas
+    from flask_jwt_extended import verify_jwt_in_request  # Adicione este import
+
     @app.before_request
     def log_request_info():
-        """Log de informações de cada requisição recebida."""
-        # Ignorar requisições GET para reduzir a poluição nos logs
         if request.method == 'GET':
-            return  # Não faz nada e não registra logs para GET
+            return
 
-        # Copiar os dados da requisição
         log_data = request.get_json(silent=True) or {}
+        email_logado = "Não logado"
 
-        # Obter o email do usuário logado, se disponível, a partir do JWT
-        email_logado = None
         try:
-            email_logado = get_jwt_identity()  # Obtém a identidade do usuário do token JWT
+            # Verifica primeiro se há um token válido na requisição
+            verify_jwt_in_request(optional=True)  # Verificação explícita
+            email_logado = get_jwt_identity() or "Não logado"  # Agora seguro para usar
         except Exception as e:
-            # Se não conseguir obter o email, pode ser que não esteja logado
-            email_logado = "Não logado"  # Pode registrar "Não logado" ou outra indicação
+            current_app.logger.error(f"Erro JWT na requisição: {str(e)}")
+            email_logado = "Erro no token"
 
         # Guardar a senha para posterior log, sem alterar a requisição
         senha = log_data.get('senha', None)
