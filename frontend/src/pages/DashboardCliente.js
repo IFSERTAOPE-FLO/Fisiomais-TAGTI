@@ -172,45 +172,46 @@ const DashboardClientes = () => {
               <i className="bi bi-person-workspace me-2"></i>
               <span>Serviços Disponíveis</span>
             </Card.Header>
-            <div className="accordion" id="servicosAccordion" >
-              {servicos.map((servico, index) => (
-                <div className="accordion-item" key={servico.id}>
-                  <h2 className="accordion-header" id={`heading-${index}`}>
-                    <button
-                      className="accordion-button collapsed small d-flex align-items-center"
-                      type="button"
-                      data-bs-toggle="collapse"
-                      data-bs-target={`#collapse-${index}`}
-                      aria-expanded="false"
-                      aria-controls={`collapse-${index}`}
-                      style={{ fontSize: "0.775rem", fontWeight: "bold", padding: "8px 12px" }}
-                    >
-                      <span>{servico.Nome_servico}</span>
-                      <Badge
-                        bg="secondary"
-                        className="ms-auto"
-                        style={{ fontSize: "0.75rem" }}
-                      >
-                        {servico.Tipos}
-                      </Badge>
-                    </button>
-                  </h2>
+            <div className="accordion" id="servicosAccordion">
+              {servicos.map((servico) => {
+                const safeNomeServico = servico.Nome_servico.replace(/\s+/g, "-"); // Substitui espaços por hífen para evitar erros no ID
 
-                  <div
-                    id={`collapse-${index}`}
-                    className="accordion-collapse collapse"
-                    aria-labelledby={`heading-${index}`}
-                    data-bs-parent="#servicosAccordion"
-                  >
-                    <div className="accordion-body text-muted small" style={{ fontSize: "0.75rem" }}>
-                      {servico.Descricao}
+                return (
+                  <div className="accordion-item" key={safeNomeServico}>
+                    <h2 className="accordion-header" id={`heading-${safeNomeServico}`}>
+                      <button
+                        className="accordion-button collapsed small d-flex align-items-center"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target={`#collapse-${safeNomeServico}`}
+                        aria-expanded="false"
+                        aria-controls={`collapse-${safeNomeServico}`}
+                        style={{ fontSize: "0.775rem", fontWeight: "bold", padding: "8px 12px" }}
+                      >
+                        <span>{servico.Nome_servico}</span>
+                        <Badge bg="secondary" className="ms-auto" style={{ fontSize: "0.75rem" }}>
+                          {servico.Tipos}
+                        </Badge>
+                      </button>
+                    </h2>
+
+                    <div
+                      id={`collapse-${safeNomeServico}`}
+                      className="accordion-collapse collapse"
+                      aria-labelledby={`heading-${safeNomeServico}`}
+                      data-bs-parent="#servicosAccordion"
+                    >
+                      <div className="accordion-body text-muted small" style={{ fontSize: "0.75rem" }}>
+                        {servico.Descricao}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </Card>
         </Col>
+
 
         {/* Aulas de Pilates */}
         <Col xs={12}>
@@ -218,38 +219,88 @@ const DashboardClientes = () => {
             <Card.Header>
               <h5 className="mb-0">Minhas Aulas de Pilates</h5>
             </Card.Header>
-            <Card.Body>
+            <Card.Body style={{ maxHeight: "500px", overflowY: "auto" }}>
               {aulas.length > 0 ? (
-                <Table striped hover responsive>
-                  <thead>
-                    <tr>
-                      <th>Dia</th>
-                      <th>Horário</th>
-                      <th>Instrutor</th>
-                      <th>Clínica</th>
-                      <th>Serviço</th>
-                      <th>Inscrição</th>
-                      <th>Vagas</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {aulas.map((aula) => (
-                      <tr key={aula.id_aula}>
-                        <td>{aula.dia_semana}</td>
-                        <td>{aula.hora_inicio} - {aula.hora_fim}</td>
-                        <td>{aula.colaborador?.nome || 'N/A'}</td>
-                        <td>{aula.clinica || 'N/A'}</td>
-                        <td>{aula.servico}</td>
-                        <td>{new Date(aula.data_inscricao).toLocaleDateString()}</td>
-                        <td>
-                          <Badge bg={aula.num_alunos >= aula.limite_alunos ? 'danger' : 'success'}>
-                            {aula.num_alunos}/{aula.limite_alunos}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
+                <div className="accordion" id="aulasAccordion">
+                  {aulas.map((aula) => (
+                    <div className="accordion-item" key={aula.id_aula}>
+                      <h2 className="accordion-header" id={`heading-${aula.id_aula}`}>
+                        <button
+                          className="accordion-button collapsed"
+                          type="button"
+                          data-bs-toggle="collapse"
+                          data-bs-target={`#collapse-${aula.id_aula}`}
+                          aria-expanded="false"
+                          aria-controls={`collapse-${aula.id_aula}`}
+                        >
+                          <div className="d-flex flex-column gap-2 w-100">
+                            {/* Cabeçalho Principal */}
+                            <div className="d-flex justify-content-between align-items-center">
+                              <div>
+                                <strong>{aula.dia_semana}</strong>
+                                <br />
+                                {aula.hora_inicio} - {aula.hora_fim}
+                              </div>
+                              <Badge
+                                bg={aula.num_alunos >= aula.limite_alunos ? 'danger' : 'success'}
+                                className="fs-6"
+                              >
+                                {aula.num_alunos}/{aula.limite_alunos}
+                              </Badge>
+                            </div>
+
+                            {/* Detalhes da Aula */}
+                            <div className="d-flex flex-wrap gap-3">
+                              {/* Instrutor */}
+                              <div className="d-flex align-items-center gap-1">
+                                <i className="bi bi-person-badge text-muted"></i>
+                                <span>{aula.colaborador?.nome || 'N/A'}</span>
+                              </div>
+
+                              {/* Clínica */}
+                              <div className="d-flex align-items-center gap-1">
+                                <i className="bi bi-geo-alt text-muted"></i>
+                                <span>{aula.clinica || 'N/A'}</span>
+                              </div>
+
+                              {/* Serviço */}
+                              <div className="d-flex align-items-center gap-1">
+                                <i className="bi bi-clipboard-check text-muted"></i>
+                                <span>{aula.servico}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      </h2>
+
+                      {/* Corpo Expandível */}
+                      <div
+                        id={`collapse-${aula.id_aula}`}
+                        className="accordion-collapse collapse"
+                        aria-labelledby={`heading-${aula.id_aula}`}
+                        data-bs-parent="#aulasAccordion"
+                      >
+                        <div className="accordion-body">
+                          <div className="d-flex flex-column gap-2">
+                            <div>
+                              <strong>Data de Inscrição:</strong>{' '}
+                              {new Date(aula.data_inscricao).toLocaleDateString()}
+                            </div>
+                            <div>
+                              <strong>Status:</strong>{' '}
+                              <Badge
+                                bg={aula.num_alunos >= aula.limite_alunos ? 'danger' : 'success'}
+                                className="text-uppercase"
+                              >
+                                {aula.num_alunos >= aula.limite_alunos ? 'Lotado' : 'Disponível'}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <div className="text-center text-muted py-4">
                   Nenhuma aula de pilates agendada

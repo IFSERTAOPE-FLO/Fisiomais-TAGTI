@@ -203,30 +203,63 @@ Horário: ${agendamento.hora}${agendamento.status === "Pedido de Remarcação" &
                   title={eventInfo.event.extendedProps.description}
                   style={{
                     cursor: "pointer",
-                    textAlign: "center",
                     backgroundColor: eventInfo.event.backgroundColor,
                     color: eventInfo.event.textColor,
-                    padding: "5px",
-                    borderRadius: "5px",
-                    fontSize: "clamp(0.4rem, 2vw, 0.8rem)",
-                    lineHeight: "1.2",
-                    textOverflow: "ellipsis",
+                    borderRadius: "8px",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                    margin: "2px",
+                    transition: "transform 0.2s, box-shadow 0.2s",
                     overflow: "hidden",
-                    whiteSpace: "nowrap",
                   }}
+                  className="card-hover-effect"
                 >
-                  <strong>{title}</strong>
-                  <br />
-                  <span>
-                    {new Date(eventInfo.event.start).toLocaleTimeString("pt-BR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                  {role !== 'cliente' && (<><br /> <span> {cliente}</span> </>)}
-                  <br />
-                  {role === 'admin' && <span> {colaborador}</span>}
-                  {role === 'cliente' && <span> {colaborador}</span>}
+                  <div
+                    className="p-2"
+                    style={{
+                      fontSize: "clamp(0.5rem, 2vw, 0.9rem)",
+                      lineHeight: "1.4",
+                    }}
+                  >
+                    <div className="d-flex align-items-center gap-2 mb-2">
+                      <i className="bi bi-calendar-event fs-6"></i>
+                      <strong className="flex-grow-1">{title}</strong>
+                    </div>
+
+                    <div className="d-flex flex-column gap-1">
+                      <div className="d-flex align-items-center gap-2">
+                        <i className="bi bi-clock" aria-label="Horário"></i>
+                        <span>
+                          {new Date(eventInfo.event.start).toLocaleTimeString("pt-BR", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+
+                      {role !== 'cliente' && (
+                        <div className="d-flex align-items-center gap-2">
+                          <i className="bi bi-person" aria-label="Cliente"></i>
+                          <span className="text-truncate">{cliente}</span>
+                        </div>
+                      )}
+
+                      {(role === 'admin' || role === 'cliente') && (
+                        <div className="d-flex align-items-center gap-2">
+                          <i className="bi bi-person-badge" aria-label="Profissional"></i>
+                          <span className="text-truncate">{colaborador}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Borda colorida na parte inferior */}
+                  <div
+                    style={{
+                      height: "4px",
+                      backgroundColor: eventInfo.event.borderColor || eventInfo.event.backgroundColor,
+                      opacity: 0.8
+                    }}
+                  ></div>
                 </div>
               );
             }}

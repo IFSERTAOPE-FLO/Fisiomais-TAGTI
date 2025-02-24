@@ -82,29 +82,30 @@ const MinhasAulasCliente = () => {
   };
 
   // Função para confirmar presença na próxima semana para uma aula específica
-  const confirmarPresenca = async (aulaId) => {
-    if (!window.confirm("Deseja confirmar presença para esta aula na próxima semana?")) return;
+const confirmarPresenca = async (aulaId) => {
+  if (!window.confirm("Deseja confirmar presença para esta aula na próxima semana?")) return;
 
-    try {
-      const response = await fetch(`${apiBaseUrl}pilates/criar_agendamentos_semana_atual/${clienteId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ aula_id: aulaId }), // Enviando o ID da aula selecionada
-      });
-
-      if (response.ok) {
-        alert("Presença confirmada para esta aula na próxima semana!");
-      } else {
-        const data = await response.json();
-        alert(data.message || "Erro ao confirmar presença.");
+  try {
+    const response = await fetch(`${apiBaseUrl}pilates/criar_agendamentos_aula/${aulaId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       }
-    } catch (err) {
-      alert("Erro ao confirmar presença.");
+      // Se a rota não espera um body, pode-se omitir o JSON.stringify()
+    });
+
+    if (response.ok) {
+      alert("Presença confirmada para esta aula na próxima semana!");
+    } else {
+      const data = await response.json();
+      alert(data.message || "Erro ao confirmar presença.");
     }
-  };
+  } catch (err) {
+    alert("Erro ao confirmar presença.");
+  }
+};
+
 
 
   return (
@@ -208,6 +209,7 @@ const MinhasAulasCliente = () => {
                       <button 
                         className="btn btn-success d-flex align-items-center gap-2"
                         onClick={() => confirmarPresenca(aula.id_aula)}
+                        title="Confirmar presença nesse mês"
                       >
                         <i className="bi bi-check2-circle"></i>
                         <span className="d-none d-md-block">Confirmar</span>

@@ -66,14 +66,15 @@ def create_app():
 
     app.logger.addHandler(file_handler)
     
-    from flask_jwt_extended import get_jwt_identity
+    from flask_jwt_extended import get_jwt_identity, jwt_required
     from flask import request, current_app
     from datetime import datetime
 
     from flask_jwt_extended import verify_jwt_in_request  # Adicione este import
 
-    @app.before_request
+    @app.before_request    
     def log_request_info():
+        
         if request.method == 'GET':
             return
 
